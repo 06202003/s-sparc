@@ -10,8 +10,19 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
   </head>
-  <body style="font-family: 'Plus Jakarta Sans', sans-serif; background-color: #fffff0">
-    <nav class="navbar navbar-expand-lg sticky-top" style="top: 0; z-index: 1030; background-color: #fffff0">
+  <body style="font-family: 'Plus Jakarta Sans', sans-serif; background: radial-gradient(circle at top left, #e0f7f4, #f5faf8);">
+    <div id="particles-js"></div>
+    <style>
+      #particles-js {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+      }
+    </style>
+    <nav class="navbar navbar-expand-lg sticky-top" style="top: 0; z-index: 1030; background-color: rgba(245, 250, 248, 0.95); box-shadow: 0 2px 12px rgba(15, 23, 42, 0.04);">
       <div class="container-fluid">
         <a class="navbar-brand" href="index.php">
           <img src="logo.png" alt="S-SPARC" width="150" height="75" />
@@ -72,5 +83,50 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script>
+      particlesJS('particles-js', {
+        particles: {
+          number: { value: 60, density: { enable: true, value_area: 900 } },
+          color: { value: ['#14b8a6', '#0f766e', '#a5f3fc'] },
+          shape: { type: 'circle' },
+          opacity: { value: 0.4, random: true },
+          size: { value: 4, random: true },
+          line_linked: {
+            enable: true,
+            distance: 150,
+            color: '#0f766e',
+            opacity: 0.25,
+            width: 2,
+          },
+          move: {
+            enable: true,
+            speed: 2,
+            direction: 'none',
+            random: false,
+            straight: false,
+            out_mode: 'out',
+            bounce: false,
+          },
+        },
+        interactivity: {
+          detect_on: 'window',
+          events: {
+            onhover: { enable: true, mode: 'grab' },
+            onclick: { enable: false, mode: 'push' },
+            resize: true,
+          },
+          modes: {
+            grab: {
+              distance: 160,
+              line_linked: { opacity: 0.6 },
+            },
+            repulse: { distance: 100, duration: 0.4 },
+            push: { particles_nb: 4 },
+          },
+        },
+        retina_detect: true,
+      });
+    </script>
   </body>
 </html>

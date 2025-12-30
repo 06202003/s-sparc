@@ -54,8 +54,8 @@ if (!$assessmentId) {
           </div>
         </div>
         <nav class="flex items-center gap-3 text-sm font-medium">
-          <a class="text-slate-700 hover:text-slate-900" href="dashboard.php">Dashboard</a>
-          <a class="text-slate-700 hover:text-slate-900" href="courses.php">Change courses</a>
+          <a class="text-slate-400 hover:text-slate-700" href="dashboard.php">Dashboard</a>
+          <a class="text-slate-400 hover:text-slate-700" href="courses.php">Change courses</a>
           <button id="new-chat" type="button" class="inline-flex items-center gap-2 rounded-full bg-slate-900 text-white px-3 py-1 hover:bg-slate-800">New chat</button>
           <button id="clear-chat" type="button" class="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1 text-slate-700 hover:border-slate-400">Clear history</button>
           <?php if ($loggedIn): ?>
@@ -118,7 +118,7 @@ if (!$assessmentId) {
               <span>Total quota: <strong><span id="token-total">-</span></strong> tokens</span>
               <span>Used: <strong><span id="token-used">-</span></strong> tokens</span>
               <span>Remaining: <strong><span id="token-remaining">-</span></strong> tokens</span>
-              <span>Active points: <strong><span id="token-points">-</span></strong></span>
+              <span>Active points: <strong><span id="token-points">-</span></strong> points</span>
             </div>
             <p class="mt-2 text-xs text-slate-500">Quota is calculated weekly based on the total tokens used across all sessions.</p>
           </div>
@@ -270,16 +270,40 @@ if (!$assessmentId) {
 
     async function refreshGamification() {
       try {
-        const res = await fetch('gamification.php', { method: 'GET' });
-        if (!res.ok) return;
-        const data = await res.json();
-        if (!data || !data.gamification) return;
-        const g = data.gamification;
-        // Backend kadang mengirim angka sebagai string, jadi selalu parse ke Number
+        // If an assessment is selected, prefer per-assessment totals
+        if (assessmentId) {
+          const res = await fetch('token_usage_breakdown.php', { method: 'GET' });
+          if (res && res.ok) {
+            const data = await res.json();
+            if (data && Array.isArray(data.by_assessment)) {
+              const as = data.by_assessment.find(a => String(a.assessment_id) === String(assessmentId));
+              if (as) {
+                const total = 2000; // per-assessment quota
+                const used = Number(as.total_used || 0) || 0;
+                const remaining = Math.max(0, total - used);
+                const points = remaining;
+                tokenState.total = total;
+                tokenState.remaining = remaining;
+                tokenState.points = points;
+                if (tokenTotalEl) tokenTotalEl.textContent = String(total);
+                if (tokenRemainingEl) tokenRemainingEl.textContent = String(remaining);
+                if (tokenUsedEl) tokenUsedEl.textContent = String(used);
+                if (tokenPointsEl) tokenPointsEl.textContent = String(points);
+                return;
+              }
+            }
+          }
+        }
+
+        // Fallback to global gamification endpoint
+        const res2 = await fetch('gamification.php', { method: 'GET' });
+        if (!res2.ok) return;
+        const data2 = await res2.json();
+        if (!data2 || !data2.gamification) return;
+        const g = data2.gamification;
         const total = Number(g.total_tokens ?? 0) || 0;
         const remaining = Number(g.remaining_tokens ?? 0) || 0;
         const points = Number(g.points ?? 0) || 0;
-        // Backend mengirim used_tokens eksplisit; fallback ke total - remaining jika tidak ada
         const used = g.used_tokens != null ? (Number(g.used_tokens) || 0) : (total - remaining);
         tokenState.total = total;
         tokenState.remaining = remaining;

@@ -167,6 +167,12 @@ if ($scope === 'course' && $selectedCourseId !== '') {
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+  <style>
+    .odd-row { background-color: #f8fafc; }
+    .even-row { background-color: #ffffff; }
+  </style>
   <style>
     body { font-family: 'Manrope', system-ui, -apple-system, sans-serif; }
   </style>
@@ -183,8 +189,8 @@ if ($scope === 'course' && $selectedCourseId !== '') {
           </div>
         </div>
         <nav class="flex items-center gap-3 text-sm font-medium">
-          <a class="text-slate-700 hover:text-slate-900" href="courses.php">Courses</a>
-          <a class="text-slate-700 hover:text-slate-900" href="gamification_dashboard.php">Gamification</a>
+          <a class="text-slate-400 hover:text-slate-700" href="courses.php">Courses</a>
+          <a class="text-slate-400 hover:text-slate-700" href="gamification_dashboard.php">Gamification</a>
           <a class="text-slate-900 active" href="dashboard.php">Environmental impact</a>
           <a href="logout.php" class="ml-2 inline-flex items-center gap-2 rounded-full bg-red-800 text-white px-3 py-1 hover:bg-red-600 shadow-sm">Logout</a>
         </nav>
@@ -240,7 +246,7 @@ if ($scope === 'course' && $selectedCourseId !== '') {
                 <?php endforeach; ?>
               </select>
             </div>
-            <button type="submit" class="rounded-lg bg-slate-900 text-white px-3 py-1 hover:bg-slate-800">Terapkan</button>
+            <button type="submit" class="rounded-lg bg-slate-900 text-white px-3 py-1 hover:bg-slate-800">Apply</button>
           </form>
         </div>
 
@@ -286,7 +292,7 @@ if ($scope === 'course' && $selectedCourseId !== '') {
             <canvas id="impactChart" height="120"></canvas>
           </div>
           <div class="overflow-x-auto">
-            <table class="min-w-full text-sm">
+            <table id="impactDailyTable" class="min-w-full text-sm display">
               <thead>
                 <tr class="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                   <th class="px-3 py-2 text-left">Date</th>
@@ -414,6 +420,11 @@ if ($scope === 'course' && $selectedCourseId !== '') {
     if (window.jQuery) {
       jQuery(function($) {
         $('.select2').select2({ width: 'resolve' });
+          try {
+            if ($.fn.dataTable) {
+              $('#impactDailyTable').DataTable({ paging: true, searching: true, info: false, pageLength: 10, stripeClasses: ['odd-row','even-row'] });
+            }
+          } catch (e) { console.warn('DataTable init failed', e); }
       });
     }
 

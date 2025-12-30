@@ -86,15 +86,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="text-xs text-slate-500">Create an account to access courses, chat, and dashboards.</div>
           </div>
         </div>
-        <nav class="flex items-center gap-3 text-sm font-medium">
+        <!-- <nav class="flex items-center gap-3 text-sm font-medium">
           <a class="text-slate-900 font-semibold" href="register.php">Register</a>
           <a class="text-slate-700 hover:text-slate-900" href="login.php">Login</a>
-        </nav>
+        </nav> -->
       </div>
     </header>
 
-    <main class="flex-1">
-      <div class="max-w-md mx-auto px-4 py-10">
+    <main class="flex-1 flex items-center">
+      <div class="max-w-md mx-auto px-4 py-10 w-full">
         <section class="glass rounded-2xl border border-white/60 shadow-lg p-6 sm:p-8 bg-white/80">
           <h1 class="text-xl font-semibold text-slate-900 mb-2">Create a new account</h1>
           <p class="text-sm text-slate-600 mb-4">Use your institutional email and a strong password.</p>
@@ -119,10 +119,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               <label class="block text-sm font-medium text-slate-700 mb-1" for="password">Password</label>
               <input class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-slate-900 focus:ring focus:ring-slate-200 outline-none" type="password" id="password" name="password" required>
             </div>
-            <button type="submit" class="w-full inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 focus:outline-none focus:ring focus:ring-slate-200">Daftar</button>
+            <button type="submit" class="w-full inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 focus:outline-none focus:ring focus:ring-slate-200">Register</button>
           </form>
 
-          <p class="mt-4 text-xs text-slate-500">Do you already have an account? <a href="login.php" class="text-slate-900 font-medium hover:underline">Login here</a>.</p>
+          <p class="mt-4 text-xs text-slate-500">Do you already have an account? <a href="login.php" class="text-blue-900 font-medium hover:underline">Login here</a>.</p>
         </section>
       </div>
     </main>

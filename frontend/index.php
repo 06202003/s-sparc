@@ -10,8 +10,20 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
   </head>
-  <body style="font-family: 'Plus Jakarta Sans', sans-serif; background-color: #fffff0">
-    <nav class="navbar navbar-expand-lg sticky-top" style="top: 0; z-index: 1030; background-color: #fffff0">
+  <body style="font-family: 'Plus Jakarta Sans', sans-serif; background: radial-gradient(circle at top left, #e0f7f4, #f5faf8);">
+    <!-- Animated background layer -->
+    <div id="particles-js"></div>
+    <style>
+      #particles-js {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+      }
+    </style>
+    <nav class="navbar navbar-expand-lg sticky-top" style="top: 0; z-index: 1030; background-color: rgba(245, 250, 248, 0.95); box-shadow: 0 2px 12px rgba(15, 23, 42, 0.04);">
       <div class="container-fluid">
         <a class="navbar-brand" href="index.php">
           <img src="logo.png" alt="S-SPARC" width="150" height="75" />
@@ -172,26 +184,25 @@
         <div class="row justify-content-center">
           <div class="col-lg-12">
             <div id="faqAccordion" class="faq-modern">
-              <!-- FAQ items copied from template/index.html -->
               <!-- FAQ Item 1 -->
-              <div class="faq-item mb-3">
+              <!-- <div class="faq-item mb-3">
                 <button class="faq-question d-flex align-items-center w-100 px-4 py-3 border-0 rounded-3 shadow-sm bg-white" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" aria-expanded="true" aria-controls="faq1">
                   <span class="me-3 flex-shrink-0">
                     <i class="fa-solid fa-lightbulb" style="color: #ffd600"></i>
                   </span>
-                  <span class="fw-semibold flex-grow-1 text-start">Apa itu S-SPARC?</span>
+                  <span class="fw-semibold flex-grow-1 text-start">What is S-SPARC?</span>
                   <span class="faq-icon ms-3">
                     <i class="fa-solid fa-chevron-down" style="color: #ffd600"></i>
                   </span>
                 </button>
                 <div id="faq1" class="collapse show" data-bs-parent="#faqAccordion">
                   <div class="faq-answer px-4 py-3 bg-light rounded-bottom-3 border-top">
-                    S-SPARC adalah asisten kecerdasan buatan (AI) yang dirancang khusus untuk membantu proses penulisan kode secara efisien dan cerdas. Sistem ini memanfaatkan teknologi <b>semantic similarity</b> untuk menganalisis
-                    permintaan pengguna, membandingkannya dengan data historis, dan menghasilkan solusi yang paling relevan. Dengan pendekatan ini, S-SPARC tidak hanya mempercepat proses coding, tetapi juga mengurangi konsumsi energi dan
-                    sumber daya komputasi. S-SPARC dapat digunakan oleh siapa saja yang ingin meningkatkan produktivitas dalam pengembangan perangkat lunak, baik untuk keperluan akademik, profesional, maupun pembelajaran mandiri.
+                    S-SPARC is an AI assistant designed to support efficient, intelligent programming workflows. It uses <b>semantic similarity</b> to analyze user requests, compare them against historical data, and surface the most relevant
+                    solutions. This approach not only speeds up coding, but also reduces energy use and computational resources. S-SPARC can be used by anyone who wants to increase productivity in software development, from academic projects
+                    to professional work and self-learning.
                   </div>
                 </div>
-              </div>
+              </div> -->
               <!-- FAQ Item 2 -->
               <div class="faq-item mb-3">
                 <button
@@ -205,17 +216,15 @@
                   <span class="me-3 flex-shrink-0">
                     <i class="fa-solid fa-layer-group" style="color: #7c4dff"></i>
                   </span>
-                  <span class="fw-semibold flex-grow-1 text-start">Apa yang membedakan S-SPARC dari chatbot AI lain?</span>
+                  <span class="fw-semibold flex-grow-1 text-start">What makes S-SPARC different from other AI chatbots?</span>
                   <span class="faq-icon ms-3">
                     <i class="fa-solid fa-chevron-down" style="color: #7c4dff"></i>
                   </span>
                 </button>
                 <div id="faq2" class="collapse" data-bs-parent="#faqAccordion">
                   <div class="faq-answer px-4 py-3 bg-light rounded-bottom-3 border-top">
-                    S-SPARC berbeda dari chatbot AI konvensional karena tidak selalu menghasilkan jawaban baru dari awal. Sistem ini mengidentifikasi pola, konteks, dan kemiripan dari permintaan yang masuk dengan data atau solusi yang sudah
-                    pernah dihasilkan sebelumnya. Dengan demikian, S-SPARC dapat melakukan <b>reuse</b> terhadap solusi yang sudah terbukti efektif, lalu menyesuaikannya dengan kebutuhan pengguna saat ini. Pendekatan ini membuat proses
-                    lebih cepat, mengurangi beban komputasi, serta meningkatkan konsistensi dan kualitas hasil kode yang diberikan. Selain itu, S-SPARC juga mengutamakan transparansi dalam setiap prosesnya, sehingga pengguna dapat memahami
-                    bagaimana solusi dihasilkan.
+                    Unlike many generative chatbots that always create answers from scratch, S-SPARC identifies patterns, context, and similarity between new requests and previously solved cases. It then <b>reuses</b> proven solutions and
+                    adapts them to the current need. This makes responses faster, reduces computational load, and improves consistency and quality. S-SPARC also emphasizes transparency, so users can understand how each answer is produced.
                   </div>
                 </div>
               </div>
@@ -232,16 +241,16 @@
                   <span class="me-3 flex-shrink-0">
                     <i class="fa-solid fa-user-graduate" style="color: #00bfae"></i>
                   </span>
-                  <span class="fw-semibold flex-grow-1 text-start">Apakah S-SPARC hanya untuk pengguna IT atau programmer?</span>
+                  <span class="fw-semibold flex-grow-1 text-start">Is S-SPARC only for IT students?</span>
                   <span class="faq-icon ms-3">
                     <i class="fa-solid fa-chevron-down" style="color: #00bfae"></i>
                   </span>
                 </button>
                 <div id="faq3" class="collapse" data-bs-parent="#faqAccordion">
                   <div class="faq-answer px-4 py-3 bg-light rounded-bottom-3 border-top">
-                    Tidak. S-SPARC dirancang agar dapat digunakan oleh berbagai kalangan, mulai dari mahasiswa, dosen, peneliti, hingga pengguna umum yang ingin belajar atau mengembangkan solusi berbasis kode. Anda tidak perlu memiliki
-                    latar belakang teknis mendalam untuk memanfaatkan S-SPARC. Antarmuka yang ramah pengguna dan penjelasan yang detail memungkinkan siapa saja untuk mengajukan pertanyaan atau permintaan kode, lalu mendapatkan solusi yang
-                    mudah dipahami dan dapat langsung digunakan. S-SPARC juga menyediakan referensi dan penjelasan tambahan untuk membantu pengguna memahami konsep di balik solusi yang diberikan.
+                    No. S-SPARC is built for a wide range of users: students, lecturers, researchers, and anyone who wants to learn or build code-based solutions. You do not need a deep technical background to benefit from S-SPARC. A friendly
+                    interface and detailed explanations allow users to ask questions or request code and receive solutions that are easy to understand and ready to use. S-SPARC can also provide additional references to help users grasp the
+                    concepts behind each solution.
                   </div>
                 </div>
               </div>
@@ -258,17 +267,16 @@
                   <span class="me-3 flex-shrink-0">
                     <i class="fa-solid fa-bolt" style="color: #ff5252"></i>
                   </span>
-                  <span class="fw-semibold flex-grow-1 text-start">Bagaimana S-SPARC meningkatkan efisiensi komputasi?</span>
+                  <span class="fw-semibold flex-grow-1 text-start">How does S-SPARC improve computational efficiency?</span>
                   <span class="faq-icon ms-3">
                     <i class="fa-solid fa-chevron-down" style="color: #ff5252"></i>
                   </span>
                 </button>
                 <div id="faq4" class="collapse" data-bs-parent="#faqAccordion">
                   <div class="faq-answer px-4 py-3 bg-light rounded-bottom-3 border-top">
-                    S-SPARC meningkatkan efisiensi komputasi dengan menerapkan <b>semantic similarity</b> untuk membandingkan permintaan baru dengan data historis yang telah ada. Jika ditemukan solusi yang relevan, sistem akan melakukan
-                    penyesuaian dan optimalisasi terhadap solusi tersebut, sehingga tidak perlu melakukan proses inferensi penuh setiap kali ada permintaan baru. Hal ini secara signifikan mengurangi waktu pemrosesan, konsumsi energi, dan
-                    penggunaan token pada model AI. Selain itu, S-SPARC juga menerapkan caching internal yang cerdas untuk mempercepat respons pada permintaan yang sering diajukan, sehingga pengalaman pengguna menjadi lebih responsif dan
-                    hemat sumber daya.
+                    S-SPARC improves efficiency by applying <b>semantic similarity</b> to compare new requests with historical data. When a relevant solution already exists, the system adjusts and optimizes it instead of running a full
+                    inference every time. This significantly reduces processing time, energy consumption, and token usage. S-SPARC also uses smart internal caching to speed up frequent queries, delivering more responsive and resource-efficient
+                    experiences.
                   </div>
                 </div>
               </div>
@@ -285,16 +293,15 @@
                   <span class="me-3 flex-shrink-0">
                     <i class="fa-solid fa-leaf" style="color: #43a047"></i>
                   </span>
-                  <span class="fw-semibold flex-grow-1 text-start">Apakah S-SPARC ramah lingkungan?</span>
+                  <span class="fw-semibold flex-grow-1 text-start">Is S-SPARC environmentally friendly?</span>
                   <span class="faq-icon ms-3">
                     <i class="fa-solid fa-chevron-down" style="color: #43a047"></i>
                   </span>
                 </button>
                 <div id="faq5" class="collapse" data-bs-parent="#faqAccordion">
                   <div class="faq-answer px-4 py-3 bg-light rounded-bottom-3 border-top">
-                    Ya, S-SPARC sangat memperhatikan aspek keberlanjutan (sustainability) dalam pengembangan dan operasionalnya. Dengan mengurangi proses regenerasi kode yang berulang dan menurunkan beban inferensi pada model AI, S-SPARC
-                    secara langsung menekan konsumsi energi dan emisi karbon yang dihasilkan oleh infrastruktur komputasi. Pendekatan ini sejalan dengan prinsip <b>sustainable AI</b>, yaitu memaksimalkan performa dan manfaat teknologi AI
-                    dengan dampak lingkungan yang seminimal mungkin. Selain itu, S-SPARC juga mendorong penggunaan kembali solusi yang sudah ada, sehingga sumber daya yang digunakan menjadi lebih efisien dan ramah lingkungan.
+                    Yes. S-SPARC is developed with sustainability as a core principle. By reducing repeated code generation and lowering inference load on AI models, it directly cuts energy consumption and associated carbon emissions. This
+                    aligns with <b>sustainable AI</b> practices—maximizing the benefits of AI while minimizing environmental impact. S-SPARC also promotes reuse of existing solutions so that compute resources are used more efficiently.
                   </div>
                 </div>
               </div>
@@ -311,16 +318,15 @@
                   <span class="me-3 flex-shrink-0">
                     <i class="fa-solid fa-shield-halved" style="color: #1976d2"></i>
                   </span>
-                  <span class="fw-semibold flex-grow-1 text-start">Apakah data pengguna aman?</span>
+                  <span class="fw-semibold flex-grow-1 text-start">Is my data safe with S-SPARC?</span>
                   <span class="faq-icon ms-3">
                     <i class="fa-solid fa-chevron-down" style="color: #1976d2"></i>
                   </span>
                 </button>
                 <div id="faq6" class="collapse" data-bs-parent="#faqAccordion">
                   <div class="faq-answer px-4 py-3 bg-light rounded-bottom-3 border-top">
-                    Keamanan dan privasi data pengguna adalah prioritas utama S-SPARC. Sistem ini tidak menyimpan percakapan atau data pengguna secara permanen, kecuali untuk keperluan caching internal yang bersifat anonim dan terbatas.
-                    Semua data yang digunakan untuk optimasi sistem telah melalui proses anonimisasi dan tidak dapat diidentifikasi secara personal. Selain itu, S-SPARC hanya menggunakan metadata yang benar-benar diperlukan untuk
-                    meningkatkan efisiensi dan kualitas layanan, tanpa membahayakan privasi pengguna. Pengguna juga dapat mengajukan permintaan penghapusan data jika diperlukan, sesuai dengan prinsip transparansi dan perlindungan data.
+                    User privacy and data security are top priorities for S-SPARC. The system does not permanently store conversations or personal data, except for limited, anonymized caching needed for optimization. Any data used for
+                    improving the system is anonymized and cannot be traced back to individuals. S-SPARC only uses the minimal metadata required to enhance efficiency and quality, without compromising privacy.
                   </div>
                 </div>
               </div>
@@ -337,16 +343,16 @@
                   <span class="me-3 flex-shrink-0">
                     <i class="fa-solid fa-code" style="color: #ff9800"></i>
                   </span>
-                  <span class="fw-semibold flex-grow-1 text-start">Kode apa saja yang dapat dihasilkan oleh S-SPARC?</span>
+                  <span class="fw-semibold flex-grow-1 text-start">What kind of code can S-SPARC generate?</span>
                   <span class="faq-icon ms-3">
                     <i class="fa-solid fa-chevron-down" style="color: #ff9800"></i>
                   </span>
                 </button>
                 <div id="faq7" class="collapse" data-bs-parent="#faqAccordion">
                   <div class="faq-answer px-4 py-3 bg-light rounded-bottom-3 border-top">
-                    S-SPARC mampu menghasilkan dan membantu berbagai jenis kode dalam banyak bahasa pemrograman populer, seperti Python, JavaScript, PHP, Java, C++, dan lain-lain. Tidak hanya terbatas pada potongan kode sederhana, S-SPARC
-                    juga dapat memberikan solusi lengkap untuk algoritma, struktur data, pengembangan web, automasi, hingga integrasi API. Setiap solusi yang diberikan disesuaikan dengan konteks dan kebutuhan pengguna, serta dilengkapi
-                    dengan penjelasan dan referensi agar mudah dipahami dan diimplementasikan. S-SPARC juga dapat membantu debugging, refactoring, dan optimalisasi kode sesuai permintaan.
+                    S-SPARC can assist with a wide range of programming languages, including Python, JavaScript, PHP, Java, C++, and more. Beyond simple snippets, it can support full algorithm implementations, data structures, web
+                    development, automation scripts, and API integrations. Every solution is tailored to the user's context and includes explanations or references so it is easier to understand and apply. S-SPARC can also help with
+                    debugging, refactoring, and optimizing existing code.
                   </div>
                 </div>
               </div>
@@ -363,16 +369,16 @@
                   <span class="me-3 flex-shrink-0">
                     <i class="fa-solid fa-book-open" style="color: #d84315"></i>
                   </span>
-                  <span class="fw-semibold flex-grow-1 text-start">Bisakah saya mengandalkan S-SPARC untuk proyek akademik?</span>
+                  <span class="fw-semibold flex-grow-1 text-start">Can I rely on S-SPARC for academic projects?</span>
                   <span class="faq-icon ms-3">
                     <i class="fa-solid fa-chevron-down" style="color: #d84315"></i>
                   </span>
                 </button>
                 <div id="faq8" class="collapse" data-bs-parent="#faqAccordion">
                   <div class="faq-answer px-4 py-3 bg-light rounded-bottom-3 border-top">
-                    Tentu saja. S-SPARC dikembangkan dalam lingkungan riset akademik dan telah diuji untuk mendukung berbagai kebutuhan proyek pendidikan, penelitian, maupun tugas akhir. Sistem ini menyediakan solusi yang tidak hanya cepat
-                    dan efisien, tetapi juga dapat dipertanggungjawabkan secara ilmiah. S-SPARC membantu mahasiswa dan peneliti dalam eksplorasi konsep, perancangan algoritma, penulisan kode, serta dokumentasi yang jelas dan terstruktur.
-                    Selain itu, S-SPARC juga dapat memberikan referensi pustaka, penjelasan teori, dan contoh implementasi nyata untuk mendukung proses pembelajaran dan penelitian secara menyeluruh.
+                    Yes. S-SPARC is developed in an academic research environment and has been tested to support coursework, research projects, and final theses. It provides solutions that are not only fast and efficient but also
+                    scientifically grounded. S-SPARC helps students and researchers explore concepts, design algorithms, write code, and produce clear, structured documentation—turning day-to-day coding tasks into opportunities for deeper
+                    learning.
                   </div>
                 </div>
               </div>
@@ -425,6 +431,53 @@
           msgEl.style.opacity = 1;
         }, 1000);
       }, 3000);
+    </script>
+
+    <!-- Particles.js animated background -->
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script>
+      particlesJS('particles-js', {
+        particles: {
+          number: { value: 60, density: { enable: true, value_area: 900 } },
+          color: { value: ['#14b8a6', '#0f766e', '#a5f3fc'] },
+          shape: { type: 'circle' },
+          opacity: { value: 0.4, random: true },
+          size: { value: 4, random: true },
+          line_linked: {
+            enable: true,
+            distance: 150,
+            color: '#0f766e',
+            opacity: 0.25,
+            width: 2,
+          },
+          move: {
+            enable: true,
+            speed: 2,
+            direction: 'none',
+            random: false,
+            straight: false,
+            out_mode: 'out',
+            bounce: false,
+          },
+        },
+        interactivity: {
+          detect_on: 'window',
+          events: {
+            onhover: { enable: true, mode: 'grab' },
+            onclick: { enable: false, mode: 'push' },
+            resize: true,
+          },
+          modes: {
+            grab: {
+              distance: 160,
+              line_linked: { opacity: 0.6 },
+            },
+            repulse: { distance: 100, duration: 0.4 },
+            push: { particles_nb: 4 },
+          },
+        },
+        retina_detect: true,
+      });
     </script>
   </body>
 </html>

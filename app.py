@@ -60,6 +60,27 @@ ENERGY_PER_TOKEN_WH_SHORT = 0.0021775
 ENERGY_PER_TOKEN_WH_MEDIUM = 0.0015805
 ENERGY_PER_TOKEN_WH_LONG = 0.00042026
 
+
+app = Flask(__name__)
+CORS(app, supports_credentials=True)
+
+# --- Helper: Validate env and warn if missing (moved early so secret_key can use it)
+def _warn_env(var, default=None):
+    val = os.getenv(var)
+    if not val and default is None:
+        print(f"[WARNING] Environment variable {var} is not set!")
+    return val or default
+
+app.secret_key = _warn_env("FLASK_SECRET_KEY", "supersecretkey")
+def require_login(func):
+    from functools import wraps
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if "user_id" not in session:
+            return jsonify({"error": "Unauthorized. Silakan login."}), 401
+        return func(*args, **kwargs)
+    return wrapper
+
 def update_user_total_points_if_new_week(user_id, tokens_to_add):
     """Tambah poin akumulatif berdasarkan jumlah token yang dipakai.
 
@@ -89,23 +110,170 @@ def update_user_total_points_if_new_week(user_id, tokens_to_add):
     finally:
         conn.close()
 
+
+@app.route('/assessment-leaderboard', methods=['GET'])
+@require_login
+def assessment_leaderboard():
+    """
+    Return leaderboard for a given assessment_id.
+    Params: assessment_id (query) or use session['assessment_id'] if present.
+    Response: { assessment_id, leaderboard: [{user_id, username, points, rank}], user_rank }
+    """
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"error": "Unauthorized. Silakan login."}), 401
+
+    assessment_id = request.args.get('assessment_id') or session.get('assessment_id')
+    if not assessment_id:
+        return jsonify({"error": "Missing assessment_id"}), 400
+
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            now = datetime.datetime.now()
+            # Compute per-user remaining for the specific assessment (same logic as token_usage_breakdown.by_assessment)
+            try:
+                cur.execute(
+                    "SELECT st.user_id AS user_id, COALESCE(u.username,'') AS username, COALESCE(SUM(st.tokens_used),0) AS total_used "
+                    "FROM session_tokens st LEFT JOIN users u ON st.user_id = u.user_id "
+                    "WHERE st.assessment_id = %s AND YEARWEEK(st.used_at, 1) = YEARWEEK(%s, 1) "
+                    "GROUP BY st.user_id ORDER BY total_used DESC",
+                    (assessment_id, now),
+                )
+                rows = cur.fetchall() or []
+                leaderboard = []
+                for r in rows:
+                    used = int(r.get('total_used', 0) or 0)
+                    remaining = max(0, 2000 - used)
+                    leaderboard.append({
+                        'user_id': r.get('user_id'),
+                        'username': r.get('username') or None,
+                        'points': remaining,
+                        'total_used': used,
+                    })
+
+                # Do NOT include users with no usage rows; leaderboard should only show
+                # users who have usage entries for this assessment. Users without any
+                # record will not appear here.
+
+                # Sort by remaining points desc and compute dense ranks
+                leaderboard.sort(key=lambda x: x['points'], reverse=True)
+                prev_points = None
+                rank = 0
+                dense_rank = 0
+                for item in leaderboard:
+                    dense_rank += 1
+                    if prev_points is None or item['points'] < prev_points:
+                        rank = dense_rank
+                    prev_points = item['points']
+                    item['rank'] = rank
+
+            except Exception as e:
+                # Fallback to user_points_assessment if session_tokens per-assessment not available
+                print(f"[WARNING] session_tokens per-assessment query failed, falling back: {e}")
+                cur.execute(
+                    "SELECT upa.user_id AS user_id, COALESCE(u.username,'') AS username, COALESCE(upa.total_points,0) AS total_used "
+                    "FROM user_points_assessment upa LEFT JOIN users u ON upa.user_id = u.user_id "
+                    "WHERE upa.assessment_id = %s ORDER BY total_used DESC",
+                    (assessment_id,)
+                )
+                rows = cur.fetchall() or []
+                leaderboard = []
+                for r in rows:
+                    used = int(r.get('total_used', 0) or 0)
+                    remaining = max(0, 2000 - used)
+                    leaderboard.append({
+                        'user_id': r.get('user_id'),
+                        'username': r.get('username') or None,
+                        'points': remaining,
+                        'total_used': used,
+                    })
+
+                # compute ranks
+                leaderboard.sort(key=lambda x: x['points'], reverse=True)
+                prev_points = None
+                rank = 0
+                dense_rank = 0
+                for item in leaderboard:
+                    dense_rank += 1
+                    if prev_points is None or item['points'] < prev_points:
+                        rank = dense_rank
+                    prev_points = item['points']
+                    item['rank'] = rank
+
+        # find current user's rank
+        user_rank = None
+        for item in leaderboard:
+            if str(item['user_id']) == str(user_id):
+                user_rank = item
+                break
+
+        return jsonify({
+            'assessment_id': assessment_id,
+            'leaderboard': leaderboard,
+            'user_rank': user_rank,
+        }), 200
+    except Exception as e:
+        print(f"[ERROR] assessment_leaderboard: {e}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
+
+def update_user_points_for_assessment(user_id, assessment_id, course_id, points_to_add):
+    """Update or insert per-assessment points for a user.
+
+    This function will create a row in `user_points_assessment` if missing,
+    otherwise it will add to `total_points`.
+    """
+    if not user_id or not assessment_id:
+        return
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            now = datetime.datetime.now()
+            cur.execute("SELECT total_points FROM user_points_assessment WHERE user_id=%s AND assessment_id=%s", (user_id, assessment_id))
+            row = cur.fetchone()
+            if not row:
+                cur.execute(
+                    "INSERT INTO user_points_assessment (id, user_id, assessment_id, course_id, total_points, updated_at) VALUES (%s, %s, %s, %s, %s, %s)",
+                    (str(uuid.uuid4()), user_id, assessment_id, course_id, points_to_add, now)
+                )
+            else:
+                cur.execute(
+                    "UPDATE user_points_assessment SET total_points = total_points + %s, updated_at = %s WHERE user_id = %s AND assessment_id = %s",
+                    (points_to_add, now, user_id, assessment_id)
+                )
+        conn.commit()
+    finally:
+        conn.close()
+
 # === Gamification Utilities: Insert per aksi, agregat mingguan ===
 def log_token_usage(user_id, session_id, tokens_used):
     """
     Insert log penggunaan token ke session_tokens (sekarang sebagai log/audit trail).
     Setiap aksi, insert baris baru dengan tokens_used dan used_at.
     """
+    # Accept optional assessment_id and course_id (pass as kwargs)
+def log_token_usage(user_id, session_id, tokens_used, assessment_id=None, course_id=None):
     if not user_id or not session_id:
         raise ValueError("user_id and session_id are required for token usage log")
     conn = get_db_connection()
     try:
         with conn.cursor() as cur:
             now = datetime.datetime.now()
-            # Kolom id (PK, UUID), tokens_used, used_at harus ada di tabel session_tokens
-            cur.execute(
-                "INSERT INTO session_tokens (id, user_id, session_id, tokens_used, used_at) VALUES (%s, %s, %s, %s, %s)",
-                (str(uuid.uuid4()), user_id, session_id, tokens_used, now)
-            )
+            # Try to insert with assessment/course columns if they exist, fallback to legacy insert
+            try:
+                cur.execute(
+                    "INSERT INTO session_tokens (id, user_id, session_id, assessment_id, course_id, tokens_used, used_at) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                    (str(uuid.uuid4()), user_id, session_id, assessment_id, course_id, tokens_used, now)
+                )
+            except Exception:
+                # Fallback for older schemas without assessment/course columns
+                cur.execute(
+                    "INSERT INTO session_tokens (id, user_id, session_id, tokens_used, used_at) VALUES (%s, %s, %s, %s, %s)",
+                    (str(uuid.uuid4()), user_id, session_id, tokens_used, now)
+                )
         conn.commit()
     finally:
         conn.close()
@@ -326,17 +494,6 @@ def compute_environmental_impact(token_count: int) -> dict:
         "water_ml": water_ml
     }
 
-# --- Helper: Validate env and warn if missing ---
-def _warn_env(var, default=None):
-    val = os.getenv(var)
-    if not val and default is None:
-        print(f"[WARNING] Environment variable {var} is not set!")
-    return val or default
-
-app = Flask(__name__)
-CORS(app, supports_credentials=True)
-app.secret_key = _warn_env("FLASK_SECRET_KEY", "supersecretkey")
-
 def get_db_connection():
     try:
         return pymysql.connect(
@@ -502,6 +659,176 @@ def get_gamification():
         return jsonify({"gamification": gamification}), 200
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
+
+
+@app.route('/token-usage-daily', methods=['GET'])
+@require_login
+def token_usage_daily():
+    """
+    Return daily token usage for the current user for the current week.
+    """
+    user_id = session.get("user_id")
+    if not user_id:
+        return jsonify({"error": "Unauthorized. Silakan login."}), 401
+
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            now = datetime.datetime.now()
+            cur.execute(
+                """
+                SELECT DATE(used_at) AS day, COALESCE(SUM(tokens_used), 0) AS tokens_used
+                FROM session_tokens
+                WHERE user_id=%s AND YEARWEEK(used_at, 1) = YEARWEEK(%s, 1)
+                GROUP BY DATE(used_at)
+                ORDER BY DATE(used_at) ASC
+                """,
+                (user_id, now),
+            )
+            rows = cur.fetchall() or []
+            daily_stats = []
+            total_used = 0
+            for r in rows:
+                day = r.get('day')
+                day_str = day.strftime('%Y-%m-%d') if hasattr(day, 'strftime') else str(day)
+                used = int(r.get('tokens_used', 0) or 0)
+                daily_stats.append({"date": day_str, "tokens_used": used})
+                total_used += used
+            remaining = max(0, 2000 - total_used)
+        return jsonify({"daily_stats": daily_stats, "total_used": total_used, "remaining_tokens": remaining}), 200
+    except Exception as e:
+        print(f"[ERROR] token_usage_daily: {e}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
+
+@app.route('/token-usage-breakdown', methods=['GET'])
+@require_login
+def token_usage_breakdown():
+    """
+    Return token usage breakdown for current week: total, by_course, by_assessment.
+    Gracefully fallback if schema does not have course_id/assessment_id.
+    """
+    user_id = session.get("user_id")
+    if not user_id:
+        return jsonify({"error": "Unauthorized. Silakan login."}), 401
+
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            now = datetime.datetime.now()
+            # Total used this week
+            cur.execute(
+                "SELECT COALESCE(SUM(tokens_used), 0) AS total_used "
+                "FROM session_tokens WHERE user_id=%s AND YEARWEEK(used_at, 1) = YEARWEEK(%s, 1)",
+                (user_id, now),
+            )
+            row = cur.fetchone() or {"total_used": 0}
+            total_used = int(row.get('total_used', 0) or 0)
+            remaining = max(0, 2000 - total_used)
+
+            by_course = []
+            by_assessment = []
+
+            # Try per-course breakdown (if column exists)
+            try:
+                cur.execute(
+                    "SELECT st.course_id AS course_id, COALESCE(c.name, '') AS course_name, COALESCE(SUM(st.tokens_used),0) AS total_used, COUNT(DISTINCT st.assessment_id) AS assessments_count "
+                    "FROM session_tokens st LEFT JOIN courses c ON st.course_id = c.course_id "
+                    "WHERE st.user_id=%s AND YEARWEEK(st.used_at, 1) = YEARWEEK(%s, 1) "
+                    "GROUP BY st.course_id ORDER BY total_used DESC",
+                    (user_id, now),
+                )
+                rows = cur.fetchall() or []
+                for r in rows:
+                    count = int(r.get('assessments_count') or 0)
+                    by_course.append({
+                        "course_id": r.get('course_id'),
+                        "course_name": r.get('course_name') or None,
+                        "assessments_count": count,
+                        "total_used": int(r.get('total_used', 0) or 0),
+                        "remaining": max(0, count * 2000 - int(r.get('total_used', 0) or 0)),
+                    })
+            except Exception:
+                by_course = []
+
+            # Fallback: if no rows found in session_tokens, try reading from user_points_assessment grouped by course
+            if not by_course:
+                try:
+                    # Prefer aggregating via assessments -> courses mapping to avoid incorrect upa.course_id
+                    cur.execute(
+                        "SELECT a.course_id AS course_id, COALESCE(c.name,'') AS course_name, COALESCE(SUM(upa.total_points),0) AS total_used, COUNT(DISTINCT upa.assessment_id) AS assessments_count "
+                        "FROM user_points_assessment upa JOIN assessments a ON upa.assessment_id = a.assessment_id "
+                        "LEFT JOIN courses c ON a.course_id = c.course_id "
+                        "WHERE upa.user_id=%s GROUP BY a.course_id ORDER BY total_used DESC",
+                        (user_id,)
+                    )
+                    rows = cur.fetchall() or []
+                    for r in rows:
+                        count = int(r.get('assessments_count') or 0)
+                        by_course.append({
+                            "course_id": r.get('course_id'),
+                            "course_name": r.get('course_name') or None,
+                            "assessments_count": count,
+                            "total_used": int(r.get('total_used', 0) or 0),
+                            "remaining": max(0, count * 2000 - int(r.get('total_used', 0) or 0)),
+                        })
+                except Exception as e:
+                    print(f"[DEBUG] fallback by_course failed: {e}")
+                    by_course = []
+
+            # Try per-assessment breakdown
+            try:
+                cur.execute(
+                    "SELECT st.assessment_id AS assessment_id, COALESCE(a.name, '') AS assessment_name, COALESCE(SUM(st.tokens_used),0) AS total_used "
+                    "FROM session_tokens st LEFT JOIN assessments a ON st.assessment_id = a.assessment_id "
+                    "WHERE st.user_id=%s AND YEARWEEK(st.used_at, 1) = YEARWEEK(%s, 1) "
+                    "GROUP BY st.assessment_id ORDER BY total_used DESC",
+                    (user_id, now),
+                )
+                rows = cur.fetchall() or []
+                for r in rows:
+                    by_assessment.append({
+                        "assessment_id": r.get('assessment_id'),
+                        "assessment_name": r.get('assessment_name') or None,
+                        "total_used": int(r.get('total_used', 0) or 0),
+                        "remaining": max(0, 2000 - int(r.get('total_used', 0) or 0)),
+                    })
+            except Exception:
+                by_assessment = []
+
+            # Fallback: if no rows found in session_tokens, try reading from user_points_assessment
+            if not by_assessment:
+                try:
+                    cur.execute(
+                        "SELECT upa.assessment_id AS assessment_id, COALESCE(a.name,'') AS assessment_name, COALESCE(upa.total_points,0) AS total_used "
+                        "FROM user_points_assessment upa LEFT JOIN assessments a ON upa.assessment_id = a.assessment_id "
+                        "WHERE upa.user_id=%s ORDER BY total_used DESC",
+                        (user_id,)
+                    )
+                    rows = cur.fetchall() or []
+                    for r in rows:
+                        by_assessment.append({
+                            "assessment_id": r.get('assessment_id'),
+                            "assessment_name": r.get('assessment_name') or None,
+                            "total_used": int(r.get('total_used', 0) or 0),
+                            "remaining": max(0, 2000 - int(r.get('total_used', 0) or 0)),
+                        })
+                except Exception as e:
+                    print(f"[DEBUG] fallback by_assessment failed: {e}")
+                    by_assessment = []
+
+        return jsonify({
+            "total": {"total_used": total_used, "remaining": remaining},
+            "by_course": by_course,
+            "by_assessment": by_assessment,
+        }), 200
+    except Exception as e:
+        print(f"[ERROR] token_usage_breakdown: {e}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
 
 # Initialize Flask-Limiter
 limiter = Limiter(
@@ -1206,10 +1533,6 @@ def check_status(job_id):
             # Update token user (kurangi token setelah GPT selesai)
             user_id = job["user_id"]
             session_id = request.remote_addr or "default"
-            log_token_usage(user_id, session_id, token_count)
-            # Tambah poin berdasarkan token yang dipakai
-            update_user_total_points_if_new_week(user_id, token_count)
-            gamification = get_user_token_info(user_id, session_id)
             # Coba deteksi assessment_id & course_id terbaru dari riwayat chat user
             assessment_id = None
             course_id = None
@@ -1238,6 +1561,24 @@ def check_status(job_id):
                     conn_meta.close()
                 except Exception:
                     pass
+
+            # Log token usage with assessment/course when available
+            try:
+                log_token_usage(user_id, session_id, token_count, assessment_id, course_id)
+            except Exception as e_log:
+                print(f"[WARNING] Failed to log token usage: {e_log}")
+
+            # Tambah poin per-assessment
+            try:
+                if assessment_id:
+                    update_user_points_for_assessment(user_id, assessment_id, course_id, token_count)
+                else:
+                    # Fallback to adding to overall points
+                    update_user_total_points_if_new_week(user_id, token_count)
+            except Exception as e_up:
+                print(f"[WARNING] Failed to update user points: {e_up}")
+
+            gamification = get_user_token_info(user_id, session_id)
             # Catat environmental impact untuk job ini (selalu, terlepas dari embedding)
             insert_environmental_impact_log(user_id, job.get("job_id"), course_id, assessment_id, impact)
             # VALIDASI: Jangan insert jika embedding kosong/null/array kosong

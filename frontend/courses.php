@@ -184,7 +184,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <nav class="flex items-center gap-3 text-sm font-medium">
           <a class="text-slate-900 font-semibold active" href="courses.php">Courses</a>
           <!-- <a class="text-slate-700 hover:text-slate-900" href="chat.php">Chat</a> -->
-          <a class="text-slate-700 hover:text-slate-900" href="dashboard.php">Dashboard</a>
+          <a class="text-slate-400 hover:text-slate-700" href="dashboard.php">Dashboard</a>
           <a href="logout.php" class="ml-2 inline-flex items-center gap-2 rounded-full bg-red-800 text-white px-3 py-1 hover:bg-red-600 shadow-sm">Logout</a>
         </nav>
       </div>
