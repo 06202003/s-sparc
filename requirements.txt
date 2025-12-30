@@ -1,0 +1,18 @@
+flask
+flask_cors
+flask-limiter
+python-dotenv
+sentence-transformers
+transformers
+torch
+langdetect
+sentencepiece
+faiss-cpu
+openai
+sqlalchemy
+pymysql
+joblib
+numpy
+pandas
+tiktoken
+codecarbon>=2.3.0  # for country_iso_code and pue support

@@ -1,0 +1,30 @@
+version: '3.8'
+services:
+  mysql:
+    image: mysql:8
+    container_name: mysql-local
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: passwordku
+      MYSQL_DATABASE: db_semantic
+    ports:
+      - "3306:3306"
+    networks:
+      - mynet
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin-local
+    restart: always
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: root
+      PMA_PASSWORD: passwordku
+    ports:
+      - "8080:80"
+    networks:
+      - mynet
+
+networks:
+  mynet:
+    driver: bridge

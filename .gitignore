@@ -1,0 +1,63 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env.local/
+
+# Environment & secrets
+.env
+.env.*
+*.env
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# VS Code / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node / frontend (in case added later)
+node_modules/
+
+# PHP / Composer vendor (frontend)
+frontend/vendor/
+
+# Byte-compiled / cache
+**/__pycache__/
+
+# Local backup / experimental scripts
+app copy*.py
+app_enhanced.py
+app_LLM.py
+cek_db_flask.py
+migrate_embeddings.py
+test_api_scenario.py
+tempCodeRunnerFile.py
+
+# Backup & scratch data
+*.bak
+gpt_queue_status.json
+mbpp_clone.json
+mbpp_real.json
+rs_scrape_api.json
+run.txt
+ZZZ_OLD*.json
+Yehezkiel_2479011.docx
+pretrained_model/
