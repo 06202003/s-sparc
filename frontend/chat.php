@@ -86,14 +86,36 @@ if (!$assessmentId) {
             <span>Assistant is typing…</span>
           </div>
           <form id="chat-form" class="mt-4 flex items-stretch gap-3" onsubmit="sendMessage(event)">
-            <div class="flex-1 flex">
-              <label for="chat-input" class="sr-only">Write a message</label>
-              <div class="rounded-2xl border border-slate-200 bg-white shadow-sm focus-within:border-slate-400 flex-1 flex">
-                <textarea id="chat-input" rows="2" class="w-full min-h-[3rem] resize-none overflow-y-auto bg-transparent px-4 py-2 outline-none" placeholder="Write your code question here…" required></textarea>
+            <div class="flex-1 flex flex-col gap-2">
+              <div class="flex gap-2 items-center">
+                <label for="language-select" class="text-xs text-slate-600">Language</label>
+                <select id="language-select" class="text-sm rounded-md border border-slate-200 px-2 py-1">
+                  <option value="">Auto-detect</option>
+                  <option value="Python">Python</option>
+                  <option value="JavaScript">JavaScript</option>
+                  <option value="Java">Java</option>
+                  <option value="C">C</option>
+                  <option value="C++">C++</option>
+                  <option value="Go">Go</option>
+                  <option value="PHP">PHP</option>
+                </select>
+                <label for="response-mode" class="text-xs text-slate-600 ml-3">Mode</label>
+                <select id="response-mode" class="text-sm rounded-md border border-slate-200 px-2 py-1">
+                  <option value="code">Code (only)</option>
+                  <option value="summary">Summary (short)</option>
+                  <option value="summary_code_explanation">Summary + Code + Explanation</option>
+                </select>
+              </div>
+              <div class="flex items-stretch gap-3">
+                <label for="chat-input" class="sr-only">Write a message</label>
+                <div class="rounded-2xl border border-slate-200 bg-white shadow-sm focus-within:border-slate-400 flex-1 flex">
+                  <textarea id="chat-input" rows="2" class="w-full min-h-[3rem] resize-none overflow-y-auto bg-transparent px-4 py-2 outline-none" placeholder="Write your code question here…" required></textarea>
+                </div>
+                <button id="send-btn" type="submit" class="h-full flex items-center justify-center rounded-xl bg-slate-900 text-white px-4 font-semibold hover:bg-slate-800 focus:ring focus:ring-slate-200">Send</button>
               </div>
             </div>
-            <button type="submit" class="flex items-center justify-center rounded-xl bg-slate-900 text-white px-5 py-3 font-semibold hover:bg-slate-800 focus:ring focus:ring-slate-200">Send</button>
           </form>
+          <div id="rate-limit-notice" class="hidden mt-2 text-sm text-amber-700"></div>
           <div class="mt-3 flex flex-wrap gap-2 text-sm" id="suggestions">
             <button type="button" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-700 hover:border-slate-400" data-suggest="Create a Python function to calculate factorial">Factorial Python</button>
             <button type="button" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-700 hover:border-slate-400" data-suggest="Write an SQL query to select top 10 from users table ordered by created_at desc">SQL Query top 10</button>
@@ -131,6 +153,8 @@ if (!$assessmentId) {
     const chatWindow = document.getElementById('chat-window');
     const chatInput = document.getElementById('chat-input');
     const typing = document.getElementById('typing');
+    const languageSelect = document.getElementById('language-select');
+    const responseModeSelect = document.getElementById('response-mode');
     const newChatBtn = document.getElementById('new-chat');
     const clearChatBtn = document.getElementById('clear-chat');
     const suggestions = document.getElementById('suggestions');
@@ -141,6 +165,7 @@ if (!$assessmentId) {
     let scrollBtn = null;
     const userId = '<?= htmlspecialchars($_SESSION['chat_user_id']) ?>';
     const assessmentId = '<?= htmlspecialchars($assessmentId, ENT_QUOTES, 'UTF-8') ?>';
+    const sendBtn = document.getElementById('send-btn');
 
     const STORAGE_KEY = 'chat_messages_v1_' + (assessmentId || 'default');
     const state = { messages: [] };
@@ -212,19 +237,63 @@ if (!$assessmentId) {
         }
 
         if (isCode) {
-          const wrapper = document.createElement('div');
-          wrapper.className = 'code-block rounded-xl border border-slate-200 bg-slate-50 text-slate-900 relative overflow-x-auto';
-          const code = document.createElement('pre');
-          code.className = 'text-sm leading-relaxed p-3 whitespace-pre-wrap break-words';
-          code.textContent = msg.text;
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = 'copy-btn';
-          btn.textContent = 'Copy';
-          btn.dataset.copy = msg.text;
-          wrapper.appendChild(btn);
-          wrapper.appendChild(code);
-          bubble.appendChild(wrapper);
+          // If message contains fenced code blocks, split into text/code/text
+          if (msg.text.includes('```')) {
+            // Regex to capture parts: text before, each fenced block, and after
+            const parts = [];
+            const fenceRe = /```([a-zA-Z0-9+\-]*)\n([\s\S]*?)\n```/g;
+            let lastIndex = 0;
+            let m;
+            while ((m = fenceRe.exec(msg.text)) !== null) {
+              const start = m.index;
+              const lang = m[1] || '';
+              const codeContent = m[2] || '';
+              if (start > lastIndex) {
+                parts.push({ type: 'text', content: msg.text.slice(lastIndex, start) });
+              }
+              parts.push({ type: 'code', content: codeContent, lang });
+              lastIndex = fenceRe.lastIndex;
+            }
+            if (lastIndex < msg.text.length) {
+              parts.push({ type: 'text', content: msg.text.slice(lastIndex) });
+            }
+            parts.forEach(p => {
+              if (p.type === 'text') {
+                const textNode = document.createElement('div');
+                textNode.className = 'mb-2';
+                textNode.textContent = p.content.trim();
+                bubble.appendChild(textNode);
+              } else if (p.type === 'code') {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'code-block rounded-xl border border-slate-200 bg-slate-50 text-slate-900 relative overflow-x-auto my-2';
+                const code = document.createElement('pre');
+                code.className = 'text-sm leading-relaxed p-3 whitespace-pre-wrap break-words';
+                code.textContent = p.content.trim();
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'copy-btn';
+                btn.textContent = 'Copy';
+                btn.dataset.copy = p.content.trim();
+                wrapper.appendChild(btn);
+                wrapper.appendChild(code);
+                bubble.appendChild(wrapper);
+              }
+            });
+          } else {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'code-block rounded-xl border border-slate-200 bg-slate-50 text-slate-900 relative overflow-x-auto';
+            const code = document.createElement('pre');
+            code.className = 'text-sm leading-relaxed p-3 whitespace-pre-wrap break-words';
+            code.textContent = msg.text;
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'copy-btn';
+            btn.textContent = 'Copy';
+            btn.dataset.copy = msg.text;
+            wrapper.appendChild(btn);
+            wrapper.appendChild(code);
+            bubble.appendChild(wrapper);
+          }
         } else {
           const text = document.createElement('div');
           text.textContent = msg.text;
@@ -321,6 +390,22 @@ if (!$assessmentId) {
       e.preventDefault();
       const text = chatInput.value.trim();
       if (!text) return;
+      // final client-side guard: require >=100 chars and no emoji
+      function _containsEmoji(s){
+        try{
+          return /[\u{1F300}-\u{1F5FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}]/u.test(s);
+        }catch(e){
+          return false;
+        }
+      }
+      if (text.length < 100){
+        alert('Please provide at least 100 characters in your prompt.');
+        return;
+      }
+      if (_containsEmoji(text)){
+        alert('Please remove emoji or unsupported characters from the prompt.');
+        return;
+      }
       chatInput.value = '';
       autoResizeTextarea();
       // Jalankan pengiriman di background; tidak perlu menunggu untuk
@@ -336,6 +421,9 @@ if (!$assessmentId) {
       params.append('driver', 'web');
       params.append('userId', userId);
       params.append('message', messageText);
+      // send optional hints to backend
+      if (languageSelect && languageSelect.value) params.append('language', languageSelect.value);
+      if (responseModeSelect && responseModeSelect.value) params.append('response_mode', responseModeSelect.value);
 
       showTyping(true);
       try {
@@ -354,6 +442,21 @@ if (!$assessmentId) {
           addMessage('bot', 'Failed to process server response. Response snippet: ' + (snippet || '[empty]'));
           return;
         }
+        // Detect backend rate-limit messages (from BotMan) and temporarily disable send button
+        try {
+          if (data && Array.isArray(data.messages)) {
+            const rl = data.messages.some(m => (m.text || '').toLowerCase().includes('rate limit'));
+            const isRetrieval = data.messages.some(m => {
+              const t = (m.text || '').toLowerCase();
+              return t.startsWith('answers are retrieved from the database') || t.startsWith('found similar code in the database') || t.startsWith('found similar code in the database') || t.startsWith('answers taken from database') || t.includes('similarity');
+            });
+            // Only start rate-limit countdown when the response is NOT a DB retrieval/suggestion
+            if (rl && !isRetrieval && sendBtn) {
+              startRateLimitCountdown(61);
+            }
+          }
+        } catch (e) { /* ignore */ }
+
         if (data && Array.isArray(data.messages) && data.messages.length > 0) {
           const msgs = data.messages;
           // Khusus pola antrian GPT: BotMan mengirim dua pesan sekaligus:
@@ -442,6 +545,54 @@ if (!$assessmentId) {
     }
 
     chatInput.addEventListener('input', autoResizeTextarea);
+
+    // Disable send button if prompt too short or contains emoji
+    function validateInputState(){
+      if(!sendBtn || !chatInput) return;
+      const v = chatInput.value || '';
+      let ok = v.trim().length >= 100;
+      try{
+        ok = ok && !(/[\u{1F300}-\u{1F5FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}]/u.test(v));
+      }catch(e){ }
+      sendBtn.disabled = !ok;
+      sendBtn.classList.toggle('opacity-50', !ok);
+    }
+    chatInput.addEventListener('input', validateInputState);
+    // initial validation
+    validateInputState();
+
+    // Rate-limit countdown UI
+    let _rateLimitTimer = null;
+    const rateLimitEl = document.getElementById('rate-limit-notice');
+    function startRateLimitCountdown(seconds){
+      if (!sendBtn) return;
+      // clear any existing timer
+      if (_rateLimitTimer) {
+        clearInterval(_rateLimitTimer);
+        _rateLimitTimer = null;
+      }
+      let remaining = Math.max(1, Math.floor(Number(seconds) || 60));
+      sendBtn.disabled = true;
+      sendBtn.classList.add('opacity-50');
+      if (rateLimitEl) {
+        rateLimitEl.classList.remove('hidden');
+        rateLimitEl.textContent = `Rate limit reached. Try again in ${remaining}s.`;
+      }
+      _rateLimitTimer = setInterval(() => {
+        remaining -= 1;
+        if (rateLimitEl) rateLimitEl.textContent = `Rate limit reached. Try again in ${remaining}s.`;
+        if (remaining <= 0) {
+          clearInterval(_rateLimitTimer);
+          _rateLimitTimer = null;
+          if (rateLimitEl) {
+            rateLimitEl.classList.add('hidden');
+            rateLimitEl.textContent = '';
+          }
+          // re-validate input (this may re-enable sendBtn if input valid)
+          validateInputState();
+        }
+      }, 1000);
+    }
 
     chatInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {

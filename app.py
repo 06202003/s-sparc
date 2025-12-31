@@ -1,4 +1,5 @@
 import sys
+import re
 import datetime
 import hashlib
 import pymysql
@@ -925,7 +926,7 @@ def insert_gpt_job(user_id, prompt, gpt_prompt, status="pending", lock_timeout=1
         conn.close()
     return job_id
 
-def update_gpt_job(job_id, code=None, status=None, error=None, similarity=None, prompt_matched=None):
+def update_gpt_job(job_id, code=None, status=None, error=None, similarity=None, prompt_matched=None, raw_response=None):
     conn = get_db_connection()
     try:
         with conn.cursor() as cur:
@@ -947,6 +948,9 @@ def update_gpt_job(job_id, code=None, status=None, error=None, similarity=None, 
             if prompt_matched is not None:
                 fields.append("prompt_matched=%s")
                 values.append(prompt_matched)
+            if raw_response is not None:
+                fields.append("raw_response=%s")
+                values.append(raw_response)
             fields.append("updated_at=NOW()")
             sql += ", ".join(fields) + " WHERE job_id=%s"
             values.append(job_id)
@@ -1039,26 +1043,103 @@ def gpt_job_worker(sleep_time=2):
                 session_id = user_id
             # Jalankan GPT
             try:
-                system_content = (
-                    "You are an expert programming assistant helping undergraduate computer science students. "
-                    "You must only answer questions that are strictly about programming or code. "
-                    "If the user's request is not about programming or code, politely reply: 'Sorry, I can only help with programming/code questions.' "
-                    "Your task is to generate only the source code that solves the user's request. "
-                    "Output only the code, no explanation, no comments, no markdown."
-                )
+                # Parse simple markers at start of prompt like [MODE:code] [LANG:Python] [AUTO_FALLBACK:true]
+                markers = {}
+                import re as _re
+                marker_pattern = _re.compile(r"^([\s\S]*?)")
+                # find all markers anywhere in the beginning lines
+                found = _re.findall(r"\[([A-Z0-9_]+):([^\]]+)\]", prompt)
+                for k, v in found:
+                    markers[k.upper()] = v.strip()
+                # Remove markers from prompt text for the user message
+                prompt_clean = _re.sub(r"\[([A-Z0-9_]+):([^\]]+)\]\s*", "", prompt).strip()
+
+                mode = (markers.get('MODE') or markers.get('MODE'.upper()) or '').lower() or 'code'
+                lang_hint = markers.get('LANG') or markers.get('LANG'.upper()) or ''
+
+                if mode == 'code':
+                    system_content = (
+                        "You are an expert programming assistant. The user requests CODE output. "
+                        "Produce only the source code that directly solves the user's request. "
+                        "Wrap the code inside triple-backticks (```), and do not include any prose, explanation, or commentary outside the fenced code block. If a programming language is specified, include it after the opening fence (e.g. ```python)."
+                    )
+                elif mode == 'summary':
+                    system_content = (
+                        "You are an expert programming assistant. The user requests a SHORT SUMMARY (2-3 sentences). "
+                        "Provide a concise programming-focused summary. Do not include code blocks."
+                    )
+                elif mode == 'summary_code_explanation':
+                    system_content = (
+                        "You are an expert programming assistant. The user requests SUMMARY + CODE + EXPLANATION. "
+                        "First give a brief (1-2 sentence) summary, then output the minimal code required, then a concise explanation."
+                    )
+                else:
+                    system_content = (
+                        "You are an expert programming assistant helping undergraduate computer science students. "
+                        "Answer concisely and focus on programming."
+                    )
+
+                # Add language hint to system prompt if provided
+                if lang_hint:
+                    system_content += f" Use the following language when generating code: {lang_hint}."
+
                 messages = [
                     {"role": "system", "content": system_content},
-                    {"role": "user", "content": prompt},
+                    {"role": "user", "content": prompt_clean},
                 ]
                 # For openai>=1.0.0 (correct usage)
+                temp = 0.0 if mode == 'code' else 0.2
                 response = openai.chat.completions.create(
                     model=OPENAI_MODEL,
                     messages=messages,
-                    temperature=0.2,
-                    max_tokens=512,
+                    temperature=temp,
+                    max_tokens=1024,
                 )
-                code = response.choices[0].message.content.strip()
-                # Simpan jawaban assistant ke chat_history jika session_id tersedia
+                response_text = response.choices[0].message.content
+
+                # Helper: extract only code from model output (prefer fenced code blocks)
+                def _extract_code_from_text(txt: str) -> str:
+                    if not txt or not isinstance(txt, str):
+                        return ''
+                    import re as _re
+                    # 1) fenced code block ```lang\n...``` -> capture inner
+                    m = _re.search(r'```(?:[a-zA-Z0-9_+-]*)\n([\s\S]*?)\n```', txt)
+                    if m:
+                        return m.group(1).strip()
+                    # 2) inline fence without trailing newline
+                    m2 = _re.search(r'```([\s\S]*?)```', txt)
+                    if m2:
+                        return m2.group(1).strip()
+                    # 3) look for largest contiguous block with code-like indicators
+                    lines = txt.split('\n')
+                    best_block = []
+                    current = []
+                    indicators = ['def ', 'class ', 'return ', ';', '{', '}', 'import ', 'from ', 'console.log', 'function ', '=>', '#include', 'printf(', 'cout<<']
+                    for line in lines:
+                        if any(ind in line for ind in indicators) or line.strip().startswith(('    ', '\t')):
+                            current.append(line)
+                        else:
+                            if len(current) > len(best_block):
+                                best_block = current[:]
+                            current = []
+                    if len(current) > len(best_block):
+                        best_block = current[:]
+                    if best_block:
+                        return '\n'.join(best_block).strip()
+                    # 4) fallback: return empty
+                    return ''
+
+                code_only = _extract_code_from_text(response_text)
+                # Decide what to store based on requested mode:
+                # - 'code' -> store extracted code only (if present), else full response
+                # - 'summary' -> store full response (no code expected)
+                # - 'summary_code_explanation' -> store full response (summary + code + explanation)
+                if mode == 'code':
+                    code = code_only.strip() if code_only else response_text.strip()
+                else:
+                    # For summary or summary_code_explanation, preserve full model output
+                    code = response_text.strip()
+                # Simpan jawaban assistant (simpan according to mode so UI can render summary+explanation when requested)
                 if user_id and session_id:
                     save_chat_message(user_id, session_id, "assistant", code, assessment_id)
                 # Hitung total token (system + user) dan update session tokens
@@ -1082,7 +1163,7 @@ def gpt_job_worker(sleep_time=2):
                 # Update session tokens jika user_id tersedia
                 if user_id:
                     update_session_tokens(user_id, session_id or user_id, token_count)
-                update_gpt_job(job_id, code=code, status="done")
+                update_gpt_job(job_id, code=code, status="done", raw_response=response_text)
                 print(f"[WORKER] Job {job_id} done. Token used: {token_count}")
             except Exception as e:
                 print(f"[WORKER] Error running GPT for job {job_id}: {e}")
@@ -1208,11 +1289,14 @@ logging.basicConfig(level=logging.INFO)
 
 
 @app.route('/generate-code', methods=['POST'])
-@limiter.limit("6 per minute")
+@limiter.limit("1 per minute")
 def generate_code():
     data = request.get_json(silent=True) or {}
     prompt = data.get("prompt")
     assessment_id = data.get("assessment_id")  # penanda assessment/mata kuliah
+    # Optional client hints
+    language = (data.get("language") or '').strip()
+    response_mode = (data.get("response_mode") or 'code').strip()
     if not prompt or not isinstance(prompt, str):
         return jsonify({"error": "Missing or invalid 'prompt' in request body"}), 400
 
@@ -1263,10 +1347,9 @@ def generate_code():
             return num_tokens
         system_content = (
             "You are an expert programming assistant helping undergraduate computer science students. "
-            "You must only answer questions that are strictly about programming or code. "
-            "If the user's request is not about programming or code, politely reply: 'Sorry, I can only help with programming/code questions.' "
-            "Your task is to generate only the source code that solves the user's request. "
-            "Output only the code, no explanation, no comments, no markdown."
+            "You must only answer questions that are about programming or code; if the user's request is not technical programming-related, reply: 'Sorry, I can only help with programming/code questions.' "
+            "Respect any markers in the user's prompt such as [LANG:...] (preferred programming language) and [MODE:...] (one of 'code','summary','summary_code_explanation'). "
+            "If a language is specified, produce code only in that language. For retrieval results the output may be taken from the database and no generation occurs. Keep outputs concise and focused on the assessment context if provided."
         )
         messages = [
             {"role": "system", "content": system_content},
@@ -1356,7 +1439,28 @@ def generate_code():
             impact = compute_environmental_impact(token_count)
             return impact
 
-        if similarity >= 0.95:
+        # Helper: simple heuristic to detect if retrieved text looks like code
+        def _is_code_like(text: str) -> bool:
+            if not text or not isinstance(text, str):
+                return False
+            t = text.strip()
+            # fenced code blocks
+            if t.startswith('```') or '```' in t:
+                return True
+            indicators = ['\ndef ', '\nclass ', ';', '{', '}', 'function ', 'import ', '#include', 'return ', 'console.log', '=>', 'public ', 'private ', 'static ', 'def '] 
+            for ind in indicators:
+                if ind in t:
+                    return True
+            # also check for multiple newlines and indentation suggesting code
+            if t.count('\n') >= 2 and any(line.startswith('    ') or line.startswith('\t') for line in t.split('\n')):
+                return True
+            return False
+
+        is_code = _is_code_like(code_retrieved)
+
+        # If user asked explicitly for code but retrieved item seems descriptive,
+        # treat it as a suggestion rather than returning it as final code.
+        if similarity >= 0.95 and (response_mode != 'code' or is_code):
             impact = _get_impact(emissions)
             # Jawaban dari database bersifat gratis: tidak mengurangi kuota/poin
             user_id = session.get("user_id")
@@ -1372,6 +1476,48 @@ def generate_code():
                 "token_info": retrieval_token_info,
                 "gamification": gamification
             }), 200
+        elif similarity >= 0.95 and response_mode == 'code' and not is_code:
+            # High similarity but retrieved content not code — automatically queue GPT job
+            impact = _get_impact(emissions)
+            user_id = session.get("user_id")
+            session_id = session.get("session_id") or request.remote_addr
+            # Build a marked prompt for the queued job to respect language/mode
+            markers = []
+            try:
+                if language:
+                    markers.append(f"[LANG:{language}]")
+            except Exception:
+                pass
+            markers.append("[MODE:code]")
+            markers.append("[AUTO_FALLBACK:true]")
+            job_prompt = "\n".join(markers) + "\n" + prompt
+            try:
+                job_id = insert_gpt_job(user_id, prompt, job_prompt, status="pending")
+            except Exception as e_job:
+                # If job creation fails, fallback to suggestion response
+                gamification = get_user_token_info(user_id, session_id)
+                return jsonify({
+                    "mode": "suggestion",
+                    "similarity": similarity,
+                    "prompt_matched": prompt_retrieved,
+                    "code": code_retrieved,
+                    "message": "Ditemukan entri mirip di database tetapi isinya deskriptif. Gagal mengantri permintaan ke ChatGPT: " + str(e_job),
+                    "environmental_impact": impact,
+                    "token_info": retrieval_token_info,
+                    "gamification": gamification
+                }), 200
+
+            gamification = get_user_token_info(user_id, session_id)
+            return jsonify({
+                "mode": "gpt-queued_auto",
+                "similarity": similarity,
+                "prompt_matched": prompt_retrieved,
+                "job_id": job_id,
+                "message": "DB only contained descriptive text. Request automatically queued to ChatGPT to generate code (this will use quota).",
+                "environmental_impact": impact,
+                "token_info": retrieval_token_info,
+                "gamification": gamification
+            }), 202
         elif similarity >= 0.8:
             impact = _get_impact(emissions)
             user_id = session.get("user_id")
@@ -1435,6 +1581,57 @@ def generate_code():
     else:
         gpt_prompt = prompt
 
+    # Additional server-side validation and markers for GPT usage
+    def _contains_emoji(s: str) -> bool:
+        try:
+            emoji_re = re.compile(r"[\U0001F300-\U0001F5FF\U0001F600-\U0001F64F\U0001F680-\U0001F6FF\U0001F1E0-\U0001F1FF]")
+            return bool(emoji_re.search(s))
+        except re.error:
+            return any(ord(c) > 0x1F000 for c in s)
+
+    if response_mode not in ("code", "summary", "summary_code_explanation"):
+        response_mode = "code"
+
+    def get_assessment_name(aid):
+        if not aid:
+            return ''
+        try:
+            conn_a = get_db_connection()
+            with conn_a.cursor() as cur_a:
+                cur_a.execute("SELECT name FROM assessments WHERE id=%s LIMIT 1", (aid,))
+                r = cur_a.fetchone()
+                if r and r.get('name'):
+                    return str(r['name'])
+        except Exception:
+            pass
+        finally:
+            try:
+                conn_a.close()
+            except Exception:
+                pass
+        return ''
+
+    assessment_name = get_assessment_name(assessment_id)
+
+    # Enforce minimal length and disallow emoji for GPT submissions
+    if not gpt_prompt or len(gpt_prompt.strip()) < 100:
+        return jsonify({"error": "Prompt too short. Please provide at least 100 characters."}), 400
+    if _contains_emoji(gpt_prompt):
+        return jsonify({"error": "Prompt contains unsupported characters (emoji). Please remove them."}), 400
+
+    # Prefix markers so downstream worker/system can pick language/mode/assessment
+    markers = []
+    if language:
+        markers.append(f"[LANG:{language}]")
+    if response_mode:
+        markers.append(f"[MODE:{response_mode}]")
+    if assessment_name:
+        markers.append(f"[ASSESSMENT:{assessment_name}]")
+    if markers:
+        gpt_prompt_marked = "\n".join(markers) + "\n" + gpt_prompt
+    else:
+        gpt_prompt_marked = gpt_prompt
+
     # Simpan prompt user ke chat_history, dikelompokkan per assessment
     save_chat_message(user_id, session_id, "user", gpt_prompt, assessment_id)
 
@@ -1443,10 +1640,9 @@ def generate_code():
 
     system_content = (
         "You are an expert programming assistant helping undergraduate computer science students. "
-        "You must only answer questions that are strictly about programming or code. "
-        "If the user's request is not about programming or code, politely reply: 'Sorry, I can only help with programming/code questions.' "
-        "Your task is to generate only the source code that solves the user's request. "
-        "Output only the code, no explanation, no comments, no markdown."
+        "You must only answer questions that are about programming or code; if the user's request is not technical programming-related, reply: 'Sorry, I can only help with programming/code questions.' "
+        "Respect any markers the user may include such as [LANG:...] to indicate the desired programming language and [MODE:...] to indicate 'code','summary', or 'summary_code_explanation'. "
+        "If an assessment context is provided (e.g., [ASSESSMENT:Implementasi Fungsi]), tailor the answer to that assessment focus."
     )
 
     # Gabungkan system prompt + chat history
@@ -1457,7 +1653,7 @@ def generate_code():
     # --- Queue GPT request ---
     # Menggunakan insert_gpt_job dengan advisory lock untuk menghindari
     # duplikasi job jika ada beberapa user menanyakan prompt yang sama
-    job_id = insert_gpt_job(user_id, prompt, gpt_prompt, status="pending")
+    job_id = insert_gpt_job(user_id, prompt, gpt_prompt_marked, status="pending")
     # (worker thread/async processing not shown here)
     # Untuk GPT, token akan dikurangi saat job selesai (di /check-status)
     gamification = get_user_token_info(user_id, session_id)
@@ -1465,6 +1661,73 @@ def generate_code():
         "mode": "gpt-queued",
         "job_id": job_id,
         "message": "Permintaan Anda sedang diproses karena antrian atau rate limit. Silakan cek status dengan job_id ini di endpoint /check-status/{job_id}.",
+        "gamification": gamification
+    }), 202
+
+
+@app.route('/enqueue-gpt', methods=['POST'])
+def enqueue_gpt():
+    """Enqueue a GPT job without applying the route rate limit.
+
+    Intended for explicit "Generate with ChatGPT" actions originating from retrieval.
+    The caller must be authenticated (session user_id).
+    """
+    data = request.get_json(silent=True) or {}
+    prompt = data.get('prompt')
+    assessment_id = data.get('assessment_id')
+    language = (data.get('language') or '').strip()
+    response_mode = (data.get('response_mode') or 'code').strip()
+
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"error": "Unauthorized. Silakan login."}), 401
+
+    # Basic validation (similar to generate_code)
+    if not prompt or not isinstance(prompt, str) or len(prompt.strip()) < 10:
+        return jsonify({"error": "Missing or invalid 'prompt' in request body"}), 400
+
+    # Enforce per-user cooldown for manual GPT enqueue: prevent >1 enqueue per minute
+    try:
+        conn_c = get_db_connection()
+        with conn_c.cursor() as curc:
+            curc.execute(
+                "SELECT COUNT(*) AS cnt FROM gpt_jobs WHERE user_id=%s AND created_at >= NOW() - INTERVAL %s SECOND",
+                (user_id, 60)
+            )
+            rowc = curc.fetchone() or {}
+            if int(rowc.get('cnt', 0) or 0) > 0:
+                # Inform client about cooldown
+                return jsonify({"error": "Rate limit: only one manual ChatGPT generation allowed per minute."}), 429, {"Retry-After": "60"}
+    except Exception as e_cd:
+        print(f"[WARNING] Could not enforce enqueue cooldown: {e_cd}")
+    finally:
+        try:
+            conn_c.close()
+        except Exception:
+            pass
+
+    # Build markers and marked prompt for worker
+    markers = []
+    if language:
+        markers.append(f"[LANG:{language}]")
+    if response_mode:
+        markers.append(f"[MODE:{response_mode}]")
+    if assessment_id:
+        markers.append(f"[ASSESSMENT_ID:{assessment_id}]")
+    markers.append("[AUTO_FALLBACK:true]")
+    gpt_prompt_marked = "\n".join(markers) + "\n" + prompt
+
+    try:
+        job_id = insert_gpt_job(user_id, prompt, gpt_prompt_marked, status="pending")
+    except Exception as e:
+        return jsonify({"error": f"Failed to create job: {e}"}), 500
+
+    session_id = session.get('session_id') or request.remote_addr
+    gamification = get_user_token_info(user_id, session_id)
+    return jsonify({
+        "mode": "gpt-queued_manual",
+        "job_id": job_id,
+        "message": "Request queued to ChatGPT (manual generate).",
         "gamification": gamification
     }), 202
 
@@ -1521,7 +1784,7 @@ def check_status(job_id):
                 print(f"[DEBUG]: {len(encoding.encode(str(text)))}")
                 return len(encoding.encode(str(text)))
             messages = [
-                {"role": "system", "content": "You are an expert programming assistant helping undergraduate computer science students. Output only the code, no explanation, no comments, no markdown."},
+                {"role": "system", "content": "You are an expert programming assistant helping undergraduate computer science students. Respect any [MODE:] or [LANG:] markers in the prompt; follow them when deciding output format (code/summary/summary+code+explanation)."},
                 {"role": "user", "content": prompt},
             ]
             # Token input (prompt)
@@ -1647,6 +1910,7 @@ def check_status(job_id):
             return jsonify({
                 "status": "done",
                 "code": job["code"],
+                "raw_response": job.get("raw_response"),
                 "environmental_impact": impact,
                 "gamification": gamification
             }), 200

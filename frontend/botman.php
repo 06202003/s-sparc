@@ -115,8 +115,28 @@ $botman->hears('.*', function ($bot) {
     if (!empty($_SESSION['assessment_id'])) {
         $payload['assessment_id'] = $_SESSION['assessment_id'];
     }
+    // If the web client posted language or response_mode, forward them to the backend
+    // (chat.php sends these as form fields when present)
+    if (!empty($_POST['language'])) {
+        $payload['language'] = trim((string) $_POST['language']);
+    }
+    if (!empty($_POST['response_mode'])) {
+        $payload['response_mode'] = trim((string) $_POST['response_mode']);
+    }
+    // If this is a forced generation request (from the FE 'Generate with ChatGPT' button),
+    // call the enqueue endpoint which is not subject to the per-route rate limit.
+    $is_force = false;
+    $FORCE_PREFIX = '__force_gpt__ ';
+    if (stripos($prompt, $FORCE_PREFIX) === 0) {
+        $is_force = true;
+        $payload['prompt'] = substr($prompt, strlen($FORCE_PREFIX));
+    }
 
-    $resp = flask_request('POST', '/generate-code', $payload);
+    if ($is_force) {
+        $resp = flask_request('POST', '/enqueue-gpt', $payload);
+    } else {
+        $resp = flask_request('POST', '/generate-code', $payload);
+    }
     if (!$resp['ok']) {
         $status = $resp['status'];
         if ($status === 401 || $status === 403) {
@@ -166,13 +186,14 @@ $botman->hears('.*', function ($bot) {
         return;
     }
 
-    if (($data['mode'] ?? '') === 'gpt-queued' && !empty($data['job_id'])) {
+    $respMode = $data['mode'] ?? '';
+    if (strpos($respMode, 'gpt-queued') !== false && !empty($data['job_id'])) {
         $jobId = $data['job_id'];
         $bot->reply('Your request is being processed (queued). job_id: ' . $jobId . '. I will check for up to 24 seconds, or type "status ' . $jobId . '" to check manually.');
 
-        $maxPoll = 8; // ~24 detik
+        $maxPoll = 30; // ~60 detik (2s * 30)
         for ($i = 0; $i < $maxPoll; $i++) {
-            sleep(3);
+            sleep(2);
             $poll = flask_request('GET', '/check-status/' . urlencode($jobId));
             if (!$poll['ok']) {
                 continue;
@@ -188,7 +209,8 @@ $botman->hears('.*', function ($bot) {
                 if (!empty($pollData['code'])) {
                     $bot->reply("Here is the code result:\n" . $pollData['code']);
                 } else {
-                    $bot->reply('Job done, but no code was provided.');
+                    $debug = json_encode($pollData, JSON_PRETTY_PRINT);
+                    $bot->reply('Job done, but no code was provided. Backend /check-status returned: ' . $debug);
                 }
                 return;
             }
@@ -204,7 +226,8 @@ $botman->hears('.*', function ($bot) {
     if (!empty($data['code'])) {
         $bot->reply($data['code']);
     } else {
-        $bot->reply('No code is available to send at this time. Please try again.');
+        $debugMain = json_encode($data, JSON_PRETTY_PRINT);
+        $bot->reply('No code is available to send at this time. Backend returned: ' . $debugMain);
     }
 });
 
