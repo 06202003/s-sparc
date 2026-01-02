@@ -16,7 +16,7 @@ import uuid
 import atexit
 import json
 from sqlalchemy import create_engine
-from flask import Flask, request, jsonify, session
+from flask import Flask, request, jsonify, session, Response
 from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -82,6 +82,31 @@ def require_login(func):
         return func(*args, **kwargs)
     return wrapper
 
+
+def require_admin(func):
+    from functools import wraps
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if "user_id" not in session:
+            return jsonify({"error": "Unauthorized. Silakan login."}), 401
+        uid = session.get('user_id')
+        # check users table for is_admin flag; if column missing or not admin, deny
+        conn = get_db_connection()
+        try:
+            with conn.cursor() as cur:
+                try:
+                    cur.execute("SELECT COALESCE(is_admin,0) AS is_admin FROM users WHERE user_id=%s LIMIT 1", (uid,))
+                    row = cur.fetchone()
+                    if not row or int(row.get('is_admin', 0) or 0) != 1:
+                        return jsonify({"error": "Forbidden. Admins only."}), 403
+                except Exception:
+                    # If users table has no is_admin column, deny by default to be safe
+                    return jsonify({"error": "Forbidden. Admins only."}), 403
+        finally:
+            conn.close()
+        return func(*args, **kwargs)
+    return wrapper
+
 def update_user_total_points_if_new_week(user_id, tokens_to_add):
     """Tambah poin akumulatif berdasarkan jumlah token yang dipakai.
 
@@ -112,6 +137,238 @@ def update_user_total_points_if_new_week(user_id, tokens_to_add):
         conn.close()
 
 
+@app.route('/admin-environmental-stats', methods=['GET'])
+@require_admin
+def admin_environmental_stats():
+    """Return aggregated environmental impact metrics for admins.
+
+    Response example:
+    { total_energy_kwh, total_carbon_kg, total_water_ml, by_day: [{date, energy_kwh, carbon_kg, water_ml}], recent_logs: [...] }
+    Optional query params: days (int, default 30)
+    """
+    try:
+        days = int(request.args.get('days', 30))
+    except Exception:
+        days = 30
+    days = max(1, min(365, days))
+
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            # Total sums
+            cur.execute(
+                "SELECT COALESCE(SUM(energy_kwh),0) AS energy_kwh, COALESCE(SUM(carbon_kg),0) AS carbon_kg, COALESCE(SUM(water_ml),0) AS water_ml "
+                "FROM environmental_impact_logs"
+            )
+            totals = cur.fetchone() or {'energy_kwh':0,'carbon_kg':0,'water_ml':0}
+
+            # Aggregated by day for last N days
+            cur.execute(
+                "SELECT DATE(created_at) AS d, COALESCE(SUM(energy_kwh),0) AS energy_kwh, COALESCE(SUM(carbon_kg),0) AS carbon_kg, COALESCE(SUM(water_ml),0) AS water_ml "
+                "FROM environmental_impact_logs "
+                "WHERE created_at >= DATE_SUB(NOW(), INTERVAL %s DAY) "
+                "GROUP BY DATE(created_at) ORDER BY DATE(created_at) ASC",
+                (days,)
+            )
+            by_day = cur.fetchall() or []
+
+            # recent logs (limit 50)
+            cur.execute(
+                "SELECT id, user_id, job_id, course_id, assessment_id, energy_kwh, carbon_kg, water_ml, created_at "
+                "FROM environmental_impact_logs ORDER BY created_at DESC LIMIT 50"
+            )
+            recent_logs = cur.fetchall() or []
+
+            return jsonify({
+                'total_energy_kwh': float(totals.get('energy_kwh') or 0.0),
+                'total_carbon_kg': float(totals.get('carbon_kg') or 0.0),
+                'total_water_ml': float(totals.get('water_ml') or 0.0),
+                'by_day': by_day,
+                'recent_logs': recent_logs,
+            }), 200
+    except Exception as e:
+        print(f"[ERROR] admin_environmental_stats: {e}")
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
+
+@app.route('/admin-environmental-csv', methods=['GET'])
+@require_admin
+def admin_environmental_csv():
+    """Return CSV export of environmental_impact_logs (optionally since days).
+    Query params: days (int, optional)
+    """
+    try:
+        days = int(request.args.get('days')) if request.args.get('days') else None
+    except Exception:
+        days = None
+
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            q = "SELECT id, user_id, job_id, course_id, assessment_id, energy_kwh, carbon_kg, water_ml, created_at FROM environmental_impact_logs"
+            params = ()
+            if days:
+                q += " WHERE created_at >= DATE_SUB(NOW(), INTERVAL %s DAY)"
+                params = (days,)
+            q += " ORDER BY created_at DESC"
+            cur.execute(q, params)
+            rows = cur.fetchall() or []
+
+            import io, csv
+            output = io.StringIO()
+            writer = csv.writer(output)
+            writer.writerow(['id','user_id','job_id','course_id','assessment_id','energy_kwh','carbon_kg','water_ml','created_at'])
+            for r in rows:
+                writer.writerow([
+                    r.get('id'), r.get('user_id'), r.get('job_id'), r.get('course_id'), r.get('assessment_id'),
+                    float(r.get('energy_kwh') or 0.0), float(r.get('carbon_kg') or 0.0), float(r.get('water_ml') or 0.0),
+                    r.get('created_at').isoformat() if r.get('created_at') else ''
+                ])
+
+            csv_data = output.getvalue()
+            return Response(csv_data, mimetype='text/csv', headers={
+                'Content-Disposition': f'attachment; filename="environmental_impact_logs.csv"'
+            })
+    finally:
+        conn.close()
+
+
+@app.route('/admin-assessment-csv', methods=['GET'])
+@require_admin
+def admin_assessment_csv():
+    """Return CSV with user usage and final points for a given assessment_id.
+    Query params: assessment_id
+    """
+    aid = request.args.get('assessment_id')
+    if not aid:
+        return jsonify({'error': 'assessment_id required'}), 400
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            # compute usage per user for assessment
+            cur.execute("SELECT DISTINCT user_id FROM session_tokens WHERE assessment_id=%s", (aid,))
+            users = [r['user_id'] for r in cur.fetchall() or []]
+            # fallback to user_points_assessment if none
+            if not users:
+                cur.execute("SELECT DISTINCT user_id FROM user_points_assessment WHERE assessment_id=%s", (aid,))
+                users = [r['user_id'] for r in cur.fetchall() or []]
+
+            # compute avg_usage and threshold
+            usage_map = {}
+            for uid in users:
+                cur.execute("SELECT COALESCE(SUM(tokens_used),0) AS total_used FROM session_tokens WHERE assessment_id=%s AND user_id=%s", (aid, uid))
+                row = cur.fetchone() or {'total_used': 0}
+                usage_map[uid] = int(row.get('total_used') or 0)
+
+            if not usage_map:
+                return jsonify({'error': 'no users found for assessment'}), 404
+
+            avg_usage = float(sum(usage_map.values())) / float(len(usage_map))
+            threshold = 1.10 * avg_usage
+
+            # build CSV
+            import io, csv
+            output = io.StringIO()
+            writer = csv.writer(output)
+            writer.writerow(['user_id', 'username', 'usage', 'final_point'])
+            for uid, usage in usage_map.items():
+                # try username
+                cur.execute("SELECT username FROM users WHERE user_id=%s LIMIT 1", (uid,))
+                row = cur.fetchone() or {}
+                username = row.get('username') or ''
+                usage_f = float(usage)
+                # New logic: threshold = 1.10 * avg_usage
+                # If usage <= threshold: final_point = 100
+                # Else: final_point = max(0, 100 + 100 * (threshold - usage) / threshold)
+                if threshold <= 0.0:
+                    final_point = 100.0 if usage_f <= 0.0 else 0.0
+                elif usage_f <= threshold:
+                    final_point = 100.0
+                else:
+                    final_point = max(0.0, 100.0 + 100.0 * (threshold - usage_f) / threshold)
+                final_point = min(100.0, final_point)  # Ensure never exceeds 100
+                writer.writerow([uid, username, usage, f"{final_point:.2f}"])
+
+            csv_data = output.getvalue()
+            return Response(csv_data, mimetype='text/csv', headers={
+                'Content-Disposition': f'attachment; filename="assessment_{aid}_points.csv"'
+            })
+    finally:
+        conn.close()
+
+
+@app.route('/admin-assessment-histogram', methods=['GET'])
+@require_admin
+def admin_assessment_histogram():
+    """Return histogram data of final points for an assessment.
+    Query params: assessment_id, buckets (optional, default 10)
+    """
+    aid = request.args.get('assessment_id')
+    if not aid:
+        return jsonify({'error': 'assessment_id required'}), 400
+    try:
+        buckets = int(request.args.get('buckets', 10))
+        buckets = max(1, min(100, buckets))
+    except Exception:
+        buckets = 10
+
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT DISTINCT user_id FROM session_tokens WHERE assessment_id=%s", (aid,))
+            users = [r['user_id'] for r in cur.fetchall() or []]
+            if not users:
+                cur.execute("SELECT DISTINCT user_id FROM user_points_assessment WHERE assessment_id=%s", (aid,))
+                users = [r['user_id'] for r in cur.fetchall() or []]
+            if not users:
+                return jsonify({'error': 'no users found for assessment'}), 404
+
+            usage_map = {}
+            for uid in users:
+                cur.execute("SELECT COALESCE(SUM(tokens_used),0) AS total_used FROM session_tokens WHERE assessment_id=%s AND user_id=%s", (aid, uid))
+                row = cur.fetchone() or {'total_used': 0}
+                usage_map[uid] = int(row.get('total_used') or 0)
+
+            avg_usage = float(sum(usage_map.values())) / float(len(usage_map))
+            threshold = 1.10 * avg_usage
+
+            # compute final points list
+            final_points = []
+            for usage in usage_map.values():
+                usage_f = float(usage)
+                if threshold <= 0.0:
+                    final_point = 100.0 if usage_f <= 0.0 else 0.0
+                elif usage_f <= threshold:
+                    final_point = 100.0
+                else:
+                    final_point = max(0.0, 100.0 + 100.0 * (threshold - usage_f) / threshold)
+                final_points.append(final_point)
+
+            # build histogram bins between 0..100
+            bin_counts = [0] * buckets
+            for p in final_points:
+                # ensure 0..100
+                v = max(0.0, min(100.0, p))
+                # map to bucket
+                idx = int((v / 100.0) * buckets)
+                if idx == buckets:
+                    idx = buckets - 1
+                bin_counts[idx] += 1
+
+            # labels for bins
+            labels = []
+            for i in range(buckets):
+                lo = (i * 100.0 / buckets)
+                hi = ((i + 1) * 100.0 / buckets)
+                labels.append(f"{lo:.1f}-{hi:.1f}")
+
+            return jsonify({'labels': labels, 'counts': bin_counts, 'avg_usage': avg_usage, 'threshold': threshold}), 200
+    finally:
+        conn.close()
+
+
 @app.route('/assessment-leaderboard', methods=['GET'])
 @require_login
 def assessment_leaderboard():
@@ -134,23 +391,42 @@ def assessment_leaderboard():
             now = datetime.datetime.now()
             # Compute per-user remaining for the specific assessment (same logic as token_usage_breakdown.by_assessment)
             try:
+                cur.execute("SELECT end_date FROM assessments WHERE assessment_id=%s", (assessment_id,))
+                end_row = cur.fetchone()
+                expired = False
+                week_ref = now
+                if end_row and end_row.get('end_date'):
+                    end_date = end_row.get('end_date')
+                    week_ref = end_date
+                    if now > end_date:
+                        expired = True
                 cur.execute(
                     "SELECT st.user_id AS user_id, COALESCE(u.username,'') AS username, COALESCE(SUM(st.tokens_used),0) AS total_used "
                     "FROM session_tokens st LEFT JOIN users u ON st.user_id = u.user_id "
-                    "WHERE st.assessment_id = %s AND YEARWEEK(st.used_at, 1) = YEARWEEK(%s, 1) "
+                    "WHERE st.assessment_id = %s "
                     "GROUP BY st.user_id ORDER BY total_used DESC",
-                    (assessment_id, now),
+                    (assessment_id,),
                 )
                 rows = cur.fetchall() or []
                 leaderboard = []
                 for r in rows:
                     used = int(r.get('total_used', 0) or 0)
-                    remaining = max(0, 2000 - used)
+                    threshold = get_dynamic_threshold(cur, assessment_id, week_ref)
+                    # Calculate final_point only if assessment expired
+                    if expired:
+                        if used <= threshold:
+                            final_point = 100.0
+                        else:
+                            final_point = max(0.0, 100.0 + 100.0 * (threshold - used) / threshold)
+                        final_point = min(100.0, final_point)
+                    else:
+                        final_point = None
                     leaderboard.append({
                         'user_id': r.get('user_id'),
                         'username': r.get('username') or None,
-                        'points': remaining,
+                        'points': final_point,
                         'total_used': used,
+                        'threshold': threshold,
                     })
 
                 # Do NOT include users with no usage rows; leaderboard should only show
@@ -158,6 +434,7 @@ def assessment_leaderboard():
                 # record will not appear here.
 
                 # Sort by remaining points desc and compute dense ranks
+                leaderboard = [x for x in leaderboard if x['points'] is not None]
                 leaderboard.sort(key=lambda x: x['points'], reverse=True)
                 prev_points = None
                 rank = 0
@@ -279,10 +556,217 @@ def log_token_usage(user_id, session_id, tokens_used, assessment_id=None, course
     finally:
         conn.close()
 
+
+def compute_assessment_final_points(assessment_id):
+    """Compute and persist final gamification points for all users in an assessment.
+
+    Rules implemented (per spec):
+    - threshold = 1.10 * avg_usage (avg across all users enrolled in the assessment's course)
+    - If usage <= threshold -> final_point = 100
+    - Else final_point = MAX(0, 100 + 100 * (threshold - usage) / threshold)
+    - Calculation only runs if current_date > assessment.end_date
+    - Persist decimal final score into user_points_assessment.final_points (attempt to add column if missing)
+    - Also write integer-rounded score into total_points for backwards compatibility
+    Returns dict with results or error message.
+    """
+    if not assessment_id:
+        return {"error": "assessment_id required"}
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            # Fetch assessment and end_date
+            cur.execute("SELECT assessment_id, course_id, end_date FROM assessments WHERE assessment_id=%s LIMIT 1", (assessment_id,))
+            a = cur.fetchone()
+            if not a:
+                return {"error": "assessment not found"}
+            end_date = a.get('end_date')
+            if not end_date:
+                return {"error": "assessment end_date not set"}
+            now = datetime.datetime.now()
+            if now <= end_date:
+                return {"status": "assessment_active", "message": "Assessment still active - points not computed"}
+
+            course_id = a.get('course_id')
+
+            # Determine list of users in this assessment: all users enrolled in the course
+            users = []
+            try:
+                cur.execute("SELECT user_id FROM user_courses WHERE course_id=%s", (course_id,))
+                rows = cur.fetchall() or []
+                users = [r['user_id'] for r in rows]
+            except Exception:
+                users = []
+
+            # If no enrolled users found, fallback to users who have session_tokens for this assessment
+            if not users:
+                cur.execute("SELECT DISTINCT user_id FROM session_tokens WHERE assessment_id=%s", (assessment_id,))
+                rows = cur.fetchall() or []
+                users = [r['user_id'] for r in rows]
+
+            if not users:
+                return {"error": "no users found for assessment"}
+
+            # Compute usage per user (include zeros for users without session_tokens)
+            usage_map = {}
+            for uid in users:
+                cur.execute(
+                    "SELECT COALESCE(SUM(tokens_used),0) AS total_used FROM session_tokens WHERE assessment_id=%s AND user_id=%s",
+                    (assessment_id, uid),
+                )
+                row = cur.fetchone() or {"total_used": 0}
+                usage_map[uid] = int(row.get('total_used', 0) or 0)
+
+            # avg_usage across all users (include zeros)
+            avg_usage = float(sum(usage_map.values())) / float(len(usage_map)) if usage_map else 0.0
+            threshold = 1.10 * avg_usage
+
+            # Attempt to add final_points column if not present (safe to ignore errors)
+            try:
+                cur.execute("ALTER TABLE user_points_assessment ADD COLUMN final_points DECIMAL(7,2) NULL")
+                conn.commit()
+            except Exception:
+                # ignore if column exists or other errors - we will still attempt to write into table
+                pass
+
+            results = []
+            for uid, usage in usage_map.items():
+                usage_f = float(usage)
+                # Guard against zero threshold (avoid division by zero)
+                if threshold <= 0.0:
+                    final_point = 100.0 if usage_f <= 0.0 else 0.0
+                elif usage_f <= threshold:
+                    final_point = 100.0
+                else:
+                    final_point = max(0.0, 100.0 + 100.0 * (threshold - usage_f) / threshold)
+                # Numeric contract: keep two decimals for final_points, but total_points is kept as integer for legacy
+                final_point_rounded = round(final_point, 2)
+                total_points_int = int(round(final_point_rounded))
+
+                # Upsert into user_points_assessment
+                uid_uuid = str(uuid.uuid4())
+                try:
+                    cur.execute(
+                        "INSERT INTO user_points_assessment (id, user_id, assessment_id, course_id, total_points, final_points, updated_at) "
+                        "VALUES (%s, %s, %s, %s, %s, %s, NOW()) "
+                        "ON DUPLICATE KEY UPDATE total_points=VALUES(total_points), final_points=VALUES(final_points), updated_at=NOW()",
+                        (uid_uuid, uid, assessment_id, course_id, total_points_int, final_point_rounded),
+                    )
+                except Exception as e:
+                    # If final_points column doesn't exist, fall back to updating total_points only
+                    try:
+                        cur.execute(
+                            "INSERT INTO user_points_assessment (id, user_id, assessment_id, course_id, total_points, updated_at) "
+                            "VALUES (%s, %s, %s, %s, %s, NOW()) "
+                            "ON DUPLICATE KEY UPDATE total_points=VALUES(total_points), updated_at=NOW()",
+                            (uid_uuid, uid, assessment_id, course_id, total_points_int),
+                        )
+                    except Exception as e2:
+                        # record error but continue
+                        results.append({"user_id": uid, "error": str(e2)})
+                        continue
+
+                results.append({"user_id": uid, "usage": usage, "final_point": final_point_rounded})
+
+            conn.commit()
+            return {"status": "ok", "threshold": threshold, "avg_usage": avg_usage, "results": results}
+    finally:
+        conn.close()
+
+
+@app.route('/compute-assessment-points', methods=['POST'])
+@require_admin
+def compute_assessment_points_endpoint():
+    """Endpoint to trigger computation for a given assessment_id. Returns computed scores.
+    This endpoint will only perform computation if assessment.end_date has passed.
+    """
+    data = request.get_json(silent=True) or {}
+    aid = data.get('assessment_id')
+    if not aid:
+        return jsonify({"error": "assessment_id required"}), 400
+    try:
+        res = compute_assessment_final_points(aid)
+        if res.get('error'):
+            return jsonify(res), 400
+        return jsonify(res), 200
+    except Exception as e:
+        print(f"[ERROR] compute_assessment_points_endpoint: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/admin-dashboard', methods=['GET'])
+@require_admin
+def admin_dashboard():
+    """Return aggregated stats for admin dashboard.
+
+    Response includes:
+    - total_assessments
+    - assessments_ended
+    - total_users
+    - total_points_awarded (sum of user_points_assessment.final_points where not null)
+    - recent_assessments: list of assessment_id, name, end_date, avg_usage, threshold
+    """
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            # total assessments
+            cur.execute("SELECT COUNT(*) AS cnt FROM assessments")
+            total_assessments = int(cur.fetchone().get('cnt', 0))
+
+            # assessments ended
+            cur.execute("SELECT COUNT(*) AS cnt FROM assessments WHERE end_date IS NOT NULL AND end_date < NOW()")
+            assessments_ended = int(cur.fetchone().get('cnt', 0))
+
+            # total users
+            cur.execute("SELECT COUNT(*) AS cnt FROM users")
+            total_users = int(cur.fetchone().get('cnt', 0))
+
+            # total points awarded (use final_points when available else total_points)
+            try:
+                cur.execute("SELECT COALESCE(SUM(final_points), SUM(total_points)) AS total_points FROM user_points_assessment")
+                row = cur.fetchone() or {}
+                total_points_awarded = float(row.get('total_points') or 0.0)
+            except Exception:
+                # fallback: sum total_points only
+                cur.execute("SELECT COALESCE(SUM(total_points),0) AS total_points FROM user_points_assessment")
+                total_points_awarded = float(cur.fetchone().get('total_points', 0) or 0.0)
+
+            # recent assessments with avg_usage and threshold (for ended assessments)
+            cur.execute(
+                "SELECT a.assessment_id, a.name AS assessment_name, a.end_date, "
+                "COALESCE( (SELECT AVG(u.total_used) FROM (SELECT user_id, COALESCE(SUM(tokens_used),0) AS total_used FROM session_tokens st WHERE st.assessment_id=a.assessment_id GROUP BY user_id) u), 0) AS avg_usage "
+                "FROM assessments a WHERE a.end_date IS NOT NULL ORDER BY a.end_date DESC LIMIT 20"
+            )
+            recent = []
+            for r in cur.fetchall() or []:
+                avg_usage = float(r.get('avg_usage') or 0.0)
+                threshold = 1.10 * avg_usage
+                recent.append({
+                    'assessment_id': r.get('assessment_id'),
+                    'assessment_name': r.get('assessment_name'),
+                    'end_date': r.get('end_date').isoformat() if r.get('end_date') else None,
+                    'avg_usage': avg_usage,
+                    'threshold': threshold,
+                })
+
+            return jsonify({
+                'total_assessments': total_assessments,
+                'assessments_ended': assessments_ended,
+                'total_users': total_users,
+                'total_points_awarded': total_points_awarded,
+                'recent_assessments': recent,
+            }), 200
+    except Exception as e:
+        print(f"[ERROR] admin_dashboard: {e}")
+        return jsonify({'error': str(e)}), 500
+    finally:
+        conn.close()
+
 # === Gamification Utilities ===
-def get_user_token_info(user_id, session_id):
+def get_user_token_info(user_id, session_id, assessment_id=None):
     """
     Always session-based. If no row, create with full tokens for this session. Never allow session_id=None.
+    If assessment_id is provided, use dynamic threshold (1.10 * avg_usage) for that assessment.
+    Also returns end_date from assessments table if assessment_id is provided.
     """
     if not user_id or not session_id:
         raise ValueError("user_id and session_id are required for token info")
@@ -290,34 +774,65 @@ def get_user_token_info(user_id, session_id):
     try:
         with conn.cursor() as cur:
             now = datetime.datetime.now()
-            # Hitung total token yang sudah dipakai minggu ini (semua session user)
-            cur.execute(
-                "SELECT COALESCE(SUM(tokens_used), 0) AS used_this_week "
-                "FROM session_tokens WHERE user_id=%s AND YEARWEEK(used_at, 1) = YEARWEEK(%s, 1)",
-                (user_id, now),
-            )
+            threshold = 0
+            end_date = None
+            if assessment_id:
+                # Fetch end_date from assessments table
+                try:
+                    cur.execute(
+                        "SELECT end_date FROM assessments WHERE assessment_id=%s",
+                        (assessment_id,)
+                    )
+                    end_row = cur.fetchone()
+                    if end_row and end_row.get('end_date'):
+                        end_date = end_row.get('end_date')
+                except Exception as e:
+                    print(f"[DEBUG] Failed to fetch end_date: {e}")
+                # Compute dynamic threshold
+                try:
+                    cur.execute(
+                        "SELECT AVG(u.total_used) AS avg_usage FROM (SELECT user_id, COALESCE(SUM(tokens_used),0) AS total_used FROM session_tokens WHERE assessment_id=%s AND YEARWEEK(used_at, 1) = YEARWEEK(%s, 1) GROUP BY user_id) u",
+                        (assessment_id, now)
+                    )
+                    avg_row = cur.fetchone()
+                    if avg_row and avg_row.get('avg_usage'):
+                        avg_usage = float(avg_row.get('avg_usage') or 0.0)
+                        if avg_usage > 0:
+                            threshold = int(1.10 * avg_usage)
+                except Exception as e:
+                    print(f"[DEBUG] Failed to compute dynamic threshold: {e}")
+            # If no assessment_id or no data, threshold remains 0
+            if assessment_id:
+                cur.execute(
+                    "SELECT COALESCE(SUM(tokens_used), 0) AS used_this_week "
+                    "FROM session_tokens WHERE user_id=%s AND assessment_id=%s AND YEARWEEK(used_at, 1) = YEARWEEK(%s, 1)",
+                    (user_id, assessment_id, now),
+                )
+            else:
+                cur.execute(
+                    "SELECT COALESCE(SUM(tokens_used), 0) AS used_this_week "
+                    "FROM session_tokens WHERE user_id=%s AND YEARWEEK(used_at, 1) = YEARWEEK(%s, 1)",
+                    (user_id, now),
+                )
             row = cur.fetchone() or {"used_this_week": 0}
             used_this_week = row.get("used_this_week", 0) or 0
-
-            # Pastikan nilai yang dikirim ke frontend tidak melebihi kuota mingguan
-            # sehingga kartu tidak pernah menampilkan "Sudah terpakai: 2000" jika
-            # sebenarnya total pemakaian < 2000.
-            capped_used = min(used_this_week, 2000)
-            remaining_tokens = max(0, 2000 - capped_used)
-
-            return {
-                "total_tokens": 2000,
+            capped_used = min(used_this_week, threshold)
+            remaining_tokens = max(0, threshold - capped_used)
+            result = {
+                "total_tokens": threshold,
                 "used_tokens": capped_used,
                 "remaining_tokens": remaining_tokens,
-                # Poin aktif didefinisikan sebagai sisa kuota minggu ini
                 "points": remaining_tokens,
-                # Opsional: kirim juga nilai mentah untuk debugging/analisis jika dibutuhkan
                 "used_tokens_raw": used_this_week,
             }
+            if end_date:
+                result["end_date"] = str(end_date)
+            return result
+    except Exception as e:
+        print(f"[ERROR] get_user_token_info: {e}")
+        raise
     finally:
         conn.close()
-
-
 def insert_environmental_impact_log(user_id, job_id, course_id, assessment_id, impact):
     """Simpan satu baris jejak environmental impact untuk sebuah job.
 
@@ -624,13 +1139,13 @@ def list_assessments():
         with conn.cursor() as cur:
             if course_id:
                 cur.execute(
-                    "SELECT assessment_id, course_id, code, name FROM assessments "
+                    "SELECT assessment_id, course_id, code, name, end_date FROM assessments "
                     "WHERE course_id=%s ORDER BY created_at ASC",
                     (course_id,)
                 )
             else:
                 cur.execute(
-                    "SELECT assessment_id, course_id, code, name FROM assessments "
+                    "SELECT assessment_id, course_id, code, name, end_date FROM assessments "
                     "ORDER BY created_at ASC"
                 )
             rows = cur.fetchall() or []
@@ -648,15 +1163,19 @@ def get_gamification():
     """Kembalikan informasi gamifikasi/token untuk user saat ini.
 
     Data diambil dari log penggunaan token mingguan.
+    Accepts optional assessment_id query parameter for dynamic threshold.
     """
     user_id = session.get("user_id")
     if not user_id:
         return jsonify({"error": "Unauthorized. Silakan login."}), 401
 
+    # Get assessment_id from query parameter or session
+    assessment_id = request.args.get('assessment_id') or session.get('assessment_id')
+    
     # Gunakan session_id Flask jika ada, fallback ke IP client
     session_id = session.get("session_id") or request.remote_addr
     try:
-        gamification = get_user_token_info(user_id, session_id)
+        gamification = get_user_token_info(user_id, session_id, assessment_id)
         return jsonify({"gamification": gamification}), 200
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
@@ -664,6 +1183,32 @@ def get_gamification():
 
 @app.route('/token-usage-daily', methods=['GET'])
 @require_login
+def get_dynamic_threshold(cur, assessment_id=None, now=None):
+    """Calculate dynamic threshold for an assessment (1.10 * avg_usage this week), or 0 if no data."""
+    if not assessment_id:
+        return 0
+    if now is None:
+        # Use end_date of assessment if available
+        cur.execute("SELECT end_date FROM assessments WHERE assessment_id=%s", (assessment_id,))
+        end_row = cur.fetchone()
+        if end_row and end_row.get('end_date'):
+            now = end_row.get('end_date')
+        else:
+            now = datetime.datetime.now()
+    try:
+        cur.execute(
+            "SELECT AVG(u.total_used) AS avg_usage FROM (SELECT user_id, COALESCE(SUM(tokens_used),0) AS total_used FROM session_tokens WHERE assessment_id=%s GROUP BY user_id) u",
+            (assessment_id,)
+        )
+        avg_row = cur.fetchone()
+        if avg_row and avg_row.get('avg_usage'):
+            avg_usage = float(avg_row.get('avg_usage') or 0.0)
+            if avg_usage > 0:
+                return int(1.10 * avg_usage)
+    except Exception as e:
+        print(f"[DEBUG] Failed to compute dynamic threshold: {e}")
+    return 0
+
 def token_usage_daily():
     """
     Return daily token usage for the current user for the current week.
@@ -676,6 +1221,7 @@ def token_usage_daily():
     try:
         with conn.cursor() as cur:
             now = datetime.datetime.now()
+            # Daily total usage
             cur.execute(
                 """
                 SELECT DATE(used_at) AS day, COALESCE(SUM(tokens_used), 0) AS tokens_used
@@ -695,8 +1241,52 @@ def token_usage_daily():
                 used = int(r.get('tokens_used', 0) or 0)
                 daily_stats.append({"date": day_str, "tokens_used": used})
                 total_used += used
-            remaining = max(0, 2000 - total_used)
-        return jsonify({"daily_stats": daily_stats, "total_used": total_used, "remaining_tokens": remaining}), 200
+
+            # Use dynamic threshold for all assessments this week (sum)
+            # If user has multiple assessments, sum their dynamic thresholds
+            cur.execute(
+                "SELECT DISTINCT assessment_id FROM session_tokens WHERE user_id=%s AND YEARWEEK(used_at, 1) = YEARWEEK(%s, 1)",
+                (user_id, now),
+            )
+            assessment_ids = [r['assessment_id'] for r in cur.fetchall() if r.get('assessment_id')]
+            total_threshold = 0
+            for aid in assessment_ids:
+                total_threshold += get_dynamic_threshold(cur, aid, now)
+            # If no assessments, threshold is 0
+            remaining = max(0, total_threshold - total_used)
+
+            # Per-assessment breakdown (with threshold and end_date)
+            by_assessment = []
+            try:
+                cur.execute(
+                    "SELECT st.assessment_id AS assessment_id, COALESCE(a.name, '') AS assessment_name, COALESCE(a.end_date, NULL) AS end_date, COALESCE(SUM(st.tokens_used),0) AS total_used "
+                    "FROM session_tokens st LEFT JOIN assessments a ON st.assessment_id = a.assessment_id "
+                    "WHERE st.user_id=%s AND YEARWEEK(st.used_at, 1) = YEARWEEK(%s, 1) "
+                    "GROUP BY st.assessment_id ORDER BY total_used DESC",
+                    (user_id, now),
+                )
+                rows = cur.fetchall() or []
+                for r in rows:
+                    aid = r.get('assessment_id')
+                    used = int(r.get('total_used', 0) or 0)
+                    threshold = get_dynamic_threshold(cur, aid, now)
+                    by_assessment.append({
+                        "assessment_id": aid,
+                        "assessment_name": r.get('assessment_name') or None,
+                        "end_date": r.get('end_date'),
+                        "total_used": used,
+                        "threshold": threshold,
+                        "remaining": max(0, threshold - used),
+                    })
+            except Exception:
+                by_assessment = []
+
+        return jsonify({
+            "daily_stats": daily_stats,
+            "total_used": total_used,
+            "remaining_tokens": remaining,
+            "by_assessment": by_assessment
+        }), 200
     except Exception as e:
         print(f"[ERROR] token_usage_daily: {e}")
         return jsonify({"error": str(e)}), 500
@@ -727,7 +1317,16 @@ def token_usage_breakdown():
             )
             row = cur.fetchone() or {"total_used": 0}
             total_used = int(row.get('total_used', 0) or 0)
-            remaining = max(0, 2000 - total_used)
+            # Use dynamic threshold for all assessments this week (sum)
+            cur.execute(
+                "SELECT DISTINCT assessment_id FROM session_tokens WHERE user_id=%s AND YEARWEEK(used_at, 1) = YEARWEEK(%s, 1)",
+                (user_id, now),
+            )
+            assessment_ids = [r['assessment_id'] for r in cur.fetchall() if r.get('assessment_id')]
+            total_threshold = 0
+            for aid in assessment_ids:
+                total_threshold += get_dynamic_threshold(cur, aid, now)
+            remaining = max(0, total_threshold - total_used)
 
             by_course = []
             by_assessment = []
@@ -744,12 +1343,21 @@ def token_usage_breakdown():
                 rows = cur.fetchall() or []
                 for r in rows:
                     count = int(r.get('assessments_count') or 0)
+                    # Sum dynamic thresholds for all assessments in this course
+                    cur.execute(
+                        "SELECT DISTINCT assessment_id FROM session_tokens WHERE user_id=%s AND course_id=%s AND YEARWEEK(used_at, 1) = YEARWEEK(%s, 1)",
+                        (user_id, r.get('course_id'), now),
+                    )
+                    aids = [aidr['assessment_id'] for aidr in cur.fetchall() if aidr.get('assessment_id')]
+                    course_threshold = 0
+                    for aid in aids:
+                        course_threshold += get_dynamic_threshold(cur, aid, now)
                     by_course.append({
                         "course_id": r.get('course_id'),
                         "course_name": r.get('course_name') or None,
                         "assessments_count": count,
                         "total_used": int(r.get('total_used', 0) or 0),
-                        "remaining": max(0, count * 2000 - int(r.get('total_used', 0) or 0)),
+                        "remaining": max(0, course_threshold - int(r.get('total_used', 0) or 0)),
                     })
             except Exception:
                 by_course = []
@@ -757,7 +1365,6 @@ def token_usage_breakdown():
             # Fallback: if no rows found in session_tokens, try reading from user_points_assessment grouped by course
             if not by_course:
                 try:
-                    # Prefer aggregating via assessments -> courses mapping to avoid incorrect upa.course_id
                     cur.execute(
                         "SELECT a.course_id AS course_id, COALESCE(c.name,'') AS course_name, COALESCE(SUM(upa.total_points),0) AS total_used, COUNT(DISTINCT upa.assessment_id) AS assessments_count "
                         "FROM user_points_assessment upa JOIN assessments a ON upa.assessment_id = a.assessment_id "
@@ -768,21 +1375,30 @@ def token_usage_breakdown():
                     rows = cur.fetchall() or []
                     for r in rows:
                         count = int(r.get('assessments_count') or 0)
+                        # Sum dynamic thresholds for all assessments in this course
+                        cur.execute(
+                            "SELECT DISTINCT assessment_id FROM user_points_assessment WHERE user_id=%s AND course_id=%s",
+                            (user_id, r.get('course_id')),
+                        )
+                        aids = [aidr['assessment_id'] for aidr in cur.fetchall() if aidr.get('assessment_id')]
+                        course_threshold = 0
+                        for aid in aids:
+                            course_threshold += get_dynamic_threshold(cur, aid, now)
                         by_course.append({
                             "course_id": r.get('course_id'),
                             "course_name": r.get('course_name') or None,
                             "assessments_count": count,
                             "total_used": int(r.get('total_used', 0) or 0),
-                            "remaining": max(0, count * 2000 - int(r.get('total_used', 0) or 0)),
+                            "remaining": max(0, course_threshold - int(r.get('total_used', 0) or 0)),
                         })
                 except Exception as e:
                     print(f"[DEBUG] fallback by_course failed: {e}")
                     by_course = []
 
-            # Try per-assessment breakdown
+            # Try per-assessment breakdown with dynamic threshold
             try:
                 cur.execute(
-                    "SELECT st.assessment_id AS assessment_id, COALESCE(a.name, '') AS assessment_name, COALESCE(SUM(st.tokens_used),0) AS total_used "
+                    "SELECT st.assessment_id AS assessment_id, COALESCE(a.name, '') AS assessment_name, COALESCE(a.end_date, NULL) AS end_date, COALESCE(SUM(st.tokens_used),0) AS total_used "
                     "FROM session_tokens st LEFT JOIN assessments a ON st.assessment_id = a.assessment_id "
                     "WHERE st.user_id=%s AND YEARWEEK(st.used_at, 1) = YEARWEEK(%s, 1) "
                     "GROUP BY st.assessment_id ORDER BY total_used DESC",
@@ -790,11 +1406,16 @@ def token_usage_breakdown():
                 )
                 rows = cur.fetchall() or []
                 for r in rows:
+                    aid = r.get('assessment_id')
+                    used = int(r.get('total_used', 0) or 0)
+                    threshold = get_dynamic_threshold(cur, aid, now)
                     by_assessment.append({
-                        "assessment_id": r.get('assessment_id'),
+                        "assessment_id": aid,
                         "assessment_name": r.get('assessment_name') or None,
-                        "total_used": int(r.get('total_used', 0) or 0),
-                        "remaining": max(0, 2000 - int(r.get('total_used', 0) or 0)),
+                        "end_date": r.get('end_date'),
+                        "total_used": used,
+                        "threshold": threshold,
+                        "remaining": max(0, threshold - used),
                     })
             except Exception:
                 by_assessment = []
@@ -803,18 +1424,23 @@ def token_usage_breakdown():
             if not by_assessment:
                 try:
                     cur.execute(
-                        "SELECT upa.assessment_id AS assessment_id, COALESCE(a.name,'') AS assessment_name, COALESCE(upa.total_points,0) AS total_used "
+                        "SELECT upa.assessment_id AS assessment_id, COALESCE(a.name,'') AS assessment_name, COALESCE(a.end_date, NULL) AS end_date, COALESCE(upa.total_points,0) AS total_used "
                         "FROM user_points_assessment upa LEFT JOIN assessments a ON upa.assessment_id = a.assessment_id "
                         "WHERE upa.user_id=%s ORDER BY total_used DESC",
                         (user_id,)
                     )
                     rows = cur.fetchall() or []
                     for r in rows:
+                        aid = r.get('assessment_id')
+                        used = int(r.get('total_used', 0) or 0)
+                        threshold = get_dynamic_threshold(cur, aid, now)
                         by_assessment.append({
-                            "assessment_id": r.get('assessment_id'),
+                            "assessment_id": aid,
                             "assessment_name": r.get('assessment_name') or None,
-                            "total_used": int(r.get('total_used', 0) or 0),
-                            "remaining": max(0, 2000 - int(r.get('total_used', 0) or 0)),
+                            "end_date": r.get('end_date'),
+                            "total_used": used,
+                            "threshold": threshold,
+                            "remaining": max(0, threshold - used),
                         })
                 except Exception as e:
                     print(f"[DEBUG] fallback by_assessment failed: {e}")
@@ -832,8 +1458,12 @@ def token_usage_breakdown():
         conn.close()
 
 # Initialize Flask-Limiter
+def _get_user_or_ip():
+    # Use user_id from session if available, else fallback to IP
+    return session.get('user_id') or get_remote_address()
+
 limiter = Limiter(
-    get_remote_address,
+    key_func=_get_user_or_ip,
     app=app,
     default_limits=DEFAULT_LIMITS,
 )
@@ -1465,7 +2095,8 @@ def generate_code():
             # Jawaban dari database bersifat gratis: tidak mengurangi kuota/poin
             user_id = session.get("user_id")
             session_id = session.get("session_id") or request.remote_addr
-            gamification = get_user_token_info(user_id, session_id)
+            assessment_id = session.get("assessment_id")
+            gamification = get_user_token_info(user_id, session_id, assessment_id)
             return jsonify({
                 "mode": "retrieval",
                 "similarity": similarity,
@@ -1495,7 +2126,8 @@ def generate_code():
                 job_id = insert_gpt_job(user_id, prompt, job_prompt, status="pending")
             except Exception as e_job:
                 # If job creation fails, fallback to suggestion response
-                gamification = get_user_token_info(user_id, session_id)
+                assessment_id = session.get("assessment_id")
+                gamification = get_user_token_info(user_id, session_id, assessment_id)
                 return jsonify({
                     "mode": "suggestion",
                     "similarity": similarity,
@@ -1507,7 +2139,8 @@ def generate_code():
                     "gamification": gamification
                 }), 200
 
-            gamification = get_user_token_info(user_id, session_id)
+            assessment_id = session.get("assessment_id")
+            gamification = get_user_token_info(user_id, session_id, assessment_id)
             return jsonify({
                 "mode": "gpt-queued_auto",
                 "similarity": similarity,
@@ -1523,7 +2156,8 @@ def generate_code():
             user_id = session.get("user_id")
             session_id = session.get("session_id") or request.remote_addr
             # Suggestion dari database juga gratis, hanya memberi kode referensi
-            gamification = get_user_token_info(user_id, session_id)
+            assessment_id = session.get("assessment_id")
+            gamification = get_user_token_info(user_id, session_id, assessment_id)
             return jsonify({
                 "mode": "suggestion",
                 "similarity": similarity,
@@ -1656,7 +2290,8 @@ def generate_code():
     job_id = insert_gpt_job(user_id, prompt, gpt_prompt_marked, status="pending")
     # (worker thread/async processing not shown here)
     # Untuk GPT, token akan dikurangi saat job selesai (di /check-status)
-    gamification = get_user_token_info(user_id, session_id)
+    assessment_id = session.get("assessment_id")
+    gamification = get_user_token_info(user_id, session_id, assessment_id)
     return jsonify({
         "mode": "gpt-queued",
         "job_id": job_id,
@@ -1723,7 +2358,8 @@ def enqueue_gpt():
         return jsonify({"error": f"Failed to create job: {e}"}), 500
 
     session_id = session.get('session_id') or request.remote_addr
-    gamification = get_user_token_info(user_id, session_id)
+    assessment_id_from_session = session.get('assessment_id')
+    gamification = get_user_token_info(user_id, session_id, assessment_id_from_session)
     return jsonify({
         "mode": "gpt-queued_manual",
         "job_id": job_id,
@@ -1841,7 +2477,8 @@ def check_status(job_id):
             except Exception as e_up:
                 print(f"[WARNING] Failed to update user points: {e_up}")
 
-            gamification = get_user_token_info(user_id, session_id)
+            assessment_id_for_token_info = assessment_id if assessment_id else session.get('assessment_id')
+            gamification = get_user_token_info(user_id, session_id, assessment_id_for_token_info)
             # Catat environmental impact untuk job ini (selalu, terlepas dari embedding)
             insert_environmental_impact_log(user_id, job.get("job_id"), course_id, assessment_id, impact)
             # VALIDASI: Jangan insert jika embedding kosong/null/array kosong

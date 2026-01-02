@@ -1,15 +1,9 @@
 <?php
 require __DIR__ . '/config.php';
-
 $loggedIn = !empty($_SESSION['flask_cookie']);
 $username = $_SESSION['username'] ?? 'Guest';
-
-if (!$loggedIn) {
-  header('Location: login.php');
-  exit;
-}
 ?>
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
@@ -20,19 +14,16 @@ if (!$loggedIn) {
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- jQuery, DataTables, Select2 -->
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
   <style>
-    /* Banded rows for DataTables using Tailwind-like colors */
     .odd-row { background-color: #f8fafc; }
     .even-row { background-color: #ffffff; }
     .select2-container--default .select2-selection--single { height: 38px; }
     .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 36px; }
-    /* DataTables sizing to match page font (smaller) */
     .dataTables_wrapper, #leaderboardTable {
       font-family: 'Manrope', system-ui, -apple-system, sans-serif;
       font-size: 0.85rem;
@@ -51,8 +42,6 @@ if (!$loggedIn) {
     }
     .dataTables_wrapper .dataTables_info { font-size: 0.8rem; color: #6b7280; }
     .dataTables_wrapper .dataTables_paginate .paginate_button { font-size: 0.85rem; }
-  </style>
-  <style>
     body { font-family: 'Manrope', system-ui, -apple-system, sans-serif; }
   </style>
 </head>
@@ -75,7 +64,6 @@ if (!$loggedIn) {
         </nav>
       </div>
     </header>
-
     <main class="flex-1">
       <div class="max-w-6xl mx-auto px-4 py-6 space-y-6">
         <section class="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm">
@@ -86,30 +74,31 @@ if (!$loggedIn) {
               <canvas id="tokenChart"></canvas>
             </div>
             <div class="space-y-2 text-sm text-slate-700" id="tokenSummary">
-              <p><span class="inline-block w-32 text-slate-500">Total quota</span> <span id="dash-token-total">-</span> tokens</p>
-              <p><span class="inline-block w-32 text-slate-500">Used</span> <span id="dash-token-used">-</span> tokens</p>
-              <p><span class="inline-block w-32 text-slate-500">Remaining</span> <span id="dash-token-remaining">-</span> tokens</p>
-              <p><span class="inline-block w-32 text-slate-500">Active points</span> <span id="dash-token-points">-</span> points</p>
-              <div class="pt-2">
-                <label class="text-xs text-slate-500">View</label>
-                <select id="viewSelect" class="block mt-1 w-full rounded-md border-slate-200 text-sm">
-                  <option value="accumulated">Accumulated (all)</option>
-                  <option value="by_course">By Course</option>
-                  <option value="by_assessment">By Assessment</option>
-                </select>
+              <div class="flex flex-col gap-2">
+                                <div class="flex items-center justify-between">
+                                  <span class="text-slate-500">Threshold</span>
+                                  <span><span id="dash-token-threshold">-</span> tokens</span>
+                                </div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-slate-500">Used</span>
+                    <span><span id="dash-token-used">-</span> tokens</span>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-slate-500">Remaining</span>
+                    <span><span id="dash-token-remaining">-</span> tokens</span>
+                  </div>
+                <div class="pt-2">
+                  <!-- View selection removed: only by assessment is shown -->
+                </div>
               </div>
             </div>
           </div>
         </section>
-
         <section class="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm">
-          <!-- <h2 class="text-sm font-semibold text-slate-900 mb-1">How points work</h2> -->
           <h1 class="text-lg font-semibold text-slate-900 mb-1">How points work</h1>
           <p class="text-xs text-slate-500">Points are equivalent to your remaining tokens in the current week. Every GPT call consumes tokens and reduces your remaining quota, while retrieval-only answers from the database are free.</p>
         </section>
-
         <section class="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm">
-          <!-- <h2 class="text-sm font-semibold text-slate-900 mb-3">Leaderboard</h2> -->
           <h1 class="text-lg font-semibold text-slate-900 mb-1">Leaderboard</h1>
           <div class="flex items-center gap-3 mb-3">
             <label class="text-xs text-slate-500">Course</label>
@@ -129,131 +118,52 @@ if (!$loggedIn) {
       </div>
     </main>
   </div>
-
   <script>
     async function renderTokenChart() {
       const canvas = document.getElementById('tokenChart');
       if (!canvas) return;
       const totalEl = document.getElementById('dash-token-total');
-      const usedEl = document.getElementById('dash-token-used');
-      const remainingEl = document.getElementById('dash-token-remaining');
-      const pointsEl = document.getElementById('dash-token-points');
-
+        const thresholdEl = document.getElementById('dash-token-threshold');
+        const usedEl = document.getElementById('dash-token-used');
+        const remainingEl = document.getElementById('dash-token-remaining');
       let chart = null;
       function createChart(cfg) {
-        if (chart) {
-          try { chart.destroy(); } catch (e) {}
-          chart = null;
-        }
+        if (chart) { try { chart.destroy(); } catch (e) {} chart = null; }
         const ctx = document.getElementById('tokenChart').getContext('2d');
         chart = new Chart(ctx, cfg);
       }
-
       try {
         const res = await fetch('token_usage_breakdown.php', { method: 'GET' });
         if (!res.ok) return;
         const data = await res.json();
         if (!data) return;
+        // Only use by_assessment for summary
+        const assessment = Array.isArray(data.by_assessment) && data.by_assessment.length > 0 ? data.by_assessment[0] : null;
+          if (thresholdEl) thresholdEl.textContent = assessment ? String(assessment.threshold ?? '-') : '-';
+          if (usedEl) usedEl.textContent = assessment ? String(assessment.total_used ?? '-') : '-';
+          if (remainingEl) remainingEl.textContent = assessment ? String(assessment.remaining ?? '-') : '-';
 
-        // Compute totals depending on view. For "accumulated" prefer summing per-assessment quotas
-        function computeTotalsForView(view) {
-          const PER_ITEM_QUOTA = 2000;
-          let totalQuota = PER_ITEM_QUOTA;
-          let totalUsed = Number((data.total && data.total.total_used) || 0) || 0;
-
-          if (view === 'accumulated') {
-            if (Array.isArray(data.by_assessment) && data.by_assessment.length > 0) {
-              totalQuota = data.by_assessment.length * PER_ITEM_QUOTA;
-              totalUsed = data.by_assessment.reduce((s, a) => s + Number(a.total_used || 0), 0);
-            } else if (Array.isArray(data.by_course) && data.by_course.length > 0) {
-              // sum assessments_count across courses
-              const count = data.by_course.reduce((s, c) => s + (Number(c.assessments_count || 0) || 0), 0) || data.by_course.length;
-              totalQuota = count * PER_ITEM_QUOTA;
-              totalUsed = data.by_course.reduce((s, c) => s + Number(c.total_used || 0), 0);
-            } else {
-              totalQuota = PER_ITEM_QUOTA;
-              totalUsed = Number((data.total && data.total.total_used) || 0) || 0;
-            }
-          } else if (view === 'by_course') {
-            if (Array.isArray(data.by_course) && data.by_course.length > 0) {
-              const count = data.by_course.reduce((s, c) => s + (Number(c.assessments_count || 0) || 0), 0) || data.by_course.length;
-              totalQuota = count * PER_ITEM_QUOTA;
-              totalUsed = data.by_course.reduce((s, c) => s + Number(c.total_used || 0), 0);
-            } else {
-              totalQuota = PER_ITEM_QUOTA;
-              totalUsed = Number((data.total && data.total.total_used) || 0) || 0;
-            }
-          } else if (view === 'by_assessment') {
-            totalQuota = (Array.isArray(data.by_assessment) && data.by_assessment.length > 0) ? data.by_assessment.length * PER_ITEM_QUOTA : PER_ITEM_QUOTA;
-            totalUsed = (Array.isArray(data.by_assessment) && data.by_assessment.length > 0) ? data.by_assessment.reduce((s, a) => s + Number(a.total_used || 0), 0) : (Number((data.total && data.total.total_used) || 0) || 0);
+        // Only show by_assessment chart
+        if (Array.isArray(data.by_assessment)) {
+          const labels = data.by_assessment.map(a => a.assessment_name || a.assessment_id || 'Unassigned');
+          const used = data.by_assessment.map(a => Number(a.total_used ?? 0));
+          const remaining = data.by_assessment.map(a => Number(a.remaining ?? 0));
+          const thresholds = data.by_assessment.map(a => Number(a.threshold ?? 0));
+          let datasets = [];
+          if (labels.length === used.length && used.length === remaining.length) {
+            datasets.push({ label: 'Used', data: used, backgroundColor: '#ef4444', borderRadius: 6, stack: 'stack1' });
+            datasets.push({ label: 'Remaining', data: remaining, backgroundColor: '#06b6d4', borderRadius: 6, stack: 'stack1' });
           }
-
-          const remaining = Math.max(0, totalQuota - totalUsed);
-          return { totalQuota, totalUsed, remaining };
-        }
-
-        // Update summary panel
-        function updateSummary(view) {
-          const t = computeTotalsForView(view);
-          if (totalEl) totalEl.textContent = String(t.totalQuota);
-          if (usedEl) usedEl.textContent = String(t.totalUsed);
-          if (remainingEl) remainingEl.textContent = String(t.remaining);
-          if (pointsEl) pointsEl.textContent = String(t.remaining);
-        }
-
-        function renderAccumulated() {
-          const t = computeTotalsForView('accumulated');
+          if (thresholds.some(t => t > 0)) {
+            datasets.push({ label: 'Threshold', data: thresholds, backgroundColor: '#facc15', borderRadius: 6, type: 'line', borderColor: '#facc15', fill: false, order: 0 });
+          }
+          // Leaderboard points are NOT shown in the chart
           createChart({
             type: 'bar',
-            data: { labels: ['Used', 'Remaining'], datasets: [{ label: 'Tokens', data: [t.totalUsed, t.remaining], backgroundColor: ['#ef4444', '#10b981'], borderRadius: 8 }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
-          });
-          updateSummary('accumulated');
-        }
-
-        function renderByCourse() {
-          const items = (data.by_course || []).map(c => ({ name: c.course_name || c.course_id || 'Unassigned', used: Number(c.total_used || 0), count: Number(c.assessments_count || 0), remaining: Math.max(0, (Number(c.assessments_count || 0) * 2000) - Number(c.total_used || 0)) }));
-          const labels = items.map(i => i.name);
-          const used = items.map(i => i.used);
-          const remaining = items.map(i => i.remaining);
-          createChart({
-            type: 'bar',
-            data: { labels, datasets: [
-              { label: 'Used', data: used, backgroundColor: '#ef4444', borderRadius: 6, stack: 'stack1' },
-              { label: 'Remaining', data: remaining, backgroundColor: '#06b6d4', borderRadius: 6, stack: 'stack1' }
-            ] },
-            options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { beginAtZero: true, stacked: true } } }
-          });
-          updateSummary('by_course');
-        }
-
-        function renderByAssessment() {
-          const items = (data.by_assessment || []).map(a => ({ name: a.assessment_name || a.assessment_id || 'Unassigned', used: Number(a.total_used || 0), remaining: Math.max(0, 2000 - Number(a.total_used || 0)) }));
-          const labels = items.map(i => i.name);
-          const used = items.map(i => i.used);
-          const remaining = items.map(i => i.remaining);
-          createChart({
-            type: 'bar',
-            data: { labels, datasets: [
-              { label: 'Used', data: used, backgroundColor: '#ef4444', borderRadius: 6, stack: 'stack1' },
-              { label: 'Remaining', data: remaining, backgroundColor: '#06b6d4', borderRadius: 6, stack: 'stack1' }
-            ] },
+            data: { labels, datasets },
             options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { beginAtZero: true, stacked: true } }, plugins: { legend: { position: 'top' } } }
           });
-          updateSummary('by_assessment');
         }
-
-        const viewSelect = document.getElementById('viewSelect');
-        function applyCurrentView() {
-          const v = viewSelect ? viewSelect.value : 'accumulated';
-          if (v === 'by_course') renderByCourse();
-          else if (v === 'by_assessment') renderByAssessment();
-          else renderAccumulated();
-        }
-
-        if (viewSelect) viewSelect.addEventListener('change', () => applyCurrentView());
-        applyCurrentView();
-
         // Populate leaderboard select from assessments
         const leaderboardSelect = document.getElementById('leaderboardSelect');
         const leaderboardWrapper = document.getElementById('leaderboardTableWrapper');
@@ -275,18 +185,15 @@ if (!$loggedIn) {
               return;
             }
             const rows = json.leaderboard || [];
-            // render DataTable container (no horizontal scroll wrapper)
             leaderboardWrapper.innerHTML = '<div class="w-full"><table id="leaderboardTable" class="w-full text-left text-sm" style="width:100%; table-layout:fixed;"></table></div>';
-
-            // destroy previous instance if exists
             if (window.leaderboardTable && $.fn.DataTable && $.fn.DataTable.isDataTable('#leaderboardTable')) {
               try { window.leaderboardTable.destroy(); } catch (e) {}
             }
-
-            // prepare data for DataTables
-            const dtData = rows.map(r => ({ rank: r.rank, username: r.username || r.user_id || 'Unknown', points: r.points }));
-
-            // initialize DataTable with search, pagination and banded rows
+            const dtData = rows.map(r => ({
+              rank: r.rank,
+              username: r.username || r.user_id || 'Unknown',
+              points: (r.points !== null && r.points !== undefined) ? Math.round(r.points) : '-',
+            }));
             window.leaderboardTable = $('#leaderboardTable').DataTable({
               data: dtData,
               columns: [
@@ -303,12 +210,10 @@ if (!$loggedIn) {
               responsive: true,
               language: { search: "Search:", emptyTable: "No leaderboard data." },
               createdRow: function(row, data, dataIndex) {
-                // apply banded row classes (odd/even)
                 if (dataIndex % 2 === 0) $(row).addClass('even-row'); else $(row).addClass('odd-row');
               },
               dom: '<"top"f>rt<"bottom"lip>'
             });
-
             if (json.user_rank) {
               const ur = `<div class="mt-2 text-xs text-slate-600">Your rank: <strong>${json.user_rank.rank}</strong> — <strong>${escapeHtml(json.user_rank.points + ' pts')}</strong></div>`;
               leaderboardWrapper.insertAdjacentHTML('beforeend', ur);
@@ -317,10 +222,7 @@ if (!$loggedIn) {
             leaderboardWrapper.innerHTML = '<div class="text-xs text-red-500">Error loading leaderboard.</div>';
           }
         }
-
         function escapeHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-        // populate courses select from by_course
         try {
           const courses = data.by_course || [];
           const courseSelect = document.getElementById('leaderboardCourseSelect');
@@ -338,7 +240,6 @@ if (!$loggedIn) {
                 return;
               }
               try {
-                // fetch assessments for course via proxy
                 const res = await fetch(`assessments.php?course_id=${encodeURIComponent(cid)}`);
                 if (!res.ok) {
                   assessmentSelect.innerHTML = '<option value="">Failed to load</option>';
@@ -355,25 +256,18 @@ if (!$loggedIn) {
                 assessmentSelect.innerHTML = '<option value="">Select assessment</option>' + items.map(a => `<option value="${a.assessment_id}">${escapeHtml(a.name || a.code || a.assessment_id)}</option>`).join('');
                 assessmentSelect.disabled = false;
                 assessmentSelect.onchange = (ev) => loadLeaderboard(ev.target.value);
-                // auto-select first
                 loadLeaderboard(items[0].assessment_id);
               } catch (err) {
                 assessmentSelect.innerHTML = '<option value="">Error</option>';
                 assessmentSelect.disabled = true;
               }
             });
-            // auto-select first course and trigger change to load assessments
             courseSelect.value = courses[0].course_id;
             courseSelect.dispatchEvent(new Event('change'));
           }
-        } catch (e) {
-          // ignore
-        }
-      } catch (e) {
-        console.warn('Failed to load token usage breakdown', e);
-      }
+        } catch (e) {}
+      } catch (e) { console.warn('Failed to load token usage breakdown', e); }
     }
-
     renderTokenChart();
   </script>
 </body>

@@ -26,8 +26,14 @@ $options = [
     ],
 ];
 
+// Forward assessment_id query parameter if present
+$queryParams = '';
+if (isset($_GET['assessment_id']) && !empty($_GET['assessment_id'])) {
+    $queryParams = '?assessment_id=' . urlencode($_GET['assessment_id']);
+}
+
 try {
-    $resp = $httpClient->request('GET', 'gamification', $options);
+    $resp = $httpClient->request('GET', 'gamification' . $queryParams, $options);
     $status = $resp->getStatusCode();
     $body   = (string) $resp->getBody();
     http_response_code($status);

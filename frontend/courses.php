@@ -208,7 +208,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               <tr>
                 <th class="px-3 py-2 border-b border-slate-200">Course Code</th>
                 <th class="px-3 py-2 border-b border-slate-200">Course Name</th>
-                <th class="px-3 py-2 border-b border-slate-200">Assessment</th>
+                <th class="px-3 py-2 border-b border-slate-200">Assessment & Status</th>
                 <th class="px-3 py-2 border-b border-slate-200 text-center">Action</th>
               </tr>
             </thead>
@@ -227,44 +227,124 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <?php if (empty($courseAssessments)): ?>
                       <span class="text-xs text-slate-500">No assessments yet.</span>
                     <?php else: ?>
-                      <?php
-                        $labels = [];
-                        foreach ($courseAssessments as $a) {
-                          $aid = (string)($a['assessment_id'] ?? '');
-                          $labels[] = $a['code'] ?? ($a['name'] ?? $aid);
-                        }
-                        $display = implode(', ', $labels);
-                      ?>
-                      <span class="text-xs text-slate-700"><?php echo htmlspecialchars($display); ?></span>
+                      <div class="flex flex-col gap-2 max-h-32 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100">
+                        <?php foreach ($courseAssessments as $a): ?>
+                          <?php
+                            $end = $a['end_date'] ?? '';
+                            $assessmentLabel = htmlspecialchars($a['code'] ?? ($a['name'] ?? $a['assessment_id'] ?? '-'));
+                            
+                            if ($end) {
+                              // Strip 'GMT' label if present (backend sends WIB time with GMT label)
+                              $endCleaned = str_replace(' GMT', '', $end);
+                              
+                              // Parse as WIB time directly
+                              $dt = new DateTime($endCleaned, new DateTimeZone('Asia/Jakarta'));
+                              
+                              $now = new DateTime('now', new DateTimeZone('Asia/Jakarta'));
+                              $isEnded = $dt < $now;
+                              $badgeColor = $isEnded ? 'bg-red-50 border-red-200 text-red-700' : 'bg-emerald-50 border-emerald-200 text-emerald-700';
+                              $icon = $isEnded ? '🔴' : '🟢';
+                              $dateStr = $dt->format('d M Y, H:i') . ' WIB';
+                            } else {
+                              $badgeColor = 'bg-slate-50 border-slate-200 text-slate-600';
+                              $icon = '⚪';
+                              $dateStr = 'No end date';
+                            }
+                          ?>
+                          <div class="inline-flex items-center justify-between gap-3 px-3 py-2 rounded-lg border <?php echo $badgeColor; ?> text-xs font-medium">
+                            <span class="font-semibold"><?php echo $assessmentLabel; ?></span>
+                            <span class="flex items-center gap-1.5">
+                              <span><?php echo $icon; ?></span>
+                              <span><?php echo $dateStr; ?></span>
+                            </span>
+                          </div>
+                        <?php endforeach; ?>
+                      </div>
                     <?php endif; ?>
                   </td>
                   <td class="px-2 py-1 align-top text-center">
                     <?php if (!empty($courseAssessments)): ?>
-                      <form method="post" class="inline-flex items-center justify-center gap-1.5 w-full">
-                        <input type="hidden" name="course_id" value="<?php echo htmlspecialchars($cid); ?>">
-                        <select name="assessment_id" class="rounded border border-slate-200 text-xs focus:border-blue-500 focus:ring-0 select2 min-w-[250px]" required>
-                          <option class="text-xs text-slate-700" value="">Select assessment</option>
-                          <?php foreach ($courseAssessments as $a): ?>
-                            <?php
-                              $aid = (string)($a['assessment_id'] ?? '');
-                              $acode = $a['code'] ?? '';
-                              $aname = $a['name'] ?? '';
-
-                              if ($acode !== '' && $aname !== '') {
-                                $alabel = $acode . ' - ' . $aname;
-                              } elseif ($acode !== '') {
-                                $alabel = $acode;
-                              } elseif ($aname !== '') {
-                                $alabel = $aname;
-                              } else {
-                                $alabel = $aid; // fallback terakhir kalau data kurang lengkap
+                      <?php
+                        // Set timezone untuk consistency
+                        date_default_timezone_set('Asia/Jakarta');
+                        
+                        // Filter only active (non-expired) assessments for dropdown
+                        $activeAssessments = [];
+                        $now = new DateTime('now', new DateTimeZone('Asia/Jakarta'));
+                        
+                        // Debug: tampilkan waktu sekarang
+                        $debugInfo = "<!-- Current time: " . $now->format('Y-m-d H:i:s') . " WIB -->\n";
+                        
+                        foreach ($courseAssessments as $a) {
+                          $end = $a['end_date'] ?? '';
+                          $isActive = false;
+                          
+                          // Debug: tampilkan data assessment
+                          $debugInfo .= "<!-- Assessment: " . ($a['code'] ?? $a['name'] ?? 'Unknown') . " | end_date raw: " . var_export($end, true) . " -->\n";
+                          
+                          if (empty($end) || $end === null || $end === '' || $end === '0000-00-00 00:00:00') {
+                            // No end date = always active
+                            $isActive = true;
+                            $debugInfo .= "<!-- -> No end_date, marked as ACTIVE -->\n";
+                          } else {
+                            try {
+                              // Strip 'GMT' label if present (backend sends WIB time with GMT label)
+                              $endCleaned = str_replace(' GMT', '', $end);
+                              
+                              // Parse as WIB time directly
+                              $dt = new DateTime($endCleaned, new DateTimeZone('Asia/Jakarta'));
+                              
+                              $debugInfo .= "<!-- -> Parsed end_date (WIB): " . $dt->format('Y-m-d H:i:s') . " | Comparison: " . ($dt > $now ? "ACTIVE (future)" : "EXPIRED (past)") . " -->\n";
+                              
+                              // Assessment is active if end_date is in the future
+                              if ($dt > $now) {
+                                $isActive = true;
                               }
-                            ?>
-                            <option value="<?php echo htmlspecialchars($aid); ?>"><?php echo htmlspecialchars($alabel); ?></option>
-                          <?php endforeach; ?>
-                        </select>
-                        <button type="submit" class="rounded bg-blue-600 px-2 py-1 text-xs font-semibold text-white hover:bg-blue-700 whitespace-nowrap">Chat</button>
-                      </form>
+                            } catch (Exception $e) {
+                              // If date parsing fails, treat as no end date (active)
+                              $isActive = true;
+                              $debugInfo .= "<!-- -> Parse error: " . $e->getMessage() . ", marked as ACTIVE -->\n";
+                            }
+                          }
+                          
+                          if ($isActive) {
+                            $activeAssessments[] = $a;
+                          }
+                        }
+                        
+                        // Output debug info
+                        echo $debugInfo;
+                        echo "<!-- Total assessments: " . count($courseAssessments) . " | Active: " . count($activeAssessments) . " -->\n";
+                      ?>
+                      <?php if (!empty($activeAssessments)): ?>
+                        <form method="post" class="inline-flex items-center justify-center gap-1.5 w-full">
+                          <input type="hidden" name="course_id" value="<?php echo htmlspecialchars($cid); ?>">
+                          <select name="assessment_id" class="rounded border border-slate-200 text-xs focus:border-blue-500 focus:ring-0 select2 min-w-[250px]" required>
+                            <option class="text-xs text-slate-700" value="">Select active assessment (<?php echo count($activeAssessments); ?>/<?php echo count($courseAssessments); ?>)</option>
+                            <?php foreach ($activeAssessments as $a): ?>
+                              <?php
+                                $aid = (string)($a['assessment_id'] ?? '');
+                                $acode = $a['code'] ?? '';
+                                $aname = $a['name'] ?? '';
+
+                                if ($acode !== '' && $aname !== '') {
+                                  $alabel = $acode . ' - ' . $aname;
+                                } elseif ($acode !== '') {
+                                  $alabel = $acode;
+                                } elseif ($aname !== '') {
+                                  $alabel = $aname;
+                                } else {
+                                  $alabel = $aid; // fallback terakhir kalau data kurang lengkap
+                                }
+                              ?>
+                              <option value="<?php echo htmlspecialchars($aid); ?>"><?php echo htmlspecialchars($alabel); ?></option>
+                            <?php endforeach; ?>
+                          </select>
+                          <button type="submit" class="rounded bg-blue-600 px-2 py-1 text-xs font-semibold text-white hover:bg-blue-700 whitespace-nowrap">Chat</button>
+                        </form>
+                      <?php else: ?>
+                        <span class="text-xs text-slate-400">All assessments expired</span>
+                      <?php endif; ?>
                     <?php else: ?>
                       <span class="text-xs text-slate-400">Tidak ada assessment</span>
                     <?php endif; ?>

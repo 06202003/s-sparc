@@ -51,6 +51,8 @@ if (!$assessmentId) {
           <div>
             <div class="text-lg font-semibold">Chat Assistant</div>
             <div class="text-xs text-slate-500">courses: <strong><?= htmlspecialchars($currentCourse ?? '-') ?></strong> &mdash; Assessment: <strong><?= htmlspecialchars($currentAssessment ?? '-') ?></strong></div>
+            <div class="text-xs text-slate-600 font-medium" id="assessment-end-info"></div>
+            <div class="text-xs font-semibold" id="assessment-end-countdown"></div>
           </div>
         </div>
         <nav class="flex items-center gap-3 text-sm font-medium">
@@ -117,10 +119,10 @@ if (!$assessmentId) {
           </form>
           <div id="rate-limit-notice" class="hidden mt-2 text-sm text-amber-700"></div>
           <div class="mt-3 flex flex-wrap gap-2 text-sm" id="suggestions">
-            <button type="button" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-700 hover:border-slate-400" data-suggest="Create a Python function to calculate factorial">Factorial Python</button>
-            <button type="button" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-700 hover:border-slate-400" data-suggest="Write an SQL query to select top 10 from users table ordered by created_at desc">SQL Query top 10</button>
-            <button type="button" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-700 hover:border-slate-400" data-suggest="Create a Flask POST /predict endpoint with JSON body validation">Flask POST Endpoint</button>
-            <button type="button" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-700 hover:border-slate-400" data-suggest="Example pytest unit test for addition function">Pytest Unit Test</button>
+            <button type="button" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-700 hover:border-slate-400" data-suggest="Create a Python function named calculate_factorial that takes a single integer argument and returns its factorial. The function should include type annotations, a detailed docstring explaining the algorithm, and handle invalid input such as negative numbers or non-integer values by raising appropriate exceptions. Please also add inline comments explaining each logical step, and provide an example usage in the docstring. The function should be efficient and avoid recursion for very large numbers, using an iterative approach instead. Assume the input can be very large, so optimize for performance and memory usage. The code should be clear and easy to understand, following PEP8 style guidelines.">Factorial Python</button>
+            <button type="button" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-700 hover:border-slate-400" data-suggest="Write an SQL query that selects the top 10 most recently registered users from a users table, joining with a profiles table to retrieve each user's full name and email address. The query should filter out users who have not verified their email, sort the results by the created_at column in descending order, and include comments explaining each part of the query. Please ensure the query is well-formatted, readable, and uses table aliases for clarity.">SQL Query top 10 </button>
+            <button type="button" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-700 hover:border-slate-400" data-suggest="Create a Flask POST endpoint at /predict that accepts a JSON body with fields for age, gender, and symptoms (as a list of strings). Validate the input using Marshmallow or Pydantic, and return a JSON response with a prediction and a confidence score. If validation fails, return a detailed error message. Include type annotations, a docstring, and example request/response in the comments. The code should be modular, with input validation separated from the prediction logic.">Flask POST Endpoint</button>
+            <button type="button" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-700 hover:border-slate-400" data-suggest="Write a Python script that demonstrates how to read a CSV file containing user data, process the data to filter out users who have not verified their email, and then write the filtered data to a new CSV file. The script should use the csv module, include detailed comments explaining each step, handle possible exceptions such as file not found or invalid data, and print a summary of how many users were processed and how many were filtered.">CSV Processing Python</button>
           </div>
         </section>
 
@@ -137,12 +139,22 @@ if (!$assessmentId) {
           <div class="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm">
             <div class="text-sm font-semibold text-slate-800 mb-2">Token usage this week</div>
             <div class="text-sm text-slate-700 flex flex-col gap-1">
-              <span>Total quota: <strong><span id="token-total">-</span></strong> tokens</span>
-              <span>Used: <strong><span id="token-used">-</span></strong> tokens</span>
-              <span>Remaining: <strong><span id="token-remaining">-</span></strong> tokens</span>
-              <span>Active points: <strong><span id="token-points">-</span></strong> points</span>
-            </div>
-            <p class="mt-2 text-xs text-slate-500">Quota is calculated weekly based on the total tokens used across all sessions.</p>
+              <div class="flex flex-col gap-2">
+                <div class="flex items-center justify-between">
+                  <span class="text-slate-500">Threshold</span>
+                  <span><span id="token-threshold">-</span> tokens</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-slate-500">Used</span>
+                  <span><span id="token-used">-</span> tokens</span>
+                </div>
+                <!-- Remaining removed: points are dynamic and sufficient -->
+                <!-- <div class="flex items-center justify-between">
+                  <span class="text-slate-500">Active points</span>
+                  <span><span id="token-points">-</span> points</span>
+                </div> -->
+              </div>
+              <p class="mt-2 text-xs text-slate-500">The threshold is calculated dynamically each time there is user interaction with the LLM based on the number of tokens used in each assessment session.</p>
           </div>
         </aside>
       </div>
@@ -160,7 +172,7 @@ if (!$assessmentId) {
     const suggestions = document.getElementById('suggestions');
     const tokenTotalEl = document.getElementById('token-total');
     const tokenUsedEl = document.getElementById('token-used');
-    const tokenRemainingEl = document.getElementById('token-remaining');
+    // Remaining element removed
     const tokenPointsEl = document.getElementById('token-points');
     let scrollBtn = null;
     const userId = '<?= htmlspecialchars($_SESSION['chat_user_id']) ?>';
@@ -169,7 +181,7 @@ if (!$assessmentId) {
 
     const STORAGE_KEY = 'chat_messages_v1_' + (assessmentId || 'default');
     const state = { messages: [] };
-    const tokenState = { total: null, remaining: null, points: null };
+    const tokenState = { total: null, points: null };
 
     function loadMessages() {
       try {
@@ -339,48 +351,51 @@ if (!$assessmentId) {
 
     async function refreshGamification() {
       try {
-        // If an assessment is selected, prefer per-assessment totals
-        if (assessmentId) {
-          const res = await fetch('token_usage_breakdown.php', { method: 'GET' });
-          if (res && res.ok) {
-            const data = await res.json();
-            if (data && Array.isArray(data.by_assessment)) {
-              const as = data.by_assessment.find(a => String(a.assessment_id) === String(assessmentId));
-              if (as) {
-                const total = 2000; // per-assessment quota
-                const used = Number(as.total_used || 0) || 0;
-                const remaining = Math.max(0, total - used);
-                const points = remaining;
-                tokenState.total = total;
-                tokenState.remaining = remaining;
-                tokenState.points = points;
-                if (tokenTotalEl) tokenTotalEl.textContent = String(total);
-                if (tokenRemainingEl) tokenRemainingEl.textContent = String(remaining);
-                if (tokenUsedEl) tokenUsedEl.textContent = String(used);
-                if (tokenPointsEl) tokenPointsEl.textContent = String(points);
-                return;
-              }
+        // Fetch gamification data with assessment_id for dynamic threshold
+        const res = await fetch(`gamification.php?assessment_id=${encodeURIComponent(assessmentId)}`, { method: 'GET' });
+        if (!res.ok) return;
+        const data = await res.json();
+        const g = data.gamification;
+        const used = g.used_tokens != null ? (Number(g.used_tokens) || 0) : 0;
+        // If backend does not send threshold, fallback to remaining_tokens or '-'
+        let threshold = '-';
+        if (g.threshold != null) {
+          threshold = Math.round(Number(g.threshold) || 0);
+        } else if (g.remaining_tokens != null) {
+          threshold = Math.round(Number(g.total_tokens) || 0);
+        }
+        const tokenUsedEl = document.getElementById('token-used');
+        const tokenThresholdEl = document.getElementById('token-threshold');
+        if (tokenUsedEl) tokenUsedEl.textContent = used.toString();
+        if (tokenThresholdEl) tokenThresholdEl.textContent = threshold.toString();
+
+        // Assessment countdown logic
+        const countdownEl = document.getElementById('assessment-end-countdown');
+        const infoEl = document.getElementById('assessment-end-info');
+        if (countdownEl && g.end_date) {
+          // Parse end_date from backend (assume ISO string)
+          const endDate = new Date(g.end_date);
+          function updateCountdown() {
+            const now = new Date();
+            const diff = endDate - now;
+            if (diff > 0) {
+              const hours = Math.floor(diff / 1000 / 60 / 60);
+              const minutes = Math.floor((diff / 1000 / 60) % 60);
+              const seconds = Math.floor((diff / 1000) % 60);
+              countdownEl.textContent = `Assessment ends in ${hours}h ${minutes}m ${seconds}s`;
+              infoEl.textContent = `Deadline: ${endDate.toLocaleString()}`;
+            } else {
+              countdownEl.textContent = 'Assessment expired';
+              infoEl.textContent = `Expired: ${endDate.toLocaleString()}`;
             }
           }
+          updateCountdown();
+          if (window._assessmentCountdownTimer) clearInterval(window._assessmentCountdownTimer);
+          window._assessmentCountdownTimer = setInterval(updateCountdown, 1000);
+        } else if (countdownEl) {
+          countdownEl.textContent = '';
+          if (infoEl) infoEl.textContent = '';
         }
-
-        // Fallback to global gamification endpoint
-        const res2 = await fetch('gamification.php', { method: 'GET' });
-        if (!res2.ok) return;
-        const data2 = await res2.json();
-        if (!data2 || !data2.gamification) return;
-        const g = data2.gamification;
-        const total = Number(g.total_tokens ?? 0) || 0;
-        const remaining = Number(g.remaining_tokens ?? 0) || 0;
-        const points = Number(g.points ?? 0) || 0;
-        const used = g.used_tokens != null ? (Number(g.used_tokens) || 0) : (total - remaining);
-        tokenState.total = total;
-        tokenState.remaining = remaining;
-        tokenState.points = points;
-        if (tokenTotalEl) tokenTotalEl.textContent = total.toString();
-        if (tokenRemainingEl) tokenRemainingEl.textContent = remaining.toString();
-        if (tokenUsedEl) tokenUsedEl.textContent = used >= 0 ? used.toString() : '0';
-        if (tokenPointsEl) tokenPointsEl.textContent = points.toString();
       } catch (e) {
         console.warn('Failed to refresh gamification info', e);
       }
