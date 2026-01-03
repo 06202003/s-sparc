@@ -23,7 +23,7 @@
         z-index: -1;
       }
     </style>
-    <nav class="navbar navbar-expand-lg sticky-top" style="top: 0; z-index: 1030; background-color: rgba(245, 250, 248, 0.95); box-shadow: 0 2px 12px rgba(15, 23, 42, 0.04);">
+    <nav class="navbar navbar-expand-lg sticky-top" style="top: 0; z-index: 1030; background-color:transparent; box-shadow: 0 2px 12px rgba(15, 23, 42, 0.04);">
       <div class="container-fluid">
         <a class="navbar-brand" href="index.php">
           <img src="logo.png" alt="S-SPARC" width="150" height="75" />

@@ -74,7 +74,19 @@ $botman->hears('.*', function ($bot) {
             $bot->reply('Incorrect status format. Example: status abc-123');
             return;
         }
-        $poll = flask_request('GET', '/check-status/' . urlencode($jobId));
+        // Kirim user_id dan assessment_id jika ada
+        $params = [];
+        // Prefer canonical backend user_id if present, otherwise fallback to chat_user_id
+        if (!empty($_SESSION['user_id'])) {
+            $params['user_id'] = $_SESSION['user_id'];
+        } elseif (!empty($_SESSION['chat_user_id'])) {
+            $params['user_id'] = $_SESSION['chat_user_id'];
+        }
+        if (!empty($_SESSION['assessment_id'])) {
+            $params['assessment_id'] = $_SESSION['assessment_id'];
+        }
+        $query = $params ? ('?' . http_build_query($params)) : '';
+        $poll = flask_request('GET', '/check-status/' . urlencode($jobId) . $query);
         if (!$poll['ok']) {
             $bot->reply('Failed to check status (job_id: ' . $jobId . '). ' . ($poll['error'] ?? ''));
             return;
@@ -194,7 +206,18 @@ $botman->hears('.*', function ($bot) {
         $maxPoll = 30; // ~60 detik (2s * 30)
         for ($i = 0; $i < $maxPoll; $i++) {
             sleep(2);
-            $poll = flask_request('GET', '/check-status/' . urlencode($jobId));
+            // Kirim user_id dan assessment_id jika ada
+            $params = [];
+            if (!empty($_SESSION['user_id'])) {
+                $params['user_id'] = $_SESSION['user_id'];
+            } elseif (!empty($_SESSION['chat_user_id'])) {
+                $params['user_id'] = $_SESSION['chat_user_id'];
+            }
+            if (!empty($_SESSION['assessment_id'])) {
+                $params['assessment_id'] = $_SESSION['assessment_id'];
+            }
+            $query = $params ? ('?' . http_build_query($params)) : '';
+            $poll = flask_request('GET', '/check-status/' . urlencode($jobId) . $query);
             if (!$poll['ok']) {
                 continue;
             }

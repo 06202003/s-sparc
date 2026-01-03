@@ -90,6 +90,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $_SESSION['current_assessment'] = $assessmentName;
       $_SESSION['assessment_id'] = $selectedAssessmentId;
       $_SESSION['current_course_id'] = $selectedCourseId;
+      // Set chat_user_id dari session user_id backend jika ada
+      if (!empty($_SESSION['user_id'])) {
+        $_SESSION['chat_user_id'] = $_SESSION['user_id'];
+      }
       header('Location: chat.php');
       exit;
     }

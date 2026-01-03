@@ -175,7 +175,7 @@ if (!$assessmentId) {
     // Remaining element removed
     const tokenPointsEl = document.getElementById('token-points');
     let scrollBtn = null;
-    const userId = '<?= htmlspecialchars($_SESSION['chat_user_id']) ?>';
+    const userId = '<?= htmlspecialchars($_SESSION['user_id'] ?? $_SESSION['chat_user_id']) ?>';
     const assessmentId = '<?= htmlspecialchars($assessmentId, ENT_QUOTES, 'UTF-8') ?>';
     const sendBtn = document.getElementById('send-btn');
 
@@ -434,7 +434,10 @@ if (!$assessmentId) {
 
       const params = new URLSearchParams();
       params.append('driver', 'web');
-      params.append('userId', userId);
+      // Always send userId and assessmentId explicitly
+      if (userId) params.append('user_id', userId);
+      if (assessmentId) params.append('assessment_id', assessmentId);
+      params.append('userId', userId); // legacy/fallback
       params.append('message', messageText);
       // send optional hints to backend
       if (languageSelect && languageSelect.value) params.append('language', languageSelect.value);

@@ -409,33 +409,30 @@ def assessment_leaderboard():
                 )
                 rows = cur.fetchall() or []
                 leaderboard = []
+                # Compute threshold once for performance
+                threshold = get_dynamic_threshold(cur, assessment_id, week_ref)
                 for r in rows:
                     used = int(r.get('total_used', 0) or 0)
-                    threshold = get_dynamic_threshold(cur, assessment_id, week_ref)
-                    # Calculate final_point only if assessment expired
-                    if expired:
+                    # Calculate provisional final_point even if assessment still active
+                    if threshold <= 0:
+                        final_point = 100.0 if used <= 0 else 0.0
+                    else:
                         if used <= threshold:
                             final_point = 100.0
                         else:
                             final_point = max(0.0, 100.0 + 100.0 * (threshold - used) / threshold)
                         final_point = min(100.0, final_point)
-                    else:
-                        final_point = None
                     leaderboard.append({
                         'user_id': r.get('user_id'),
                         'username': r.get('username') or None,
-                        'points': final_point,
+                        'points': round(final_point, 2),
                         'total_used': used,
                         'threshold': threshold,
+                        'expired': expired,
                     })
 
-                # Do NOT include users with no usage rows; leaderboard should only show
-                # users who have usage entries for this assessment. Users without any
-                # record will not appear here.
-
-                # Sort by remaining points desc and compute dense ranks
-                leaderboard = [x for x in leaderboard if x['points'] is not None]
-                leaderboard.sort(key=lambda x: x['points'], reverse=True)
+                # Sort by points desc and compute dense ranks
+                leaderboard.sort(key=lambda x: x['points'] if x.get('points') is not None else -1, reverse=True)
                 prev_points = None
                 rank = 0
                 dense_rank = 0
@@ -457,17 +454,29 @@ def assessment_leaderboard():
                 )
                 rows = cur.fetchall() or []
                 leaderboard = []
+                # fallback: compute points using dynamic threshold mapping to 0-100
+                leaderboard = []
+                # reuse week_ref logic if available
+                week_ref = now
+                threshold = get_dynamic_threshold(cur, assessment_id, week_ref)
                 for r in rows:
                     used = int(r.get('total_used', 0) or 0)
-                    remaining = max(0, 2000 - used)
+                    if threshold <= 0:
+                        final_point = 100.0 if used <= 0 else 0.0
+                    else:
+                        if used <= threshold:
+                            final_point = 100.0
+                        else:
+                            final_point = max(0.0, 100.0 + 100.0 * (threshold - used) / threshold)
+                        final_point = min(100.0, final_point)
                     leaderboard.append({
                         'user_id': r.get('user_id'),
                         'username': r.get('username') or None,
-                        'points': remaining,
+                        'points': round(final_point, 2),
                         'total_used': used,
+                        'threshold': threshold,
                     })
 
-                # compute ranks
                 leaderboard.sort(key=lambda x: x['points'], reverse=True)
                 prev_points = None
                 rank = 0
@@ -504,24 +513,30 @@ def update_user_points_for_assessment(user_id, assessment_id, course_id, points_
     This function will create a row in `user_points_assessment` if missing,
     otherwise it will add to `total_points`.
     """
+    print(f"[DEBUG] update_user_points_for_assessment called with user_id={user_id}, assessment_id={assessment_id}, course_id={course_id}, points_to_add={points_to_add}")
     if not user_id or not assessment_id:
+        print(f"[ERROR] update_user_points_for_assessment: user_id or assessment_id missing (user_id={user_id}, assessment_id={assessment_id})")
         return
     conn = get_db_connection()
     try:
         with conn.cursor() as cur:
             now = datetime.datetime.now()
-            cur.execute("SELECT total_points FROM user_points_assessment WHERE user_id=%s AND assessment_id=%s", (user_id, assessment_id))
-            row = cur.fetchone()
-            if not row:
-                cur.execute(
-                    "INSERT INTO user_points_assessment (id, user_id, assessment_id, course_id, total_points, updated_at) VALUES (%s, %s, %s, %s, %s, %s)",
-                    (str(uuid.uuid4()), user_id, assessment_id, course_id, points_to_add, now)
-                )
-            else:
-                cur.execute(
-                    "UPDATE user_points_assessment SET total_points = total_points + %s, updated_at = %s WHERE user_id = %s AND assessment_id = %s",
-                    (points_to_add, now, user_id, assessment_id)
-                )
+            try:
+                cur.execute("SELECT total_points FROM user_points_assessment WHERE user_id=%s AND assessment_id=%s", (user_id, assessment_id))
+                row = cur.fetchone()
+                if not row:
+                    cur.execute(
+                        "INSERT INTO user_points_assessment (id, user_id, assessment_id, course_id, total_points, updated_at) VALUES (%s, %s, %s, %s, %s, %s)",
+                        (str(uuid.uuid4()), user_id, assessment_id, course_id, points_to_add, now)
+                    )
+                else:
+                    cur.execute(
+                        "UPDATE user_points_assessment SET total_points = total_points + %s, updated_at = %s WHERE user_id = %s AND assessment_id = %s",
+                        (points_to_add, now, user_id, assessment_id)
+                    )
+            except Exception as e:
+                print(f"[ERROR] update_user_points_for_assessment failed: {e} (user_id={user_id}, assessment_id={assessment_id}, course_id={course_id}, points_to_add={points_to_add})")
+                raise
         conn.commit()
     finally:
         conn.close()
@@ -540,18 +555,21 @@ def log_token_usage(user_id, session_id, tokens_used, assessment_id=None, course
     try:
         with conn.cursor() as cur:
             now = datetime.datetime.now()
-            # Try to insert with assessment/course columns if they exist, fallback to legacy insert
             try:
                 cur.execute(
                     "INSERT INTO session_tokens (id, user_id, session_id, assessment_id, course_id, tokens_used, used_at) VALUES (%s, %s, %s, %s, %s, %s, %s)",
                     (str(uuid.uuid4()), user_id, session_id, assessment_id, course_id, tokens_used, now)
                 )
-            except Exception:
-                # Fallback for older schemas without assessment/course columns
-                cur.execute(
-                    "INSERT INTO session_tokens (id, user_id, session_id, tokens_used, used_at) VALUES (%s, %s, %s, %s, %s)",
-                    (str(uuid.uuid4()), user_id, session_id, tokens_used, now)
-                )
+            except Exception as e1:
+                print(f"[ERROR] Failed to insert session_tokens with assessment/course: {e1}")
+                try:
+                    cur.execute(
+                        "INSERT INTO session_tokens (id, user_id, session_id, tokens_used, used_at) VALUES (%s, %s, %s, %s, %s)",
+                        (str(uuid.uuid4()), user_id, session_id, tokens_used, now)
+                    )
+                except Exception as e2:
+                    print(f"[ERROR] Fallback insert session_tokens (legacy) also failed: {e2}")
+                    raise
         conn.commit()
     finally:
         conn.close()
@@ -815,15 +833,32 @@ def get_user_token_info(user_id, session_id, assessment_id=None):
                     (user_id, now),
                 )
             row = cur.fetchone() or {"used_this_week": 0}
-            used_this_week = row.get("used_this_week", 0) or 0
-            capped_used = min(used_this_week, threshold)
-            remaining_tokens = max(0, threshold - capped_used)
+            raw_used = row.get("used_this_week", 0) or 0
+            try:
+                used_this_week_f = float(raw_used)
+            except Exception:
+                used_this_week_f = 0.0
+
+            # cap and remaining values should be integers for display
+            capped_used = int(min(used_this_week_f, float(threshold)))
+            remaining_tokens = max(0, int(max(0.0, float(threshold) - min(float(threshold), used_this_week_f))))
+
+            # Compute points using the same dynamic 0..100 mapping as leaderboard
+            if threshold <= 0:
+                final_point = 100.0 if used_this_week_f <= 0.0 else 0.0
+            else:
+                if used_this_week_f <= float(threshold):
+                    final_point = 100.0
+                else:
+                    final_point = max(0.0, 100.0 + 100.0 * (float(threshold) - used_this_week_f) / float(threshold))
+                final_point = min(100.0, final_point)
+
             result = {
                 "total_tokens": threshold,
                 "used_tokens": capped_used,
                 "remaining_tokens": remaining_tokens,
-                "points": remaining_tokens,
-                "used_tokens_raw": used_this_week,
+                "points": round(final_point, 2),
+                "used_tokens_raw": int(used_this_week_f),
             }
             if end_date:
                 result["end_date"] = str(end_date)
@@ -1083,6 +1118,31 @@ def logout():
     return jsonify({"message": "Logout berhasil."}), 200
 
 
+@app.route('/whoami', methods=['GET'])
+@require_login
+def whoami():
+    """Return basic info about the currently authenticated user (from server session)."""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Unauthorized'}), 401
+    # Attempt to return username if available in session or DB
+    username = session.get('username')
+    if not username:
+        try:
+            conn = get_db_connection()
+            with conn.cursor() as cur:
+                cur.execute("SELECT username FROM users WHERE user_id=%s LIMIT 1", (user_id,))
+                row = cur.fetchone()
+                if row:
+                    username = row.get('username')
+        finally:
+            try:
+                conn.close()
+            except Exception:
+                pass
+    return jsonify({'user_id': user_id, 'username': username}), 200
+
+
 def require_login(func):
     from functools import wraps
     @wraps(func)
@@ -1259,7 +1319,7 @@ def token_usage_daily():
             by_assessment = []
             try:
                 cur.execute(
-                    "SELECT st.assessment_id AS assessment_id, COALESCE(a.name, '') AS assessment_name, COALESCE(a.end_date, NULL) AS end_date, COALESCE(SUM(st.tokens_used),0) AS total_used "
+                    "SELECT st.assessment_id AS assessment_id, COALESCE(a.name, '') AS assessment_name, COALESCE(a.end_date, NULL) AS end_date, COALESCE(a.course_id, NULL) AS course_id, COALESCE(SUM(st.tokens_used),0) AS total_used "
                     "FROM session_tokens st LEFT JOIN assessments a ON st.assessment_id = a.assessment_id "
                     "WHERE st.user_id=%s AND YEARWEEK(st.used_at, 1) = YEARWEEK(%s, 1) "
                     "GROUP BY st.assessment_id ORDER BY total_used DESC",
@@ -1273,6 +1333,7 @@ def token_usage_daily():
                     by_assessment.append({
                         "assessment_id": aid,
                         "assessment_name": r.get('assessment_name') or None,
+                        "course_id": r.get('course_id') or None,
                         "end_date": r.get('end_date'),
                         "total_used": used,
                         "threshold": threshold,
@@ -1398,7 +1459,7 @@ def token_usage_breakdown():
             # Try per-assessment breakdown with dynamic threshold
             try:
                 cur.execute(
-                    "SELECT st.assessment_id AS assessment_id, COALESCE(a.name, '') AS assessment_name, COALESCE(a.end_date, NULL) AS end_date, COALESCE(SUM(st.tokens_used),0) AS total_used "
+                    "SELECT st.assessment_id AS assessment_id, COALESCE(a.name, '') AS assessment_name, COALESCE(a.end_date, NULL) AS end_date, COALESCE(a.course_id, NULL) AS course_id, COALESCE(SUM(st.tokens_used),0) AS total_used "
                     "FROM session_tokens st LEFT JOIN assessments a ON st.assessment_id = a.assessment_id "
                     "WHERE st.user_id=%s AND YEARWEEK(st.used_at, 1) = YEARWEEK(%s, 1) "
                     "GROUP BY st.assessment_id ORDER BY total_used DESC",
@@ -1412,6 +1473,7 @@ def token_usage_breakdown():
                     by_assessment.append({
                         "assessment_id": aid,
                         "assessment_name": r.get('assessment_name') or None,
+                        "course_id": r.get('course_id') or None,
                         "end_date": r.get('end_date'),
                         "total_used": used,
                         "threshold": threshold,
@@ -1424,7 +1486,7 @@ def token_usage_breakdown():
             if not by_assessment:
                 try:
                     cur.execute(
-                        "SELECT upa.assessment_id AS assessment_id, COALESCE(a.name,'') AS assessment_name, COALESCE(a.end_date, NULL) AS end_date, COALESCE(upa.total_points,0) AS total_used "
+                        "SELECT upa.assessment_id AS assessment_id, COALESCE(a.name,'') AS assessment_name, COALESCE(a.end_date, NULL) AS end_date, COALESCE(a.course_id, NULL) AS course_id, COALESCE(upa.total_points,0) AS total_used "
                         "FROM user_points_assessment upa LEFT JOIN assessments a ON upa.assessment_id = a.assessment_id "
                         "WHERE upa.user_id=%s ORDER BY total_used DESC",
                         (user_id,)
@@ -1435,19 +1497,21 @@ def token_usage_breakdown():
                         used = int(r.get('total_used', 0) or 0)
                         threshold = get_dynamic_threshold(cur, aid, now)
                         by_assessment.append({
-                            "assessment_id": aid,
-                            "assessment_name": r.get('assessment_name') or None,
-                            "end_date": r.get('end_date'),
-                            "total_used": used,
-                            "threshold": threshold,
-                            "remaining": max(0, threshold - used),
-                        })
+                        "assessment_id": aid,
+                        "assessment_name": r.get('assessment_name') or None,
+                        "course_id": r.get('course_id') or None,
+                        "end_date": r.get('end_date'),
+                        "total_used": used,
+                        "threshold": threshold,
+                        "remaining": max(0, threshold - used),
+                    })
                 except Exception as e:
                     print(f"[DEBUG] fallback by_assessment failed: {e}")
                     by_assessment = []
 
         return jsonify({
             "total": {"total_used": total_used, "remaining": remaining},
+            "total_threshold": total_threshold,
             "by_course": by_course,
             "by_assessment": by_assessment,
         }), 200
@@ -2432,20 +2496,25 @@ def check_status(job_id):
             # Update token user (kurangi token setelah GPT selesai)
             user_id = job["user_id"]
             session_id = request.remote_addr or "default"
-            # Coba deteksi assessment_id & course_id terbaru dari riwayat chat user
-            assessment_id = None
+            # Audit: capture incoming params and session values
+            req_user = request.form.get('user_id') or request.args.get('user_id')
+            req_assessment = request.form.get('assessment_id') or request.args.get('assessment_id')
+            req_session_id = request.form.get('session_id') or request.args.get('session_id') or session.get('session_id')
+            sess_user = session.get('user_id')
+            sess_assessment = session.get('assessment_id')
+            print(f"[AUDIT] check_status: params user_id={req_user}, assessment_id={req_assessment}, session_id={req_session_id}, session_user_id={sess_user}, session_assessment_id={sess_assessment}")
+            # Prefer server-side session user_id when present to avoid client-supplied mismatches
+            if sess_user:
+                user_id = sess_user
+            else:
+                user_id = req_user
+            # For assessment, prefer request param if provided, otherwise session
+            assessment_id = req_assessment or sess_assessment
             course_id = None
-            try:
-                conn_meta = get_db_connection()
-                with conn_meta.cursor() as curm:
-                    curm.execute(
-                        "SELECT assessment_id FROM chat_history WHERE user_id=%s ORDER BY created_at DESC LIMIT 1",
-                        (user_id,),
-                    )
-                    row_m = curm.fetchone()
-                    if row_m and row_m.get("assessment_id"):
-                        assessment_id = row_m["assessment_id"]
-                        # Dari assessment_id ambil course_id
+            if assessment_id:
+                try:
+                    conn_meta = get_db_connection()
+                    with conn_meta.cursor() as curm:
                         curm.execute(
                             "SELECT course_id FROM assessments WHERE assessment_id=%s LIMIT 1",
                             (assessment_id,),
@@ -2453,13 +2522,39 @@ def check_status(job_id):
                         row_c = curm.fetchone()
                         if row_c and row_c.get("course_id"):
                             course_id = row_c["course_id"]
-            except Exception as e_meta:
-                print(f"[WARNING] Could not resolve course/assessment for impact log: {e_meta}")
-            finally:
+                except Exception as e_meta:
+                    print(f"[WARNING] Could not resolve course for assessment_id={assessment_id}: {e_meta}")
+                finally:
+                    try:
+                        conn_meta.close()
+                    except Exception:
+                        pass
+            else:
+                # Fallback: resolve dari chat_history jika assessment_id tetap tidak ada
                 try:
-                    conn_meta.close()
-                except Exception:
-                    pass
+                    conn_meta = get_db_connection()
+                    with conn_meta.cursor() as curm:
+                        curm.execute(
+                            "SELECT assessment_id FROM chat_history WHERE user_id=%s ORDER BY created_at DESC LIMIT 1",
+                            (user_id,),
+                        )
+                        row_m = curm.fetchone()
+                        if row_m and row_m.get("assessment_id"):
+                            assessment_id = row_m["assessment_id"]
+                            curm.execute(
+                                "SELECT course_id FROM assessments WHERE assessment_id=%s LIMIT 1",
+                                (assessment_id,),
+                            )
+                            row_c = curm.fetchone()
+                            if row_c and row_c.get("course_id"):
+                                course_id = row_c["course_id"]
+                except Exception as e_meta:
+                    print(f"[WARNING] Could not resolve assessment/course from chat_history: {e_meta}")
+                finally:
+                    try:
+                        conn_meta.close()
+                    except Exception:
+                        pass
 
             # Log token usage with assessment/course when available
             try:

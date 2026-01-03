@@ -43,31 +43,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username'] ?? '');
     $password = trim($_POST['password'] ?? '');
     if ($username === '' || $password === '') {
-        $error = 'Username dan password wajib diisi.';
+      $error = 'Username dan password wajib diisi.';
     } else {
-        $result = call_flask_login('/login', [
-            'username' => $username,
-            'password' => $password,
-        ]);
-        if (!empty($result['data']['error'])) {
-            $error = $result['data']['error'];
-        } elseif (($result['status'] ?? 500) >= 500) {
-            $error = 'Server backend sedang bermasalah (status ' . ($result['status'] ?? 'unknown') . '). Coba lagi nanti.';
-        } elseif (($result['status'] ?? 500) === 401 || ($result['status'] ?? 500) === 403) {
-            $error = 'Kredensial salah atau sesi ditolak.';
-        } elseif (($result['status'] ?? 500) >= 400) {
-            $error = 'Gagal login (status ' . ($result['status'] ?? 'unknown') . ').';
-        } elseif (!empty($result['error'])) {
-            $error = 'Tidak dapat menghubungi backend: ' . $result['error'];
-        } else {
-            $_SESSION['flask_cookie'] = $result['cookie'] ?? null;
-            $_SESSION['username'] = $username;
-            // Reset pilihan mata kuliah/assessment saat login baru
-            unset($_SESSION['current_course'], $_SESSION['current_assessment'], $_SESSION['assessment_id']);
-            // Langsung arahkan ke pemilihan mata kuliah
-            header('Location: courses.php');
-            exit;
+      $result = call_flask_login('/login', [
+        'username' => $username,
+        'password' => $password,
+      ]);
+      if (!empty($result['data']['error'])) {
+        $error = $result['data']['error'];
+      } elseif (($result['status'] ?? 500) >= 500) {
+        $error = 'Server backend sedang bermasalah (status ' . ($result['status'] ?? 'unknown') . '). Coba lagi nanti.';
+      } elseif (($result['status'] ?? 500) === 401 || ($result['status'] ?? 500) === 403) {
+        $error = 'Kredensial salah atau sesi ditolak.';
+      } elseif (($result['status'] ?? 500) >= 400) {
+        $error = 'Gagal login (status ' . ($result['status'] ?? 'unknown') . ').';
+      } elseif (!empty($result['error'])) {
+        $error = 'Tidak dapat menghubungi backend: ' . $result['error'];
+      } else {
+        $_SESSION['flask_cookie'] = $result['cookie'] ?? null;
+        $_SESSION['username'] = $username;
+        // Reset pilihan mata kuliah/assessment saat login baru
+        unset($_SESSION['current_course'], $_SESSION['current_assessment'], $_SESSION['assessment_id']);
+
+        // Try to fetch canonical user_id from backend using the flask cookie we just stored
+        try {
+          $options2 = [];
+          if (!empty($_SESSION['flask_cookie'])) {
+            $options2['headers']['Cookie'] = $_SESSION['flask_cookie'];
+          }
+          $respWho = $httpClient->get('whoami', $options2);
+          $dataWho = json_decode((string) $respWho->getBody(), true);
+          if (is_array($dataWho) && !empty($dataWho['user_id'])) {
+            $_SESSION['user_id'] = $dataWho['user_id'];
+            $_SESSION['chat_user_id'] = $dataWho['user_id'];
+          }
+        } catch (RequestException $e) {
+          // ignore - will continue without setting user_id locally; backend session still valid
         }
+
+        // Langsung arahkan ke pemilihan mata kuliah
+        header('Location: courses.php');
+        exit;
+      }
     }
 }
 ?>
