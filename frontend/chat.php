@@ -29,6 +29,7 @@ if (!$assessmentId) {
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
     :root { color-scheme: light; }
     body { font-family: 'Manrope', system-ui, -apple-system, sans-serif; }
@@ -46,24 +47,25 @@ if (!$assessmentId) {
   <div class="min-h-screen flex flex-col">
     <header class="sticky top-0 z-10 border-b border-slate-200/70 bg-white/80 backdrop-blur">
       <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-        <div class="flex items-center gap-3">
+        <div class="flex min-w-0 items-center gap-3">
           <div class="h-10 w-10 rounded-xl bg-slate-900 text-white grid place-items-center font-semibold">AI</div>
-          <div>
+          <div class="min-w-0">
             <div class="text-lg font-semibold">Chat Assistant</div>
-            <div class="text-xs text-slate-500">courses: <strong><?= htmlspecialchars($currentCourse ?? '-') ?></strong> &mdash; Assessment: <strong><?= htmlspecialchars($currentAssessment ?? '-') ?></strong></div>
+            <div class="text-xs text-slate-500 truncate max-w-[36rem]">courses: <strong><?= htmlspecialchars($currentCourse ?? '-') ?></strong> &mdash; Assessment: <strong><?= htmlspecialchars($currentAssessment ?? '-') ?></strong></div>
             <div class="text-xs text-slate-600 font-medium" id="assessment-end-info"></div>
             <div class="text-xs font-semibold" id="assessment-end-countdown"></div>
           </div>
         </div>
-        <nav class="flex items-center gap-3 text-sm font-medium">
-          <a class="text-slate-400 hover:text-slate-700" href="dashboard.php">Dashboard</a>
-          <a class="text-slate-400 hover:text-slate-700" href="courses.php">Change courses</a>
-          <button id="new-chat" type="button" class="inline-flex items-center gap-2 rounded-full bg-slate-900 text-white px-3 py-1 hover:bg-slate-800">New chat</button>
-          <button id="clear-chat" type="button" class="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1 text-slate-700 hover:border-slate-400">Clear history</button>
+        <nav class="flex shrink-0 items-center gap-2 text-sm font-medium">
+          <a class="inline-flex h-10 items-center rounded-full px-3 text-slate-500 hover:bg-slate-100 hover:text-slate-700 whitespace-nowrap" href="dashboard.php">Dashboard</a>
+          <a class="inline-flex h-10 items-center rounded-full px-3 text-slate-500 hover:bg-slate-100 hover:text-slate-700 whitespace-nowrap" href="courses.php">Change courses</a>
+          <button id="view-prompt-tips" type="button" class="inline-flex h-10 items-center rounded-full border border-slate-200 px-4 text-slate-700 hover:border-slate-400 whitespace-nowrap">Lihat Tips Prompting</button>
+          <button id="new-chat" type="button" class="inline-flex h-10 items-center rounded-full bg-slate-900 text-white px-4 hover:bg-slate-800 whitespace-nowrap">New chat</button>
+          <button id="clear-chat" type="button" class="inline-flex h-10 items-center rounded-full border border-slate-200 px-4 text-slate-700 hover:border-slate-400 whitespace-nowrap">Clear history</button>
           <?php if ($loggedIn): ?>
-            <a href="logout.php" class="ml-auto inline-flex items-center gap-2 rounded-full bg-red-500 text-white px-3 py-1 hover:bg-red-600 shadow-sm">Logout</a>
+            <a href="logout.php" class="inline-flex h-10 items-center rounded-full bg-red-500 text-white px-4 hover:bg-red-600 shadow-sm whitespace-nowrap">Logout</a>
           <?php else: ?>
-            <a href="login.php" class="ml-auto inline-flex items-center gap-2 rounded-full border border-slate-300 px-3 py-1 text-slate-700 hover:border-slate-500 hover:text-slate-900">Login</a>
+            <a href="login.php" class="inline-flex h-10 items-center rounded-full border border-slate-300 px-4 text-slate-700 hover:border-slate-500 hover:text-slate-900 whitespace-nowrap">Login</a>
           <?php endif; ?>
         </nav>
       </div>
@@ -108,12 +110,12 @@ if (!$assessmentId) {
                   <option value="summary_code_explanation">Summary + Code + Explanation</option>
                 </select>
               </div>
-              <div class="flex items-stretch gap-3">
+              <div class="flex items-center gap-3">
                 <label for="chat-input" class="sr-only">Write a message</label>
                 <div class="rounded-2xl border border-slate-200 bg-white shadow-sm focus-within:border-slate-400 flex-1 flex">
-                  <textarea id="chat-input" rows="2" class="w-full min-h-[3rem] resize-none overflow-y-auto bg-transparent px-4 py-2 outline-none" placeholder="Write your code question here…" required></textarea>
+                  <textarea id="chat-input" rows="3" class="w-full min-h-[4.5rem] resize-none overflow-y-auto bg-transparent px-4 py-2 outline-none" placeholder="Write your code question here…" required></textarea>
                 </div>
-                <button id="send-btn" type="submit" class="h-full flex items-center justify-center rounded-xl bg-slate-900 text-white px-4 font-semibold hover:bg-slate-800 focus:ring focus:ring-slate-200">Send</button>
+                <button id="send-btn" type="submit" class="h-11 self-center flex items-center justify-center rounded-xl bg-slate-900 text-white px-4 font-semibold hover:bg-slate-800 focus:ring focus:ring-slate-200">Send</button>
               </div>
             </div>
           </form>
@@ -132,12 +134,13 @@ if (!$assessmentId) {
             <ul class="space-y-2 text-sm text-slate-600">
               <li>Use a clear format, for example: “Create a Python function to calculate factorials.”</li>
               <li>To check the queue: type <span class="font-mono">status &lt;job_id&gt;</span>.</li>
-              <li>Response retrieval is marked with similarity; GPT will queue if necessary.</li>
+              <li><strong class="text-green-600">FREE:</strong> Database retrieval (similarity ≥95%) uses 0 tokens and 0 quota.</li>
+              <li><strong class="text-blue-600">GPT:</strong> New questions use tokens and quota.</li>
             </ul>
           </div>
           <!-- Kartu status sesi disembunyikan sesuai permintaan -->
           <div class="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm">
-            <div class="text-sm font-semibold text-slate-800 mb-2">Token usage this week</div>
+            <div class="text-sm font-semibold text-slate-800 mb-2">GPT Token usage this week</div>
             <div class="text-sm text-slate-700 flex flex-col gap-1">
               <div class="flex flex-col gap-2">
                 <div class="flex items-center justify-between">
@@ -145,7 +148,7 @@ if (!$assessmentId) {
                   <span><span id="token-threshold">-</span> tokens</span>
                 </div>
                 <div class="flex items-center justify-between">
-                  <span class="text-slate-500">Used</span>
+                  <span class="text-slate-500">Used (GPT only)</span>
                   <span><span id="token-used">-</span> tokens</span>
                 </div>
                 <!-- Remaining removed: points are dynamic and sufficient -->
@@ -154,7 +157,7 @@ if (!$assessmentId) {
                   <span><span id="token-points">-</span> points</span>
                 </div> -->
               </div>
-              <p class="mt-2 text-xs text-slate-500">The threshold is calculated dynamically each time there is user interaction with the LLM based on the number of tokens used in each assessment session.</p>
+              <p class="mt-2 text-xs text-slate-500">Only GPT requests count toward token usage. <strong class="text-green-600">Retrieval from database is FREE</strong> (similarity ≥95%) and does not use tokens or affect your quota.</p>
           </div>
         </aside>
       </div>
@@ -174,6 +177,7 @@ if (!$assessmentId) {
     const tokenUsedEl = document.getElementById('token-used');
     // Remaining element removed
     const tokenPointsEl = document.getElementById('token-points');
+    const viewPromptTipsBtn = document.getElementById('view-prompt-tips');
     let scrollBtn = null;
     const userId = '<?= htmlspecialchars($_SESSION['user_id'] ?? $_SESSION['chat_user_id']) ?>';
     const assessmentId = '<?= htmlspecialchars($assessmentId, ENT_QUOTES, 'UTF-8') ?>';
@@ -351,42 +355,35 @@ if (!$assessmentId) {
 
     async function refreshGamification() {
       try {
-        // Fetch gamification data with assessment_id for dynamic threshold
+        if (!assessmentId) return;
         const res = await fetch(`gamification.php?assessment_id=${encodeURIComponent(assessmentId)}`, { method: 'GET' });
         if (!res.ok) return;
         const data = await res.json();
         const g = data.gamification;
-        const used = g.used_tokens != null ? (Number(g.used_tokens) || 0) : 0;
-        // If backend does not send threshold, fallback to remaining_tokens or '-'
-        let threshold = '-';
-        if (g.threshold != null) {
-          threshold = Math.round(Number(g.threshold) || 0);
-        } else if (g.remaining_tokens != null) {
-          threshold = Math.round(Number(g.total_tokens) || 0);
-        }
-        const tokenUsedEl = document.getElementById('token-used');
-        const tokenThresholdEl = document.getElementById('token-threshold');
-        if (tokenUsedEl) tokenUsedEl.textContent = used.toString();
-        if (tokenThresholdEl) tokenThresholdEl.textContent = threshold.toString();
+        if (!g) return;
 
-        // Assessment countdown logic
+        const thresholdEl = document.getElementById('token-threshold');
+        if (thresholdEl) thresholdEl.textContent = Number(g.token_threshold || 0).toLocaleString();
+        if (tokenTotalEl) tokenTotalEl.textContent = Number(g.token_threshold || 0).toLocaleString();
+        if (tokenUsedEl) tokenUsedEl.textContent = Number(g.gpt_tokens_used || 0).toLocaleString();
+        if (tokenPointsEl) tokenPointsEl.textContent = Number(g.current_points || 0).toLocaleString();
+
         const countdownEl = document.getElementById('assessment-end-countdown');
         const infoEl = document.getElementById('assessment-end-info');
-        if (countdownEl && g.end_date) {
-          // Parse end_date from backend (assume ISO string)
-          const endDate = new Date(g.end_date);
+        if (g.assessment_end_date) {
+          const endDate = new Date(g.assessment_end_date);
           function updateCountdown() {
             const now = new Date();
-            const diff = endDate - now;
+            const diff = endDate.getTime() - now.getTime();
             if (diff > 0) {
               const hours = Math.floor(diff / 1000 / 60 / 60);
               const minutes = Math.floor((diff / 1000 / 60) % 60);
               const seconds = Math.floor((diff / 1000) % 60);
-              countdownEl.textContent = `Assessment ends in ${hours}h ${minutes}m ${seconds}s`;
-              infoEl.textContent = `Deadline: ${endDate.toLocaleString()}`;
+              if (countdownEl) countdownEl.textContent = `Assessment ends in ${hours}h ${minutes}m ${seconds}s`;
+              if (infoEl) infoEl.textContent = `Deadline: ${endDate.toLocaleString()}`;
             } else {
-              countdownEl.textContent = 'Assessment expired';
-              infoEl.textContent = `Expired: ${endDate.toLocaleString()}`;
+              if (countdownEl) countdownEl.textContent = 'Assessment expired';
+              if (infoEl) infoEl.textContent = `Expired: ${endDate.toLocaleString()}`;
             }
           }
           updateCountdown();
@@ -498,9 +495,21 @@ if (!$assessmentId) {
             // Take only the code part from the second message (after the first line)
             const lines = finalText.split('\n');
             const codeOnly = lines.slice(1).join('\n') || finalText;
-            const meta = jobId
-              ? `Result from ChatGPT (queued earlier, job_id: ${jobId}).`
-              : 'Result from ChatGPT (queued earlier).';
+            
+            // Detect source: check if message starts with "Answers are retrieved from the database"
+            const isRetrieval = finalText.includes('Answers are retrieved from the database');
+            let meta = '';
+            if (isRetrieval) {
+              // Extract similarity info if present
+              const simMatch = finalText.match(/Similarity\s+([0-9.]+)%/);
+              meta = simMatch
+                ? `Retrieved from database (FREE). Similarity ${simMatch[1]}%`
+                : 'Retrieved from database (FREE)';
+            } else {
+              meta = jobId
+                ? `Result from ChatGPT (queued earlier, job_id: ${jobId}).`
+                : 'Result from ChatGPT (queued earlier).';
+            }
 
             // Hanya tampilkan hasil akhirnya, bukan pesan antrian mentah
             addMessage('bot', codeOnly, meta);
@@ -553,7 +562,7 @@ if (!$assessmentId) {
       addMessage('bot', 'New chat started. Ask me anything about coding.');
     }
 
-    const MAX_TEXTAREA_HEIGHT = 64; // 4rem assuming 16px base font size
+    const MAX_TEXTAREA_HEIGHT = 128; // 8rem assuming 16px base font size
 
     function autoResizeTextarea() {
       if (!chatInput) return;
@@ -638,9 +647,9 @@ if (!$assessmentId) {
       if (gptBtn) {
         const original = gptBtn.dataset.prompt || '';
         if (original) {
+          // Send with __force_gpt__ prefix to trigger /enqueue-gpt endpoint (no rate limit)
           const FORCE_PREFIX = '__force_gpt__ ';
-          // Tampilkan ke user teks aslinya dengan label kecil, kirim ke backend dengan prefix khusus
-          sendMessageCore(FORCE_PREFIX + original, original + ' (generate dengan ChatGPT)');
+          sendMessageCore(FORCE_PREFIX + original, original + ' (generate with ChatGPT)');
         }
       }
     });
@@ -681,6 +690,182 @@ if (!$assessmentId) {
 
     // Hydrate from localStorage on load and seed welcome message if empty
     loadMessages();
+
+    function showPromptingTipsModal() {
+      if (typeof Swal === 'undefined') return;
+
+      const promptingProfiles = [
+        {
+          id: 'debug-error',
+          title: 'Debugging Error (Paling Penting)',
+          badge: 'Wajib untuk kasus error',
+          focus: 'Cocok saat kamu dapat error/bug dan butuh solusi cepat + aman.',
+          checklist: [
+            'Sebutkan pesan error lengkap (copy-paste).',
+            'Sertakan potongan kode yang error (minimal reproduksi).',
+            'Jelaskan ekspektasi hasil vs hasil aktual.',
+            'Sebutkan bahasa, versi, dan langkah menjalankan.',
+          ],
+          template: `Konteks: Saya sedang mengerjakan [topik/tugas].\nError: [paste pesan error lengkap].\nKode terkait: [paste potongan kode minimal yang error].\nEkspektasi: [hasil yang seharusnya].\nHasil aktual: [hasil saat ini].\nOutput diminta: 1) akar masalah 2) perbaikan kode 3) alasan perbaikan 4) cara verifikasi.`
+        },
+        {
+          id: 'generate-code',
+          title: 'Generate Kode Baru',
+          badge: 'Untuk mulai dari nol',
+          focus: 'Cocok untuk minta implementasi fitur/fungsi baru secara terstruktur.',
+          checklist: [
+            'Jelaskan requirement fungsional utama.',
+            'Sebutkan input/output dengan contoh.',
+            'Tetapkan bahasa pemrograman dan batasan.',
+            'Minta format jawaban yang kamu mau.',
+          ],
+          template: `Konteks: Saya butuh implementasi [fitur].\nBahasa: [Python/JS/Java/dll].\nInput: [struktur data + contoh].\nOutput: [format hasil yang diharapkan].\nBatasan: [kompleksitas, library, style].\nOutput diminta: kode runnable + contoh uji singkat.`
+        },
+        {
+          id: 'refactor',
+          title: 'Refactor / Rapikan Kode',
+          badge: 'Untuk perbaikan kualitas',
+          focus: 'Cocok saat kode jalan tapi ingin lebih bersih, cepat, dan mudah maintain.',
+          checklist: [
+            'Berikan kode awal yang ingin dirapikan.',
+            'Sebutkan masalah utama (duplikasi, lambat, sulit dibaca).',
+            'Minta tetap menjaga behavior awal.',
+            'Minta ringkasan perubahan penting.',
+          ],
+          template: `Konteks: Tolong refactor kode berikut tanpa mengubah behavior.\nKode awal: [paste kode].\nMasalah: [mis. duplikasi, naming, performa].\nBatasan: [jangan ubah API publik, tetap kompatibel].\nOutput diminta: kode hasil refactor + ringkasan perubahan + alasan.`
+        },
+        {
+          id: 'sql',
+          title: 'SQL Query / Analisis Data',
+          badge: 'Untuk query DB',
+          focus: 'Cocok saat butuh query SQL akurat sesuai skema tabel.',
+          checklist: [
+            'Sebutkan nama tabel dan kolom kunci.',
+            'Jelaskan relasi/join yang dibutuhkan.',
+            'Sebutkan filter, sorting, dan limit.',
+            'Minta contoh output.',
+          ],
+          template: `Konteks: Saya perlu query SQL untuk [tujuan].\nTabel & kolom: [daftar tabel + kolom penting].\nRelasi: [join antar tabel].\nFilter/sort: [syarat where, order, limit].\nOutput diminta: query final + penjelasan singkat tiap bagian.`
+        },
+        {
+          id: 'concept',
+          title: 'Penjelasan Konsep',
+          badge: 'Untuk belajar teori',
+          focus: 'Cocok untuk pemahaman konsep sebelum coding.',
+          checklist: [
+            'Sebutkan konsep yang ingin dipahami.',
+            'Minta analogi sederhana.',
+            'Minta contoh kode kecil.',
+            'Minta rangkuman poin penting.',
+          ],
+          template: `Konteks: Jelaskan konsep [nama konsep] untuk mahasiswa.\nLevel: [pemula/menengah].\nMinta: definisi singkat, analogi, contoh kode sederhana, dan kapan konsep ini dipakai.`
+        }
+      ];
+
+      const defaultProfileId = 'debug-error';
+      const todayIndex = Math.floor(Date.now() / 86400000) % promptingProfiles.length;
+      const tipOfSession = promptingProfiles[todayIndex];
+      const chipsHtml = promptingProfiles.map((p) => (
+        `<button type="button" class="prompt-chip" data-id="${p.id}" style="border:1px solid #cbd5e1; background:#fff; color:#334155; border-radius:999px; padding:6px 10px; font-size:12px; cursor:pointer;">${p.title}</button>`
+      )).join('');
+
+      Swal.fire({
+        title: 'Prompting Dinamis Biar Tepat & Minim Error ✅',
+        width: 860,
+        confirmButtonText: 'Siap, Mulai Chat',
+        confirmButtonColor: '#0f172a',
+        showCloseButton: true,
+        html: `
+          <div style="text-align:left; font-size:14px; line-height:1.55; color:#334155;">
+            <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:10px;">
+              <span style="font-size:12px; color:#475569;"><b>Tip sesi ini:</b></span>
+              <span style="font-size:12px; background:#ecfeff; color:#0f766e; border:1px solid #99f6e4; border-radius:999px; padding:4px 10px;">${tipOfSession.title}</span>
+              <span style="font-size:12px; background:#fff7ed; color:#9a3412; border:1px solid #fdba74; border-radius:999px; padding:4px 10px;">Fokus utama: debugging error mahasiswa</span>
+            </div>
+
+            <p style="margin:0 0 8px;"><b>Pilih tipe prompting:</b></p>
+            <div id="promptTypeChips" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;">${chipsHtml}</div>
+
+            <div id="promptTypeDetail" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px;">
+              <div id="promptTitle" style="font-weight:700; color:#0f172a; margin-bottom:4px;"></div>
+              <div id="promptBadge" style="display:inline-block; font-size:11px; border-radius:999px; padding:2px 8px; border:1px solid #cbd5e1; color:#475569; margin-bottom:8px;"></div>
+              <div id="promptFocus" style="margin-bottom:8px;"></div>
+              <div style="margin-bottom:6px;"><b>Checklist:</b></div>
+              <ul id="promptChecklist" style="margin:0 0 10px 18px; padding:0;"></ul>
+              <div style="margin-bottom:6px;"><b>Template siap pakai:</b></div>
+              <pre id="promptTemplate" style="margin:0; background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:10px; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:12px; white-space:pre-wrap;"></pre>
+              <button id="usePromptTemplate" type="button" style="margin-top:10px; border:none; background:#0f172a; color:#fff; border-radius:8px; padding:7px 12px; font-size:12px; cursor:pointer;">Gunakan template ini ke chat</button>
+            </div>
+
+            <p style="margin:10px 0 0; font-size:12px; color:#64748b;">
+              <b>Catatan:</b> Prompt yang detail biasanya lebih akurat, dan untuk kasus error selalu sertakan <b>pesan error lengkap</b> + <b>kode minimal</b>.
+            </p>
+          </div>
+        `,
+        didOpen: () => {
+          const chipsWrap = document.getElementById('promptTypeChips');
+          const titleEl = document.getElementById('promptTitle');
+          const badgeEl = document.getElementById('promptBadge');
+          const focusEl = document.getElementById('promptFocus');
+          const checklistEl = document.getElementById('promptChecklist');
+          const templateEl = document.getElementById('promptTemplate');
+          const applyBtn = document.getElementById('usePromptTemplate');
+
+          let activeId = defaultProfileId;
+
+          function renderProfile(profileId) {
+            const p = promptingProfiles.find(x => x.id === profileId) || promptingProfiles[0];
+            activeId = p.id;
+            if (titleEl) titleEl.textContent = p.title;
+            if (badgeEl) badgeEl.textContent = p.badge;
+            if (focusEl) focusEl.textContent = p.focus;
+            if (templateEl) templateEl.textContent = p.template;
+            if (checklistEl) {
+              checklistEl.innerHTML = (p.checklist || []).map(item => `<li>${item}</li>`).join('');
+            }
+
+            const chips = chipsWrap ? chipsWrap.querySelectorAll('.prompt-chip') : [];
+            chips.forEach(ch => {
+              const selected = ch.getAttribute('data-id') === p.id;
+              ch.style.background = selected ? '#0f172a' : '#ffffff';
+              ch.style.color = selected ? '#ffffff' : '#334155';
+              ch.style.borderColor = selected ? '#0f172a' : '#cbd5e1';
+            });
+          }
+
+          if (chipsWrap) {
+            chipsWrap.addEventListener('click', (ev) => {
+              const chip = ev.target.closest('.prompt-chip');
+              if (!chip) return;
+              renderProfile(chip.getAttribute('data-id'));
+            });
+          }
+
+          if (applyBtn) {
+            applyBtn.addEventListener('click', () => {
+              const p = promptingProfiles.find(x => x.id === activeId);
+              if (!p || !chatInput) return;
+              chatInput.value = p.template;
+              autoResizeTextarea();
+              validateInputState();
+              chatInput.focus();
+              try { Swal.close(); } catch (e) {}
+            });
+          }
+
+          renderProfile(defaultProfileId);
+        }
+      });
+    }
+
+    if (viewPromptTipsBtn) {
+      viewPromptTipsBtn.addEventListener('click', () => {
+        showPromptingTipsModal();
+      });
+    }
+
+    showPromptingTipsModal();
+
     // Ambil informasi token awal untuk mengisi kartu
     refreshGamification();
     if (state.messages.length === 0) {

@@ -15,9 +15,11 @@ $username = $_SESSION['username'] ?? 'Guest';
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
   <style>
     .odd-row { background-color: #f8fafc; }
@@ -42,6 +44,49 @@ $username = $_SESSION['username'] ?? 'Guest';
     }
     .dataTables_wrapper .dataTables_info { font-size: 0.8rem; color: #6b7280; }
     .dataTables_wrapper .dataTables_paginate .paginate_button { font-size: 0.85rem; }
+    /* Simple rank display with medals for top 3 */
+    .rank-cell {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      justify-content: flex-start;
+    }
+    .rank-medal {
+      font-size: 1.5rem;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      width: 24px;
+      height: 24px;
+    }
+    .rank-number {
+      font-weight: 600;
+      color: #475569;
+      line-height: 1;
+    }
+    /* Current user highlight */
+    #leaderboardTable tr.current-user {
+      background: linear-gradient(90deg, #dbeafe 0%, #bfdbfe 100%) !important;
+      font-weight: 600;
+      border-left: 4px solid #3b82f6;
+    }
+    #leaderboardTable tr.current-user td {
+      color: #1e40af;
+    }
+    #leaderboardTable tr.current-user td:first-child {
+      padding-left: 0.5rem;
+    }
+    /* Points badge */
+    .points-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+      color: white;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-weight: 700;
+      font-size: 0.75rem;
+      box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+    }
     body { font-family: 'Manrope', system-ui, -apple-system, sans-serif; }
   </style>
 </head>
@@ -99,7 +144,15 @@ $username = $_SESSION['username'] ?? 'Guest';
         </section>
         <section class="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm">
           <h1 class="text-lg font-semibold text-slate-900 mb-1">How points work</h1>
-          <p class="text-xs text-slate-500">Points are equivalent to your remaining tokens in the current week. Every GPT call consumes tokens and reduces your remaining quota, while retrieval-only answers from the database are free.</p>
+          <div class="text-xs text-slate-600 space-y-2">
+            <p>Points are a 0–100 score based on how your usage compares to the threshold for each assessment.</p>
+            <ul class="list-disc pl-4 space-y-1">
+              <li><strong>Threshold</strong> = 1.10 × average token usage of all users in the same assessment (this week or until the assessment end date).</li>
+              <li>If your usage ≤ threshold → score = 100.</li>
+              <li>If your usage > threshold → score decreases linearly toward 0.</li>
+              <li>Retrieval-only answers are free and do not affect your usage.</li>
+            </ul>
+          </div>
         </section>
         <section class="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm">
           <h1 class="text-lg font-semibold text-slate-900 mb-1">Leaderboard</h1>
@@ -114,7 +167,7 @@ $username = $_SESSION['username'] ?? 'Guest';
             </select>
           </div>
           <div id="leaderboardContainer" class="text-sm text-slate-700">
-            <div class="text-xs text-slate-500 mb-2">Top participants for selected assessment will appear here.</div>
+            <div class="text-xs text-slate-500 mb-2">Select a course to see its leaderboard, or choose an assessment for per-assessment ranks.</div>
             <div id="leaderboardTableWrapper"></div>
           </div>
         </section>
@@ -137,8 +190,10 @@ $username = $_SESSION['username'] ?? 'Guest';
       }
       try {
         const res = await fetch('token_usage_breakdown.php', { method: 'GET' });
+        
         if (!res.ok) return;
         const data = await res.json();
+        // console.log('Data received from backend:', data);
         if (!data) return;
         // Only use by_assessment for summary
         // Show overall totals by default (no course selected)
@@ -179,7 +234,7 @@ $username = $_SESSION['username'] ?? 'Guest';
           datasets.push({ label: 'Remaining', data: overall_remaining_array, backgroundColor: '#06b6d4', borderRadius: 6, stack: 'stack1' });
         }
         if (overall_thresholds_array.some(t => t > 0)) {
-          datasets.push({ label: 'Threshold', data: overall_thresholds_array, backgroundColor: '#facc15', borderRadius: 6, type: 'line', borderColor: '#facc15', fill: false, order: 0 });
+          datasets.unshift({ label: 'Threshold', data: overall_thresholds_array, type: 'line', backgroundColor: '#51ff00', pointRadius: 4.5, pointHoverRadius: 6, pointBackgroundColor: '#51ff00', pointBorderColor: '#51ff00', tension: 0, fill: false, order: 0 });
         }
         createChart({
           type: 'bar',
@@ -191,58 +246,149 @@ $username = $_SESSION['username'] ?? 'Guest';
         const leaderboardWrapper = document.getElementById('leaderboardTableWrapper');
         const currentUser = '<?= htmlspecialchars($username) ?>';
         const chartCourseSelect = document.getElementById('chartCourseSelect');
-        async function loadLeaderboard(assessmentId) {
+        async function renderLeaderboard(data, titleText) {
+          const leaderboardWrapper = document.getElementById('leaderboardTableWrapper');
+          if (!data || !Array.isArray(data.leaderboard)) {
+            leaderboardWrapper.innerHTML = '<div class="text-xs text-slate-500">No leaderboard data.</div>';
+            return;
+          }
+          const rows = data.leaderboard || [];
+          leaderboardWrapper.innerHTML = `<div class="mb-2 text-sm font-semibold text-slate-800">${titleText}</div><div class="w-full"><table id="leaderboardTable" class="w-full text-left text-sm" style="width:100%; table-layout:fixed;"></table></div>`;
+          if (window.leaderboardTable && $.fn.DataTable && $.fn.DataTable.isDataTable('#leaderboardTable')) {
+            try { window.leaderboardTable.destroy(); } catch (e) {}
+          }
+          const dtData = rows.map(r => ({
+            rank: r.rank,
+            username: r.username || r.user_id || 'Unknown',
+            points: (r.points !== null && r.points !== undefined) ? Number(r.points) : null,
+            assessments_count: r.assessments_count || null,
+          }));
+          // console.log(dtData);
+          window.leaderboardTable = $('#leaderboardTable').DataTable({
+            data: dtData,
+            columns: [
+              { 
+                data: 'rank', 
+                title: 'Rank', 
+                className: 'py-2',
+                render: function(data, type, row) {
+                  const rank = parseInt(data);
+                  let medal = '';
+                  if (rank === 1) medal = '🥇';
+                  else if (rank === 2) medal = '🥈';
+                  else if (rank === 3) medal = '🥉';
+                  if (medal) return `<span class="rank-medal" title="Rank ${rank}">${medal}</span>`;
+                  return `<span class="rank-number">${data}</span>`;
+                }
+              },
+              { 
+                data: 'username', 
+                title: 'User', 
+                className: 'py-2',
+                render: function(data, type, row) { 
+                  const escaped = escapeHtml(data);
+                  if (data === currentUser) {
+                    return `<strong>${escaped}</strong> <span style="color:#3b82f6;font-size:0.75rem">(You)</span>`;
+                  }
+                  return escaped;
+                }
+              },
+              { 
+                data: 'points', 
+                title: 'Points', 
+                className: 'py-2 text-center',
+                render: function(data, type, row) {
+                  const val = Number(data);
+                  if (!Number.isFinite(val)) return '-';
+                  return `<span class="points-badge">${val.toFixed(2)} pts</span>`;
+                }
+              },
+              { 
+                data: 'assessments_count', 
+                title: 'Assessments',
+                className: 'py-2 text-center',
+                visible: dtData.some(d => d.assessments_count !== null),
+                render: function(data) { return data ? data : '-'; }
+              }
+            ],
+            paging: true,
+            pageLength: 10,
+            lengthChange: true,
+            lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            searching: true,
+            info: true,
+            ordering: true,
+            order: [[0, 'asc']],
+            responsive: true,
+            language: { 
+              search: "Search:", 
+              emptyTable: "No leaderboard data.",
+              lengthMenu: "Show _MENU_ entries",
+              info: "Showing _START_ to _END_ of _TOTAL_ entries",
+              infoEmpty: "Showing 0 to 0 of 0 entries",
+              paginate: {
+                first: "First",
+                last: "Last",
+                next: "Next",
+                previous: "Previous"
+              }
+            },
+            createdRow: function(row, data, dataIndex) {
+              // Highlight current user row
+              if (data.username === currentUser) {
+                $(row).addClass('current-user');
+              } else {
+                if (dataIndex % 2 === 0) $(row).addClass('even-row');
+                else $(row).addClass('odd-row');
+              }
+            }
+          });
+          if (data.user_rank) {
+            const extra = data.user_rank.assessments_count ? ` (${data.user_rank.assessments_count} assessments)` : '';
+            const urPoints = Number(data.user_rank.points);
+            const urPointsText = Number.isFinite(urPoints) ? `${urPoints.toFixed(2)} pts` : '-';
+            const ur = `<div class="mt-2 text-xs text-slate-600">Your rank: <strong>${data.user_rank.rank}</strong> — <strong>${escapeHtml(urPointsText)}</strong>${extra}</div>`;
+            leaderboardWrapper.insertAdjacentHTML('beforeend', ur);
+          }
+        }
+
+        async function loadAssessmentLeaderboard(assessmentId) {
+          const leaderboardWrapper = document.getElementById('leaderboardTableWrapper');
           if (!assessmentId) {
-            leaderboardWrapper.innerHTML = '<div class="text-xs text-slate-500">Choose an assessment to see the leaderboard.</div>';
+            const courseId = document.getElementById('leaderboardCourseSelect') ? document.getElementById('leaderboardCourseSelect').value : '';
+            if (courseId) {
+              loadCourseLeaderboard(courseId);
+            } else {
+              leaderboardWrapper.innerHTML = '<div class="text-xs text-slate-500">Choose a course to see the course leaderboard.</div>';
+            }
             return;
           }
           try {
             const res = await fetch(`assessment_leaderboard.php?assessment_id=${encodeURIComponent(assessmentId)}`);
-            if (!res.ok) {
-              leaderboardWrapper.innerHTML = '<div class="text-xs text-red-500">Failed to load leaderboard.</div>';
-              return;
-            }
+            if (!res.ok) throw new Error('Failed');
             const json = await res.json();
-            if (!json || !Array.isArray(json.leaderboard)) {
-              leaderboardWrapper.innerHTML = '<div class="text-xs text-slate-500">No leaderboard data.</div>';
-              return;
-            }
-            const rows = json.leaderboard || [];
-            leaderboardWrapper.innerHTML = '<div class="w-full"><table id="leaderboardTable" class="w-full text-left text-sm" style="width:100%; table-layout:fixed;"></table></div>';
-            if (window.leaderboardTable && $.fn.DataTable && $.fn.DataTable.isDataTable('#leaderboardTable')) {
-              try { window.leaderboardTable.destroy(); } catch (e) {}
-            }
-            const dtData = rows.map(r => ({
-              rank: r.rank,
-              username: r.username || r.user_id || 'Unknown',
-              points: (r.points !== null && r.points !== undefined) ? Math.round(r.points) : '-',
-            }));
-            window.leaderboardTable = $('#leaderboardTable').DataTable({
-              data: dtData,
-              columns: [
-                { data: 'rank', title: 'Rank', className: 'py-2' },
-                { data: 'username', title: 'User', className: 'py-2', render: function(data, type, row) { return escapeHtml(data); } },
-                { data: 'points', title: 'Points', className: 'py-2' }
-              ],
-              paging: true,
-              pageLength: 10,
-              lengthChange: true,
-              searching: true,
-              info: true,
-              ordering: false,
-              responsive: true,
-              language: { search: "Search:", emptyTable: "No leaderboard data." },
-              createdRow: function(row, data, dataIndex) {
-                if (dataIndex % 2 === 0) $(row).addClass('even-row'); else $(row).addClass('odd-row');
-              },
-              dom: '<"top"f>rt<"bottom"lip>'
-            });
-            if (json.user_rank) {
-              const ur = `<div class="mt-2 text-xs text-slate-600">Your rank: <strong>${json.user_rank.rank}</strong> — <strong>${escapeHtml(json.user_rank.points + ' pts')}</strong></div>`;
-              leaderboardWrapper.insertAdjacentHTML('beforeend', ur);
-            }
+            // console.log("Assessment Leaderboard FULL JSON:", json);
+            // console.log("Leaderboard array:", json.leaderboard);
+            // console.table(json.leaderboard);
+            await renderLeaderboard(json, 'Assessment Leaderboard');
           } catch (e) {
             leaderboardWrapper.innerHTML = '<div class="text-xs text-red-500">Error loading leaderboard.</div>';
+          }
+        }
+
+        async function loadCourseLeaderboard(courseId) {
+          const leaderboardWrapper = document.getElementById('leaderboardTableWrapper');
+          if (!courseId) {
+            leaderboardWrapper.innerHTML = '<div class="text-xs text-slate-500">Choose a course to see the course leaderboard.</div>';
+            return;
+          }
+          try {
+            const res = await fetch(`course_leaderboard.php?course_id=${encodeURIComponent(courseId)}`);
+            if (!res.ok) throw new Error('Failed');
+            const json = await res.json();
+            await renderLeaderboard(json, 'Course Leaderboard (average across assessments)');
+          } catch (e) {
+            leaderboardWrapper.innerHTML = '<div class="text-xs text-red-500">Error loading course leaderboard.</div>';
           }
         }
         function escapeHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -271,26 +417,28 @@ $username = $_SESSION['username'] ?? 'Guest';
                 assessmentSelect.innerHTML = '<option value="">Select assessment</option>';
                 assessmentSelect.disabled = true;
                 const leaderboardWrapper = document.getElementById('leaderboardTableWrapper');
-                leaderboardWrapper.innerHTML = '<div class="text-xs text-slate-500">Choose an assessment to see the leaderboard.</div>';
-                // Do NOT modify the chart: leaderboard controls are independent now
+                leaderboardWrapper.innerHTML = '<div class="text-xs text-slate-500">Choose a course to see the course leaderboard.</div>';
                 return;
               }
+              // Load course-level leaderboard immediately on course change
+              loadCourseLeaderboard(cid);
               try {
-                // populate assessments from in-memory data.by_assessment where possible
+                // Fetch all assessments (expired + active). Try flag, then without, then fallback to local data.
                 let items = [];
-                if (Array.isArray(data.by_assessment) && data.by_assessment.length) {
-                  items = data.by_assessment.filter(a => String(a.course_id) === String(cid));
-                }
-                // fallback to server call if none found locally
-                if (!items.length) {
-                  const res = await fetch(`assessments.php?course_id=${encodeURIComponent(cid)}`);
-                  if (!res.ok) {
-                    assessmentSelect.innerHTML = '<option value="">Failed to load</option>';
-                    assessmentSelect.disabled = true;
-                    return;
-                  }
+                let res = await fetch(`assessments.php?course_id=${encodeURIComponent(cid)}&include_expired=1`);
+                if (res.ok) {
                   const j = await res.json();
-                  items = j.assessments || [];
+                  items = Array.isArray(j.assessments) ? j.assessments : [];
+                }
+                if (!items.length) {
+                  res = await fetch(`assessments.php?course_id=${encodeURIComponent(cid)}`);
+                  if (res.ok) {
+                    const j2 = await res.json();
+                    items = Array.isArray(j2.assessments) ? j2.assessments : [];
+                  }
+                }
+                if (!items.length && Array.isArray(data.by_assessment) && data.by_assessment.length) {
+                  items = data.by_assessment.filter(a => String(a.course_id) === String(cid));
                 }
                 if (!items.length) {
                   assessmentSelect.innerHTML = '<option value="">No assessments</option>';
@@ -299,8 +447,7 @@ $username = $_SESSION['username'] ?? 'Guest';
                 }
                 assessmentSelect.innerHTML = '<option value="">Select assessment</option>' + items.map(a => `<option value="${a.assessment_id}">${escapeHtml(a.assessment_name || a.name || a.code || a.assessment_id)}</option>`).join('');
                 assessmentSelect.disabled = false;
-                assessmentSelect.onchange = (ev) => loadLeaderboard(ev.target.value);
-                // leaderboard only — do NOT update chart here
+                assessmentSelect.onchange = (ev) => loadAssessmentLeaderboard(ev.target.value);
               } catch (err) {
                 assessmentSelect.innerHTML = '<option value="">Error</option>';
                 assessmentSelect.disabled = true;
@@ -320,7 +467,7 @@ $username = $_SESSION['username'] ?? 'Guest';
                 if (remainingEl) remainingEl.textContent = (typeof displayed_overall_remaining !== 'undefined' ? String(displayed_overall_remaining) : '-');
                 createChart({
                   type: 'bar',
-                  data: { labels: overall_labels, datasets: (function(){ let d=[]; if (overall_labels.length){ d.push({ label: 'Used', data: overall_used_array, backgroundColor: '#ef4444', borderRadius: 6, stack: 'stack1' }); d.push({ label: 'Remaining', data: overall_remaining_array, backgroundColor: '#06b6d4', borderRadius: 6, stack: 'stack1' }); } if (overall_thresholds_array.some(t=>t>0)) d.push({ label: 'Threshold', data: overall_thresholds_array, type: 'line', borderColor: '#facc15', fill: false }); return d; })() },
+                  data: { labels: overall_labels, datasets: (function(){ let d=[]; if (overall_thresholds_array.some(t=>t>0)) d.push({ label: 'Threshold', data: overall_thresholds_array, type: 'line', borderColor: '#a16207', borderWidth: 2.5, pointRadius: 4.5, pointHoverRadius: 6, pointBackgroundColor: '#a16207', pointBorderColor: '#a16207', tension: 0, fill: false, order: 0 }); if (overall_labels.length){ d.push({ label: 'Used', data: overall_used_array, backgroundColor: '#ef4444', borderRadius: 6, stack: 'stack1' }); d.push({ label: 'Remaining', data: overall_remaining_array, backgroundColor: '#06b6d4', borderRadius: 6, stack: 'stack1' }); } return d; })() },
                   options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { beginAtZero: true, stacked: true } }, plugins: { legend: { position: 'top' } } }
                 });
                 return;
@@ -328,6 +475,7 @@ $username = $_SESSION['username'] ?? 'Guest';
               updateCourseChart(cid);
             });
           }
+
           // helper: update chart for a selected course using data.by_assessment
           function updateCourseChart(courseId) {
             const leaderboardWrapper = document.getElementById('leaderboardTableWrapper');
@@ -345,7 +493,7 @@ $username = $_SESSION['username'] ?? 'Guest';
                 try {
                   createChart({
                     type: 'bar',
-                    data: { labels: [courseEntry.course_name || courseEntry.course_id], datasets: [ { label: 'Used', data: [course_used], backgroundColor: '#ef4444', borderRadius: 6, stack: 'stack1' }, { label: 'Remaining', data: [course_remaining], backgroundColor: '#06b6d4', borderRadius: 6, stack: 'stack1' }, (course_threshold > 0 ? { label: 'Threshold', data: [course_threshold], type: 'line', borderColor: '#facc15', fill: false } : null) ].filter(Boolean) },
+                    data: { labels: [courseEntry.course_name || courseEntry.course_id], datasets: [ { label: 'Used', data: [course_used], backgroundColor: '#ef4444', borderRadius: 6, stack: 'stack1' }, { label: 'Remaining', data: [course_remaining], backgroundColor: '#06b6d4', borderRadius: 6, stack: 'stack1' }, (course_threshold > 0 ? { label: 'Threshold', data: [course_threshold], type: 'line', borderColor: '#a16207', borderDash: [6,4], borderWidth: 2, pointRadius: 4, pointHoverRadius: 6, pointBackgroundColor: '#a16207', pointBorderColor: '#a16207', tension: 0, fill: false } : null) ].filter(Boolean) },
                     options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { beginAtZero: true, stacked: true } }, plugins: { legend: { position: 'top' } } }
                   });
                 } catch (e) {}
@@ -374,7 +522,7 @@ $username = $_SESSION['username'] ?? 'Guest';
             try {
               createChart({
                 type: 'bar',
-                data: { labels: labels, datasets: [ { label: 'Used', data: used, backgroundColor: '#ef4444', borderRadius: 6, stack: 'stack1' }, { label: 'Remaining', data: remaining, backgroundColor: '#06b6d4', borderRadius: 6, stack: 'stack1' }, (thresholds.some(t=>t>0) ? { label: 'Threshold', data: thresholds, type: 'line', borderColor: '#facc15', fill: false } : null) ].filter(Boolean) },
+                data: { labels: labels, datasets: [ { label: 'Used', data: used, backgroundColor: '#ef4444', borderRadius: 6, stack: 'stack1' }, { label: 'Remaining', data: remaining, backgroundColor: '#06b6d4', borderRadius: 6, stack: 'stack1' }, (thresholds.some(t=>t>0) ? { label: 'Threshold', data: thresholds, type: 'line', borderColor: '#a16207', borderDash: [6,4], borderWidth: 2, pointRadius: 4, pointHoverRadius: 6, pointBackgroundColor: '#a16207', pointBorderColor: '#a16207', tension: 0, fill: false } : null) ].filter(Boolean) },
                 options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { beginAtZero: true, stacked: true } }, plugins: { legend: { position: 'top' } } }
               });
             } catch (e) {

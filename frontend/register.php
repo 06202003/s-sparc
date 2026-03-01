@@ -56,7 +56,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!empty($result['error'])) {
       $error = 'Tidak dapat menghubungi backend: ' . $result['error'];
     } else {
-      $message = 'Registrasi berhasil. Silakan login.';
+      // Redirect ke login dengan pesan sukses
+      header('Location: login.php?registered=1');
+      exit;
     }
     }
 }

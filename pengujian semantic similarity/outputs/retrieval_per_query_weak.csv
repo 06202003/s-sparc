@@ -1,0 +1,633 @@
+query_id,query_text,hit@10,precision@10,recall@10,mrr@10,ap@10,ndcg@10
+0,Write a function to find the shared elements from the given two lists.,1.0,0.3,1.0,1.0,1.0,1.0
+1,Write a python function to identify non-prime numbers.,1.0,0.3,1.0,1.0,1.0,1.0
+2,"Write a function to find the n largest integers from a given list of numbers, returned in descending order.",1.0,0.3,1.0,1.0,1.0,1.0
+3,Write a python function to check whether the two numbers differ at one bit position only or not.,1.0,0.3,1.0,1.0,1.0,1.0
+4,Write a function to find all words which are at least 4 characters long in a string.,1.0,0.3,1.0,1.0,1.0,1.0
+5,Write a function to find squares of individual elements in a list.,1.0,0.3,1.0,1.0,1.0,1.0
+6,Write a python function to find the minimum number of rotations (greater than 0) required to get the same string.,1.0,0.3,1.0,1.0,1.0,1.0
+7,Write a python function to remove first and last occurrence of a given character from the string.,1.0,0.3,1.0,1.0,1.0,1.0
+8,Write a function to sort a given matrix in ascending order according to the sum of its rows.,1.0,0.3,1.0,1.0,1.0,1.0
+9,Write a python function to find the volume of a triangular prism.,1.0,0.3,1.0,1.0,1.0,1.0
+10,Write a function to that returns true if the input string contains sequences of lowercase letters joined with an underscore and false otherwise.,1.0,0.3,1.0,1.0,1.0,1.0
+11,Write a function that returns the perimeter of a square given its side length as input.,1.0,0.3,1.0,1.0,1.0,1.0
+12,Write a function to remove characters from the first string which are present in the second string.,1.0,0.3,1.0,1.0,1.0,1.0
+13,Write a function to find whether a given array of integers contains any duplicate element.,1.0,0.3,1.0,1.0,1.0,1.0
+14,Write a function to check if the given number is woodball or not.,1.0,0.3,1.0,1.0,1.0,1.0
+15,Write a python function to check if a given number is one less than twice its reverse.,1.0,0.3,1.0,1.0,1.0,1.0
+16,Write a python function to find the largest number that can be formed with the given list of digits.,1.0,0.3,1.0,1.0,1.0,1.0
+17,Write a python function to check whether the given two integers have opposite sign or not.,1.0,0.3,1.0,1.0,1.0,1.0
+18,Write a function to find the nth octagonal number.,1.0,0.3,1.0,1.0,1.0,1.0
+19,Write a python function to count the number of substrings with the sum of digits equal to their length.,1.0,0.3,1.0,1.0,1.0,1.0
+20,Write a python function to find smallest number in a list.,1.0,0.3,1.0,1.0,1.0,1.0
+21,Write a function to find the maximum difference between available pairs in the given tuple list.,1.0,0.3,1.0,1.0,1.0,1.0
+22,Write a function to sort a list of tuples using the second value of each tuple.,1.0,0.3,1.0,1.0,1.0,1.0
+23,Write a function to flatten a list and sum all of its elements.,1.0,0.3,1.0,1.0,1.0,1.0
+24,Write a python function to count the number of positive numbers in a list.,1.0,0.3,1.0,1.0,1.0,1.0
+25,Write a function to find the number of ways to partition a set of Bell numbers.,1.0,0.3,1.0,1.0,1.0,1.0
+26,Write a python function to check whether the given array is monotonic or not.,1.0,0.3,1.0,1.0,1.0,1.0
+27,Write a function to check whether a list contains the given sublist or not.,1.0,0.3,1.0,1.0,1.0,1.0
+28,Write a function to find whether all the given tuples have equal length or not.,1.0,0.3,1.0,1.0,1.0,1.0
+29,Write a function to sort a list of elements.,1.0,0.3,1.0,1.0,1.0,1.0
+30,Write a python function to check whether the given number can be represented as the difference of two squares or not.,1.0,0.3,1.0,1.0,1.0,1.0
+31,Write a function to check whether it follows the sequence given in the patterns array.,1.0,0.3,1.0,1.0,1.0,1.0
+32,Write a function to find tuples which have all elements divisible by k from the given list of tuples.,1.0,0.3,1.0,1.0,1.0,1.0
+33,Write a python function to find whether a number is divisible by 11.,1.0,0.3,1.0,1.0,1.0,1.0
+34,Write a python function to check whether the length of the word is odd or not.,1.0,0.3,1.0,1.0,1.0,1.0
+35,Write a function to find the nth tetrahedral number.,1.0,0.3,1.0,1.0,1.0,1.0
+36,Write a function to find the volume of a sphere.,1.0,0.3,1.0,1.0,1.0,1.0
+37,Write a python function to find the character made by adding the ASCII value of all the characters of the given string modulo 26.,1.0,0.3,1.0,1.0,1.0,1.0
+38,Write a function to find the nth number in the newman conway sequence.,1.0,0.3,1.0,1.0,1.0,1.0
+39,Write a function to find the surface area of a sphere.,1.0,0.3,1.0,1.0,1.0,1.0
+40,Write a function to find nth centered hexagonal number.,1.0,0.3,1.0,1.0,1.0,1.0
+41,Write a function to merge three dictionaries into a single dictionary.,1.0,0.3,1.0,1.0,1.0,1.0
+42,"Write a function to get the frequency of all the elements in a list, returned as a dictionary.",1.0,0.3,1.0,1.0,1.0,1.0
+43,Write a function to find the closest smaller number than n.,1.0,0.3,1.0,1.0,1.0,1.0
+44,Write a python function to find the length of the longest word.,1.0,0.3,1.0,1.0,1.0,1.0
+45,Write a function to check if a string is present as a substring in a given list of string values.,1.0,0.3,1.0,1.0,1.0,1.0
+46,Write a function to check whether the given number is undulating or not.,1.0,0.3,1.0,1.0,1.0,1.0
+47,Write a function to calculate the value of 'a' to the power 'b'.,1.0,0.3,1.0,1.0,1.0,1.0
+48,"Given a list of tuples, write a function that returns the first value of the tuple with the smallest second value.",1.0,0.3,1.0,1.0,1.0,1.0
+49,Write a python function to find the length of the smallest list in a list of lists.,1.0,0.3,1.0,1.0,1.0,1.0
+50,Write a python function to find the number of divisors of a given integer.,1.0,0.3,1.0,1.0,1.0,1.0
+51,"Write a function to find frequency of each element in a flattened list of lists, returned in a dictionary.",1.0,0.3,1.0,1.0,1.0,1.0
+52,Write a function to multiply all the numbers in a list and divide with the length of the list.,1.0,0.3,1.0,1.0,1.0,1.0
+53,"Write a function to convert the given decimal number to its binary equivalent, represented as a string with no leading zeros.",1.0,0.3,1.0,1.0,1.0,1.0
+54,"Write a function to find the next smallest palindrome of a specified integer, returned as an integer.",1.0,0.3,1.0,1.0,1.0,1.0
+55,Write a function to find the kth element in the given array using 1-based indexing.,1.0,0.3,1.0,1.0,1.0,1.0
+56,Write a function to convert a snake case string to camel case string.,1.0,0.3,1.0,1.0,1.0,1.0
+57,"Write a function to find the Eulerian number a(n, m).",1.0,0.3,1.0,1.0,1.0,1.0
+58,Write a function to sort each sublist of strings in a given list of lists.,1.0,0.3,1.0,1.0,1.0,1.0
+59,Write a python function to count true booleans in the given list.,1.0,0.3,1.0,1.0,1.0,1.0
+60,Write a function to append the given list to the given tuples.,1.0,0.3,1.0,1.0,1.0,1.0
+61,Write a function to merge three lists into a single sorted list.,1.0,0.3,1.0,1.0,1.0,1.0
+62,Write a python function to find the number of numbers with an odd value when rotating a binary string the given number of times.,1.0,0.3,1.0,1.0,1.0,1.0
+63,Write a function to find the common elements in given nested lists.,1.0,0.3,1.0,1.0,1.0,1.0
+64,Write a function to check if a string represents an integer or not.,1.0,0.3,1.0,1.0,1.0,1.0
+65,Write a function to check whether all dictionaries in a list are empty or not.,1.0,0.3,1.0,1.0,1.0,1.0
+66,Write a function to convert a given tuple of positive integers into a single integer.,1.0,0.3,1.0,1.0,1.0,1.0
+67,Write a function to convert all possible convertible elements in a list of lists to floats.,1.0,0.3,1.0,1.0,1.0,1.0
+68,Write a function to convert a string to a list of strings split on the space character.,1.0,0.3,1.0,1.0,1.0,1.0
+69,Write a python function to find the element that appears only once in a sorted array.,1.0,0.3,1.0,1.0,1.0,1.0
+70,Write a function to find the maximum absolute product between numbers in pairs of tuples within a given list.,1.0,0.3,1.0,1.0,1.0,1.0
+71,Write a function to sum all amicable numbers from 1 to a specified number.,1.0,0.3,1.0,1.0,1.0,1.0
+72,Write a function to get the angle of a complex number.,1.0,0.3,1.0,1.0,1.0,1.0
+73,Write a function to find the maximum difference between the number of 0s and number of 1s in any sub-string of the given binary string.,1.0,0.3,1.0,1.0,1.0,1.0
+74,Write a python function to find the sum of common divisors of two given numbers.,1.0,0.3,1.0,1.0,1.0,1.0
+75,Write a function to multiply two integers.,1.0,0.3,1.0,1.0,1.0,1.0
+76,Write a function to find words that are longer than n characters from a given list of words.,1.0,0.3,1.0,1.0,1.0,1.0
+77,Write a function to calculate whether the matrix is a magic square.,1.0,0.3,1.0,1.0,1.0,1.0
+78,Write a function to find the item with maximum frequency in a given list.,1.0,0.3,1.0,1.0,1.0,1.0
+79,Write a python function to reverse only the vowels of a given string (where y is not a vowel).,1.0,0.3,1.0,1.0,1.0,1.0
+80,Write a function to convert a tuple to a string.,1.0,0.3,1.0,1.0,1.0,1.0
+81,Write a function to calculate the sum of the negative numbers of a given list of numbers.,1.0,0.3,1.0,1.0,1.0,1.0
+82,Write a function to find the nth hexagonal number.,1.0,0.3,1.0,1.0,1.0,1.0
+83,Write a function to find the ratio of zeroes to non-zeroes in an array of integers.,1.0,0.3,1.0,1.0,1.0,1.0
+84,Write a python function to check whether the given number can be represented as sum of non-zero powers of 2 or not.,1.0,0.3,1.0,1.0,1.0,1.0
+85,Write a function to find the circumference of a circle.,1.0,0.3,1.0,1.0,1.0,1.0
+86,Write a function to sort a list of elements.,1.0,0.3,1.0,1.0,1.0,1.0
+87,Write a python function to find the smallest power of 2 greater than or equal to n.,1.0,0.3,1.0,1.0,1.0,1.0
+88,Write a python function to check whether all the bits are unset in the given range or not.,1.0,0.3,1.0,1.0,1.0,1.0
+89,Write a python function that takes in a positive integer n and finds the sum of even index binomial coefficients.,1.0,0.3,1.0,1.0,1.0,1.0
+90,Write a function to flatten the list of lists into a single set of numbers.,1.0,0.3,1.0,1.0,1.0,1.0
+91,Write a function to count number items that are identical in the same position of three given lists.,1.0,0.3,1.0,1.0,1.0,1.0
+92,Write a function to find number of lists present in the given tuple.,1.0,0.3,1.0,1.0,1.0,1.0
+93,Write a python function to find the maximum difference between any two elements in a given array.,1.0,0.3,1.0,1.0,1.0,1.0
+94,"Write a function that returns integers x and y that satisfy ax + by = n as a tuple, or return None if no solution exists.",1.0,0.3,1.0,1.0,1.0,1.0
+95,Write a function to remove all elements from a given list present in another list.,1.0,0.3,1.0,1.0,1.0,1.0
+96,"Write a function to calculate the sum (n - 2*i) from i=0 to n // 2, for instance n + (n-2) + (n-4)... (until n-x =< 0).",1.0,0.3,1.0,1.0,1.0,1.0
+97,Write a function to calculate the area of a regular polygon given the length and number of its sides.,1.0,0.3,1.0,1.0,1.0,1.0
+98,Write a function to determine if the sum of the divisors of two integers are the same.,1.0,0.3,1.0,1.0,1.0,1.0
+99,Write a function to count the number of characters in a string that occur at the same position in the string as in the English alphabet (case insensitive).,1.0,0.3,1.0,1.0,1.0,1.0
+100,Write a function that counts the number of pairs of integers in a list that xor to an even number.,1.0,0.3,1.0,1.0,1.0,1.0
+101,Write a function to count the number of occurrences of a number in a given list.,1.0,0.3,1.0,1.0,1.0,1.0
+102,Write a function to find the sum of numbers in a list within a range specified by two indices.,1.0,0.3,1.0,1.0,1.0,1.0
+103,Write a function to find the perimeter of a regular pentagon from the length of its sides.,1.0,0.3,1.0,1.0,1.0,1.0
+104,Write a function to count the number of occurence of the string 'std' in a given string.,1.0,0.3,1.0,1.0,1.0,1.0
+105,Write a function to check if all the elements in tuple have same data type or not.,1.0,0.3,1.0,1.0,1.0,1.0
+106,"Write a function that takes in a sorted array, its length (n), and an element and returns whether the element is the majority element in the given sorted array. (The majority element is the element that occurs more than n/2 times.)",1.0,0.3,1.0,1.0,1.0,1.0
+107,Write a function to count the number of set bits (binary digits with value 1) in a given number.,1.0,0.3,1.0,1.0,1.0,1.0
+108,Write a python function to remove the characters which have odd index values of a given string.,1.0,0.3,1.0,1.0,1.0,1.0
+109,Write a function to find minimum of three numbers.,1.0,0.3,1.0,1.0,1.0,1.0
+110,"Write a function that takes in an array and an integer n, and re-arranges the first n elements of the given array so that all negative elements appear before positive ones, and where the relative order among negative and positive elements is preserved.",1.0,0.3,1.0,1.0,1.0,1.0
+111,"Write a function that takes in a string and character, replaces blank spaces in the string with the character, and returns the string.",1.0,0.3,1.0,1.0,1.0,1.0
+112,"Write a function that takes in a list and an integer n and splits the given list into two parts where the length of the first part of the list is L, and returns the resulting lists in a tuple.",1.0,0.3,1.0,1.0,1.0,1.0
+113,Write a function to calculate a dog's age in dog's years.,1.0,0.3,1.0,1.0,1.0,1.0
+114,"Write a function that takes in a list and an integer n and splits a list for every nth element, returning a list of the resulting lists.",1.0,0.3,1.0,1.0,1.0,1.0
+115,Write a function to find the lateral surface area of a cube given its side length.,1.0,0.3,1.0,1.0,1.0,1.0
+116,Write a python function that takes in an integer n and returns the sum of the squares of the first n odd natural numbers.,1.0,0.3,1.0,1.0,1.0,1.0
+117,Write a function to find the n'th star number.,1.0,0.3,1.0,1.0,1.0,1.0
+118,Write a function to find the ascii value of a character.,1.0,0.3,1.0,1.0,1.0,1.0
+119,Write a python function to find the sum of even numbers at even positions of a list.,1.0,0.3,1.0,1.0,1.0,1.0
+120,Write a python function that takes in an integer n and finds the sum of the first n even natural numbers that are raised to the fifth power.,1.0,0.3,1.0,1.0,1.0,1.0
+121,Write a function that takes in a list of tuples and returns a list containing the rear element of each tuple.,1.0,0.3,1.0,1.0,1.0,1.0
+122,Write a function that takes in two tuples and subtracts the elements of the first tuple by the elements of the second tuple with the same index.,1.0,0.3,1.0,1.0,1.0,1.0
+123,Write a function that takes in the radius and height of a cylinder and returns the the volume.,1.0,0.3,1.0,1.0,1.0,1.0
+124,Write a function that takes in a dictionary and integer n and filters the dictionary to only include entries with values greater than or equal to n.,1.0,0.3,1.0,1.0,1.0,1.0
+125,Write a function to find the number of elements that occurs before the tuple element in the given tuple.,1.0,0.3,1.0,1.0,1.0,1.0
+126,Write a function to find the nth decagonal number.,1.0,0.3,1.0,1.0,1.0,1.0
+127,Write a function that takes in an array and element and returns a tuple containing a boolean that indicates if the element is in the array and the index position of the element (or -1 if the element is not found).,1.0,0.3,1.0,1.0,1.0,1.0
+128,Write a python function to check if the elements of a given list are unique or not.,1.0,0.3,1.0,1.0,1.0,1.0
+129,Write a function to subtract two lists element-wise.,1.0,0.3,1.0,1.0,1.0,1.0
+130,Write a python function takes in an integer and check whether the frequency of each digit in the integer is less than or equal to the digit itself.,1.0,0.3,1.0,1.0,1.0,1.0
+131,Write a function that takes in a list and element and checks whether all items in the list are equal to the given element.,1.0,0.3,1.0,1.0,1.0,1.0
+132,Write a function that checks whether a string contains the 'a' character followed by two or three 'b' characters.,1.0,0.3,1.0,1.0,1.0,1.0
+133,Write a function to find the largest sum of a contiguous array in the modified array which is formed by repeating the given array k times.,1.0,0.3,1.0,1.0,1.0,1.0
+134,Write a python function takes in an integer n and returns the sum of squares of first n even natural numbers.,1.0,0.3,1.0,1.0,1.0,1.0
+135,Write a function to find the list of maximum length in a list of lists.,1.0,0.3,1.0,1.0,1.0,1.0
+136,Write a function to find out the number of ways of painting the fence such that at most 2 adjacent posts have the same color for the given fence with n posts and k colors.,1.0,0.3,1.0,1.0,1.0,1.0
+137,Write a python function to find quotient of two numbers (rounded down to the nearest integer).,1.0,0.3,1.0,1.0,1.0,1.0
+138,Write a function to find the third side of a right angled triangle.,1.0,0.3,1.0,1.0,1.0,1.0
+139,Write a function to find the maximum value in a given heterogeneous list.,1.0,0.3,1.0,1.0,1.0,1.0
+140,Write a function to return the sum of all divisors of a number.,1.0,0.3,1.0,1.0,1.0,1.0
+141,Write a python function to count inversions in an array.,1.0,0.3,1.0,1.0,1.0,1.0
+142,Write a function to flatten a given nested list structure.,1.0,0.3,1.0,1.0,1.0,1.0
+143,Write a function to calculate the maximum aggregate from the list of tuples.,1.0,0.3,1.0,1.0,1.0,1.0
+144,Write a function to find the count of all binary sequences of length 2n such that sum of first n bits is same as sum of last n bits.,1.0,0.3,1.0,1.0,1.0,1.0
+145,Write a function to find the depth of a dictionary.,1.0,0.3,1.0,1.0,1.0,1.0
+146,Write a python function to find element at a given index after number of rotations.,1.0,0.3,1.0,1.0,1.0,1.0
+147,Write a function to return two words from a list of words starting with letter 'p'.,1.0,0.3,1.0,1.0,1.0,1.0
+148,"Write a function to find the maximum sum of increasing subsequence from prefix until ith index and also including a given kth element which is after i, i.e., k > i .",1.0,0.3,1.0,1.0,1.0,1.0
+149,Write a function to get a colon of a tuple.,1.0,0.3,1.0,1.0,1.0,1.0
+150,"Write a function to find the specified number of largest products from two given lists, selecting one factor from each list.",1.0,0.3,1.0,1.0,1.0,1.0
+151,Write a python function to find the maximum of two numbers.,1.0,0.3,1.0,1.0,1.0,1.0
+152,Write a function to convert a given string to a tuple of characters.,1.0,0.3,1.0,1.0,1.0,1.0
+153,Write a python function to set the left most unset bit.,1.0,0.3,1.0,1.0,1.0,1.0
+154,Write a function to find the volume of a cone.,1.0,0.3,1.0,1.0,1.0,1.0
+155,Write a function to find the list with maximum length.,1.0,0.3,1.0,1.0,1.0,1.0
+156,Write a python function to find the highest power of 2 that is less than or equal to n.,1.0,0.3,1.0,1.0,1.0,1.0
+157,Write a function to find the n'th lucas number.,1.0,0.3,1.0,1.0,1.0,1.0
+158,Write a function to apply a given format string to all of the elements in a list.,1.0,0.3,1.0,1.0,1.0,1.0
+159,Write a function to convert more than one list to nested dictionary.,1.0,0.3,1.0,1.0,1.0,1.0
+160,"Write a function to find the maximum sum possible by using the given equation f(n) = max( (f(n/2) + f(n/3) + f(n/4) + f(n/5)), n).",1.0,0.3,1.0,1.0,1.0,1.0
+161,Write a function to check if given tuple contains no duplicates.,1.0,0.3,1.0,1.0,1.0,1.0
+162,Write a python function to find the first non-repeated character in a given string.,1.0,0.3,1.0,1.0,1.0,1.0
+163,Write a function to check whether the given string starts and ends with the same character or not.,1.0,0.3,1.0,1.0,1.0,1.0
+164,Write a function to find the median of three numbers.,1.0,0.3,1.0,1.0,1.0,1.0
+165,Write a function to compute the sum of digits of each number of a given list.,1.0,0.3,1.0,1.0,1.0,1.0
+166,Write a function to perform the mathematical bitwise xor operation across the given tuples.,1.0,0.3,1.0,1.0,1.0,1.0
+167,Write a function to extract the number of unique tuples in the given list.,1.0,0.3,1.0,1.0,1.0,1.0
+168,Write a function to perform index wise addition of tuple elements in the given two nested tuples.,1.0,0.3,1.0,1.0,1.0,1.0
+169,Write a python function to find the minimum of two numbers.,1.0,0.3,1.0,1.0,1.0,1.0
+170,Write a function to check whether an element exists within a tuple.,1.0,0.3,1.0,1.0,1.0,1.0
+171,Write a python function to find whether the parity of a given number is odd.,1.0,0.3,1.0,1.0,1.0,1.0
+172,Write a function to create the next bigger number by rearranging the digits of a given number.,1.0,0.3,1.0,1.0,1.0,1.0
+173,Write a function to find k number of smallest pairs which consist of one element from the first array and one element from the second array.,1.0,0.3,1.0,1.0,1.0,1.0
+174,Write a function to find the minimum product from the pairs of tuples within a given list.,1.0,0.3,1.0,1.0,1.0,1.0
+175,Write a function to find the minimum value in a given heterogeneous list.,1.0,0.3,1.0,1.0,1.0,1.0
+176,Write a function to convert the given snake case string to camel case string.,1.0,0.3,1.0,1.0,1.0,1.0
+177,Write a python function to remove odd numbers from a given list.,1.0,0.3,1.0,1.0,1.0,1.0
+178,Write a function to extract the nth element from a given list of tuples.,1.0,0.3,1.0,1.0,1.0,1.0
+179,Write a python function to check whether any value in a sequence exists in a sequence or not.,1.0,0.3,1.0,1.0,1.0,1.0
+180,Write a python function to find a pair with highest product from a given array of integers.,1.0,0.3,1.0,1.0,1.0,1.0
+181,Write a function to find common first element in given list of tuple.,1.0,0.3,1.0,1.0,1.0,1.0
+182,Write a python function to find element of a list having maximum length.,1.0,0.3,1.0,1.0,1.0,1.0
+183,Write a function to round every number of a given list of numbers and print the total sum multiplied by the length of the list.,1.0,0.3,1.0,1.0,1.0,1.0
+184,Write a python function to find the cube sum of first n even natural numbers.,1.0,0.3,1.0,1.0,1.0,1.0
+185,Write a function to concatenate each element of tuple by the delimiter.,1.0,0.3,1.0,1.0,1.0,1.0
+186,Write a python function to find the average of cubes of first n natural numbers.,1.0,0.3,1.0,1.0,1.0,1.0
+187,Write a function to extract only the rear index element of each string in the given tuple.,1.0,0.3,1.0,1.0,1.0,1.0
+188,Write a function to count the number of sublists containing a particular element.,1.0,0.3,1.0,1.0,1.0,1.0
+189,Write a function to filter odd numbers.,1.0,0.3,1.0,1.0,1.0,1.0
+190,Write a function to convert a date of yyyy-mm-dd format to dd-mm-yyyy format.,1.0,0.3,1.0,1.0,1.0,1.0
+191,Write a function to sort the given array by using shell sort.,1.0,0.3,1.0,1.0,1.0,1.0
+192,Write a function to extract the elementwise and tuples from the given two tuples.,1.0,0.3,1.0,1.0,1.0,1.0
+193,Write a function to find the directrix of a parabola.,1.0,0.3,1.0,1.0,1.0,1.0
+194,Write a function that takes two lists and returns true if they have at least one common element.,1.0,0.3,1.0,1.0,1.0,1.0
+195,Write a function to find the median length of a trapezium.,1.0,0.3,1.0,1.0,1.0,1.0
+196,Write a function to check whether the entered number is greater than the elements of the given array.,1.0,0.3,1.0,1.0,1.0,1.0
+197,Write a function that matches a string that has an a followed by one or more b's.,1.0,0.3,1.0,1.0,1.0,1.0
+198,Write a python function to find the last digit of a given number.,1.0,0.3,1.0,1.0,1.0,1.0
+199,Write a python function to return the negative numbers in a list.,1.0,0.3,1.0,1.0,1.0,1.0
+200,Write a function to remove odd characters in a string.,1.0,0.3,1.0,1.0,1.0,1.0
+201,Write a function to count bidirectional tuple pairs.,1.0,0.3,1.0,1.0,1.0,1.0
+202,Write a function to join a list of multiple integers into a single integer.,1.0,0.3,1.0,1.0,1.0,1.0
+203,Write a function to find the first adverb and their positions in a given sentence.,1.0,0.3,1.0,1.0,1.0,1.0
+204,Write a function to find the surface area of a cube of a given size.,1.0,0.3,1.0,1.0,1.0,1.0
+205,Write a function to find the ration of positive numbers in an array of integers.,1.0,0.3,1.0,1.0,1.0,1.0
+206,Write a python function to find the largest negative number from the given list.,1.0,0.3,1.0,1.0,1.0,1.0
+207,Write a function to trim each tuple by k in the given tuple list.,1.0,0.3,1.0,1.0,1.0,1.0
+208,Write a function to perform index wise multiplication of tuple elements in the given two tuples.,1.0,0.3,1.0,1.0,1.0,1.0
+209,Write a python function to count the occurence of all elements of list in a tuple.,1.0,0.3,1.0,1.0,1.0,1.0
+210,Write a function to find cubes of individual elements in a list.,1.0,0.3,1.0,1.0,1.0,1.0
+211,Write a function to calculate the sum of perrin numbers.,1.0,0.3,1.0,1.0,1.0,1.0
+212,Write a function to extract specified size of strings from a given list of string values.,1.0,0.3,1.0,1.0,1.0,1.0
+213,Write a function to remove all whitespaces from the given string.,1.0,0.3,1.0,1.0,1.0,1.0
+214,Write a function that gives loss amount on a sale if the given amount has loss else return 0.,1.0,0.3,1.0,1.0,1.0,1.0
+215,Write a python function to find the sum of even factors of a number.,1.0,0.3,1.0,1.0,1.0,1.0
+216,Write a function that matches a word containing 'z'.,1.0,0.3,1.0,1.0,1.0,1.0
+217,Write a function to check whether the given month number contains 31 days or not.,1.0,0.3,1.0,1.0,1.0,1.0
+218,Write a function to reverse each string in a given list of string values.,1.0,0.3,1.0,1.0,0.8333333333333334,0.9325210919548239
+219,Write a python function to find the sublist having minimum length.,1.0,0.3,1.0,1.0,1.0,1.0
+220,Write a function to find the area of a rectangle.,1.0,0.3,1.0,1.0,1.0,1.0
+221,Write a function to remove uppercase substrings from a given string.,1.0,0.3,1.0,1.0,1.0,1.0
+222,Write a python function to get the first element of each sublist.,1.0,0.3,1.0,1.0,1.0,1.0
+223,Write a python function to count the upper case characters in a given string.,1.0,0.3,1.0,1.0,1.0,1.0
+224,Write a function to find all possible combinations of the elements of a given list.,1.0,0.3,1.0,1.0,1.0,1.0
+225,Write a function to find the maximum product subarray of the given array.,1.0,0.3,1.0,1.0,1.0,1.0
+226,Write a function to check whether the given dictionary is empty,1.0,0.3,1.0,1.0,1.0,1.0
+227,Write a function to drop empty items from a given dictionary.,1.0,0.3,1.0,1.0,1.0,1.0
+228,Write a function to find the maximum product formed by multiplying numbers of an increasing subsequence of that array.,1.0,0.3,1.0,1.0,1.0,1.0
+229,Write a function to find the pairwise addition of the neighboring elements of the given tuple.,1.0,0.3,1.0,1.0,1.0,1.0
+230,Write a python function to find the product of the array multiplication modulo n.,1.0,0.3,1.0,1.0,1.0,1.0
+231,Write a python function to check whether the given list contains consecutive numbers or not.,1.0,0.3,1.0,1.0,1.0,1.0
+232,Write a function to find the tuple intersection of elements in the given tuple list irrespective of their order.,1.0,0.3,1.0,1.0,1.0,1.0
+233,Write a function to replace characters in a string.,1.0,0.3,1.0,1.0,1.0,1.0
+234,Write a function to sort a dictionary by value.,1.0,0.3,1.0,1.0,1.0,1.0
+235,Write a python function to find the sum of the largest and smallest value in a given array.,1.0,0.3,1.0,1.0,1.0,1.0
+236,Write a python function to convert the given string to lower case.,1.0,0.3,1.0,1.0,1.0,1.0
+237,Write a python function to remove lowercase substrings from a given string.,1.0,0.3,1.0,1.0,1.0,1.0
+238,Write a python function to find the first digit of a given number.,1.0,0.3,1.0,1.0,1.0,1.0
+239,Write a python function which takes a list of integers and only returns the odd ones.,1.0,0.3,1.0,1.0,1.0,1.0
+240,Write a python function to find the difference between the sum of cubes of the first n natural numbers and the sum of the first n natural numbers.,1.0,0.3,1.0,1.0,1.0,1.0
+241,Write a python function to count the number of pairs whose xor value is odd.,1.0,0.3,1.0,1.0,1.0,1.0
+242,Write a function to toggle the case of all characters in a string.,1.0,0.3,1.0,1.0,1.0,1.0
+243,Write a python function to find the sum of the per-digit difference between two integers.,1.0,0.3,1.0,1.0,1.0,1.0
+244,Write a function to find the sum of the largest contiguous sublist in the given list.,1.0,0.3,1.0,1.0,1.0,1.0
+245,Write a function to find the union of the elements of two given tuples and output them in sorted order.,1.0,0.3,1.0,1.0,1.0,1.0
+246,Write a python function to find the length of the longest sublists.,1.0,0.3,1.0,1.0,1.0,1.0
+247,Write a function to extract values between quotation marks from a string.,1.0,0.3,1.0,1.0,1.0,1.0
+248,Write a python function which takes a list of integers and counts the number of possible unordered pairs where both elements are unequal.,1.0,0.3,1.0,1.0,1.0,1.0
+249,Write a python function to split a string into characters.,1.0,0.3,1.0,1.0,1.0,1.0
+250,Write a function to get the sum of the digits of a non-negative integer.,1.0,0.3,1.0,1.0,1.0,1.0
+251,Write a function to check whether a specified list is sorted or not.,1.0,0.3,1.0,1.0,1.0,1.0
+252,Write a function to create a list of N empty dictionaries.,1.0,0.3,1.0,1.0,1.0,1.0
+253,Write a function to sort each sublist of strings in a given list of lists.,1.0,0.3,1.0,1.0,1.0,1.0
+254,Write a python function to remove duplicate numbers from a given number of lists.,1.0,0.3,1.0,1.0,1.0,1.0
+255,Write a python function to calculate the product of the unique numbers in a given list.,1.0,0.3,1.0,1.0,1.0,1.0
+256,Write a function to find the surface area of a cylinder.,1.0,0.3,1.0,1.0,1.0,1.0
+257,Write a python function to check whether a list is sublist of another or not.,1.0,0.3,1.0,1.0,1.0,1.0
+258,Write a python function to find the last digit in factorial of a given number.,1.0,0.3,1.0,1.0,1.0,1.0
+259,Write a python function to interleave 3 lists of the same length into a single flat list.,1.0,0.3,1.0,1.0,1.0,1.0
+260,Write a function to find the dissimilar elements in the given two tuples.,1.0,0.3,1.0,1.0,1.0,1.0
+261,Write a function to remove uneven elements in the nested mixed tuple.,1.0,0.3,1.0,1.0,1.0,1.0
+262,Write a python function to find the surface area of a square pyramid with a given base edge and height.,1.0,0.3,1.0,1.0,1.0,1.0
+263,Write a function to check if a dictionary is empty,1.0,0.3,1.0,1.0,1.0,1.0
+264,Write a function which returns nth catalan number.,1.0,0.3,1.0,1.0,1.0,1.0
+265,Write a function to find the first adverb ending with ly and its positions in a given sentence.,1.0,0.3,1.0,1.0,1.0,1.0
+266,Write a function to find the n most expensive items in a given dataset.,1.0,0.3,1.0,1.0,1.0,1.0
+267,Write a python function to split a list at the nth eelment and add the first part to the end.,1.0,0.3,1.0,1.0,1.0,1.0
+268,Write a function to convert a list to a tuple.,1.0,0.3,1.0,1.0,1.0,1.0
+269,Write a python function to find the difference between largest and smallest value in a given list.,1.0,0.3,1.0,1.0,1.0,1.0
+270,Write a function to find perfect squares between two given numbers.,1.0,0.3,1.0,1.0,1.0,1.0
+271,Write a function to convert polar coordinates to rectangular coordinates.,1.0,0.3,1.0,1.0,1.0,1.0
+272,Write a python function to interchange the first and last elements in a list.,1.0,0.3,1.0,1.0,1.0,1.0
+273,Write a python function to find the sum of the product of consecutive binomial co-efficients.,1.0,0.3,1.0,1.0,1.0,1.0
+274,Write a function to remove leading zeroes from an ip address.,1.0,0.3,1.0,1.0,1.0,1.0
+275,Write a function to find the difference of the first even and first odd number of a given list.,1.0,0.3,1.0,1.0,0.9166666666666666,0.9674679834891693
+276,Write a python function to count minimum number of swaps required to convert one binary number represented as a string to another.,1.0,0.3,1.0,1.0,1.0,1.0
+277,Write a function to find the size in bytes of the given tuple.,1.0,0.3,1.0,1.0,1.0,1.0
+278,Write a function to find kth element from the given two sorted arrays.,1.0,0.3,1.0,1.0,1.0,1.0
+279,Write a function to check whether the given number is armstrong or not.,1.0,0.3,1.0,1.0,1.0,1.0
+280,Write a function to find sum and average of first n natural numbers.,1.0,0.3,1.0,1.0,1.0,1.0
+281,Write a python function to check whether the given number is even or not.,1.0,0.3,1.0,1.0,1.0,1.0
+282,Write a python function to find the first repeated character in a given string.,1.0,0.3,1.0,1.0,1.0,1.0
+283,Write a function to get all lucid numbers smaller than or equal to a given integer.,1.0,0.3,1.0,1.0,1.0,1.0
+284,Write a function to reverse words seperated by spaces in a given string.,1.0,0.3,1.0,1.0,1.0,1.0
+285,Write a function to check if the given integer is a prime number.,1.0,0.3,1.0,1.0,1.0,1.0
+286,Write a function to convert degrees to radians.,1.0,0.3,1.0,1.0,1.0,1.0
+287,"Write a function to search a string for a regex pattern. The function should return the matching subtring, a start index and an end index.",1.0,0.3,1.0,1.0,1.0,1.0
+288,Write a python function to find nth bell number.,1.0,0.3,1.0,1.0,1.0,1.0
+289,"Write a python function which takes a list and returns a list with the same elements, but the k'th element removed.",1.0,0.3,1.0,1.0,1.0,1.0
+290,"Given a square matrix of size N*N given as a list of lists, where each cell is associated with a specific cost. A path is defined as a specific sequence of cells that starts from the top-left cell move only right or down and ends on bottom right cell. We want to find a path with the maximum average over all existing paths. Average is computed as total cost divided by the number of cells visited in the path.",1.0,0.3,1.0,1.0,1.0,1.0
+291,Write a function to find the median of two sorted lists of same size.,1.0,0.3,1.0,1.0,1.0,1.0
+292,"The input is given as - a dictionary with a student name as a key and a tuple of float (student_height, student_weight) as a value, - minimal height, - minimal weight. Write a function to filter students that have height and weight above the minimum.",1.0,0.3,1.0,1.0,1.0,1.0
+293,Write a function to count indices where the lists have the same values.,1.0,0.3,1.0,1.0,1.0,1.0
+294,Create a function that returns the elements found in both of the provided lists.,1.0,0.3,1.0,1.0,1.0,1.0
+295,Develop a Python function that checks if a number is not a prime.,1.0,0.3,1.0,1.0,1.0,1.0
+296,"Implement a function that returns the n biggest numbers from a list, sorted from highest to lowest.",1.0,0.3,1.0,1.0,1.0,1.0
+297,Create a Python function to determine if two numbers differ by exactly one bit position.,1.0,0.3,1.0,1.0,1.0,1.0
+298,Write a function that extracts all words with a minimum length of four characters from a string.,1.0,0.3,1.0,1.0,1.0,1.0
+299,Create a function that computes the square of each element in a list.,1.0,0.3,1.0,1.0,1.0,1.0
+300,Develop a Python function to determine the smallest number of rotations needed to return a string to its original form.,1.0,0.3,1.0,1.0,1.0,1.0
+301,Create a Python function that deletes the first and last appearance of a specified character in a string.,1.0,0.3,1.0,1.0,1.0,1.0
+302,Implement a function that sorts a matrix by the sum of each row in ascending order.,1.0,0.3,1.0,1.0,1.0,1.0
+303,Create a Python function that calculates the volume of a triangular prism.,1.0,0.3,1.0,1.0,1.0,1.0
+304,Write a function that checks if a string has lowercase letter sequences separated by an underscore.,1.0,0.3,1.0,1.0,1.0,1.0
+305,Create a function to compute the perimeter of a square from its side length.,1.0,0.3,1.0,1.0,1.0,1.0
+306,Develop a function that deletes all characters from the first string that also appear in the second string.,1.0,0.3,1.0,1.0,1.0,1.0
+307,Create a function to check if an integer array has any repeated elements.,1.0,0.3,1.0,1.0,1.0,1.0
+308,Develop a function to determine whether a number is a woodball number.,1.0,0.3,1.0,1.0,1.0,1.0
+309,Create a Python function to determine if a number equals two times its reverse minus one.,1.0,0.3,1.0,1.0,1.0,1.0
+310,Develop a Python function that constructs the biggest number possible from a list of digits.,1.0,0.3,1.0,1.0,1.0,1.0
+311,Create a Python function to verify if two integers have different signs.,1.0,0.3,1.0,1.0,1.0,1.0
+312,Implement a function that calculates the nth octagonal number.,1.0,0.3,1.0,1.0,1.0,1.0
+313,Create a Python function that counts substrings where the sum of digits matches the substring's length.,1.0,0.3,1.0,1.0,1.0,1.0
+314,Develop a Python function to return the minimum value in a list.,1.0,0.3,1.0,1.0,1.0,1.0
+315,Create a function that returns the largest difference among pairs in a list of tuples.,1.0,0.3,1.0,1.0,1.0,1.0
+316,Implement a function to sort tuples in a list based on their second element.,1.0,0.3,1.0,1.0,1.0,1.0
+317,Create a function that flattens a nested list and computes the total sum of its elements.,1.0,0.3,1.0,1.0,1.0,1.0
+318,Develop a Python function to count how many numbers in a list are positive.,1.0,0.3,1.0,1.0,1.0,1.0
+319,Create a function that calculates the number of partitions for a set using Bell numbers.,1.0,0.3,1.0,1.0,1.0,1.0
+320,Develop a Python function to determine if an array is monotonic (entirely non-increasing or non-decreasing).,1.0,0.3,1.0,1.0,1.0,1.0
+321,Create a function that verifies if a sublist exists within a list.,1.0,0.3,1.0,1.0,1.0,1.0
+322,Develop a function to check if all tuples in a list have the same length.,1.0,0.3,1.0,1.0,1.0,1.0
+323,Implement a function that sorts the elements of a list in ascending order.,1.0,0.3,1.0,1.0,1.0,1.0
+324,Create a Python function to determine if a number can be written as the difference of two squares.,1.0,0.3,1.0,1.0,1.0,1.0
+325,Develop a function to verify if a list matches the sequence pattern provided.,1.0,0.3,1.0,1.0,1.0,1.0
+326,Create a function that returns tuples from a list where every element is divisible by a given number k.,1.0,0.3,1.0,1.0,1.0,1.0
+327,Develop a Python function to check if a number can be divided by 11 without remainder.,1.0,0.3,1.0,1.0,1.0,1.0
+328,Create a Python function to determine if the length of a word is an odd number.,1.0,0.3,1.0,1.0,1.0,1.0
+329,Implement a function to calculate the nth tetrahedral number.,1.0,0.3,1.0,1.0,1.0,1.0
+330,Create a function that computes the volume of a sphere given its radius.,1.0,0.3,1.0,1.0,1.0,1.0
+331,Develop a Python function that returns the character corresponding to the sum of ASCII values of a string's characters modulo 26.,1.0,0.3,1.0,1.0,1.0,1.0
+332,Create a function to compute the nth value in the Newman-Conway sequence.,1.0,0.3,1.0,1.0,1.0,1.0
+333,Implement a function to calculate the surface area of a sphere from its radius.,1.0,0.3,1.0,1.0,1.0,1.0
+334,Create a function that returns the nth centered hexagonal number.,1.0,0.3,1.0,1.0,1.0,1.0
+335,Develop a function that combines three dictionaries into one.,1.0,0.3,1.0,1.0,1.0,1.0
+336,Create a function that counts how often each element appears in a list and returns the result as a dictionary.,1.0,0.3,1.0,1.0,1.0,1.0
+337,Develop a function that returns the largest integer less than a given number n.,1.0,0.3,1.0,1.0,1.0,1.0
+338,Create a Python function to determine the maximum word length in a list.,1.0,0.3,1.0,1.0,1.0,1.0
+339,Develop a function to check if any string in a list contains a given substring.,1.0,0.3,1.0,1.0,1.0,1.0
+340,Create a function to determine if a number is undulating (alternating digits).,1.0,0.3,1.0,1.0,1.0,1.0
+341,Develop a function that computes a raised to the power of b.,1.0,0.3,1.0,1.0,1.0,1.0
+342,Create a function that finds the first element from the tuple with the lowest second value in a list.,1.0,0.3,1.0,1.0,1.0,1.0
+343,Develop a Python function to return the length of the shortest list among a list of lists.,1.0,0.3,1.0,1.0,1.0,1.0
+344,Create a Python function that counts how many divisors a given integer has.,1.0,0.3,1.0,1.0,1.0,1.0
+345,Develop a function that flattens a list of lists and returns a dictionary with the frequency of each element.,1.0,0.3,1.0,1.0,1.0,1.0
+346,Create a function that multiplies all elements in a list and divides the result by the list's length.,1.0,0.3,1.0,1.0,1.0,1.0
+347,Develop a function that converts a decimal number to its binary string representation without leading zeros.,1.0,0.3,1.0,1.0,1.0,1.0
+348,Create a function that returns the next palindrome greater than a given integer.,1.0,0.3,1.0,1.0,1.0,1.0
+349,"Develop a function that retrieves the kth element from an array, using 1-based indexing.",1.0,0.3,1.0,1.0,1.0,1.0
+350,Create a function that transforms a snake_case string into camel case format.,1.0,0.3,1.0,1.0,1.0,1.0
+351,Develop a function to compute the Eulerian number for given n and m.,1.0,0.3,1.0,1.0,1.0,1.0
+352,Create a function that sorts every sublist of strings within a list of lists.,1.0,0.3,1.0,1.0,1.0,1.0
+353,Develop a Python function to count the number of True values in a list.,1.0,0.3,1.0,1.0,1.0,1.0
+354,Create a function that appends all elements of a list to a tuple.,1.0,0.3,1.0,1.0,1.0,1.0
+355,Develop a function that combines three lists and returns a single sorted list.,1.0,0.3,1.0,1.0,1.0,1.0
+356,Create a Python function that counts the number of ones in the first n positions of a binary string.,1.0,0.3,1.0,1.0,1.0,1.0
+357,Develop a function that returns the elements shared by all nested lists.,1.0,0.3,1.0,1.0,1.0,1.0
+358,Create a function that determines whether a string can be interpreted as an integer.,1.0,0.3,1.0,1.0,1.0,1.0
+359,Develop a function that checks if every dictionary in a list is empty.,1.0,0.3,1.0,1.0,1.0,1.0
+360,Create a function that joins all numbers in a tuple into one integer.,1.0,0.3,1.0,1.0,1.0,1.0
+361,Develop a function that converts all convertible elements in a list of lists to float type.,1.0,0.3,1.0,1.0,1.0,1.0
+362,Create a function that splits a string into a list of words using spaces as separators.,1.0,0.3,1.0,1.0,1.0,1.0
+363,Develop a Python function to identify the unique element in a sorted array where all others are duplicated.,1.0,0.3,1.0,1.0,1.0,1.0
+364,Create a function that finds the largest absolute product among all pairs in a list of tuples.,1.0,0.3,1.0,1.0,1.0,1.0
+365,Develop a function that calculates the sum of all amicable numbers up to a given limit.,1.0,0.3,1.0,1.0,1.0,1.0
+366,Create a function that returns the phase angle of a complex number.,1.0,0.3,1.0,1.0,1.0,1.0
+367,Develop a function that finds the largest difference between the count of zeros and ones in any substring of a binary string.,1.0,0.3,1.0,1.0,1.0,1.0
+368,Create a Python function that returns the sum of all common divisors of two numbers.,1.0,0.3,1.0,1.0,1.0,1.0
+369,Develop a function that multiplies two integers together.,1.0,0.3,1.0,1.0,1.0,1.0
+370,Create a function that returns all words longer than n characters from a string.,1.0,0.3,1.0,1.0,1.0,1.0
+371,Develop a function that checks if a matrix is a magic square.,1.0,0.3,1.0,1.0,1.0,1.0
+372,Create a function that returns the most frequent item in a list.,1.0,0.3,1.0,1.0,1.0,1.0
+373,Develop a Python function that reverses only the vowels in a string.,1.0,0.3,1.0,1.0,1.0,1.0
+374,Create a function that concatenates all elements of a tuple into a single string.,1.0,0.3,1.0,1.0,1.0,1.0
+375,Develop a function that sums all negative numbers in a list.,1.0,0.3,1.0,1.0,1.0,1.0
+376,Create a function that computes the nth hexagonal number.,1.0,0.3,1.0,1.0,1.0,1.0
+377,Develop a function that calculates the ratio of zeros to non-zeros in an integer array.,1.0,0.3,1.0,1.0,1.0,1.0
+378,Create a Python function to determine if a number can be written as a sum of non-zero powers of two.,1.0,0.3,1.0,1.0,1.0,1.0
+379,Create a function that returns the circumference of a circle given its radius.,1.0,0.3,1.0,1.0,1.0,1.0
+380,Implement a function that sorts the elements of a list in ascending order.,1.0,0.3,1.0,1.0,1.0,1.0
+381,Create a Python function to determine the smallest power of 2 that is greater than or equal to a given number.,1.0,0.3,1.0,1.0,1.0,1.0
+382,Create a Python function to determine if a number has all bits set to zero within a specified range.,1.0,0.3,1.0,1.0,1.0,1.0
+383,Create a Python function to compute the sum of binomial coefficients at even indices for a given positive integer n.,1.0,0.3,1.0,1.0,1.0,1.0
+384,Create a function that merges all numbers from a list of lists into a single set.,1.0,0.3,1.0,1.0,1.0,1.0
+385,Develop a function that counts how many items are the same at the same index in three lists.,1.0,0.3,1.0,1.0,1.0,1.0
+386,Create a function that returns the count of lists inside a given tuple.,1.0,0.3,1.0,1.0,1.0,1.0
+387,Develop a Python function to get the largest difference between any two elements in an array.,1.0,0.3,1.0,1.0,1.0,1.0
+388,"Create a function that finds integers x and y such that ax plus by equals n, or returns None if not possible.",1.0,0.3,1.0,1.0,1.0,1.0
+389,Develop a function that removes every element from one list that also appears in a second list.,1.0,0.3,1.0,1.0,1.0,1.0
+390,"Create a function that sums n, n-2, n-4, and so on, stopping when the result is less than or equal to zero.",1.0,0.3,1.0,1.0,1.0,1.0
+391,Develop a function that computes the area of a regular polygon using its side length and number of sides.,1.0,0.3,1.0,1.0,1.0,1.0
+392,Create a function that checks if two numbers have the same sum of divisors.,1.0,0.3,1.0,1.0,1.0,1.0
+393,Develop a function that counts characters whose position in a string matches their position in the alphabet.,1.0,0.3,1.0,1.0,1.0,1.0
+394,Create a function that counts all pairs in a list whose XOR result is even.,1.0,0.3,1.0,1.0,1.0,1.0
+395,Develop a function that returns how many times a specific number appears in a list.,1.0,0.3,1.0,1.0,1.0,1.0
+396,"Create a function that sums the elements of a list between two given indices, inclusive.",1.0,0.3,1.0,1.0,1.0,1.0
+397,Develop a function that calculates the perimeter of a regular pentagon given the side length.,1.0,0.3,1.0,1.0,1.0,1.0
+398,Create a function that counts how many times the substring 'std' appears in a string.,1.0,0.3,1.0,1.0,1.0,1.0
+399,Develop a function that checks whether every element in a tuple is of the same type.,1.0,0.3,1.0,1.0,1.0,1.0
+400,Create a function to check if a given element is the majority in a sorted array (appears more than n/2 times).,1.0,0.3,1.0,1.0,1.0,1.0
+401,Develop a function that returns the count of 1s in the binary representation of a number.,1.0,0.3,1.0,1.0,1.0,1.0
+402,Create a Python function that removes all characters at odd indices from a string.,1.0,0.3,1.0,1.0,1.0,1.0
+403,Develop a function that returns the smallest value among three given numbers.,1.0,0.3,1.0,1.0,1.0,1.0
+404,"Create a function that moves all negative numbers to the front of the first n elements of an array, keeping their order.",1.0,0.3,1.0,1.0,1.0,1.0
+405,Develop a function that replaces every space in a string with a specified character.,1.0,0.3,1.0,1.0,1.0,1.0
+406,Create a function that splits a list into two at a given index L and returns both parts as a tuple.,1.0,0.3,1.0,1.0,1.0,1.0
+407,Develop a function that computes a dog's age in dog years from its human age.,1.0,0.3,1.0,1.0,1.0,1.0
+408,Create a function that divides a list into n groups by taking every nth element for each group.,1.0,0.3,1.0,1.0,1.0,1.0
+409,Develop a function that calculates the lateral surface area of a cube from its side length.,1.0,0.3,1.0,1.0,1.0,1.0
+410,Create a Python function that sums the squares of the first n odd numbers.,1.0,0.3,1.0,1.0,1.0,1.0
+411,Develop a function that computes the nth star number.,1.0,0.3,1.0,1.0,1.0,1.0
+412,Create a function that returns the ASCII code of a given character.,1.0,0.3,1.0,1.0,1.0,1.0
+413,Develop a Python function that adds up all even numbers found at even indices in a list.,1.0,0.3,1.0,1.0,1.0,1.0
+414,Create a Python function that calculates the sum of the fifth powers of the first n even natural numbers.,1.0,0.3,1.0,1.0,1.0,1.0
+415,Develop a function that extracts the last element from each tuple in a list.,1.0,0.3,1.0,1.0,1.0,1.0
+416,Create a function that subtracts corresponding elements of two tuples and returns the result as a tuple.,1.0,0.3,1.0,1.0,1.0,1.0
+417,Create a function that computes the volume of a cylinder given its radius and height.,1.0,0.3,1.0,1.0,1.0,1.0
+418,Develop a function that returns a dictionary containing only entries whose values are at least n.,1.0,0.3,1.0,1.0,1.0,1.0
+419,Create a function that counts how many elements appear before the first tuple element in the given tuple.,1.0,0.3,1.0,1.0,1.0,1.0
+420,Implement a function that returns the nth decagonal number.,1.0,0.3,1.0,1.0,1.0,1.0
+421,"Create a function that checks whether an element exists in an array and returns (found, index) where index is -1 if not found.",1.0,0.3,1.0,1.0,1.0,1.0
+422,Develop a Python function that determines whether all elements in a list are unique.,1.0,0.3,1.0,1.0,1.0,1.0
+423,Create a function that performs element-wise subtraction between two lists.,1.0,0.3,1.0,1.0,1.0,1.0
+424,Develop a function that checks if the frequency of each digit in an integer n does not exceed the value of the digit.,1.0,0.3,1.0,1.0,1.0,1.0
+425,Create a function that checks if all elements in a list are the same as the given element.,1.0,0.3,1.0,1.0,1.0,1.0
+426,Develop a function that checks for the presence of 'a' followed by two or three 'b' characters in a string.,1.0,0.3,1.0,1.0,1.0,1.0
+427,Create a function that finds the maximum sum of a contiguous subarray in an array formed by repeating the original array k times.,1.0,0.3,1.0,1.0,1.0,1.0
+428,Develop a function that calculates the sum of squares of the first n even natural numbers.,1.0,0.3,1.0,1.0,1.0,1.0
+429,Create a function that identifies the longest sublist from a collection of nested lists.,1.0,0.3,1.0,1.0,1.0,1.0
+430,Implement a function to calculate how many ways we can paint n fence posts using k colors where no more than 2 consecutive posts can be the same color.,1.0,0.3,1.0,1.0,1.0,1.0
+431,"Develop a function that calculates the quotient of two numbers, rounding down to the nearest whole number.",1.0,0.3,1.0,1.0,1.0,1.0
+432,Create a function to calculate the length of the third side of a right triangle given the lengths of the other two sides.,1.0,0.3,1.0,1.0,1.0,1.0
+433,Write a function to determine the highest integer value in a mixed list of data types.,1.0,0.3,1.0,1.0,1.0,1.0
+434,Create a function that calculates the total sum of all divisors of a given number.,1.0,0.3,1.0,1.0,1.0,1.0
+435,Develop a function to count the number of inversions needed to sort an array.,1.0,0.3,1.0,1.0,0.9166666666666666,0.9674679834891693
+436,Create a function that flattens a nested list into a single list with all the values.,1.0,0.3,1.0,1.0,1.0,1.0
+437,Determine the highest total score from a list of student score tuples.,1.0,0.3,1.0,1.0,1.0,1.0
+438,Calculate the number of binary sequences of length 2n with equal sums of the first n and last n bits.,1.0,0.3,1.0,1.0,1.0,1.0
+439,Determine the maximum depth of nesting in a given dictionary.,1.0,0.3,1.0,1.0,1.0,1.0
+440,Create a function to identify the element at a specific index in an array after a series of rotations.,1.0,0.3,1.0,1.0,1.0,1.0
+441,Find and return two words from a list that both start with the letter 'p'.,1.0,0.3,1.0,1.0,1.0,1.0
+442,"Determine the highest sum of an increasing subsequence in an array, considering only elements up to index i and including a specified element at index k.",1.0,0.3,1.0,1.0,1.0,1.0
+443,"Create a function that adds a specified element to a specific position in a tuple, returning the modified tuple.",1.0,0.3,1.0,1.0,1.0,1.0
+444,Determine the N largest products that can be made by multiplying a number from each of two lists.,1.0,0.3,1.0,1.0,1.0,1.0
+445,Create a function that returns the larger of two given numbers.,1.0,0.3,1.0,1.0,1.0,1.0
+446,Develop a function to transform a string into a tuple where each character is an element.,1.0,0.3,1.0,1.0,1.0,1.0
+447,"Create a function that sets the leftmost unset bit in a number, returning the new number.",1.0,0.3,1.0,1.0,1.0,1.0
+448,Calculate the volume of a cone given its radius and height.,1.0,0.3,1.0,1.0,1.0,1.0
+449,Create a function that determines which list in a collection of lists is the longest.,1.0,0.3,1.0,1.0,1.0,1.0
+450,Create a function to determine the maximum power of two that does not exceed the input number n.,1.0,0.3,1.0,1.0,1.0,1.0
+451,Create a function that calculates and returns the lucas number at position n in the sequence.,1.0,0.3,1.0,1.0,1.0,1.0
+452,Create a function that formats every element of a list using a provided string template.,1.0,0.3,1.0,1.0,1.0,1.0
+453,Create a function that transforms multiple lists into a nested dictionary structure.,1.0,0.3,1.0,1.0,1.0,1.0
+454,"Create a function that calculates the highest possible sum using the formula f(n) = max( (f(n/2) + f(n/3) + f(n/4) + f(n/5)), n).",1.0,0.3,1.0,1.0,1.0,1.0
+455,Create a function that verifies whether a tuple has any duplicate elements.,1.0,0.3,1.0,1.0,1.0,1.0
+456,Create a function that identifies the first non-repeating character in a string.,1.0,0.3,1.0,1.0,1.0,1.0
+457,Create a function that checks if a string begins and ends with the identical character.,1.0,0.3,1.0,1.0,1.0,1.0
+458,Create a function that determines the median value among three given numbers.,1.0,0.3,1.0,1.0,1.0,1.0
+459,Create a function that calculates the sum of digits for every number in a list.,1.0,0.3,1.0,1.0,1.0,1.0
+460,Create a function that executes the bitwise XOR operation on the elements of two tuples.,1.0,0.3,1.0,1.0,1.0,1.0
+461,Create a function that determines the count of unique tuples within a list.,1.0,0.3,1.0,1.0,1.0,1.0
+462,Create a function that adds together elements of two nested tuples at the same index.,1.0,0.3,1.0,1.0,1.0,1.0
+463,Create a function that identifies the smaller of two given numbers.,1.0,0.3,1.0,1.0,1.0,1.0
+464,Create a function that verifies the existence of an element in a tuple.,1.0,0.3,1.0,1.0,1.0,1.0
+465,Create a function that determines if the parity of a number is odd.,1.0,0.3,1.0,1.0,1.0,1.0
+466,Create a function that generates the next larger number by permuting the digits of the current number.,1.0,0.3,1.0,1.0,1.0,1.0
+467,Create a function that identifies k smallest pairs formed by elements from two arrays.,1.0,0.3,1.0,1.0,1.0,1.0
+468,Create a function that determines the lowest product obtainable from tuple pairs in a list.,1.0,0.3,1.0,1.0,1.0,1.0
+469,Create a function that identifies the smallest value in a heterogeneous list.,1.0,0.3,1.0,1.0,1.0,1.0
+470,Create a function that changes snake_case strings to camelCase.,1.0,0.3,1.0,1.0,1.0,1.0
+471,Create a function that filters out odd numbers from a list.,1.0,0.3,1.0,1.0,1.0,1.0
+472,Create a function that retrieves the nth element from each tuple in a list of tuples.,1.0,0.3,1.0,1.0,1.0,1.0
+473,Create a function that checks for the existence of any value from one sequence in another sequence.,1.0,0.3,1.0,1.0,1.0,1.0
+474,Create a function that identifies the pair of integers in an array that yields the highest product.,1.0,0.3,1.0,1.0,1.0,1.0
+475,Create a function that identifies the shared first element in a list of tuples.,1.0,0.3,1.0,1.0,1.0,1.0
+476,Create a function that identifies the element with the greatest length in a list.,1.0,0.3,1.0,1.0,1.0,1.0
+477,"Create a function that rounds each number in a list, then returns the total sum multiplied by the list's length.",1.0,0.3,1.0,1.0,1.0,1.0
+478,Create a function that calculates the cube sum of the initial n even natural numbers.,1.0,0.3,1.0,1.0,1.0,1.0
+479,Create a function that concatenates the elements of a tuple using a specified delimiter.,1.0,0.3,1.0,1.0,1.0,1.0
+480,Create a function that calculates the average value of the cubes of the first n natural numbers.,1.0,0.3,1.0,1.0,1.0,1.0
+481,Create a function that retrieves the last character from each string in a tuple.,1.0,0.3,1.0,1.0,1.0,1.0
+482,Create a function that tallies the number of sublists that include a specific element.,1.0,0.3,1.0,1.0,1.0,1.0
+483,Create a function that filters out odd numbers from a list.,1.0,0.3,1.0,1.0,1.0,1.0
+484,Create a function that changes date formats from yyyy-mm-dd to dd-mm-yyyy.,1.0,0.3,1.0,1.0,1.0,1.0
+485,Create a function that arranges an array using the shell sort algorithm.,1.0,0.3,1.0,1.0,1.0,1.0
+486,Create a function that retrieves the element-wise AND results of two tuples.,1.0,0.3,1.0,1.0,1.0,1.0
+487,Create a function that calculates the directrix of a parabola given its parameters.,1.0,0.3,1.0,1.0,1.0,1.0
+488,Create a function that checks for any common element between two lists and returns true if found.,1.0,0.3,1.0,1.0,1.0,1.0
+489,Create a function that calculates the median length of a trapezium given its bases and height.,1.0,0.3,1.0,1.0,1.0,1.0
+490,Create a function that verifies if a given number is larger than all elements in an array.,1.0,0.3,1.0,1.0,1.0,1.0
+491,Create a function that identifies strings containing 'a' followed by one or more 'b' characters.,1.0,0.3,1.0,1.0,1.0,1.0
+492,Create a function that extracts the last digit from a given number.,1.0,0.3,1.0,1.0,1.0,1.0
+493,Create a function that filters and returns negative numbers from a list.,1.0,0.3,1.0,1.0,1.0,1.0
+494,Create a function that eliminates characters at odd positions in a string.,1.0,0.3,1.0,1.0,1.0,1.0
+495,Create a function that counts pairs of tuples that are bidirectional.,1.0,0.3,1.0,1.0,1.0,1.0
+496,Create a function that concatenates multiple integers from a list into one single integer.,1.0,0.3,1.0,1.0,1.0,1.0
+497,Create a function that identifies the first adverb in a sentence and provides its position.,1.0,0.3,1.0,1.0,1.0,1.0
+498,Create a function that calculates the surface area of a cube based on its size.,1.0,0.3,1.0,1.0,1.0,1.0
+499,Create a function that calculates the ratio of positive numbers in an array of integers.,1.0,0.3,1.0,1.0,1.0,1.0
+500,Create a function that identifies the largest negative number in a list.,1.0,0.3,1.0,1.0,1.0,1.0
+501,Create a function that shortens each tuple in a list of tuples by removing the first and last k elements.,1.0,0.3,1.0,1.0,1.0,1.0
+502,Create a function that multiplies elements of two tuples at the same index together.,1.0,0.3,1.0,1.0,1.0,1.0
+503,Create a function that tallies the occurrences of each list element in a tuple.,1.0,0.3,1.0,1.0,1.0,1.0
+504,Create a function that computes the cube of each element in a list.,1.0,0.3,1.0,1.0,1.0,1.0
+505,Create a function that computes the sum of Perrin numbers up to the nth term.,1.0,0.3,1.0,1.0,1.0,1.0
+506,Create a function that retrieves strings of a certain length from a list.,1.0,0.3,1.0,1.0,1.0,1.0
+507,Create a function that eliminates all whitespace characters from a string.,1.0,0.3,1.0,1.0,1.0,1.0
+508,"Create a function that calculates the loss amount on a sale, returning 0 if there is no loss.",1.0,0.3,1.0,1.0,1.0,1.0
+509,Create a function that computes the sum of all even factors of a given number.,1.0,0.3,1.0,1.0,1.0,1.0
+510,Create a function that identifies words with the letter 'z' in them.,1.0,0.3,1.0,1.0,1.0,1.0
+511,Create a function that verifies if a month number corresponds to a month with 31 days.,1.0,0.3,1.0,1.0,1.0,1.0
+512,Create a function that reverses the characters in each string within a list.,1.0,0.3,1.0,1.0,1.0,1.0
+513,Create a function that identifies the sublist with the smallest length within a list of sublists.,1.0,0.3,1.0,1.0,1.0,1.0
+514,Create a function that calculates the area of a rectangle given its length and breadth.,1.0,0.3,1.0,1.0,1.0,1.0
+515,Create a function that eliminates uppercase letter sequences from a string.,1.0,0.3,1.0,1.0,1.0,1.0
+516,Create a function that retrieves the initial element from each sublist in a list of sublists.,1.0,0.3,1.0,1.0,1.0,1.0
+517,Create a function that tallies the number of uppercase characters in a string.,1.0,0.3,1.0,1.0,1.0,1.0
+518,Create a function that generates all possible combinations of elements from a given list.,1.0,0.3,1.0,1.0,1.0,1.0
+519,Create a function that identifies the subarray with the highest product within an array.,1.0,0.3,1.0,1.0,1.0,1.0
+520,Create a function that verifies if a dictionary is empty.,1.0,0.3,1.0,1.0,1.0,1.0
+521,Create a function that removes entries with empty values from a dictionary.,1.0,0.3,1.0,1.0,1.0,1.0
+522,Create a function that calculates the highest product obtainable from an increasing subsequence in the array.,1.0,0.3,1.0,1.0,1.0,1.0
+523,Create a function that computes the pairwise sum of adjacent elements in a tuple.,1.0,0.3,1.0,1.0,1.0,1.0
+524,"Create a function that calculates the product of an array's elements multiplied together, then applies a modulo operation with n.",1.0,0.3,1.0,1.0,1.0,1.0
+525,Create a function that verifies if a list of numbers is consecutive.,1.0,0.3,1.0,1.0,1.0,1.0
+526,"Create a function that finds common elements in tuples within a list, regardless of their order.",1.0,0.3,1.0,1.0,1.0,1.0
+527,Create a function that substitutes specified characters in a string with new ones.,1.0,0.3,1.0,1.0,1.0,1.0
+528,Create a function that arranges the entries of a dictionary based on their values.,1.0,0.3,1.0,1.0,1.0,1.0
+529,Create a function that computes the sum of the maximum and minimum values in an array.,1.0,0.3,1.0,1.0,1.0,1.0
+530,Create a function that changes all characters in a string to lowercase.,1.0,0.3,1.0,1.0,1.0,1.0
+531,Create a function that eliminates lowercase letter sequences from a string.,1.0,0.3,1.0,1.0,1.0,1.0
+532,Create a function that extracts the first digit from a given number.,1.0,0.3,1.0,1.0,1.0,1.0
+533,Create a function that filters and returns only the odd integers from a list.,1.0,0.3,1.0,1.0,1.0,1.0
+534,Create a function that calculates the difference between the sum of cubes and the sum of the first n natural numbers.,1.0,0.3,1.0,1.0,1.0,1.0
+535,Create a function that counts the number of pairs in a list that have an odd XOR value.,1.0,0.3,1.0,1.0,1.0,1.0
+536,Create a function that switches the case of each character in a string.,1.0,0.3,1.0,1.0,1.0,1.0
+537,Create a function that computes the sum of differences between corresponding digits of two integers.,1.0,0.3,1.0,1.0,1.0,1.0
+538,Create a function that calculates the sum of the largest contiguous subarray within a given list.,1.0,0.3,1.0,1.0,1.0,1.0
+539,Create a function that determines the union of two tuples' elements and returns them in sorted order.,1.0,0.3,1.0,1.0,1.0,1.0
+540,Create a function that determines the length of the longest sublist within a list of sublists.,1.0,0.3,1.0,1.0,1.0,1.0
+541,Create a function that retrieves values enclosed in quotation marks from a string.,1.0,0.3,1.0,1.0,1.0,1.0
+542,Create a function that counts the number of unordered pairs in a list of integers where the two integers are different.,1.0,0.3,1.0,1.0,1.0,1.0
+543,Create a function that divides a string into its individual characters.,1.0,0.3,1.0,1.0,1.0,1.0
+544,Create a function that computes the sum of all digits in a non-negative integer.,1.0,0.3,1.0,1.0,1.0,1.0
+545,Create a function that verifies if a list is sorted in ascending order.,1.0,0.3,1.0,1.0,1.0,1.0
+546,Create a function that generates a list containing N empty dictionaries.,1.0,0.3,1.0,1.0,1.0,1.0
+547,Create a function that arranges the strings in each sublist of a list of lists.,1.0,0.3,1.0,1.0,1.0,1.0
+548,Create a function that filters out duplicate numbers from multiple lists.,1.0,0.3,1.0,1.0,1.0,1.0
+549,Create a function that computes the product of all unique numbers in a list.,1.0,0.3,1.0,1.0,1.0,1.0
+550,Create a function that calculates the surface area of a cylinder given its radius and height.,1.0,0.3,1.0,1.0,1.0,1.0
+551,Create a function that verifies if one list is a sublist of another list.,1.0,0.3,1.0,1.0,1.0,1.0
+552,Create a function that determines the last digit of the factorial of a number.,1.0,0.3,1.0,1.0,1.0,1.0
+553,Create a function that merges three lists of equal length into one flat list by alternating their elements.,1.0,0.3,1.0,1.0,1.0,1.0
+554,Create a function that identifies elements that are in either of the two tuples but not in both.,1.0,0.3,1.0,1.0,1.0,1.0
+555,Create a function that filters out uneven elements from nested tuples.,1.0,0.3,1.0,1.0,1.0,1.0
+556,Create a function that calculates the surface area of a square pyramid given the length of a base edge and the pyramid's height.,1.0,0.3,1.0,1.0,1.0,1.0
+557,Create a function that verifies if a dictionary is empty.,1.0,0.3,1.0,1.0,1.0,1.0
+558,Create a function that computes the nth Catalan number.,1.0,0.3,1.0,1.0,1.0,1.0
+559,Create a function that identifies the first adverb in a sentence ending with 'ly' and provides its position.,1.0,0.3,1.0,1.0,1.0,1.0
+560,Create a function that retrieves the n items with the highest price from a dataset.,1.0,0.3,1.0,1.0,1.0,1.0
+561,Create a function that divides a list at the nth element and appends the first segment to the end.,1.0,0.3,1.0,1.0,1.0,1.0
+562,Create a function that changes a list into a tuple.,1.0,0.3,1.0,1.0,1.0,1.0
+563,Create a function that calculates the difference between the maximum and minimum values in a list.,1.0,0.3,1.0,1.0,1.0,1.0
+564,Create a function that identifies all perfect squares within a specified range.,1.0,0.3,1.0,1.0,1.0,1.0
+565,Create a function that transforms polar coordinates into rectangular coordinates.,1.0,0.3,1.0,1.0,1.0,1.0
+566,Create a function that swaps the first and last elements of a list.,1.0,0.3,1.0,1.0,1.0,1.0
+567,Create a function that computes the sum of products of consecutive binomial coefficients.,1.0,0.3,1.0,1.0,1.0,1.0
+568,Create a function that eliminates leading zeros from an IP address.,1.0,0.3,1.0,1.0,1.0,1.0
+569,Create a function that calculates the difference between the first even and first odd number in a list.,1.0,0.3,1.0,1.0,1.0,1.0
+570,Create a function that calculates the least number of swaps needed to change one binary string to another.,1.0,0.3,1.0,1.0,1.0,1.0
+571,Create a function that determines the byte size of a given tuple.,1.0,0.3,1.0,1.0,1.0,1.0
+572,Create a function that retrieves the kth element from the merged result of two sorted arrays.,1.0,0.3,1.0,1.0,1.0,1.0
+573,Create a function that verifies if a number is an Armstrong number.,1.0,0.3,1.0,1.0,1.0,1.0
+574,Create a function that calculates both the sum and the average of the first n natural numbers.,1.0,0.3,1.0,1.0,1.0,1.0
+575,Create a function that determines if a number is even.,1.0,0.3,1.0,1.0,1.0,1.0
+576,Create a function that identifies the first character that appears more than once in a string.,1.0,0.3,1.0,1.0,1.0,1.0
+577,Create a function that lists all lucid numbers up to a specified integer.,1.0,0.3,1.0,1.0,1.0,1.0
+578,Create a function that reverses the order of words in a string where words are separated by spaces.,1.0,0.3,1.0,1.0,1.0,1.0
+579,Create a function that determines whether a given integer is prime.,1.0,0.3,1.0,1.0,1.0,1.0
+580,Create a function that converts an angle from degrees to radians.,1.0,0.3,1.0,1.0,1.0,1.0
+581,Create a function that searches for a regex pattern in a string and returns the matching substring along with its start and end indices.,1.0,0.3,1.0,1.0,1.0,1.0
+582,Create a function that computes the nth Bell number.,1.0,0.3,1.0,1.0,1.0,1.0
+583,Create a function that produces a list identical to the input list but with the k'th element excluded.,1.0,0.3,1.0,1.0,1.0,1.0
+584,"Create a function that finds a path through a cost matrix (N*N) with the highest average value, starting from the top-left and ending at the bottom-right, only moving right or down.",1.0,0.3,1.0,1.0,1.0,1.0
+585,Create a function that determines the median value of two equally sized sorted lists.,1.0,0.3,1.0,1.0,1.0,1.0
+586,Create a function that filters out students who do not meet the minimum height and weight requirements.,1.0,0.3,1.0,1.0,1.0,1.0
+587,Create a function that counts the number of indices at which two lists have the same value.,1.0,0.3,1.0,1.0,1.0,1.0
+588,Write a function to generate Fibonacci numbers in python language,1.0,0.1,0.3333333333333333,0.25,0.08333333333333333,0.20210734650054757
+589,Silakan masukkan ulang permintaan Anda.,1.0,0.3,1.0,1.0,1.0,1.0
+590,Write a function to generate Fibonacci numbers in python language,1.0,0.1,0.3333333333333333,0.25,0.08333333333333333,0.20210734650054757
+591,Write a function to reverse a string,1.0,0.3,1.0,1.0,1.0,1.0
+592,Write a function to generate Fibonacci numbers in python language,1.0,0.1,0.3333333333333333,0.25,0.08333333333333333,0.20210734650054757
+593,Write a function to generate Fibonacci numbers in python language,1.0,0.1,0.3333333333333333,0.25,0.08333333333333333,0.20210734650054757
+594,Write a function to reverse a string,1.0,0.3,1.0,1.0,1.0,1.0
+595,Write a function to generate Fibonacci numbers in python language,1.0,0.2,0.6666666666666666,0.3333333333333333,0.27777777777777773,0.4367467095119258
+596,Write a function to reverse a string,1.0,0.3,1.0,1.0,1.0,1.0
+597,Write a function to generate Fibonacci numbers in python language,1.0,0.2,0.6666666666666666,0.3333333333333333,0.27777777777777773,0.4367467095119258
+598,Write a function to reverse a string,1.0,0.3,1.0,1.0,1.0,1.0
+599,Write a function to generate Fibonacci numbers in python language,1.0,0.2,0.6666666666666666,0.3333333333333333,0.27777777777777773,0.4367467095119258
+600,Write a function to generate Fibonacci numbers in python language,1.0,0.2,0.6666666666666666,0.3333333333333333,0.27777777777777773,0.4367467095119258
+601,Write a function to generate Fibonacci numbers in python language,1.0,0.2,0.6666666666666666,0.3333333333333333,0.27777777777777773,0.4367467095119258
+602,Write a function to generate Fibonacci numbers in python language,1.0,0.2,0.6666666666666666,0.3333333333333333,0.27777777777777773,0.4367467095119258
+603,Write a function to generate Fibonacci numbers in python language,1.0,0.2,0.6666666666666666,0.3333333333333333,0.27777777777777773,0.4367467095119258
+604,Write a function to generate Fibonacci numbers in python language,1.0,0.2,0.6666666666666666,0.3333333333333333,0.27777777777777773,0.4367467095119258
+605,Write a function to generate Fibonacci numbers in python language,1.0,0.2,0.6666666666666666,0.3333333333333333,0.27777777777777773,0.4367467095119258
+606,Generate a Python function that calculates the Levenshtein distance between two strings without using external libraries,1.0,0.3,1.0,1.0,1.0,1.0
+607,Write a function to generate Fibonacci numbers in python language,1.0,0.2,0.6666666666666666,0.3333333333333333,0.27777777777777773,0.4367467095119258
+608,Generate a Python function that calculates the Levenshtein distance between two strings without using external libraries,1.0,0.3,1.0,1.0,1.0,1.0
+609,Write a function to generate Fibonacci numbers in python language,1.0,0.2,0.6666666666666666,0.3333333333333333,0.27777777777777773,0.4367467095119258
+610,Generate a Python function that calculates the Levenshtein distance between two strings without using external libraries,1.0,0.3,1.0,1.0,1.0,1.0
+611,Write a Python function to compute the nth Fibonacci number using memoization.,1.0,0.2,0.6666666666666666,0.2,0.1619047619047619,0.3379680345449381
+612,Generate a Python function that calculates the Levenshtein distance between two strings without using external libraries,1.0,0.3,1.0,1.0,1.0,1.0
+613,Write a Python function to check if a string is a valid IPv4 address.,1.0,0.3,1.0,1.0,0.8666666666666667,0.9469024295259745
+614,Write a Python function to check if a string is a valid IPv4 address.,1.0,0.3,1.0,1.0,0.8666666666666667,0.9469024295259745
+615,Write a Python function to check if a string is a valid IPv4 address.,1.0,0.3,1.0,1.0,0.8666666666666667,0.9469024295259745
+616,Find shared elements from four arrays.,1.0,0.3,1.0,1.0,0.8666666666666667,0.9469024295259745
+617,Write a function to find the biggest max elements from nine arrays.,1.0,0.3,1.0,1.0,0.9166666666666666,0.9674679834891693
+618,Write a Python function to check if a string is a valid IPv6 address.,1.0,0.3,1.0,0.5,0.6388888888888888,0.7328286204777911
+619,Find shared elements from eleven arrays.,1.0,0.3,1.0,1.0,0.9166666666666666,0.9674679834891693
+620,Write a function to find the biggest max elements from seven arrays.,1.0,0.3,1.0,1.0,1.0,1.0
+621,Write a Python function to check if a string is a valid IPv6 address.,1.0,0.3,1.0,0.5,0.6388888888888888,0.7328286204777911
+622,Find shared elements from eleven arrays.,1.0,0.3,1.0,1.0,0.9166666666666666,0.9674679834891693
+623,Find shared elements from eleven arrays.,1.0,0.3,1.0,1.0,0.9166666666666666,0.9674679834891693
+624,Write a function to find the biggest max elements from seven arrays.,1.0,0.3,1.0,1.0,1.0,1.0
+625,Write a Python function to check if a string is a valid IPv6 address.,1.0,0.3,1.0,0.5,0.6388888888888888,0.7328286204777911
+626,Find shared elements from eight arrays.,1.0,0.3,1.0,1.0,0.8666666666666667,0.9469024295259745
+627,Write a function to find the smallest max elements from seven arrays.,1.0,0.3,1.0,1.0,1.0,1.0
+628,Write a Python function to check if a string is a valid IPv6 address.,1.0,0.3,1.0,0.5,0.6388888888888888,0.7328286204777911
+629,Find shared elements from eight arrays.,1.0,0.3,1.0,1.0,0.9166666666666666,0.9674679834891693
+630,Write a function to find the smallest max elements from seven arrays.,1.0,0.3,1.0,1.0,1.0,1.0
+631,Write a Python function to check if a string is a valid IPv6 address.,1.0,0.3,1.0,1.0,1.0,1.0

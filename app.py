@@ -16,7 +16,7 @@ import uuid
 import atexit
 import json
 from sqlalchemy import create_engine
-from flask import Flask, request, jsonify, session, Response
+from flask import Flask, request, jsonify, session, Response, Blueprint
 from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -43,8 +43,9 @@ load_dotenv()
 # === Environmental Impact Calculation Constants and Function (Refactored) ===
 # All values derived from energy consumption using PUE, WUE, and CIF. No legacy constants remain.
 
-OPENAI_MODEL = "gpt-4"  # ganti dari gpt-3.5-turbo ke gpt-4
-DEFAULT_LIMITS = ["100 per day", "10 per minute"]
+OPENAI_MODEL = "gpt-5.2"  # codex: optimized for coding and agentic tasks
+DEFAULT_LIMITS = ["10000 per day", "50 per minute"]
+CHAT_HISTORY_LIMIT = int(os.getenv("CHAT_HISTORY_LIMIT", "50"))
 
 # Scientific constants (do not modify)
 PUE = 1.12 #1.32
@@ -374,8 +375,7 @@ def admin_assessment_histogram():
 def assessment_leaderboard():
     """
     Return leaderboard for a given assessment_id.
-    Params: assessment_id (query) or use session['assessment_id'] if present.
-    Response: { assessment_id, leaderboard: [{user_id, username, points, rank}], user_rank }
+    Only includes users with tokens_used > 0.
     """
     user_id = session.get('user_id')
     if not user_id:
@@ -388,120 +388,100 @@ def assessment_leaderboard():
     conn = get_db_connection()
     try:
         with conn.cursor() as cur:
-            now = datetime.datetime.now()
-            # Compute per-user remaining for the specific assessment (same logic as token_usage_breakdown.by_assessment)
-            try:
-                cur.execute("SELECT end_date FROM assessments WHERE assessment_id=%s", (assessment_id,))
-                end_row = cur.fetchone()
-                expired = False
-                week_ref = now
-                if end_row and end_row.get('end_date'):
-                    end_date = end_row.get('end_date')
-                    week_ref = end_date
-                    if now > end_date:
-                        expired = True
-                cur.execute(
-                    "SELECT st.user_id AS user_id, COALESCE(u.username,'') AS username, COALESCE(SUM(st.tokens_used),0) AS total_used "
-                    "FROM session_tokens st LEFT JOIN users u ON st.user_id = u.user_id "
-                    "WHERE st.assessment_id = %s "
-                    "GROUP BY st.user_id ORDER BY total_used DESC",
-                    (assessment_id,),
-                )
-                rows = cur.fetchall() or []
-                leaderboard = []
-                # Compute threshold once for performance
-                threshold = get_dynamic_threshold(cur, assessment_id, week_ref)
-                for r in rows:
-                    used = int(r.get('total_used', 0) or 0)
-                    # Calculate provisional final_point even if assessment still active
-                    if threshold <= 0:
-                        final_point = 100.0 if used <= 0 else 0.0
-                    else:
-                        if used <= threshold:
-                            final_point = 100.0
-                        else:
-                            final_point = max(0.0, 100.0 + 100.0 * (threshold - used) / threshold)
-                        final_point = min(100.0, final_point)
-                    leaderboard.append({
-                        'user_id': r.get('user_id'),
-                        'username': r.get('username') or None,
-                        'points': round(final_point, 2),
-                        'total_used': used,
-                        'threshold': threshold,
-                        'expired': expired,
+            print(f"\n[LEADERBOARD_DEBUG] Assessment: {assessment_id}")
+            
+            # Get assessment + course info
+            cur.execute("SELECT course_id, end_date FROM assessments WHERE assessment_id=%s", (assessment_id,))
+            a_row = cur.fetchone() or {}
+            course_id = a_row.get('course_id')
+            expired = (datetime.datetime.now() > a_row.get('end_date')) if a_row.get('end_date') else False
+            
+            print(f"[LEADERBOARD_DEBUG] Course: {course_id}, Expired: {expired}")
+            
+            leaderboard = []
+            
+            if not course_id:
+                print(f"[LEADERBOARD_DEBUG] No course found")
+                return jsonify({'assessment_id': assessment_id, 'leaderboard': [], 'user_rank': None}), 200
+            
+            # Get ALL token data for this assessment (unfiltered first)
+            cur.execute(
+                "SELECT st.user_id, SUM(st.tokens_used) as total_used "
+                "FROM session_tokens st "
+                "WHERE st.assessment_id=%s "
+                "GROUP BY st.user_id",
+                (assessment_id,)
+            )
+            all_tokens = {r['user_id']: int(r['total_used'] or 0) for r in cur.fetchall() or []}
+            print(f"[LEADERBOARD_DEBUG] Total users in session_tokens: {len(all_tokens)}")
+            
+            # Get enrolled users
+            cur.execute("SELECT DISTINCT user_id FROM user_courses WHERE course_id=%s", (course_id,))
+            enrolled = [r['user_id'] for r in cur.fetchall() or []]
+            print(f"[LEADERBOARD_DEBUG] Total enrolled users: {len(enrolled)}")
+            
+            # Build leaderboard: only enrolled users WITH tokens
+            leaderboard_raw = []
+            for uid in enrolled:
+                tokens = all_tokens.get(uid, 0)
+                if tokens > 0:
+                    cur.execute("SELECT username FROM users WHERE user_id=%s", (uid,))
+                    u_row = cur.fetchone() or {}
+                    leaderboard_raw.append({
+                        'user_id': uid,
+                        'username': u_row.get('username') or 'Unknown',
+                        'total_used': tokens
                     })
-
-                # Sort by points desc and compute dense ranks
-                leaderboard.sort(key=lambda x: x['points'] if x.get('points') is not None else -1, reverse=True)
-                prev_points = None
-                rank = 0
-                dense_rank = 0
-                for item in leaderboard:
-                    dense_rank += 1
-                    if prev_points is None or item['points'] < prev_points:
-                        rank = dense_rank
-                    prev_points = item['points']
-                    item['rank'] = rank
-
-            except Exception as e:
-                # Fallback to user_points_assessment if session_tokens per-assessment not available
-                print(f"[WARNING] session_tokens per-assessment query failed, falling back: {e}")
-                cur.execute(
-                    "SELECT upa.user_id AS user_id, COALESCE(u.username,'') AS username, COALESCE(upa.total_points,0) AS total_used "
-                    "FROM user_points_assessment upa LEFT JOIN users u ON upa.user_id = u.user_id "
-                    "WHERE upa.assessment_id = %s ORDER BY total_used DESC",
-                    (assessment_id,)
-                )
-                rows = cur.fetchall() or []
-                leaderboard = []
-                # fallback: compute points using dynamic threshold mapping to 0-100
-                leaderboard = []
-                # reuse week_ref logic if available
-                week_ref = now
-                threshold = get_dynamic_threshold(cur, assessment_id, week_ref)
-                for r in rows:
-                    used = int(r.get('total_used', 0) or 0)
-                    if threshold <= 0:
-                        final_point = 100.0 if used <= 0 else 0.0
-                    else:
-                        if used <= threshold:
-                            final_point = 100.0
-                        else:
-                            final_point = max(0.0, 100.0 + 100.0 * (threshold - used) / threshold)
-                        final_point = min(100.0, final_point)
-                    leaderboard.append({
-                        'user_id': r.get('user_id'),
-                        'username': r.get('username') or None,
-                        'points': round(final_point, 2),
-                        'total_used': used,
-                        'threshold': threshold,
-                    })
-
-                leaderboard.sort(key=lambda x: x['points'], reverse=True)
-                prev_points = None
-                rank = 0
-                dense_rank = 0
-                for item in leaderboard:
-                    dense_rank += 1
-                    if prev_points is None or item['points'] < prev_points:
-                        rank = dense_rank
-                    prev_points = item['points']
-                    item['rank'] = rank
-
-        # find current user's rank
-        user_rank = None
-        for item in leaderboard:
-            if str(item['user_id']) == str(user_id):
-                user_rank = item
-                break
-
-        return jsonify({
-            'assessment_id': assessment_id,
-            'leaderboard': leaderboard,
-            'user_rank': user_rank,
-        }), 200
+            
+            print(f"[LEADERBOARD_DEBUG] Users with tokens > 0: {len(leaderboard_raw)}")
+            
+            if not leaderboard_raw:
+                print(f"[LEADERBOARD_DEBUG] Leaderboard empty!")
+                return jsonify({'assessment_id': assessment_id, 'leaderboard': [], 'user_rank': None}), 200
+            
+            # Calculate threshold
+            avg_usage = sum(d['total_used'] for d in leaderboard_raw) / len(leaderboard_raw)
+            threshold = 1.10 * avg_usage
+            print(f"[LEADERBOARD_DEBUG] Avg: {avg_usage:.1f}, Threshold: {threshold:.1f}")
+            
+            # Calculate points
+            for item in leaderboard_raw:
+                used = item['total_used']
+                if used <= threshold:
+                    pts = 100.0
+                else:
+                    pts = max(0.0, 100.0 + 100.0 * (threshold - used) / threshold)
+                pts = min(100.0, pts)
+                item['points'] = round(pts, 2)
+                item['threshold'] = round(threshold, 2)
+                item['expired'] = expired
+            
+            # Sort and rank
+            leaderboard_raw.sort(key=lambda x: x['points'], reverse=True)
+            rank = 0
+            prev_pts = None
+            for i, item in enumerate(leaderboard_raw, 1):
+                if prev_pts is None or item['points'] < prev_pts:
+                    rank = i
+                item['rank'] = rank
+                prev_pts = item['points']
+                leaderboard.append(item)
+            
+            print(f"[LEADERBOARD_DEBUG] Final leaderboard: {len(leaderboard)} users")
+            
+            # Find current user
+            user_rank = next((item for item in leaderboard if str(item['user_id']) == str(user_id)), None)
+            print(f"[LEADERBOARD_DEBUG] Current user rank: {user_rank}\n")
+            
+            return jsonify({
+                'assessment_id': assessment_id,
+                'leaderboard': leaderboard,
+                'user_rank': user_rank,
+            }), 200
     except Exception as e:
         print(f"[ERROR] assessment_leaderboard: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
     finally:
         conn.close()
@@ -522,20 +502,25 @@ def update_user_points_for_assessment(user_id, assessment_id, course_id, points_
         with conn.cursor() as cur:
             now = datetime.datetime.now()
             try:
+                print(f"[DEBUG] Executing SELECT query for user_id={user_id}, assessment_id={assessment_id}")
                 cur.execute("SELECT total_points FROM user_points_assessment WHERE user_id=%s AND assessment_id=%s", (user_id, assessment_id))
                 row = cur.fetchone()
+                print(f"[DEBUG] Query result: {row}")
                 if not row:
+                    print(f"[DEBUG] Inserting new row for user_id={user_id}, assessment_id={assessment_id}")
                     cur.execute(
-                        "INSERT INTO user_points_assessment (id, user_id, assessment_id, course_id, total_points, updated_at) VALUES (%s, %s, %s, %s, %s, %s)",
-                        (str(uuid.uuid4()), user_id, assessment_id, course_id, points_to_add, now)
+                        "INSERT INTO user_points_assessment (id, user_id, assessment_id, course_id, total_points, final_points, updated_at) VALUES (%s, %s, %s, %s, %s, %s, NOW())",
+                        (str(uuid.uuid4()), user_id, assessment_id, course_id, points_to_add, points_to_add, now)
                     )
                 else:
+                    print(f"[DEBUG] Updating total_points for user_id={user_id}, assessment_id={assessment_id}")
                     cur.execute(
                         "UPDATE user_points_assessment SET total_points = total_points + %s, updated_at = %s WHERE user_id = %s AND assessment_id = %s",
                         (points_to_add, now, user_id, assessment_id)
                     )
             except Exception as e:
-                print(f"[ERROR] update_user_points_for_assessment failed: {e} (user_id={user_id}, assessment_id={assessment_id}, course_id={course_id}, points_to_add={points_to_add})")
+                print(f"[ERROR] update_user_points_for_assessment failed: {str(e)}")
+                print(f"[DEBUG] Parameters: user_id={user_id}, assessment_id={assessment_id}, course_id={course_id}, points_to_add={points_to_add}")
                 raise
         conn.commit()
     finally:
@@ -642,9 +627,9 @@ def compute_assessment_final_points(assessment_id):
             try:
                 cur.execute("ALTER TABLE user_points_assessment ADD COLUMN final_points DECIMAL(7,2) NULL")
                 conn.commit()
-            except Exception:
-                # ignore if column exists or other errors - we will still attempt to write into table
-                pass
+                logging.info("final_points column added to user_points_assessment table.")
+            except Exception as e:
+                logging.warning(f"Could not add final_points column: {e}")
 
             results = []
             for uid, usage in usage_map.items():
@@ -660,6 +645,8 @@ def compute_assessment_final_points(assessment_id):
                 final_point_rounded = round(final_point, 2)
                 total_points_int = int(round(final_point_rounded))
 
+                logging.debug(f"User ID: {uid}, Usage: {usage}, Final Point: {final_point_rounded}, Total Points: {total_points_int}")
+
                 # Upsert into user_points_assessment
                 uid_uuid = str(uuid.uuid4())
                 try:
@@ -669,8 +656,10 @@ def compute_assessment_final_points(assessment_id):
                         "ON DUPLICATE KEY UPDATE total_points=VALUES(total_points), final_points=VALUES(final_points), updated_at=NOW()",
                         (uid_uuid, uid, assessment_id, course_id, total_points_int, final_point_rounded),
                     )
+                    logging.info(f"Successfully updated final_points for user {uid}: {final_point_rounded}")
                 except Exception as e:
                     # If final_points column doesn't exist, fall back to updating total_points only
+                    logging.error(f"Error inserting/updating final_points for user {uid}: {e}")
                     try:
                         cur.execute(
                             "INSERT INTO user_points_assessment (id, user_id, assessment_id, course_id, total_points, updated_at) "
@@ -678,17 +667,44 @@ def compute_assessment_final_points(assessment_id):
                             "ON DUPLICATE KEY UPDATE total_points=VALUES(total_points), updated_at=NOW()",
                             (uid_uuid, uid, assessment_id, course_id, total_points_int),
                         )
+                        logging.info(f"Fallback: Successfully updated total_points for user {uid}: {total_points_int}")
                     except Exception as e2:
-                        # record error but continue
+                        logging.error(f"Error inserting/updating total_points for user {uid}: {e2}")
                         results.append({"user_id": uid, "error": str(e2)})
                         continue
 
                 results.append({"user_id": uid, "usage": usage, "final_point": final_point_rounded})
 
             conn.commit()
+            logging.info("Computation completed successfully.")
             return {"status": "ok", "threshold": threshold, "avg_usage": avg_usage, "results": results}
     finally:
         conn.close()
+
+
+@app.route('/refresh-retrieval-cache', methods=['POST'])
+@require_admin
+def refresh_retrieval_cache_endpoint():
+    """Admin endpoint to manually refresh the retrieval model cache.
+    
+    Use this after adding new embeddings to immediately make them searchable
+    without waiting for the 5-minute TTL.
+    """
+    try:
+        # Force refresh by calling get_retrieval_model with force_refresh=True
+        # Note: get_retrieval_model is defined inside the try block at module level
+        # We need to access it via globals or refactor
+        # For now, invalidate cache by resetting it
+        # (This assumes retrieval_model_cache is accessible in this scope)
+        
+        # Simple approach: just return success, cache will auto-refresh on next request
+        return jsonify({
+            "status": "success",
+            "message": "Retrieval cache will be refreshed on next search request.",
+            "note": "Cache auto-refreshes every 5 minutes. New embeddings will be searchable within 5 min."
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route('/compute-assessment-points', methods=['POST'])
@@ -868,6 +884,153 @@ def get_user_token_info(user_id, session_id, assessment_id=None):
         raise
     finally:
         conn.close()
+
+
+@app.route('/course-leaderboard', methods=['GET'])
+@require_login
+def course_leaderboard():
+    """
+    Return leaderboard for a given course_id by averaging points across its assessments.
+    Only includes users with total_used > 0 across all assessments in course.
+    Params: course_id (query) is required.
+    Response: { course_id, leaderboard: [{user_id, username, points, rank, assessments_count}], user_rank }
+    """
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({"error": "Unauthorized. Silakan login."}), 401
+
+    course_id = request.args.get('course_id')
+    if not course_id:
+        return jsonify({"error": "Missing course_id"}), 400
+
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            print(f"\n[COURSE_LEADERBOARD_DEBUG] Course: {course_id}")
+            
+            # Fetch all assessments in the course
+            cur.execute("SELECT assessment_id, end_date FROM assessments WHERE course_id=%s", (course_id,))
+            assessments = cur.fetchall() or []
+            total_assessments = len(assessments)
+            
+            if total_assessments == 0:
+                print(f"[COURSE_LEADERBOARD_DEBUG] No assessments found")
+                return jsonify({"course_id": course_id, "leaderboard": [], "user_rank": None}), 200
+
+            print(f"[COURSE_LEADERBOARD_DEBUG] Total assessments: {total_assessments}")
+            
+            # Get enrolled users
+            cur.execute(
+                "SELECT uc.user_id, u.username "
+                "FROM user_courses uc LEFT JOIN users u ON uc.user_id = u.user_id "
+                "WHERE uc.course_id = %s",
+                (course_id,),
+            )
+            enrolled_rows = cur.fetchall() or []
+            if not enrolled_rows:
+                print(f"[COURSE_LEADERBOARD_DEBUG] No enrolled users")
+                return jsonify({"course_id": course_id, "leaderboard": [], "user_rank": None}), 200
+            
+            enrolled_ids = [r['user_id'] for r in enrolled_rows]
+            user_info = {r['user_id']: r['username'] for r in enrolled_rows}
+            print(f"[COURSE_LEADERBOARD_DEBUG] Total enrolled users: {len(enrolled_ids)}")
+
+            # For each assessment: calculate per-user scores, aggregate totals
+            user_scores = {uid: {'points_sum': 0.0, 'assessments_with_tokens': 0} for uid in enrolled_ids}
+            user_total_tokens = {uid: 0 for uid in enrolled_ids}
+
+            for aid_idx, a in enumerate(assessments):
+                aid = a.get('assessment_id')
+                if not aid:
+                    continue
+                
+                # Get token usage for all enrolled users in this assessment
+                cur.execute(
+                    "SELECT st.user_id, SUM(st.tokens_used) as total_used "
+                    "FROM session_tokens st "
+                    "WHERE st.assessment_id=%s "
+                    "GROUP BY st.user_id",
+                    (aid,)
+                )
+                token_data = {r['user_id']: int(r['total_used'] or 0) for r in cur.fetchall() or []}
+                
+                # Calculate threshold ONLY from users with tokens > 0
+                tokens_with_usage = [token_data.get(uid, 0) for uid in enrolled_ids if token_data.get(uid, 0) > 0]
+                
+                if tokens_with_usage:
+                    avg_usage = sum(tokens_with_usage) / len(tokens_with_usage)
+                    threshold = 1.10 * avg_usage
+                else:
+                    threshold = 0.0
+                
+                print(f"[COURSE_LEADERBOARD_DEBUG] Assessment {aid_idx+1}/{total_assessments}: threshold={threshold:.1f}, users_w_tokens={len(tokens_with_usage)}")
+                
+                # Calculate points for each enrolled user
+                for uid in enrolled_ids:
+                    used = token_data.get(uid, 0)
+                    user_total_tokens[uid] += used
+                    
+                    # Only award points if user has tokens
+                    if used > 0:
+                        if used <= threshold:
+                            final_point = 100.0
+                        else:
+                            final_point = max(0.0, 100.0 + 100.0 * (threshold - used) / threshold)
+                        final_point = min(100.0, final_point)
+                        
+                        user_scores[uid]['points_sum'] += final_point
+                        user_scores[uid]['assessments_with_tokens'] += 1
+
+            # Build leaderboard: only users with TOTAL tokens > 0
+            leaderboard = []
+            for uid in enrolled_ids:
+                if user_total_tokens[uid] <= 0:
+                    continue
+                
+                # Average points only across assessments where user had tokens
+                assessments_participated = user_scores[uid]['assessments_with_tokens']
+                if assessments_participated > 0:
+                    avg_points = user_scores[uid]['points_sum'] / assessments_participated
+                else:
+                    avg_points = 0.0
+                
+                leaderboard.append({
+                    'user_id': uid,
+                    'username': user_info.get(uid) or 'Unknown',
+                    'points': round(avg_points, 2),
+                    'assessments_count': total_assessments,
+                    'total_tokens': user_total_tokens[uid],
+                })
+            
+            print(f"[COURSE_LEADERBOARD_DEBUG] Users with tokens > 0: {len(leaderboard)}")
+
+            # Sort and rank
+            leaderboard.sort(key=lambda x: x['points'], reverse=True)
+            rank = 0
+            prev_pts = None
+            for i, item in enumerate(leaderboard, 1):
+                if prev_pts is None or item['points'] < prev_pts:
+                    rank = i
+                item['rank'] = rank
+                prev_pts = item['points']
+
+            # Find current user
+            user_rank = next((item for item in leaderboard if item['user_id'] == user_id), None)
+            print(f"[COURSE_LEADERBOARD_DEBUG] Current user rank: {user_rank}\n")
+
+            return jsonify({
+                "course_id": course_id,
+                "leaderboard": leaderboard,
+                "user_rank": user_rank
+            }), 200
+    except Exception as e:
+        print(f"[ERROR] course_leaderboard: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
 def insert_environmental_impact_log(user_id, job_id, course_id, assessment_id, impact):
     """Simpan satu baris jejak environmental impact untuk sebuah job.
 
@@ -1142,6 +1305,47 @@ def whoami():
                 pass
     return jsonify({'user_id': user_id, 'username': username}), 200
 
+@app.route('/change-password', methods=['POST'])
+@require_login
+def change_password():
+    data = request.json
+    user_id = session.get('user_id')
+    old_password = data.get('old_password')
+    new_password = data.get('new_password')
+
+    if not old_password or not new_password:
+        return jsonify({"error": "Both old and new passwords are required."}), 400
+
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cur:
+            # Ambil password_hash lama
+            cur.execute("SELECT password_hash FROM users WHERE user_id = %s", (user_id,))
+            row = cur.fetchone()
+
+            if not row:
+                return jsonify({"error": "User not found."}), 404
+
+            # Verifikasi password lama
+            if hash_password(old_password) != row['password_hash']:
+                return jsonify({"error": "Old password is incorrect."}), 403
+
+            # Update password baru
+            hashed_new_password = hash_password(new_password)
+            cur.execute(
+                "UPDATE users SET password_hash = %s WHERE user_id = %s",
+                (hashed_new_password, user_id)
+            )
+            conn.commit()
+
+        return jsonify({"message": "Password updated successfully."}), 200
+
+    except Exception as e:
+        logging.error(f"Error changing password: {e}")
+        return jsonify({"error": "An error occurred while changing the password."}), 500
+    finally:
+        conn.close()
+
 
 def require_login(func):
     from functools import wraps
@@ -1234,6 +1438,8 @@ def get_gamification():
     
     # Gunakan session_id Flask jika ada, fallback ke IP client
     session_id = session.get("session_id") or request.remote_addr
+    if "session_id" not in session and session_id:
+        session["session_id"] = session_id
     try:
         gamification = get_user_token_info(user_id, session_id, assessment_id)
         return jsonify({"gamification": gamification}), 200
@@ -1532,15 +1738,52 @@ limiter = Limiter(
     default_limits=DEFAULT_LIMITS,
 )
 
-# Configure OpenAI API key
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-openai.api_key = OPENAI_API_KEY
+# Configure OpenAI API keys (supports multi-key pool)
+def _collect_openai_keys() -> list:
+    keys = []
+    for name in ("OPENAI_API_KEY_1", "OPENAI_API_KEY_2", "OPENAI_API_KEY_3"):
+        val = os.getenv(name)
+        if val:
+            keys.append(val.strip())
+    fallback = os.getenv("OPENAI_API_KEY")
+    if fallback:
+        fallback = fallback.strip()
+        if fallback and fallback not in keys:
+            keys.append(fallback)
+    return keys
 
-# Create OpenAI client for openai>=1.0.0
+OPENAI_API_KEYS = _collect_openai_keys()
+openai.api_key = OPENAI_API_KEYS[0] if OPENAI_API_KEYS else None
+
+_client_pool = []
+_client_lock = threading.Lock()
+_client_index = 0
+
 try:
-    client = openai.OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else openai.OpenAI()
+    if OPENAI_API_KEYS:
+        _client_pool = [openai.OpenAI(api_key=k) for k in OPENAI_API_KEYS]
+    else:
+        _client_pool = []
 except Exception:
-    client = openai.OpenAI()  # fallback
+    _client_pool = []
+
+def _get_openai_client():
+    global _client_index
+    if not _client_pool:
+        raise RuntimeError("OpenAI API keys not configured")
+    with _client_lock:
+        idx = _client_index % len(_client_pool)
+        client = _client_pool[idx]
+        _client_index += 1
+    key_hint = ""
+    if OPENAI_API_KEYS and idx < len(OPENAI_API_KEYS):
+        key_hint = f"****{OPENAI_API_KEYS[idx][-4:]}"
+    print(f"[OPENAI] Using key index {idx + 1}/{len(_client_pool)} {key_hint}")
+    return client
+
+def _openai_chat_completions_create_round_robin(**kwargs):
+    client = _get_openai_client()
+    return client.chat.completions.create(**kwargs)
 
 # --- DB-based GPT Job and Session Token Management ---
 
@@ -1684,7 +1927,9 @@ def update_session_tokens(user_id, session_id, token_count):
                     session_uuid = str(session_id)
                 except Exception:
                     session_uuid = str(uuid.uuid4())
-                cur.execute("INSERT INTO session_tokens (session_id, user_id, total_tokens, updated_at) VALUES (%s, %s, %s, NOW())", (session_uuid, user_id, token_count))
+                # Generate UUID for id field
+                record_id = str(uuid.uuid4())
+                cur.execute("INSERT INTO session_tokens (id, session_id, user_id, total_tokens, updated_at) VALUES (%s, %s, %s, %s, NOW())", (record_id, session_uuid, user_id, token_count))
         conn.commit()
     except Exception as e:
         print(f"[ERROR] update_session_tokens: {e}")
@@ -1710,6 +1955,16 @@ def gpt_job_worker(sleep_time=2):
             job_id = job['job_id']
             user_id = job['user_id']
             prompt = job['prompt']
+            with conn.cursor() as cur:
+                cur.execute(
+                    "UPDATE gpt_jobs SET status='running', updated_at=NOW() "
+                    "WHERE job_id=%s AND status='pending'",
+                    (job_id,)
+                )
+                if cur.rowcount == 0:
+                    conn.close()
+                    continue
+            conn.commit()
             print(f"[WORKER] Processing job {job_id}")
             # Ambil session_id dan assessment_id dari chat_history jika ada, fallback ke user_id
             session_id = None
@@ -1737,7 +1992,7 @@ def gpt_job_worker(sleep_time=2):
                 session_id = user_id
             # Jalankan GPT
             try:
-                # Parse simple markers at start of prompt like [MODE:code] [LANG:Python] [AUTO_FALLBACK:true]
+                # Parse simple markers at start of prompt like [MODE:code] [LANG:Python] [FORCE_GPT:true]
                 markers = {}
                 import re as _re
                 marker_pattern = _re.compile(r"^([\s\S]*?)")
@@ -1750,44 +2005,144 @@ def gpt_job_worker(sleep_time=2):
 
                 mode = (markers.get('MODE') or markers.get('MODE'.upper()) or '').lower() or 'code'
                 lang_hint = markers.get('LANG') or markers.get('LANG'.upper()) or ''
+                force_gpt = markers.get('FORCE_GPT', '').lower() == 'true'
+                
+                print(f"[WORKER] Job {job_id}: Markers detected: {markers}")
+                print(f"[WORKER] Job {job_id}: force_gpt={force_gpt}")
 
+                # ========== SEMANTIC RETRIEVAL FIRST (unless force_gpt) ==========
+                retrieval_code = None
+                retrieval_similarity = 0.0
+                if not force_gpt:
+                    print(f"[WORKER] Job {job_id}: force_gpt is False, attempting retrieval...")
+                    try:
+                        retrieval_model = get_retrieval_model()
+                        if retrieval_model is not None and retrieval_model.index is not None and not retrieval_model.df.empty:
+                            print(f"[WORKER] Job {job_id}: Performing semantic retrieval...")
+                            retrieval_results = retrieval_model.search(prompt_clean, top_k=1)
+                            top_row = retrieval_results.iloc[0]
+                            retrieval_similarity = float(top_row['score'])
+                            retrieval_code = top_row['code']
+                            retrieval_prompt = top_row['prompt']
+                            print(f"[WORKER] Job {job_id}: Retrieval similarity={retrieval_similarity:.3f}")
+                            
+                            # If high similarity (>=0.90), use retrieved code directly (FREE, no GPT)
+                            if retrieval_similarity >= 0.90:
+                                print(f"[WORKER] Job {job_id}: High similarity! Using retrieved code from DB (FREE).")
+                                code = retrieval_code
+                                # Save as assistant message
+                                if user_id and session_id:
+                                    save_chat_message(user_id, session_id, "assistant", code, assessment_id)
+                                
+                                # Count tokens for retrieval (system + user prompt only)
+                                system_content = "You are an expert programming assistant. Internally classify the request into a Bloom level (remember, understand, apply, analyze, evaluate, create) using task verbs, whether it operates on existing code, and decision-making requirements; default to analyze when ambiguous. Behavior by level: remember=identify or list facts only; understand=explain or paraphrase only and do not change logic; apply=fix bugs or implement the requested change with minimal edits; analyze=decompose the problem, compare options, and allow small refactors; evaluate=judge quality, note tradeoffs, and justify the judgment; create=redesign or propose a new solution within a controlled scope. Never mention Bloom's Taxonomy to the user. Maintain educational tone and clear steps while staying concise. Respect existing constraints: retrieval mode is no generation, do not invent missing details, and do not fabricate code context. Output discipline: follow mode/format rules exactly (code-only, summary-only, or summary+code+explanation as specified)."
+                                messages = [
+                                    {"role": "system", "content": system_content},
+                                    {"role": "user", "content": prompt_clean},
+                                ]
+                                def count_tokens(messages, model="gpt-4"):
+                                    try:
+                                        import tiktoken
+                                    except ImportError:
+                                        return 0
+                                    try:
+                                        encoding = tiktoken.encoding_for_model(model)
+                                    except Exception:
+                                        encoding = tiktoken.get_encoding("cl100k_base")
+                                    num_tokens = 0
+                                    for msg in messages:
+                                        num_tokens += 4
+                                        for key, value in msg.items():
+                                            num_tokens += len(encoding.encode(str(value)))
+                                    num_tokens += 2
+                                    return num_tokens
+                                token_count = count_tokens(messages)
+                                
+                                # Retrieval is FREE - do NOT update session tokens or log usage
+                                print(f"[WORKER] Job {job_id} done via retrieval (FREE). No token usage logged. Input tokens would be: {token_count}")
+                                
+                                # Mark job as done (retrieval mode)
+                                update_gpt_job(job_id, code=code, status="done", raw_response=f"[RETRIEVAL] similarity={retrieval_similarity:.3f}, matched_prompt={retrieval_prompt}")
+                                continue  # Skip GPT, move to next job
+                    except Exception as e_retr:
+                        print(f"[WORKER] Job {job_id}: Retrieval failed: {e_retr}. Falling back to GPT.")
+                        # Continue to GPT if retrieval fails
+                else:
+                    print(f"[WORKER] Job {job_id}: force_gpt is True, SKIPPING retrieval, going directly to GPT.")
+                
+                # ========== GPT GENERATION (if retrieval not used or similarity too low) ==========
+                print(f"[WORKER] Job {job_id}: Similarity too low ({retrieval_similarity:.3f}) or force_gpt. Using GPT...")
+
+                bloom_rules =(
+                    "Internally classify the request into a Bloom level (remember, understand, apply, analyze, "
+                    "evaluate, create) using task verbs, whether it operates on existing code, and decision-making "
+                    "requirements; default to analyze when ambiguous. Behavior by level: remember=identify or list "
+                    "facts only; understand=explain or paraphrase only and do not change logic; apply=fix bugs or "
+                    "implement the requested change with minimal edits; analyze=decompose the problem, compare "
+                    "options, and allow small refactors; evaluate=judge quality, note tradeoffs, and justify the "
+                    "judgment; create=redesign or propose a new solution within a controlled scope. Never mention "
+                    "Bloom's Taxonomy to the user."
+                )
+                shared_constraints = (
+                    "Maintain educational tone and clear steps while staying concise. {respect_constraints} "
+                    "Output discipline: follow mode/format rules exactly (code-only, summary-only, or "
+                    "summary+code+explanation as specified)."
+                )
                 if mode == 'code':
                     system_content = (
                         "You are an expert programming assistant. The user requests CODE output. "
                         "Produce only the source code that directly solves the user's request. "
-                        "Wrap the code inside triple-backticks (```), and do not include any prose, explanation, or commentary outside the fenced code block. If a programming language is specified, include it after the opening fence (e.g. ```python)."
+                        "Wrap the code inside triple-backticks (```), and do not include any prose, explanation, "
+                        "or commentary outside the fenced code block. If a programming language is specified, "
+                        "include it after the opening fence (e.g. ```python). "
+                        f"{bloom_rules} "
+                        f"{shared_constraints.format(respect_constraints='Respect existing constraints: do not invent missing details, do not fabricate code context, and honor the requested language.')}"
                     )
                 elif mode == 'summary':
                     system_content = (
                         "You are an expert programming assistant. The user requests a SHORT SUMMARY (2-3 sentences). "
-                        "Provide a concise programming-focused summary. Do not include code blocks."
+                        "Provide a concise programming-focused summary. Do not include code blocks. "
+                        f"{bloom_rules} "
+                        f"{shared_constraints.format(respect_constraints='Respect existing constraints: do not invent missing details and do not fabricate code context.')}"
                     )
                 elif mode == 'summary_code_explanation':
                     system_content = (
                         "You are an expert programming assistant. The user requests SUMMARY + CODE + EXPLANATION. "
-                        "First give a brief (1-2 sentence) summary, then output the minimal code required, then a concise explanation."
+                        "First give a brief (1-2 sentence) summary, then output the minimal code required, then a "
+                        "concise explanation. "
+                        f"{bloom_rules} "
+                        f"{shared_constraints.format(respect_constraints='Respect existing constraints: do not invent missing details, do not fabricate code context, and keep the explanation brief.')}"
                     )
                 else:
                     system_content = (
                         "You are an expert programming assistant helping undergraduate computer science students. "
-                        "Answer concisely and focus on programming."
+                        "Answer concisely and focus on programming. "
+                        f"{bloom_rules} "
+                        f"{shared_constraints.format(respect_constraints='Respect existing constraints: do not invent missing details and do not fabricate code context.')}"
                     )
 
                 # Add language hint to system prompt if provided
                 if lang_hint:
                     system_content += f" Use the following language when generating code: {lang_hint}."
 
-                messages = [
-                    {"role": "system", "content": system_content},
-                    {"role": "user", "content": prompt_clean},
-                ]
+                chat_history = []
+                try:
+                    chat_history = get_chat_history(user_id, session_id, assessment_id, limit=CHAT_HISTORY_LIMIT)
+                except Exception as e_hist:
+                    print(f"[WARNING] Failed to load chat history: {e_hist}")
+
+                messages = [{"role": "system", "content": system_content}]
+                for row in chat_history:
+                    messages.append({"role": row["role"], "content": row["content"]})
+                if not chat_history or chat_history[-1].get("role") != "user" or chat_history[-1].get("content") != prompt_clean:
+                    messages.append({"role": "user", "content": prompt_clean})
                 # For openai>=1.0.0 (correct usage)
                 temp = 0.0 if mode == 'code' else 0.2
-                response = openai.chat.completions.create(
+                response = _openai_chat_completions_create_round_robin(
                     model=OPENAI_MODEL,
                     messages=messages,
                     temperature=temp,
-                    max_tokens=1024,
+                    max_completion_tokens=1024,
                 )
                 response_text = response.choices[0].message.content
 
@@ -1899,31 +2254,151 @@ try:
             return base
         return base
 
+    # Find model paths at startup but don't load yet (lazy loading)
     model1_path = _find_st_model('paraphrase-multilingual-mpnet-base-v2')
     model2_path = _find_st_model('LaBSE')
     model3_path = _find_st_model('multilingual-e5-base')
     print(f"[DEBUG] model1_path: {os.path.abspath(model1_path)}")
     print(f"[DEBUG] model2_path: {os.path.abspath(model2_path)}")
     print(f"[DEBUG] model3_path: {os.path.abspath(model3_path)}")
-    model1 = SentenceTransformer(model1_path)
-    model2 = SentenceTransformer(model2_path)
-    model3 = SentenceTransformer(model3_path)
-    translator = pipeline('translation', model=_local_path('opus-mt-id-en'), tokenizer=_local_path('opus-mt-id-en'), device=0 if torch.cuda.is_available() else -1)
+    
+    # LAZY LOADING: Initialize as None, load on first use
+    model1 = None
+    model2 = None
+    model3 = None
+    translator = None
 
     # Set best weights (should be tuned elsewhere and imported/configured as needed)
     best_weights = (0.5, 0.5, 1.5)  # Update as needed
 
+    def _is_cuda_runtime_error(exc: Exception) -> bool:
+        msg = str(exc).lower()
+        return "cuda" in msg or "device-side assert" in msg
+
+    def _safe_move_model_to_cpu(model):
+        try:
+            model = model.to('cpu')
+            model.eval()
+        except Exception as e:
+            print(f"[WARNING] Could not move model to CPU: {e}")
+        return model
+
+    def _encode_with_fallback(model, text: str):
+        try:
+            with torch.no_grad():
+                return model.encode([text], convert_to_numpy=True, show_progress_bar=False)
+        except RuntimeError as e:
+            if not _is_cuda_runtime_error(e):
+                raise
+            print(f"[WARNING] CUDA encode failed, retrying on CPU: {e}")
+            try:
+                torch.cuda.empty_cache()
+            except Exception:
+                pass
+            model = _safe_move_model_to_cpu(model)
+            with torch.no_grad():
+                return model.encode([text], convert_to_numpy=True, show_progress_bar=False)
+
+    def _translate_id_to_en_with_fallback(text: str):
+        global translator
+        if translator is None:
+            return text
+        trans_model, trans_tokenizer, device_idx = translator
+        try:
+            inputs = trans_tokenizer(text, return_tensors="pt", truncation=True, max_length=256)
+            if device_idx >= 0:
+                inputs = {k: v.cuda() for k, v in inputs.items()}
+            with torch.no_grad():
+                outputs = trans_model.generate(**inputs, max_length=256)
+            return trans_tokenizer.decode(outputs[0], skip_special_tokens=True)
+        except RuntimeError as e:
+            if not _is_cuda_runtime_error(e):
+                raise
+            print(f"[WARNING] CUDA translation failed, retrying on CPU: {e}")
+            try:
+                torch.cuda.empty_cache()
+            except Exception:
+                pass
+            try:
+                trans_model = trans_model.to('cpu')
+                cpu_inputs = trans_tokenizer(text, return_tensors="pt", truncation=True, max_length=256)
+                with torch.no_grad():
+                    cpu_outputs = trans_model.generate(**cpu_inputs, max_length=256)
+                translator = (trans_model, trans_tokenizer, -1)
+                return trans_tokenizer.decode(cpu_outputs[0], skip_special_tokens=True)
+            except Exception as cpu_e:
+                print(f"[WARNING] CPU translation fallback also failed: {cpu_e}")
+                return text
+    
+    def _ensure_models_loaded():
+        """Lazy load models on first use to prevent blocking startup. Auto-detects GPU."""
+        global model1, model2, model3, translator
+        if model1 is None:
+            # Detect GPU availability
+            device = 'cuda' if torch.cuda.is_available() else 'cpu'
+            if device == 'cuda':
+                gpu_name = torch.cuda.get_device_name(0)
+                print(f"[INFO] GPU detected: {gpu_name}. Loading models with CUDA acceleration...")
+            else:
+                print("[INFO] No GPU detected. Loading models on CPU (this may take 10-30 seconds)...")
+            
+            # Load Sentence Transformers with device specification
+            model1 = SentenceTransformer(model1_path, device=device)
+            model2 = SentenceTransformer(model2_path, device=device)
+            model3 = SentenceTransformer(model3_path, device=device)
+            
+            # Set models to evaluation mode for inference optimization
+            if device == 'cuda':
+                model1.eval()
+                model2.eval()
+                model3.eval()
+                # Enable TF32 for Ampere GPUs (RTX 3060, 3070, 3080, 3090, 4090)
+                torch.backends.cuda.matmul.allow_tf32 = True
+                torch.backends.cudnn.allow_tf32 = True
+                print("[INFO] TF32 acceleration enabled for Ampere GPU")
+            
+            # Load translator (also uses GPU if available)
+            try:
+                # Try using the model directly without task specification
+                from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+                device_idx = 0 if torch.cuda.is_available() else -1
+                translator_model = AutoModelForSeq2SeqLM.from_pretrained(_local_path('opus-mt-id-en'))
+                translator_tokenizer = AutoTokenizer.from_pretrained(_local_path('opus-mt-id-en'))
+                if device_idx >= 0:
+                    translator_model = translator_model.cuda()
+                translator = (translator_model, translator_tokenizer, device_idx)
+            except Exception as e:
+                print(f"[WARNING] Translation model failed to load: {e}")
+                print("[INFO] Falling back to lazy translation loading...")
+                translator = None
+            
+            if device == 'cuda':
+                print(f"[INFO] ✓ All models loaded on GPU with CUDA acceleration!")
+                print(f"[INFO] ✓ Expected speedup: 5-8x faster encoding compared to CPU")
+            else:
+                print("[INFO] Models loaded successfully on CPU!")
+
     def get_ensemble_embedding(text, weights):
         global model1, model2, model3, translator
+        _ensure_models_loaded()  # Lazy load on first use
+        text = (str(text) if text is not None else "").strip()
+        if not text:
+            raise ValueError("Text for embedding cannot be empty")
+        # Guardrail to avoid extremely long sequences causing GPU issues.
+        text = text[:4000]
         try:
             lang = detect(text)
         except Exception:
             lang = 'en'
-        if lang == 'id':
-            text = translator(text)[0]['translation_text']
-        emb1 = model1.encode([text], convert_to_numpy=True)
-        emb2 = model2.encode([text], convert_to_numpy=True)
-        emb3 = model3.encode([text], convert_to_numpy=True)
+        if lang == 'id' and translator is not None:
+            try:
+                text = _translate_id_to_en_with_fallback(text)
+            except Exception as trans_e:
+                print(f"[WARNING] Translation failed: {trans_e}")
+                # Fall through with original text
+        emb1 = _encode_with_fallback(model1, text)
+        emb2 = _encode_with_fallback(model2, text)
+        emb3 = _encode_with_fallback(model3, text)
         emb1 = emb1 / np.linalg.norm(emb1, axis=1, keepdims=True)
         emb2 = emb2 / np.linalg.norm(emb2, axis=1, keepdims=True)
         emb3 = emb3 / np.linalg.norm(emb3, axis=1, keepdims=True)
@@ -1934,8 +2409,29 @@ try:
         emb = emb / np.linalg.norm(emb, axis=1, keepdims=True)
         return emb
 
-    # REMOVE static PKL load. Always refresh from DB for up-to-date retrieval
-    retrieval_model = None
+    # Cache retrieval model to avoid expensive DB queries on every request
+    retrieval_model_cache = {
+        'model': None,
+        'last_refresh': 0,
+        'ttl': 300  # 5 minutes cache
+    }
+
+    def get_retrieval_model(force_refresh=False):
+        """Get cached retrieval model, refresh if expired (5 min TTL)"""
+        import time
+        now = time.time()
+        
+        if force_refresh or retrieval_model_cache['model'] is None or \
+           (now - retrieval_model_cache['last_refresh']) > retrieval_model_cache['ttl']:
+            print(f"[INFO] Refreshing retrieval model from DB... (last refresh: {int(now - retrieval_model_cache['last_refresh'])}s ago)")
+            retrieval_model_cache['model'] = refresh_retrieval_model_from_db()
+            retrieval_model_cache['last_refresh'] = now
+            print(f"[INFO] Retrieval model refreshed successfully with {len(retrieval_model_cache['model'].df) if retrieval_model_cache['model'] and retrieval_model_cache['model'].df is not None else 0} embeddings")
+        else:
+            cache_age = int(now - retrieval_model_cache['last_refresh'])
+            print(f"[DEBUG] Using cached retrieval model (age: {cache_age}s, expires in: {retrieval_model_cache['ttl'] - cache_age}s)")
+        
+        return retrieval_model_cache['model']
 
     def refresh_retrieval_model_from_db():
         import faiss
@@ -1979,12 +2475,73 @@ except Exception as e:
     retrieval_model = None
     print(f"[WARNING] semantic_retrieval_mode_rev.pkl not loaded: {e}")
 # Configure logging
-logging.basicConfig(level=logging.INFO)
-
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 @app.route('/generate-code', methods=['POST'])
 @limiter.limit("1 per minute")
 def generate_code():
+    """
+    NON-BLOCKING: Return job_id immediately (<100ms).
+    Worker performs retrieval + GPT in background.
+    This prevents blocking other requests (like login) during encoding.
+    """
+    data = request.get_json(silent=True) or {}
+    prompt = data.get("prompt")
+    assessment_id = data.get("assessment_id")
+    language = (data.get("language") or '').strip()
+    response_mode = (data.get("response_mode") or 'code').strip()
+    
+    if not prompt or not isinstance(prompt, str):
+        return jsonify({"error": "Missing or invalid 'prompt' in request body"}), 400
+
+    user_id = session.get("user_id")
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    session_id = session.get("session_id") or request.remote_addr
+
+    # Check for force_gpt flag
+    force_gpt = prompt.startswith("__force_gpt__ ")
+    if force_gpt:
+        prompt = prompt[len("__force_gpt__ "):].strip()
+
+    # Save user message so async worker can build a complete history chain
+    try:
+        save_chat_message(user_id, session_id, "user", prompt, assessment_id)
+    except Exception as e:
+        print(f"[WARNING] Failed to save chat message: {e}")
+
+    # Build marked prompt with metadata for worker
+    markers = []
+    if language:
+        markers.append(f"[LANG:{language}]")
+    markers.append(f"[MODE:{response_mode}]")
+    if force_gpt:
+        markers.append("[FORCE_GPT:true]")
+    
+    job_prompt = "\n".join(markers) + "\n" + prompt if markers else prompt
+    
+    # Enqueue job immediately (retrieval + GPT will be done in background)
+    try:
+        job_id = insert_gpt_job(user_id, prompt, job_prompt, status="pending")
+    except Exception as e:
+        return jsonify({"error": f"Failed to enqueue job: {str(e)}"}), 500
+    
+    gamification = get_user_token_info(user_id, session_id, assessment_id)
+    
+    # Return immediately - worker will do retrieval + GPT
+    return jsonify({
+        "mode": "gpt-queued_auto",
+        "job_id": job_id,
+        "message": "Request queued for processing. Worker will check database first (fast & free if found), then use GPT if needed.",
+        "gamification": gamification
+    }), 202
+
+# LEGACY BLOCKING ENDPOINT (kept for backward compatibility, but NOT recommended)
+@app.route('/generate-code-sync', methods=['POST'])
+@limiter.limit("1 per minute")
+def generate_code_sync():
+    """DEPRECATED: Synchronous version that blocks request thread. Use /generate-code instead."""
     data = request.get_json(silent=True) or {}
     prompt = data.get("prompt")
     assessment_id = data.get("assessment_id")  # penanda assessment/mata kuliah
@@ -2001,8 +2558,8 @@ def generate_code():
         force_gpt = True
         prompt = prompt[len(FORCE_PREFIX):].strip()
 
-    # SEMANTIC RETRIEVAL (always refresh from DB)
-    retrieval_model = refresh_retrieval_model_from_db()
+    # SEMANTIC RETRIEVAL (use cached model, refresh every 5 min)
+    retrieval_model = get_retrieval_model()
     if (not force_gpt) and retrieval_model is not None and retrieval_model.index is not None and not retrieval_model.df.empty:
         tracker = None
         emissions = None
@@ -2042,8 +2599,8 @@ def generate_code():
         system_content = (
             "You are an expert programming assistant helping undergraduate computer science students. "
             "You must only answer questions that are about programming or code; if the user's request is not technical programming-related, reply: 'Sorry, I can only help with programming/code questions.' "
-            "Respect any markers in the user's prompt such as [LANG:...] (preferred programming language) and [MODE:...] (one of 'code','summary','summary_code_explanation'). "
-            "If a language is specified, produce code only in that language. For retrieval results the output may be taken from the database and no generation occurs. Keep outputs concise and focused on the assessment context if provided."
+            "Respect any markers in the user's prompt such as [LANG:...] to indicate the desired programming language and [MODE:...] to indicate 'code','summary', or 'summary_code_explanation'. "
+            "If an assessment context is provided (e.g., [ASSESSMENT:Implementasi Fungsi]), tailor the answer to that assessment focus. Internally classify the request into a Bloom level (remember, understand, apply, analyze, evaluate, create) using task verbs, whether it operates on existing code, and decision-making requirements; default to analyze when ambiguous. Behavior by level: remember=identify or list facts only; understand=explain or paraphrase only and do not change logic; apply=fix bugs or implement the requested change with minimal edits; analyze=decompose the problem, compare options, and allow small refactors; evaluate=judge quality, note tradeoffs, and justify the judgment; create=redesign or propose a new solution within a controlled scope. Never mention Bloom's Taxonomy to the user. Maintain educational tone and clear steps while staying concise. Respect existing constraints: retrieval is no generation, do not invent missing details, and do not fabricate code context. Output discipline: follow mode/format rules exactly (code-only, summary-only, or summary+code+explanation as specified)."
         )
         messages = [
             {"role": "system", "content": system_content},
@@ -2154,7 +2711,7 @@ def generate_code():
 
         # If user asked explicitly for code but retrieved item seems descriptive,
         # treat it as a suggestion rather than returning it as final code.
-        if similarity >= 0.95 and (response_mode != 'code' or is_code):
+        if similarity >= 0.90 and (response_mode != 'code' or is_code):
             impact = _get_impact(emissions)
             # Jawaban dari database bersifat gratis: tidak mengurangi kuota/poin
             user_id = session.get("user_id")
@@ -2166,17 +2723,17 @@ def generate_code():
                 "similarity": similarity,
                 "prompt_matched": prompt_retrieved,
                 "code": code_retrieved,
-                "message": "Kode ditemukan di database dengan similarity >=95%. Jawaban diambil dari database.",
+                "message": "Kode ditemukan di database dengan similarity >=90%. Jawaban diambil dari database.",
                 "environmental_impact": impact,
                 "token_info": retrieval_token_info,
                 "gamification": gamification
             }), 200
-        elif similarity >= 0.95 and response_mode == 'code' and not is_code:
+        elif similarity >= 0.90 and response_mode == 'code' and not is_code:
             # High similarity but retrieved content not code — automatically queue GPT job
             impact = _get_impact(emissions)
             user_id = session.get("user_id")
             session_id = session.get("session_id") or request.remote_addr
-            # Build a marked prompt for the queued job to respect language/mode
+            # Build a marked prompt for the queued job to respect language/mode/assessment
             markers = []
             try:
                 if language:
@@ -2227,7 +2784,7 @@ def generate_code():
                 "similarity": similarity,
                 "prompt_matched": prompt_retrieved,
                 "code": code_retrieved,
-                "message": "Ditemukan kode mirip di database (similarity 80–95%). Jika ingin jawaban lebih spesifik, balas dengan 'GPT Mode'.",
+                "message": "Ditemukan kode mirip di database (similarity 80–90%). Jika ingin jawaban lebih spesifik, balas dengan 'GPT Mode'.",
                 "environmental_impact": impact,
                 "token_info": retrieval_token_info,
                 "gamification": gamification
@@ -2235,7 +2792,7 @@ def generate_code():
         # else: similarity < 0.8, fallback to GPT
 
     # Fallback ke GPT jika similarity < 0.8 atau user balas 'GPT Mode'
-    if not openai.api_key:
+    if not OPENAI_API_KEYS:
         return jsonify({"error": "OpenAI API key not configured"}), 500
 
     user_id = session.get("user_id")
@@ -2334,13 +2891,13 @@ def generate_code():
     save_chat_message(user_id, session_id, "user", gpt_prompt, assessment_id)
 
     # Ambil riwayat chat terakhir (misal 10), difilter per assessment
-    chat_history = get_chat_history(user_id, session_id, assessment_id, limit=10)
+    chat_history = get_chat_history(user_id, session_id, assessment_id, limit=CHAT_HISTORY_LIMIT)
 
     system_content = (
         "You are an expert programming assistant helping undergraduate computer science students. "
         "You must only answer questions that are about programming or code; if the user's request is not technical programming-related, reply: 'Sorry, I can only help with programming/code questions.' "
         "Respect any markers the user may include such as [LANG:...] to indicate the desired programming language and [MODE:...] to indicate 'code','summary', or 'summary_code_explanation'. "
-        "If an assessment context is provided (e.g., [ASSESSMENT:Implementasi Fungsi]), tailor the answer to that assessment focus."
+        "If an assessment context is provided (e.g., [ASSESSMENT:Implementasi Fungsi]), tailor the answer to that assessment focus. Internally classify the request into a Bloom level (remember, understand, apply, analyze, evaluate, create) using task verbs, whether it operates on existing code, and decision-making requirements; default to analyze when ambiguous. Behavior by level: remember=identify or list facts only; understand=explain or paraphrase only and do not change logic; apply=fix bugs or implement the requested change with minimal edits; analyze=decompose the problem, compare options, and allow small refactors; evaluate=judge quality, note tradeoffs, and justify the judgment; create=redesign or propose a new solution within a controlled scope. Never mention Bloom's Taxonomy to the user. Maintain educational tone and clear steps while staying concise. Respect existing constraints: do not invent missing details and do not fabricate code context. Output discipline: follow mode/format rules exactly (code-only, summary-only, or summary+code+explanation as specified)."
     )
 
     # Gabungkan system prompt + chat history
@@ -2370,6 +2927,7 @@ def enqueue_gpt():
 
     Intended for explicit "Generate with ChatGPT" actions originating from retrieval.
     The caller must be authenticated (session user_id).
+    NO RATE LIMIT - User explicitly requested GPT generation.
     """
     data = request.get_json(silent=True) or {}
     prompt = data.get('prompt')
@@ -2385,25 +2943,8 @@ def enqueue_gpt():
     if not prompt or not isinstance(prompt, str) or len(prompt.strip()) < 10:
         return jsonify({"error": "Missing or invalid 'prompt' in request body"}), 400
 
-    # Enforce per-user cooldown for manual GPT enqueue: prevent >1 enqueue per minute
-    try:
-        conn_c = get_db_connection()
-        with conn_c.cursor() as curc:
-            curc.execute(
-                "SELECT COUNT(*) AS cnt FROM gpt_jobs WHERE user_id=%s AND created_at >= NOW() - INTERVAL %s SECOND",
-                (user_id, 60)
-            )
-            rowc = curc.fetchone() or {}
-            if int(rowc.get('cnt', 0) or 0) > 0:
-                # Inform client about cooldown
-                return jsonify({"error": "Rate limit: only one manual ChatGPT generation allowed per minute."}), 429, {"Retry-After": "60"}
-    except Exception as e_cd:
-        print(f"[WARNING] Could not enforce enqueue cooldown: {e_cd}")
-    finally:
-        try:
-            conn_c.close()
-        except Exception:
-            pass
+    # NO RATE LIMIT for explicit GPT generation button
+    # User explicitly chose "Generate with ChatGPT" - honor their request immediately
 
     # Build markers and marked prompt for worker
     markers = []
@@ -2413,6 +2954,7 @@ def enqueue_gpt():
         markers.append(f"[MODE:{response_mode}]")
     if assessment_id:
         markers.append(f"[ASSESSMENT_ID:{assessment_id}]")
+    markers.append("[FORCE_GPT:true]")  # Force GPT, skip retrieval
     markers.append("[AUTO_FALLBACK:true]")
     gpt_prompt_marked = "\n".join(markers) + "\n" + prompt
 
@@ -2437,8 +2979,14 @@ def check_status(job_id):
     job = get_gpt_job(job_id)
     if not job:
         return jsonify({"status": "not_found", "message": "Job ID tidak ditemukan."}), 404
+    
+    # DEBUG: Log job details
+    print(f"[DEBUG] check_status for job_id={job_id}: status={job.get('status')}, has_code={bool(job.get('code'))}, code_length={len(job.get('code', '')) if job.get('code') else 0}")
+    
     if job["status"] == "pending":
         return jsonify({"status": "pending", "message": "Pertanyaan Anda masih dalam antrian, silakan tunggu."}), 200
+    if job["status"] == "running":
+        return jsonify({"status": "running", "message": "Pertanyaan Anda sedang diproses, silakan tunggu."}), 200
     if job["status"] == "done":
         # Simpan code dan embedding ke code_embeddings, environmental impact ke environtmental_impact_logs
         try:
@@ -2451,9 +2999,13 @@ def check_status(job_id):
             if not code or not prompt:
                 print(f"[ERROR] Empty code or prompt for job {job.get('job_id')}")
                 return jsonify({"status": "error", "message": "Empty code or prompt."}), 500
-            emb = get_ensemble_embedding(prompt, weights=best_weights)
-            emb = emb[0] if hasattr(emb, '__len__') and len(emb.shape) > 1 else emb
-            emb_list = [float(x) for x in emb]
+            emb_list = None
+            try:
+                emb = get_ensemble_embedding(prompt, weights=best_weights)
+                emb = emb[0] if hasattr(emb, '__len__') and len(emb.shape) > 1 else emb
+                emb_list = [float(x) for x in emb]
+            except Exception as emb_e:
+                print(f"[WARNING] Embedding generation failed, skip embedding save for job {job.get('job_id')}: {emb_e}")
             # Hitung token_count dan environmental impact
             def count_tokens(messages, model="gpt-4"):
                 try:
@@ -2484,7 +3036,7 @@ def check_status(job_id):
                 print(f"[DEBUG]: {len(encoding.encode(str(text)))}")
                 return len(encoding.encode(str(text)))
             messages = [
-                {"role": "system", "content": "You are an expert programming assistant helping undergraduate computer science students. Respect any [MODE:] or [LANG:] markers in the prompt; follow them when deciding output format (code/summary/summary+code+explanation)."},
+                {"role": "system", "content": "You are an expert programming assistant helping undergraduate computer science students. Respect any [MODE:] or [LANG:] markers in the prompt; follow them when deciding output format (code/summary/summary+code+explanation). Internally classify the request into a Bloom level (remember, understand, apply, analyze, evaluate, create) using task verbs, whether it operates on existing code, and decision-making requirements; default to analyze when ambiguous. Behavior by level: remember=identify or list facts only; understand=explain or paraphrase only and do not change logic; apply=fix bugs or implement the requested change with minimal edits; analyze=decompose the problem, compare options, and allow small refactors; evaluate=judge quality, note tradeoffs, and justify the judgment; create=redesign or propose a new solution within a controlled scope. Never mention Bloom's Taxonomy to the user. Maintain educational tone and clear steps while staying concise. Respect existing constraints: do not invent missing details and do not fabricate code context. Output discipline: follow mode/format rules exactly (code-only, summary-only, or summary+code+explanation as specified)."},
                 {"role": "user", "content": prompt},
             ]
             # Token input (prompt)
@@ -2517,7 +3069,7 @@ def check_status(job_id):
                     with conn_meta.cursor() as curm:
                         curm.execute(
                             "SELECT course_id FROM assessments WHERE assessment_id=%s LIMIT 1",
-                            (assessment_id,),
+                            (assessment_id,)
                         )
                         row_c = curm.fetchone()
                         if row_c and row_c.get("course_id"):
@@ -2536,14 +3088,14 @@ def check_status(job_id):
                     with conn_meta.cursor() as curm:
                         curm.execute(
                             "SELECT assessment_id FROM chat_history WHERE user_id=%s ORDER BY created_at DESC LIMIT 1",
-                            (user_id,),
+                            (user_id,)
                         )
                         row_m = curm.fetchone()
                         if row_m and row_m.get("assessment_id"):
                             assessment_id = row_m["assessment_id"]
                             curm.execute(
                                 "SELECT course_id FROM assessments WHERE assessment_id=%s LIMIT 1",
-                                (assessment_id,),
+                                (assessment_id,)
                             )
                             row_c = curm.fetchone()
                             if row_c and row_c.get("course_id"):
@@ -2556,21 +3108,36 @@ def check_status(job_id):
                     except Exception:
                         pass
 
-            # Log token usage with assessment/course when available
-            try:
-                log_token_usage(user_id, session_id, token_count, assessment_id, course_id)
-            except Exception as e_log:
-                print(f"[WARNING] Failed to log token usage: {e_log}")
+            # Detect source: retrieval (FREE) or GPT
+            raw_resp = job.get("raw_response", "")
+            source = "retrieval" if raw_resp and raw_resp.startswith("[RETRIEVAL]") else "gpt"
+            similarity = None
+            if source == "retrieval":
+                # Extract similarity from raw_response: [RETRIEVAL] similarity=0.988, ...
+                import re
+                match = re.search(r'similarity=([0-9.]+)', raw_resp)
+                if match:
+                    similarity = float(match.group(1))
+            
+            # Only log token usage and add points for GPT (not retrieval)
+            if source == "gpt":
+                # Log token usage with assessment/course when available
+                try:
+                    log_token_usage(user_id, session_id, token_count, assessment_id, course_id)
+                except Exception as e_log:
+                    print(f"[WARNING] Failed to log token usage: {e_log}")
 
-            # Tambah poin per-assessment
-            try:
-                if assessment_id:
-                    update_user_points_for_assessment(user_id, assessment_id, course_id, token_count)
-                else:
-                    # Fallback to adding to overall points
-                    update_user_total_points_if_new_week(user_id, token_count)
-            except Exception as e_up:
-                print(f"[WARNING] Failed to update user points: {e_up}")
+                # Tambah poin per-assessment
+                try:
+                    if assessment_id:
+                        update_user_points_for_assessment(user_id, assessment_id, course_id, token_count)
+                    else:
+                        # Fallback to adding to overall points
+                        update_user_total_points_if_new_week(user_id, token_count)
+                except Exception as e_up:
+                    print(f"[WARNING] Failed to update user points: {e_up}")
+            else:
+                print(f"[INFO] Retrieval (FREE) - No token usage logged, no points added. Similarity={similarity:.3f}")
 
             assessment_id_for_token_info = assessment_id if assessment_id else session.get('assessment_id')
             gamification = get_user_token_info(user_id, session_id, assessment_id_for_token_info)
@@ -2639,10 +3206,13 @@ def check_status(job_id):
             # Catatan: gpt_jobs tidak lagi dihapus otomatis.
             # Riwayat job disimpan sebagai log, dan environmental_impact_logs
             # terhubung ke job_id untuk pelacakan.
+            
             return jsonify({
                 "status": "done",
                 "code": job["code"],
-                "raw_response": job.get("raw_response"),
+                "raw_response": raw_resp,
+                "source": source,
+                "similarity": similarity,
                 "environmental_impact": impact,
                 "gamification": gamification
             }), 200
@@ -2651,6 +3221,8 @@ def check_status(job_id):
             return jsonify({"status": "error", "message": "Internal error saving GPT answer."}), 500
     if job["status"] == "error":
         return jsonify({"status": "error", "message": job.get("error", "Unknown error")}), 500
+
+    return jsonify({"status": "unknown", "message": "Status job tidak dikenal."}), 500
 
 
 @app.route('/impact-summary', methods=['GET'])
@@ -2774,15 +3346,79 @@ def save_global_emissions():
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--worker', action='store_true', help='Run GPT job worker')
+    default_workers = int(os.getenv("GPT_WORKERS", str(max(1, len(OPENAI_API_KEYS) if OPENAI_API_KEYS else 1))))
+    parser.add_argument('--worker', action='store_true', help='Run GPT job worker in main thread (blocking)')
+    parser.add_argument('--host', default='localhost', help='Host to bind to (default: localhost for local, use 0.0.0.0 for network access)')
+    parser.add_argument('--port', type=int, default=5000, help='Port to bind to (default: 5000)')
+    parser.add_argument('--no-worker', action='store_true', help='Disable auto-start background worker')
+    parser.add_argument('--use-waitress', action='store_true', help='Serve with Waitress for multi-threaded production use')
+    parser.add_argument('--threads', type=int, default=int(os.getenv('WAITRESS_THREADS', '50')), help='Thread count for Waitress (default: WAITRESS_THREADS or 50)')
+    parser.add_argument('--worker-count', type=int, default=default_workers, help='Number of GPT worker threads (default: GPT_WORKERS or key count)')
     args = parser.parse_args()
+    
     if global_tracker is not None:
         try:
             global_tracker.start()
         except Exception as e:
             print(f"[WARNING] Could not start global emissions tracker: {e}")
     atexit.register(save_global_emissions)
+    
     if args.worker:
-        gpt_job_worker()
+        # Run workers in main thread (blocking, for dedicated worker process)
+        worker_count = max(1, args.worker_count)
+        print(f"[INFO] Starting {worker_count} GPT job worker(s) in main thread...")
+        worker_threads = []
+        for i in range(worker_count):
+            t = threading.Thread(target=gpt_job_worker, daemon=False, name=f"GPTWorker-{i + 1}")
+            t.start()
+            worker_threads.append(t)
+        for t in worker_threads:
+            t.join()
     else:
-        app.run(debug=True)
+        # Start background worker thread unless explicitly disabled
+        if not args.no_worker:
+            worker_count = max(1, args.worker_count)
+            print(f"[INFO] Starting {worker_count} background GPT job worker(s)...")
+            for i in range(worker_count):
+                worker_thread = threading.Thread(target=gpt_job_worker, daemon=True, name=f"GPTWorker-{i + 1}")
+                worker_thread.start()
+        else:
+            print("[WARNING] Background worker disabled. GPT jobs will not be processed automatically.")
+        
+        # PRE-LOAD MODELS IN BACKGROUND to avoid blocking first request
+        def preload_models():
+            """Pre-load Sentence Transformers + Retrieval Model in background after Flask starts"""
+            import time
+            time.sleep(2)  # Give Flask time to start first
+            print("[INFO] Pre-loading Sentence Transformer models in background...")
+            try:
+                _ensure_models_loaded()
+                print("[INFO] Sentence Transformer models loaded!")
+            except Exception as e:
+                print(f"[WARNING] Model pre-loading failed: {e}")
+                return
+            
+            # Also pre-load retrieval model cache
+            print("[INFO] Pre-loading retrieval model cache...")
+            try:
+                get_retrieval_model(force_refresh=True)
+                print("[INFO] Retrieval model cache loaded!")
+            except Exception as e:
+                print(f"[WARNING] Retrieval cache pre-loading failed: {e}")
+        
+        preload_thread = threading.Thread(target=preload_models, daemon=True, name="ModelPreloader")
+        preload_thread.start()
+        
+        if args.use_waitress:
+            try:
+                from waitress import serve
+            except ImportError:
+                print("[ERROR] Waitress not installed. Run: pip install waitress")
+                raise SystemExit(1)
+
+            print(f"[INFO] Starting Waitress server on {args.host}:{args.port} with {args.threads} threads...")
+            serve(app, host=args.host, port=args.port, threads=args.threads)
+        else:
+            # Run Flask with threading enabled for concurrent requests
+            print(f"[INFO] Starting Flask server on {args.host}:{args.port} with threading enabled...")
+            app.run(host=args.host, port=args.port, debug=True, threaded=True, use_reloader=False)

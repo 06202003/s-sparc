@@ -114,6 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
   <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
     body { font-family: 'Manrope', system-ui, -apple-system, sans-serif; }
     /* Perkecil tampilan pagination DataTables */
@@ -189,6 +190,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <a class="text-slate-900 font-semibold active" href="courses.php">Courses</a>
           <!-- <a class="text-slate-700 hover:text-slate-900" href="chat.php">Chat</a> -->
           <a class="text-slate-400 hover:text-slate-700" href="dashboard.php">Dashboard</a>
+          <a class="ml-2 inline-flex items-center gap-2 rounded-full bg-teal-600 text-white px-3 py-1 hover:bg-teal-800 shadow-sm" href="change_password.php">Change Password</a>
           <a href="logout.php" class="ml-2 inline-flex items-center gap-2 rounded-full bg-red-800 text-white px-3 py-1 hover:bg-red-600 shadow-sm">Logout</a>
         </nav>
       </div>
@@ -387,5 +389,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       });
     });
   </script>
+  <?php if (isset($_GET['password']) && $_GET['password'] === 'updated'): ?>
+    <script>
+      Swal.fire({
+          icon: 'success',
+          title: 'Password Updated',
+          text: 'Your password has been updated successfully.',
+          showConfirmButton: false,
+          timer: 2000
+      });
+    </script>
+  <?php endif; ?>
 </body>
 </html>

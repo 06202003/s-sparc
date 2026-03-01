@@ -230,7 +230,18 @@ $botman->hears('.*', function ($bot) {
             }
             if (($pollData['status'] ?? '') === 'done') {
                 if (!empty($pollData['code'])) {
-                    $bot->reply("Here is the code result:\n" . $pollData['code']);
+                    $source = $pollData['source'] ?? 'unknown';
+                    $similarity = $pollData['similarity'] ?? null;
+                    if ($source === 'retrieval') {
+                        $prefix = 'Answers are retrieved from the database (FREE, does not reduce quota)';
+                        if ($similarity !== null) {
+                            $simPercent = round($similarity * 100, 1);
+                            $prefix .= '. Similarity ' . $simPercent . '%';
+                        }
+                        $bot->reply($prefix . "\n" . $pollData['code']);
+                    } else {
+                        $bot->reply("Here is the code result:\n" . $pollData['code']);
+                    }
                 } else {
                     $debug = json_encode($pollData, JSON_PRETTY_PRINT);
                     $bot->reply('Job done, but no code was provided. Backend /check-status returned: ' . $debug);

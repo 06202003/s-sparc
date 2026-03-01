@@ -83,10 +83,10 @@ try {
         if (json_last_error() === JSON_ERROR_NONE) {
             $impact = $data;
         } else {
-            $error = 'Gagal membaca respons server.';
+            $error = 'Failed to read server response.';
         }
     } else {
-        $error = 'Server mengembalikan status ' . $status;
+        $error = 'Server returned status ' . $status;
     }
 } catch (RequestException $e) {
     $resp = $e->getResponse();
@@ -113,7 +113,7 @@ $totals = $impact['totals'] ?? ['energy_wh' => 0, 'energy_kwh' => 0, 'carbon_kg'
 $daily  = $impact['daily'] ?? [];
 $rangeDays = $impact['range_days'] ?? $days;
 
-// Siapkan data untuk grafik (Chart.js)
+// Prepare data for the chart (Chart.js)
 $labels = [];
 $energySeries = [];
 $carbonSeries = [];
@@ -125,12 +125,106 @@ foreach ($daily as $row) {
   $waterSeries[] = (float)(($row['water_ml'] ?? 0) / 1000.0);
 }
 
-// Label filter aktif
-$activeFilterLabel = 'Semua mata kuliah & assessment';
+$totalDays = max(count($daily), 1);
+$avgEnergyPerDay = (float)($totals['energy_kwh'] ?? 0) / $totalDays;
+
+$energyKwh = (float)($totals['energy_kwh'] ?? 0);
+$carbonKg = (float)($totals['carbon_kg'] ?? 0);
+$waterL = (float)(($totals['water_ml'] ?? 0) / 1000.0);
+
+$phoneChargeWh = 12.0;
+$ledBulbW = 9.0;
+$kettleW = 1500.0;
+$carKgPerKm = 0.192;
+$treeKgPerYear = 21.0;
+$showerLPerMin = 9.0;
+$bottleL = 0.6;
+
+$charges = $phoneChargeWh > 0 ? ($energyKwh * 1000.0) / $phoneChargeWh : 0;
+$chargePercent = max(0.0, min(100.0, $charges * 100.0));
+$ledHours = $ledBulbW > 0 ? ($energyKwh * 1000.0) / $ledBulbW : 0;
+$kettleMinutes = $kettleW > 0 ? (($energyKwh * 1000.0) / $kettleW) * 60.0 : 0;
+$carKm = $carKgPerKm > 0 ? $carbonKg / $carKgPerKm : 0;
+$treeDays = $treeKgPerYear > 0 ? $carbonKg / ($treeKgPerYear / 365.0) : 0;
+$showerMinutes = $showerLPerMin > 0 ? $waterL / $showerLPerMin : 0;
+$bottles = $bottleL > 0 ? $waterL / $bottleL : 0;
+
+$maxEnergyDay = null;
+$maxEnergyKwh = 0.0;
+foreach ($daily as $row) {
+  $val = (float)($row['energy_kwh'] ?? 0);
+  if ($val > $maxEnergyKwh) {
+    $maxEnergyKwh = $val;
+    $maxEnergyDay = $row['day'] ?? null;
+  }
+}
+
+$maxEnergyDayLabel = $maxEnergyDay;
+if ($maxEnergyDay) {
+  try {
+    $dt = new DateTime($maxEnergyDay);
+    $maxEnergyDayLabel = $dt->format('D, d M Y');
+  } catch (Throwable $e) {
+    $maxEnergyDayLabel = $maxEnergyDay;
+  }
+}
+$maxChargePercent = 0.0;
+if ($phoneChargeWh > 0) {
+  $maxChargePercent = max(0.0, min(100.0, (($maxEnergyKwh * 1000.0) / $phoneChargeWh) * 100.0));
+}
+
+$factCards = [
+  [
+    'key' => 'energy',
+    'title' => 'Energy equivalence',
+    'value' => fmt_number($energyKwh, 3) . ' kWh',
+    'detail' => 'Equivalent to a ' . fmt_number($chargePercent, 0) . '% phone charge (12 Wh) or ' . fmt_number($ledHours, 1) . ' hours of a 9W LED lamp.',
+    'bar' => min(100, ($energyKwh / 1.0) * 100.0),
+    'color' => '#38bdf8'
+  ],
+  [
+    'key' => 'carbon',
+    'title' => 'Carbon travel',
+    'value' => fmt_number($carbonKg, 3) . ' kg CO₂e',
+    'detail' => 'Equivalent to about ' . fmt_number($carKm, 2) . ' km of gasoline car travel (0.192 kg CO₂/km).',
+    'bar' => min(100, ($carbonKg / 1.0) * 100.0),
+    'color' => '#10b981'
+  ],
+  [
+    'key' => 'water',
+    'title' => 'Water usage',
+    'value' => fmt_number($waterL, 3) . ' L',
+    'detail' => 'Equivalent to ' . fmt_number($showerMinutes, 1) . ' minutes of showering (9 L/min) or ' . fmt_number($bottles, 1) . ' bottles of 600 ml.',
+    'bar' => min(100, ($waterL / 100.0) * 100.0),
+    'color' => '#f59e0b'
+  ],
+  [
+    'key' => 'intensity',
+    'title' => 'Energy intensity',
+    'value' => fmt_number($avgEnergyPerDay, 3) . ' kWh/day',
+    'detail' => 'Equivalent to ' . fmt_number($kettleMinutes, 1) . ' minutes of running a 1500W kettle across the period.',
+    'bar' => min(100, ($avgEnergyPerDay / 1.0) * 100.0),
+    'color' => '#6366f1'
+  ],
+];
+
+if ($maxEnergyDay !== null && $maxEnergyKwh > 0) {
+  $factCards[] = [
+    'key' => 'peak',
+    'title' => 'Peak day',
+    'value' => fmt_number($maxEnergyKwh, 3) . ' kWh',
+    'detail' => 'Highest-usage day: ' . $maxEnergyDayLabel . '. Equivalent to charging a phone up to ' . fmt_number($maxChargePercent, 0) . '%.',
+    'bar' => min(100, ($maxEnergyKwh / 1.0) * 100.0),
+    'color' => '#f43f5e'
+  ];
+}
+
+// Active filter label
+$activeFilterLabel = 'All courses & assessments';
 if ($scope === 'course' && $selectedCourseId !== '') {
   foreach ($courses as $c) {
     if ((string)($c['course_id'] ?? '') === $selectedCourseId) {
-      $activeFilterLabel = 'Mata kuliah: ' . ($c['name'] ?? ($c['code'] ?? $selectedCourseId));
+      $activeFilterLabel = 'Course: ' . ($c['name'] ?? ($c['code'] ?? $selectedCourseId));
       break;
     }
   }
@@ -147,14 +241,14 @@ if ($scope === 'course' && $selectedCourseId !== '') {
       }
       $activeFilterLabel = 'Assessment: ' . ($a['name'] ?? ($a['code'] ?? $selectedAssessmentId));
       if ($courseName !== '') {
-        $activeFilterLabel .= ' (Mata kuliah: ' . $courseName . ')';
+        $activeFilterLabel .= ' (Course: ' . $courseName . ')';
       }
       break;
     }
   }
 }
 ?><!doctype html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -274,12 +368,47 @@ if ($scope === 'course' && $selectedCourseId !== '') {
           </div>
           <div class="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm">
             <div class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Energy intensity</div>
-            <?php
-              $totalJobs = max(count($daily), 1);
-              $avgEnergyPerDay = ($totals['energy_kwh'] ?? 0) / $totalJobs;
-            ?>
             <div class="mt-2 text-2xl font-semibold text-slate-900"><?= fmt_number($avgEnergyPerDay, 3) ?> kWh/day</div>
             <p class="mt-1 text-xs text-slate-500">Average energy consumption per day during this period.</p>
+          </div>
+        </section>
+
+        <section class="rounded-3xl bg-white border border-slate-200 p-6 shadow-sm">
+          <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 class="text-lg font-semibold text-slate-900">Fun facts from your numbers</h2>
+              <p class="text-sm text-slate-600">Switch between facts to see more relatable comparisons.</p>
+            </div>
+            <div class="flex flex-wrap gap-2" id="factTabs">
+              <?php foreach ($factCards as $idx => $card): ?>
+                <button
+                  type="button"
+                  class="fact-tab rounded-full border border-slate-300 px-3 py-1 text-xs uppercase tracking-wide text-slate-600 hover:bg-slate-50"
+                  data-index="<?= $idx ?>"
+                >
+                  <?= htmlspecialchars($card['title']) ?>
+                </button>
+              <?php endforeach; ?>
+            </div>
+          </div>
+          <div class="mt-4 grid gap-4 md:grid-cols-5">
+            <div class="md:col-span-3 rounded-2xl bg-slate-50 border border-slate-200 p-5">
+              <div class="text-xs uppercase tracking-widest text-slate-500" id="factTitle"></div>
+              <div class="mt-2 text-3xl font-semibold text-slate-900" id="factValue"></div>
+              <p class="mt-2 text-sm text-slate-600" id="factDetail"></p>
+            </div>
+            <div class="md:col-span-2 rounded-2xl bg-slate-50 border border-slate-200 p-5">
+              <div class="text-xs uppercase tracking-widest text-slate-500">Quick highlights</div>
+              <ul class="mt-3 space-y-2 text-sm text-slate-700">
+                <li>Energy: <?= fmt_number($energyKwh, 3) ?> kWh</li>
+                <li>Carbon: <?= fmt_number($carbonKg, 3) ?> kg CO₂e</li>
+                <li>Water: <?= fmt_number($waterL, 3) ?> L</li>
+                <?php if ($maxEnergyDay): ?>
+                  <li>Peak day: <?= htmlspecialchars($maxEnergyDayLabel) ?></li>
+                <?php endif; ?>
+              </ul>
+              <button type="button" id="factNext" class="mt-4 w-full rounded-xl bg-slate-900 text-white px-4 py-2 text-sm font-semibold hover:bg-slate-800">Next fact</button>
+            </div>
           </div>
         </section>
 
@@ -304,7 +433,10 @@ if ($scope === 'course' && $selectedCourseId !== '') {
               <tbody>
               <?php if (empty($daily)): ?>
                 <tr>
-                  <td colspan="4" class="px-3 py-4 text-center text-slate-500">No environmental impact data recorded for this period.</td>
+                  <td class="px-3 py-4 text-center text-slate-500">No environmental impact data recorded for this period.</td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
                 </tr>
               <?php else: ?>
                 <?php foreach ($daily as $row): ?>
@@ -325,7 +457,7 @@ if ($scope === 'course' && $selectedCourseId !== '') {
     </main>
   </div>
   <script>
-    // Aktif/nonaktifkan dropdown berdasarkan scope
+    // Enable/disable dropdowns based on scope
     const scopeSelect = document.getElementById('scope');
     const courseSelect = document.getElementById('course_id');
     const assessmentSelect = document.getElementById('assessment_id');
@@ -345,7 +477,7 @@ if ($scope === 'course' && $selectedCourseId !== '') {
     scopeSelect.addEventListener('change', updateFilterControls);
     updateFilterControls();
 
-    // Filter daftar assessment sesuai course yang dipilih (di sisi UI saja)
+    // Filter assessments based on selected course (client-side only)
     courseSelect && courseSelect.addEventListener('change', () => {
       const selectedCourse = courseSelect.value;
       if (!assessmentSelect) return;
@@ -362,7 +494,7 @@ if ($scope === 'course' && $selectedCourseId !== '') {
       }
     });
 
-    // Chart.js: grafik garis energi/karbon/air per hari
+    // Chart.js: daily energy/carbon/water line chart
     const chartLabels = <?= json_encode($labels, JSON_UNESCAPED_UNICODE) ?>;
     const energyData = <?= json_encode($energySeries) ?>;
     const carbonData = <?= json_encode($carbonSeries) ?>;
@@ -416,13 +548,76 @@ if ($scope === 'course' && $selectedCourseId !== '') {
       });
     }
 
-    // Inisialisasi Select2 pada semua select yang diberi kelas select2
+    const facts = <?= json_encode($factCards, JSON_UNESCAPED_UNICODE) ?>;
+    let currentFact = 0;
+    const titleEl = document.getElementById('factTitle');
+    const valueEl = document.getElementById('factValue');
+    const detailEl = document.getElementById('factDetail');
+    const tabEls = document.querySelectorAll('.fact-tab');
+    const nextBtn = document.getElementById('factNext');
+
+    function renderFact(index) {
+      if (!facts.length) return;
+      const fact = facts[index];
+      titleEl.textContent = fact.title;
+      valueEl.textContent = fact.value;
+      detailEl.textContent = fact.detail;
+      tabEls.forEach((btn, i) => {
+        const accent = facts[i] && facts[i].color ? facts[i].color : '#94a3b8';
+        btn.style.borderColor = accent;
+        if (i === index) {
+          btn.style.backgroundColor = accent;
+          btn.style.color = '#0f172a';
+        } else {
+          btn.style.backgroundColor = 'transparent';
+          btn.style.color = '#475569';
+        }
+      });
+    }
+
+    tabEls.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.dataset.index, 10);
+        if (!Number.isNaN(idx)) {
+          currentFact = idx;
+          renderFact(currentFact);
+        }
+      });
+    });
+
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => {
+        currentFact = (currentFact + 1) % facts.length;
+        renderFact(currentFact);
+      });
+    }
+
+    renderFact(currentFact);
+
+    // Initialize Select2 on all selects with the select2 class
     if (window.jQuery) {
       jQuery(function($) {
         $('.select2').select2({ width: 'resolve' });
           try {
             if ($.fn.dataTable) {
-              $('#impactDailyTable').DataTable({ paging: true, searching: true, info: false, pageLength: 10, stripeClasses: ['odd-row','even-row'] });
+              // Destroy existing DataTable instance if exists
+              if ($.fn.DataTable.isDataTable('#impactDailyTable')) {
+                $('#impactDailyTable').DataTable().destroy();
+              }
+              // Initialize DataTable with proper column configuration
+              $('#impactDailyTable').DataTable({ 
+                paging: true, 
+                searching: true, 
+                info: false, 
+                pageLength: 10, 
+                stripeClasses: ['odd-row','even-row'],
+                columns: [
+                  { orderable: true },  // Date
+                  { orderable: true },  // Energy
+                  { orderable: true },  // Carbon
+                  { orderable: true }   // Water
+                ]
+              });
             }
           } catch (e) { console.warn('DataTable init failed', e); }
       });

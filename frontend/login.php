@@ -39,6 +39,12 @@ function call_flask_login($path, $payload) {
 
 $message = null;
 $error = null;
+
+// Cek jika ada parameter registered=1 dari redirect register
+if (isset($_GET['registered']) && $_GET['registered'] == '1') {
+    $message = 'Registrasi berhasil! Silakan login dengan akun Anda.';
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username'] ?? '');
     $password = trim($_POST['password'] ?? '');
@@ -167,6 +173,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
               </form>
 
               <p class="mt-4 text-xs text-slate-500">Don't have an account yet? <a href="register.php" class="text-blue-900 font-medium hover:underline">Register now</a>.</p>
+              <!-- <p class="mt-4 text-xs text-slate-500">Forgot your password? <a href="change_password.php" class="text-blue-900 font-medium hover:underline">Change your password</a>.</p> -->
             </div>
           </div>
         </section>

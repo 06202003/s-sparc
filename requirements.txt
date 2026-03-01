@@ -8,7 +8,7 @@ torch
 langdetect
 sentencepiece
 faiss-cpu
-openai
+openai>=1.0.0
 sqlalchemy
 pymysql
 joblib
@@ -16,3 +16,4 @@ numpy
 pandas
 tiktoken
 codecarbon>=2.3.0  # for country_iso_code and pue support
+waitress  # Production WSGI server for Windows/Linux
