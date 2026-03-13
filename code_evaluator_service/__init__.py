@@ -1,0 +1,1 @@
+"""Standalone evaluator service package."""

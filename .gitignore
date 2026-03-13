@@ -1,57 +1,69 @@
-# Python
+# =========================
+# Python cache and binaries
+# =========================
 __pycache__/
+**/__pycache__/
 *.py[cod]
 *.pyo
 *.pyd
 *.so
 
+# =========================
 # Virtual environments
+# =========================
 venv/
 .venv/
 env/
-.env.local/
 
-# Environment & secrets
+# =========================
+# Environment and secrets
+# =========================
 .env
 .env.*
 *.env
+!.env.example
 
+# =========================
 # Jupyter
+# =========================
 .ipynb_checkpoints/
 
-# Logs
+# =========================
+# Logs and runtime outputs
+# =========================
 *.log
 logs/
+code_evaluator_service/logs/
+code_evaluator_service/reports/
+code_evaluator_service/backup/
 
-# OS files
+# =========================
+# Temp/session artifacts
+# =========================
+tmp/
+sessions/
+
+# =========================
+# Editor and OS files
+# =========================
 .DS_Store
 Thumbs.db
-
-# VS Code / IDE
-.vscode/
 .idea/
 *.swp
 *.swo
 
-# Node / frontend (in case added later)
-node_modules/
+# Keep workspace settings out by default
+.vscode/
 
-# PHP / Composer vendor (frontend)
+# =========================
+# Frontend/package artifacts
+# =========================
+node_modules/
 frontend/vendor/
 
-# Byte-compiled / cache
-**/__pycache__/
-
-# Local backup / experimental scripts
-app copy*.py
-app_enhanced.py
-app_LLM.py
-cek_db_flask.py
-migrate_embeddings.py
-test_api_scenario.py
-tempCodeRunnerFile.py
-
-# Backup & scratch data
+# =========================
+# Local backup and scratch data
+# =========================
 *.bak
 gpt_queue_status.json
 mbpp_clone.json
@@ -59,5 +71,28 @@ mbpp_real.json
 rs_scrape_api.json
 run.txt
 ZZZ_OLD*.json
+
+# =========================
+# Local personal files
+# =========================
 Yehezkiel_2479011.docx
+
+# =========================
+# Large local model artifacts
+# =========================
 pretrained_model/
+**/models--*/
+**/*.safetensors
+**/*.bin
+**/*.spm
+
+# =========================
+# VS Code temp runner files
+# =========================
+**/tempCodeRunnerFile.py
+
+# =========================
+# Generated visualization outputs
+# =========================
+pengujian semantic similarity/outputs/
+RMP/
