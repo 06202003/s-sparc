@@ -26,7 +26,7 @@ router = APIRouter()
 # Rate limit cooldown store: user_id -> timestamp (in seconds)
 _USER_LAST_REQUEST_TIME = {}
 RATE_LIMIT_COOLDOWN_SECONDS = 60
-MIN_PROMPT_LENGTH = 10
+MIN_PROMPT_LENGTH = 200
 MAX_PROMPT_LENGTH = 2000
 
 class GenerateRequest(BaseModel):

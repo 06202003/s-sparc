@@ -58,80 +58,228 @@ This makes S-SPARC useful not only as a chatbot, but also as a controlled educat
 
 This repository is organized into several major areas.
 
-### Backend (Python FastAPI)
+### Backend (Python)
 
-- `backend/main.py`: FastAPI application entry point with interactive Swagger (`/docs`) & Redocly (`/redocly`).
-- `backend/api/`: API router endpoints (`auth`, `ai_chat`, `domain`, `admin`, `health`).
-- `backend/services/`: Hybrid Adaptive Router (Gemini Cloud 6-key pool + Ollama Local fallback), gamification, and sustainability telemetry.
-- `run_fastapi.py`, `start_backend.bat`: FastAPI backend launch helpers.
-
-### Frontend (PHP E-STRANGE LMS & S-SPARC)
-
-- `estrange/`: E-STRANGE Learning Management Platform, assignments, peer review ratings, gamification, and AI Chat Assistant.
-- `frontend/`: Standalone S-SPARC PHP Web Frontend.
-- `start_frontend.bat`: 1-Click launcher for PHP server.
-
-### 1-Click Full System Launch (Windows)
-
-- `start_full_system.bat`: Automatically launches both FastAPI Backend (Port 8000) and E-STRANGE Web Portal (Port 8080).
+- `app.py`: main Flask application entry point.
+- `run_production.py`, `run_production_server.py`: production-oriented launch helpers.
+- `password_management.py`, `clear_old_retrieval_tokens.py`, and similar scripts: operational utilities.
 
 ### Evaluator Service
 
 - `code_evaluator_service/`: standalone evaluation service for quality control on code snippets.
 - Includes API endpoints, scheduler support, anomaly detection, static analysis, and report generation.
 
+### Frontend (PHP)
+
+- `frontend/`: web interface for login, chat, dashboards, gamification, course pages, and sustainability pages.
+
 ### Database and Migrations
 
-- `database/db_semantic_vfinal.sql`: Main database schema and seed data.
 - `db_migrations/`: SQL files for schema setup and incremental updates.
 
-### Semantic Similarity and Embeddings
+### Semantic Similarity and Experiments
 
 - `semantic_similarity/`: utilities for retrieval and embedding-related work.
-- `pretrained_model/`: local pretrained model files (LaBSE, E5, MPNet).
+- `pengujian semantic similarity/`: local experimental scripts and visualization assets.
+
+### Local Models and Assets
+
+- `pretrained_model/`: local large model files used during development or evaluation.
+- These files are ignored by Git because of size.
 
 ## High-Level System Flow
 
-1. A learner submits a programming question via the E-STRANGE / S-SPARC web interface.
-2. The FastAPI backend computes cosine similarity against stored code embeddings in MySQL.
-3. If similarity >= 90%, it returns an instant retrieval answer with 0 Token Cost (FREE Tier).
-4. If similarity < 90%, the **Adaptive Router** checks gamification points & token quota:
-   - Points >= 100 (or quota < 5000): Routes to **Google Gemini Flash Lite** (Cloud 6-Key Pool).
-   - Points < 100 (or quota >= 5000 / HTTP 429 Failover): Routes to **Ollama Qwen2.5-Coder 14B** (Local).
-5. Responses are delivered with token and environmental telemetry (Wh, kg CO2e, mL H2O).
+1. A learner submits a programming-related prompt.
+2. The backend computes similarity against the stored knowledge base.
+3. If a strong match is found, the system returns a retrieval-based answer.
+4. If no strong match is found, the system routes the prompt to GPT.
+5. The response is shown in the frontend and tracked for usage, gamification, and environmental impact.
+6. Separately, the evaluator service periodically reviews the knowledge base and flags duplicates, low-quality content, or suspicious entries.
 
-## Quick Setup & Launch
+## Code Evaluator Service
 
-Detailed step-by-step instructions are available in [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md).
+The evaluator service is one of the main differentiators of this project.
 
-### 1. 1-Click Launch (Windows)
-Double-click `start_full_system.bat` to launch both Backend (Port 8000) and Frontend (Port 8080).
+### What It Does
 
-### 2. Manual CLI Launch
+- Reads code snippet entries from the `code_embeddings` table in batches.
+- Detects programming language heuristically.
+- Runs static analysis, including syntax and complexity-related checks.
+- Measures semantic similarity between prompt and code.
+- Uses LLM-as-a-Judge when an API key is available, with heuristic fallback when it is not.
+- Detects exact duplicates through hashing.
+- Applies anomaly detection on numerical evaluation features.
+- Produces deletion candidates, review candidates, and valid entries.
 
-**Backend (FastAPI):**
+### Main Methods Used
+
+- AST parsing for Python syntax and structure analysis.
+- Radon metrics for cyclomatic complexity and maintainability index.
+- Embedding similarity for prompt-code alignment.
+- GPT-based structured judging for semantic quality scoring.
+- SHA-256 hashing for duplicate detection.
+- Isolation Forest for anomaly detection.
+
+### Evaluator Endpoints
+
+- `GET /health`
+- `GET /run-evaluation`
+- `GET /run-evaluation?background=true`
+- `GET /stats`
+
+### Example Evaluation Result
+
+From the latest recorded evaluation run:
+
+- Total entries evaluated: 678
+- Valid entries: 647
+- Review entries: 1
+- Delete candidates: 30
+- Average semantic similarity: 0.8774
+- Average final score: 8.6149 / 10
+- Delete reasons: 23 duplicates, 7 low-quality
+
+This indicates that the evaluator is not only theoretical; it already runs on real data and generates measurable results.
+
+## Tech Stack
+
+### Backend
+
+- Python 3.13+
+- Flask
+- FastAPI (for evaluator service)
+- APScheduler
+
+### AI / ML
+
+- OpenAI GPT-4o
+- Sentence-Transformers / multilingual embeddings
+- scikit-learn
+- Radon
+- AST (Python standard library)
+
+### Frontend
+
+- PHP 8+
+- Composer
+- Tailwind CSS
+- Bootstrap
+- Chart.js
+- DataTables
+
+### Data / Infra
+
+- MySQL / MariaDB
+- Docker Compose (optional)
+
+## Local Setup
+
+### 1. Python Backend
+
+From the project root:
+
 ```bash
 python -m venv .venv
-.venv\Scripts\activate       # Windows
-# source .venv/bin/activate  # Linux
-
+.venv\Scripts\activate
 pip install -r requirements.txt
-python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+python app.py --port 5000
 ```
 
-**Frontend (PHP):**
+To expose the backend on your local network:
+
 ```bash
-cd estrange
-php -S 0.0.0.0:8080
+python app.py --host 0.0.0.0 --port 5000
 ```
+
+For heavier concurrent usage:
+
+```bash
+python run_production.py
+```
+
+### 2. Frontend
+
+```bash
+cd frontend
+composer install
+php -S localhost:8000
+```
+
+Then open `http://localhost:8000`.
+
+### 3. Evaluator Service
+
+```bash
+pip install -r code_evaluator_service/requirements.txt
+python -m uvicorn code_evaluator_service.evaluator_app:app --host 0.0.0.0 --port 5055
+```
+
+Or run it as a module:
+
+```bash
+python -m code_evaluator_service
+```
+
+## Environment Configuration
+
+This repository expects environment-based configuration for database credentials and API keys.
+
+### Main database settings
+
+- `MYSQL_HOST`
+- `MYSQL_PORT`
+- `MYSQL_USER`
+- `MYSQL_PASSWORD`
+- `MYSQL_DB`
+
+### Evaluator-specific optional settings
+
+- `EVALUATOR_PORT`
+- `EVALUATOR_BATCH_SIZE`
+- `EVALUATOR_SEMANTIC_THRESHOLD`
+- `EVALUATOR_REVIEW_SCORE_THRESHOLD`
+- `EVALUATOR_FINAL_SCORE_THRESHOLD`
+- `EVALUATOR_EMBEDDING_MODEL`
+- `EVALUATOR_LLM_MODEL`
+- `EVALUATOR_OPENAI_API_KEY`
+- `EVALUATOR_TIMEZONE`
+- `EVALUATOR_DRY_RUN`
+
+Use `.env.example` as the starting point where available.
+
+## Database Migrations
+
+The `db_migrations/` directory contains SQL scripts for schema creation and updates. Apply them in order using your preferred database client.
+
+Examples include:
+
+- `001_add_user_courses.sql`
+- `002_add_env_impact_filters.sql`
+- `003_add_assessment_fields.sql`
+
+## Running with Docker
+
+If you want a container-based workflow, review `docker-compose.yml` and run:
+
+```bash
+docker compose up --build
+```
+
+You may still need to adapt environment variables, ports, and database initialization to your local setup.
+
+## Important Notes About Large Files
+
+- Local pretrained models are intentionally excluded from Git.
+- Evaluator outputs such as logs, reports, and backups are also ignored.
+- If you clone this repository on a fresh machine, you will need to restore model files manually before running the full semantic or evaluation pipeline.
 
 ## Recommended Reading
 
-- [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) - Official complete deployment and production guide
-- [README_DEPLOYMENT.md](README_DEPLOYMENT.md) - Quick deployment summary
-- [docs/SYSTEM_STARTUP_GUIDE.md](docs/SYSTEM_STARTUP_GUIDE.md) - System startup and verification guide
-- [docs/system_flow_diagrams.md](docs/system_flow_diagrams.md) - 11 End-to-end visual workflow diagrams
-- [code_evaluator_service/README.md](code_evaluator_service/README.md) - Automated code evaluator service docs
+- [code_evaluator_service/README.md](code_evaluator_service/README.md)
+- [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
+- [QUICK_START_PRODUCTION.md](QUICK_START_PRODUCTION.md)
+- [PERFORMANCE_OPTIMIZATION.md](PERFORMANCE_OPTIMIZATION.md)
+- [report.md](report.md)
 
 ## Use Cases
 

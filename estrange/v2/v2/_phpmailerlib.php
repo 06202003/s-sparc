@@ -58,10 +58,13 @@ function sendEmail($targetEmail, $emailSubject, $emailContent){
 	//Start Option 1: Use league/oauth2-client as OAuth2 token provider
 	//Fill in authentication details here
 	//Either the gmail account owner, or the user that gave consent
-	$email = getenv('GMAIL_SMTP_EMAIL') ?: 'educationalstrange@gmail.com';
-	$clientId = getenv('GOOGLE_OAUTH_CLIENT_ID') ?: 'GOOGLE_OAUTH_CLIENT_ID_PLACEHOLDER';
-	$clientSecret = getenv('GOOGLE_OAUTH_CLIENT_SECRET') ?: 'GOOGLE_OAUTH_CLIENT_SECRET_PLACEHOLDER';
-	$refreshToken = getenv('GOOGLE_OAUTH_REFRESH_TOKEN') ?: 'GOOGLE_OAUTH_REFRESH_TOKEN_PLACEHOLDER';
+	$email = getenv('GMAIL_OAUTH_USER') ?: 'educationalstrange@gmail.com';
+	$clientId = getenv('GMAIL_OAUTH_CLIENT_ID') ?: 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+	$clientSecret = getenv('GMAIL_OAUTH_CLIENT_SECRET') ?: 'YOUR_GOOGLE_CLIENT_SECRET';
+
+	//Obtained by configuring and running get_oauth_token.php
+	//after setting up an app in Google Developer Console.
+	$refreshToken = getenv('GMAIL_OAUTH_REFRESH_TOKEN') ?: 'YOUR_GOOGLE_REFRESH_TOKEN';
 
 	//Create a new OAuth2 provider instance
 	$provider = new Google(

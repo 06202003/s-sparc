@@ -1,0 +1,1555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UNU AI for SDGs 2026 - S-SPARC Research Proposal</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&family=JetBrains+Mono:wght@400;500;600;700&family=STIX+Two+Text:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <!-- MathJax 3 with Full LaTeX Support -->
+    <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: true,
+        processEnvironments: true,
+        packages: {'[+]': ['ams', 'textmacros']}
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      },
+      svg: {
+        fontCache: 'global',
+        displayAlign: 'center'
+      },
+      startup: {
+        typeset: true
+      }
+    };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <!-- Mermaid.js for Vector Diagrams -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: 'default',
+        themeVariables: {
+          fontFamily: 'Plus Jakarta Sans, sans-serif',
+          fontSize: '12px',
+          primaryColor: '#f0f9ff',
+          primaryTextColor: '#0f172a',
+          primaryBorderColor: '#0284c7',
+          lineColor: '#0284c7',
+          secondaryColor: '#f8fafc',
+          tertiaryColor: '#ffffff',
+          clusterBkg: '#f8fafc',
+          clusterBorder: '#cbd5e1'
+        },
+        flowchart: { useMaxWidth: false, htmlLabels: true, curve: 'basis' },
+        sequence: { useMaxWidth: false, actorMargin: 50, messageMargin: 35 },
+        gantt: { useMaxWidth: false },
+        pie: { useMaxWidth: false }
+      });
+
+      window.addEventListener('DOMContentLoaded', async () => {
+        try {
+          await mermaid.run({
+            querySelector: '.mermaid'
+          });
+          console.log('Mermaid diagrams compiled successfully');
+          window.mermaidDone = true;
+        } catch (err) {
+          console.error('Mermaid render error:', err);
+          window.mermaidDone = true;
+        }
+      });
+    </script>
+
+    <style>
+        @page {
+            size: A4;
+            margin: 18mm 14mm 18mm 14mm;
+            @top-left {
+                content: "UNITED NATIONS UNIVERSITY (UNU) | AI FOR SDGS 2026";
+                font-family: 'Plus Jakarta Sans', sans-serif;
+                font-size: 7pt;
+                font-weight: 700;
+                color: #64748b;
+                letter-spacing: 0.5px;
+                border-bottom: 1px solid #e2e8f0;
+                padding-bottom: 4px;
+            }
+            @top-right {
+                content: "S-SPARC: Specific Smart Prompting (TRL 7)";
+                font-family: 'Plus Jakarta Sans', sans-serif;
+                font-size: 7pt;
+                font-weight: 700;
+                color: #0284c7;
+                border-bottom: 1px solid #e2e8f0;
+                padding-bottom: 4px;
+            }
+            @bottom-right {
+                content: "Page " counter(page) " of " counter(pages);
+                font-family: 'Plus Jakarta Sans', sans-serif;
+                font-size: 8pt;
+                color: #64748b;
+            }
+        }
+
+        *, *:before, *:after {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #1e293b;
+            line-height: 1.65;
+            font-size: 9.5pt;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 30px;
+            background-color: #ffffff;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Academic Paper Masthead */
+        h1:first-of-type {
+            background: linear-gradient(135deg, #0b192c 0%, #0369a1 100%);
+            color: #ffffff;
+            font-size: 14pt;
+            font-weight: 800;
+            line-height: 1.4;
+            padding: 18px 22px;
+            border-radius: 8px;
+            margin-top: 0;
+            margin-bottom: 14px;
+            letter-spacing: -0.2px;
+            border: none;
+            box-shadow: 0 4px 12px rgba(3, 105, 161, 0.15);
+        }
+
+        h1 {
+            font-size: 14pt;
+            font-weight: 800;
+            color: #0f172a;
+            border-bottom: 2px solid #0284c7;
+            padding-bottom: 6px;
+            margin-top: 26px;
+            margin-bottom: 10px;
+            letter-spacing: -0.2px;
+            page-break-after: avoid;
+        }
+
+        h2 {
+            font-size: 12pt;
+            font-weight: 700;
+            color: #0369a1;
+            border-left: 3.5px solid #0284c7;
+            padding-left: 10px;
+            margin-top: 24px;
+            margin-bottom: 10px;
+            page-break-after: avoid;
+        }
+
+        h3 {
+            font-size: 10.5pt;
+            font-weight: 600;
+            color: #0f172a;
+            margin-top: 16px;
+            margin-bottom: 8px;
+            page-break-after: avoid;
+        }
+
+        h4 {
+            font-size: 9.5pt;
+            font-weight: 600;
+            color: #334155;
+            margin-top: 12px;
+            margin-bottom: 6px;
+            page-break-after: avoid;
+        }
+
+        p {
+            margin-top: 0;
+            margin-bottom: 10px;
+            text-align: justify;
+            text-justify: inter-word;
+        }
+
+        ul, ol {
+            margin-top: 4px;
+            margin-bottom: 12px;
+            padding-left: 22px;
+        }
+
+        li {
+            margin-bottom: 4px;
+        }
+
+        strong {
+            color: #0f172a;
+            font-weight: 600;
+        }
+
+        code {
+            font-family: 'JetBrains Mono', Consolas, Monaco, monospace;
+            background-color: #f1f5f9;
+            color: #0f766e;
+            padding: 1.5px 5px;
+            border-radius: 4px;
+            font-size: 8.5pt;
+            border: 1px solid #e2e8f0;
+        }
+
+        pre {
+            background-color: #0f172a;
+            color: #f8fafc;
+            padding: 12px 14px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', Consolas, Monaco, monospace;
+            font-size: 8pt;
+            line-height: 1.45;
+            margin: 12px 0;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+
+        pre code {
+            background-color: transparent;
+            color: inherit;
+            padding: 0;
+            border: none;
+        }
+
+        /* Executive Academic Table Design */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 16px 0;
+            font-size: 8.5pt;
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid #cbd5e1;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+
+        th, td {
+            padding: 7px 10px;
+            border-bottom: 1px solid #e2e8f0;
+            border-right: 1px solid #e2e8f0;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        th:last-child, td:last-child {
+            border-right: none;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        th {
+            background-color: #0f172a;
+            color: #ffffff;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+            font-size: 8.5pt;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        tr:hover td {
+            background-color: #f1f5f9;
+        }
+
+        blockquote {
+            border-left: 3.5px solid #0284c7;
+            margin: 12px 0;
+            padding: 8px 14px;
+            background-color: #f0f9ff;
+            color: #0369a1;
+            font-style: normal;
+            border-radius: 0 6px 6px 0;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+
+        hr {
+            border: 0;
+            height: 1px;
+            background: #e2e8f0;
+            margin: 20px 0;
+        }
+
+        /* Interactive Mermaid Card Styles with Academic Figure Headers */
+        .mermaid-card {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #ffffff;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 12px 16px 16px 16px;
+            margin: 18px 0;
+            page-break-inside: avoid;
+            break-inside: avoid;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+            cursor: zoom-in;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-x: auto;
+        }
+
+        .mermaid-card:hover {
+            border-color: #0284c7;
+            box-shadow: 0 6px 16px rgba(2, 132, 199, 0.12);
+            transform: translateY(-2px);
+        }
+
+        .diagram-header-tag {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .diagram-number {
+            font-size: 7.5pt;
+            font-weight: 700;
+            color: #64748b;
+            letter-spacing: 0.5px;
+        }
+
+        .diagram-zoom-badge {
+            font-size: 7.5pt;
+            font-weight: 600;
+            color: #0284c7;
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            padding: 2px 8px;
+            border-radius: 12px;
+            pointer-events: none;
+            opacity: 0.9;
+            transition: all 0.2s ease;
+        }
+
+        .mermaid-card:hover .diagram-zoom-badge {
+            opacity: 1;
+            background: #0284c7;
+            color: #ffffff;
+            border-color: #0284c7;
+        }
+
+        .mermaid {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        .mermaid svg {
+            max-width: 100%;
+            height: auto;
+            font-family: 'Plus Jakarta Sans', sans-serif !important;
+        }
+
+        /* Pure LaTeX Math Typography & Display Environment */
+        .MathJax_Display, mjx-container[display="true"] {
+            margin: 12px 0 !important;
+            padding: 10px 16px !important;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            page-break-inside: avoid;
+            break-inside: avoid;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
+        }
+
+        mjx-container:not([display="true"]) {
+            padding: 0 1px;
+            font-family: 'STIX Two Text', serif !important;
+        }
+
+        /* Modal Lightbox for Diagram Zoom */
+        .diagram-modal {
+            display: none;
+            position: fixed;
+            z-index: 99999;
+            left: 0;
+            top: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(15, 23, 42, 0.82);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+
+        .diagram-modal.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .diagram-modal-container {
+            position: relative;
+            background: #ffffff;
+            border-radius: 12px;
+            width: 95vw;
+            max-width: 1280px;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            animation: modalPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes modalPop {
+            0% { transform: scale(0.95); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .diagram-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            background: #0f172a;
+            color: #ffffff;
+            border-bottom: 1px solid #334155;
+        }
+
+        .modal-title {
+            font-size: 11pt;
+            font-weight: 700;
+            color: #f8fafc;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .modal-btn {
+            background: #1e293b;
+            color: #f8fafc;
+            border: 1px solid #475569;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 9pt;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .modal-btn:hover {
+            background: #0284c7;
+            border-color: #38bdf8;
+            color: #ffffff;
+        }
+
+        .modal-close-btn {
+            background: #e11d48;
+            border-color: #f43f5e;
+            color: #ffffff;
+            font-size: 11pt;
+            padding: 4px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        .modal-close-btn:hover {
+            background: #be123c;
+        }
+
+        .diagram-modal-body {
+            flex: 1;
+            overflow: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            background: radial-gradient(circle, #f8fafc 10%, #f1f5f9 100%);
+            cursor: grab;
+            user-select: none;
+        }
+
+        .diagram-modal-body:active {
+            cursor: grabbing;
+        }
+
+        .diagram-zoom-wrapper {
+            transform-origin: center center;
+            transition: transform 0.15s ease-out;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        .diagram-zoom-wrapper svg {
+            max-width: 100% !important;
+            max-height: 100% !important;
+            width: auto !important;
+            height: auto !important;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.06));
+        }
+
+        .diagram-modal-footer {
+            padding: 8px 16px;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            font-size: 8pt;
+            color: #64748b;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .diagram-modal-footer kbd {
+            background: #e2e8f0;
+            color: #334155;
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid #cbd5e1;
+            font-family: inherit;
+            font-size: 7.5pt;
+        }
+
+        @media print {
+            body {
+                padding: 0;
+                font-size: 9pt;
+            }
+            .diagram-zoom-badge, .diagram-modal {
+                display: none !important;
+            }
+            .mermaid-card {
+                border: 1px solid #cbd5e1;
+                box-shadow: none;
+                padding: 10px;
+                margin: 10px 0;
+                cursor: default;
+                transform: none !important;
+            }
+            pre, table, .mermaid-card, mjx-container {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            h1, h2, h3, h4 {
+                page-break-after: avoid;
+                break-after: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>UNITED NATIONS UNIVERSITY (UNU) GLOBAL YOUTH AI FUTURE INNOVATION COMPETITION 2026</h1>
+<p><strong>Theme:</strong> <em>AI and Education: AI Transforming the Educational Paradigm and Enhancing AI Literacy (Targeting SDG 4)</em><br />
+<strong>Project Title:</strong> <strong>S-SPARC: Specific Smart Prompting Assistant for peRformanCe</strong><br />
+<em>(Snippet-aware Semantic Programmable Assistant with Retrieval and Caching)</em><br />
+<strong>Technology Readiness Level:</strong> <strong>TRL 7 (Demonstrated in Operational Academic Environment)</strong><br />
+<strong>Target Beneficiaries:</strong> Computer Science &amp; Engineering Students, Educators, and Higher Education Institutions (Focus on the Global South)<br />
+<strong>Host &amp; Institutional Alignment:</strong> UNU Macau &amp; UNU Global AI Network | Maranatha Christian University (Indonesia)</p>
+<hr />
+<h2>1. EXECUTIVE SUMMARY &amp; SDG ALIGNMENT</h2>
+<h3>1.1 Project Abstract</h3>
+<p>Generative Artificial Intelligence (GenAI) is fundamentally transforming higher education, yet unregulated student usage has created a compounding crisis of <strong>&quot;Prompt Illiteracy,&quot; &quot;Pedagogical Dependency,&quot; and &quot;Massive Token Inefficiency.&quot;</strong> When students interact with standard conversational chatbots, they frequently submit ambiguous, low-effort prompts (e.g., <em>&quot;fix my code&quot;</em> or <em>&quot;write this function&quot;</em>), completely bypassing algorithmic problem decomposition. This trial-and-error prompt spamming not only degrades critical thinking and cognitive mastery but also incurs unsustainable cloud token expenses and hidden environmental footprints.</p>
+<div class="mermaid-card" onclick="openDiagramModal(this)" title="Click to enlarge diagram">
+        <div class="diagram-header-tag">
+            <span class="diagram-number">FIGURE 1</span>
+            <span class="diagram-zoom-badge">🔍 Click to enlarge / zoom</span>
+        </div>
+        <div class="mermaid">flowchart TD
+    subgraph SSPARC_Dual_Engine [&quot;S-SPARC: Dual-Engine Architecture for AI Literacy &amp; Token Optimization (TRL 7)&quot;]
+        direction TB
+        Root[&quot;S-SPARC Core Cognitive &amp; Optimization Platform&quot;]
+        
+        Pillar1[&quot;Pillar 1: Specific Smart Prompting Engine&lt;br/&gt;&lt;b&gt;Bloom's Cognitive Scaffolding &amp; C-I-O-E Protocol&lt;/b&gt;&quot;]
+        Pillar2[&quot;Pillar 2: Headroom Context Compression Layer&lt;br/&gt;&lt;b&gt;Extreme Token Optimization &amp; 0-Token Fast-Path&lt;/b&gt;&quot;]
+        
+        Root --&gt; Pillar1
+        Root --&gt; Pillar2
+        
+        P1[&quot;200-Character Metacognitive Threshold (C-I-O-E Intent Decomposition)&quot;]
+        P2[&quot;Bloom's Taxonomy Cognitive Tiering (C1-C2 Summary / C3-C4 Code / C5-C6 Synthesis)&quot;]
+        P3[&quot;60-Second Deliberate Reflection Cooldown (Anti-Spam Friction)&quot;]
+        P4[&quot;Socratic Guardrails &amp; Progressive Hint Unlocking&quot;]
+        
+        F1[&quot;AST CodeCompressor (78.8% RAG Context Token Pruning)&quot;]
+        F2[&quot;CacheAligner (Prefix Freezing for &gt;= 85% Provider KV-Cache Hits)&quot;]
+        F3[&quot;Output Shaper &amp; Verbosity Steering (50-70% Output Fluff Trimming)&quot;]
+        F4[&quot;0-Token Semantic Fast-Path Caching (s &gt;= 0.88 Cosine Lookup)&quot;]
+        
+        Pillar1 --&gt; P1 &amp; P2 &amp; P3 &amp; P4
+        Pillar2 --&gt; F1 &amp; F2 &amp; F3 &amp; F4
+    end
+</div>
+    </div>
+<p><strong>S-SPARC</strong> (<em>Specific Smart Prompting Assistant for peRformanCe</em>) addresses these challenges at <strong>Technology Readiness Level (TRL) 7</strong>, deployed and validated within the PHP-based Learning Management System <strong>E-STRANGE</strong>. S-SPARC establishes a symbiotic paradigm: <strong>Effective, Structured Prompting directly drives Extreme Token Conservation</strong>.</p>
+<p>To cultivate prompt literacy and eliminate superficial querying, S-SPARC enforces the <strong>200-Character Metacognitive Prompt Threshold</strong> ($200 \le \text{len}(\text{prompt}) \le 2000$) via the <strong>C-I-O-E Protocol</strong>:</p>
+<ol>
+<li><strong>$C$ - Context &amp; Domain ($\approx 50$ chars):</strong> Explicit software domain formulation.</li>
+<li><strong>$I$ - Input &amp; Data Structure ($\approx 60$ chars):</strong> Pre-conditions and parameter constraints.</li>
+<li><strong>$O$ - Expected Output &amp; Complexity ($\approx 50$ chars):</strong> Post-conditions and time/space requirements.</li>
+<li><strong>$E$ - Error Trace &amp; Bottleneck ($\approx 90$ chars):</strong> Specific runtime exceptions or logic flaws.</li>
+</ol>
+<p>Coupled with a mandatory 60-second reflection cooldown and calibrated pedagogical modes based on <strong>Bloom's Revised Taxonomy (Levels C1–C6)</strong>, S-SPARC transforms students into critical problem-solvers.</p>
+<p>On the infrastructure side, S-SPARC absorbs cutting-edge context compression principles from <strong>Headroom</strong>:</p>
+<ul>
+<li><strong>AST CodeCompressor:</strong> Automatically prunes comments, dead imports, and docstrings from Top-3 retrieved RAG snippets, slashing context token payload by <strong>78.8%</strong>.</li>
+<li><strong>CacheAligner:</strong> Freezes a deterministic system prompt prefix, boosting provider-side <strong>KV-prompt cache hits to $\ge 85\%$</strong> on Google Gemini Flash.</li>
+<li><strong>Output Shaper &amp; Verbosity Steering:</strong> Dynamically clamps output token budgets and suppresses conversational pleasantries, cutting expensive output tokens by <strong>50–70%</strong>.</li>
+<li><strong>Zero-Token Fast-Path Retrieval ($s \ge 0.88$):</strong> Serves verified solutions instantly at $0$ token cost, $< 45\text{ms}$ latency, and zero emissions.</li>
+</ul>
+<hr />
+<h3>1.2 Deep-Dive SDG 4 Alignment: Enhancing AI Literacy &amp; Effective Prompting</h3>
+<p>S-SPARC operationalizes <strong>United Nations Sustainable Development Goal 4 (Quality Education)</strong> by establishing <strong>Prompt Engineering Literacy &amp; Computational Resource Stewardship</strong> as core 21st-century competences:</p>
+<div class="mermaid-card" onclick="openDiagramModal(this)" title="Click to enlarge diagram">
+        <div class="diagram-header-tag">
+            <span class="diagram-number">FIGURE 2</span>
+            <span class="diagram-zoom-badge">🔍 Click to enlarge / zoom</span>
+        </div>
+        <div class="mermaid">flowchart TD
+    subgraph SDG4_Prompt_Alignment [&quot;SDG 4 Alignment: Transforming AI &amp; Educational Literacy&quot;]
+        direction TB
+        SDG[&quot;UN SDG 4: Quality Education&quot;]
+        
+        T43[&quot;Target 4.3: Equal Access to Technical &amp; Tertiary Education&quot;]
+        T44[&quot;Target 4.4: Relevant Skills for Decent Work &amp; AI Literacy&quot;]
+        T4C[&quot;Target 4.c: Pedagogical Capacity &amp; Teacher Enablement&quot;]
+        
+        SDG --&gt; T43
+        SDG --&gt; T44
+        SDG --&gt; T4C
+        
+        I43[&quot;Democratized AI Access via Sovereign Edge&lt;br/&gt;• 0-token semantic reuse eliminates recurring financial barriers&lt;br/&gt;• Local Ollama offline failover guarantees equity in Global South&lt;br/&gt;• Individual API key quota isolation (1,500 RPD free tier)&quot;]
+        
+        I44[&quot;Effective Prompting &amp; Bloom's Cognitive Scaffolding&lt;br/&gt;• C-I-O-E 200-char protocol forces algorithmic decomposition&lt;br/&gt;• 60s cooldown enforces metacognitive reflection&lt;br/&gt;• Physical telemetry (Wh, kg CO2e, mL) builds Green AI literacy&quot;]
+        
+        I4C[&quot;Automated Teaching Assistant &amp; Academic Integrity&lt;br/&gt;• Autonomous AST + Isolation Forest knowledge cleansing&lt;br/&gt;• E-STRANGE Plagiarism Defense Workflow (&gt;= 70% similarity)&lt;br/&gt;• Anonymized peer review &amp; code clarity scoring&quot;]
+        
+        T43 --&gt; I43
+        T44 --&gt; I44
+        T4C --&gt; I4C
+    end
+</div>
+    </div>
+<h4>1. Target 4.4 — Youth AI Literacy, Prompt Engineering &amp; Green Software Skills</h4>
+<ul>
+<li><strong>C-I-O-E Protocol &amp; Metacognitive Friction</strong>: Rather than allowing students to fire off 10 ambiguous queries, S-SPARC's 200-character boundary forces students to formulate complete algorithmic specifications in a single, high-density prompt, achieving 1-turn resolution.</li>
+<li><strong>Cognitive Tiering via Bloom's Revised Taxonomy</strong>:
+<ul>
+<li><em>C1–C2 Remember &amp; Understand (<code>summary</code>)</em>: Generates 2–4 concise Indonesian conceptual sentences without code, compelling students to write the implementation themselves.</li>
+<li><em>C3–C4 Apply &amp; Analyze (<code>code</code>)</em>: Delivers runnable code with maximum conciseness (Output Shaper enabled), emphasizing functional syntax.</li>
+<li><em>C5–C6 Evaluate &amp; Create (<code>summary_code_explanation</code>)</em>: Structured triad: Algorithmic Summary $\rightarrow$ Runnable Source Code $\rightarrow$ Step-by-Step Logic Breakdown.</li>
+</ul>
+</li>
+<li><strong>Green Prompting Literacy</strong>: Real-time display of physical externalities ($\text{Wh}$, $\text{kg CO}_2\text{e}$, $\text{mL}$ water) teaches students the computational realities of AI inference.</li>
+</ul>
+<h4>2. Target 4.3 — Affordable, Equitable Access to AI-Enhanced Technical Education</h4>
+<ul>
+<li><strong>Headroom Context Compression &amp; Zero-Token Reuse</strong>: By compressing RAG context chunks (78.8% reduction) and leveraging 0-token cache hits ($s \ge 0.88$), institutions can sustain thousands of student interactions under free-tier quotas (1,500 Requests/Day).</li>
+<li><strong>Multi-Tier Sovereign Failover</strong>: Combines personal student keys, institutional key pools, and local on-premises LLM execution (<em>Qwen2.5-Coder 14B</em> via Ollama) to guarantee offline resilience across bandwidth-constrained universities in the Global South.</li>
+</ul>
+<h4>3. Target 4.c — Pedagogical Capacity &amp; Teacher Enablement</h4>
+<ul>
+<li><strong>Autonomous Knowledge Hygiene</strong>: Relieves faculty from manual snippet curation through closed-loop AST verification and anomaly pruning (<code>code_evaluator_service</code>).</li>
+<li><strong>Academic Integrity &amp; Plagiarism Defense</strong>: Submissions exceeding 70% similarity trigger an automated defense workflow (<code>student_assessment_submit_suspicious.php</code>) where students must articulate and defend their algorithmic choices in writing.</li>
+</ul>
+<hr />
+<h2>2. SYSTEM ARCHITECTURE &amp; TECHNICAL FEASIBILITY (TRL 7 VALIDATION)</h2>
+<div class="mermaid-card" onclick="openDiagramModal(this)" title="Click to enlarge diagram">
+        <div class="diagram-header-tag">
+            <span class="diagram-number">FIGURE 3</span>
+            <span class="diagram-zoom-badge">🔍 Click to enlarge / zoom</span>
+        </div>
+        <div class="mermaid">flowchart TD
+    subgraph Client_Layer [&quot;Client &amp; Interface Layer (TRL 7 Production)&quot;]
+        UI_Estrange[&quot;E-STRANGE LMS Integrated Chat&lt;br/&gt;(ssparc/chat.php)&quot;]
+        UI_Modes[&quot;Bloom's Mode Selector&lt;br/&gt;(Code Only / Summary / Scaffolding)&quot;]
+        UI_Auth[&quot;Cookie / Session / X-User-ID Auth&quot;]
+        UI_Badge[&quot;Dynamic Quota Badge (1,500 RPD)&quot;]
+    end
+
+    subgraph FastAPI_Backend [&quot;S-SPARC Core Backend (:8000)&quot;]
+        API_Gate[&quot;API Endpoints&lt;br/&gt;(/api/generate-code, /api/user/query-quota)&quot;]
+        
+        subgraph Prompt_Governance [&quot;Prompt Boundary &amp; Governance Layer&quot;]
+            Length_Check[&quot;C-I-O-E Protocol Validator&lt;br/&gt;(200 &lt;= Prompt Chars &lt;= 2000)&quot;]
+            Cooldown_Check[&quot;Deliberate Reflection Limiter&lt;br/&gt;(60-Second Cooldown)&quot;]
+        end
+        
+        subgraph Hybrid_Retrieval [&quot;Dense-Sparse Hybrid Retrieval Engine&quot;]
+            Dense_Engine[&quot;Dense: all-MiniLM-L6-v2&lt;br/&gt;(384-Dim Vector Embeddings)&quot;]
+            Sparse_Engine[&quot;Sparse: BM25Okapi&lt;br/&gt;(Lexical Inverted Index)&quot;]
+            RRF_Fusion[&quot;Reciprocal Rank Fusion&lt;br/&gt;RRF(d) = Σ 1 / (60 + rank_m(d))&quot;]
+            Cache_Gate{&quot;Fast-Path Gate&lt;br/&gt;Cosine Sim s &gt;= 0.88?&quot;}
+        end
+
+        subgraph Headroom_Compression [&quot;Headroom-Inspired Context Compression Layer&quot;]
+            Code_Comp[&quot;AST CodeCompressor&lt;br/&gt;(Strip comments, docstrings &amp; boilerplate from RAG chunks)&quot;]
+            Cache_Align[&quot;CacheAligner Engine&lt;br/&gt;(Freeze deterministic prompt prefix for &gt;= 85% KV-cache hits)&quot;]
+            Output_Shape[&quot;Output Shaper &amp; Verbosity Steering&lt;br/&gt;(Terse delta diffs, suppress fluff &amp; clamp output budget)&quot;]
+        end
+
+        subgraph Adaptive_Router [&quot;Multi-Tier Adaptive AI Router&quot;]
+            Tier1[&quot;Tier 1: Personal Gemini API Key&lt;br/&gt;(1,500 RPD User Isolation)&quot;]
+            Tier2[&quot;Tier 2: Institutional Gemini Pool&lt;br/&gt;(6-Key Shared Failover)&quot;]
+            Tier3[&quot;Tier 3: Local Ollama Model&lt;br/&gt;(Qwen2.5-Coder 14B Offline)&quot;]
+        end
+
+        Post_Worker[&quot;Post-Processing Worker&lt;br/&gt;(tiktoken, Carbon/Water Log, Ingestion)&quot;]
+    end
+
+    subgraph Storage_Layer [&quot;Enterprise Storage Layer (MySQL db_semantic_final, 37 Tables)&quot;]
+        DB_Embed[(&quot;code_embeddings&lt;br/&gt;Vector Store &amp; Clean KB&quot;)]
+        DB_Telemetry[(&quot;environmental_impact_logs&lt;br/&gt;&amp; local_carbon_logs&quot;)]
+        DB_LMS[(&quot;E-STRANGE LMS Data&lt;br/&gt;(submission, suspicion, peer_review)&quot;)]
+    end
+
+    subgraph Governance_Daemon [&quot;code_evaluator_service (Autonomous Quality Daemon)&quot;]
+        AST_Static[&quot;1. AST &amp; Radon Metrics&lt;br/&gt;(CC, Maintainability Index)&quot;]
+        LLM_Judge[&quot;2. LLM-as-a-Judge&lt;br/&gt;(Logic, Alignment, Quality)&quot;]
+        Iso_Forest[&quot;3. Isolation Forest&lt;br/&gt;(5D Unsupervised Outlier Filter)&quot;]
+        SHA_Check[&quot;4. SHA-256 Exact Hash&quot;]
+    end
+
+    UI_Estrange --&gt; UI_Modes --&gt; UI_Auth --&gt; API_Gate
+    API_Gate --&gt; Length_Check --&gt; Cooldown_Check
+    Cooldown_Check --&gt; Dense_Engine &amp; Sparse_Engine
+    Dense_Engine &amp; Sparse_Engine --&gt; RRF_Fusion --&gt; Cache_Gate
+    
+    Cache_Gate -- &quot;Hit (s &gt;= 0.88)&quot; --&gt; UI_Estrange
+    Cache_Gate -- &quot;Miss (s &lt; 0.88)&quot; --&gt; Code_Comp --&gt; Cache_Align --&gt; Output_Shape --&gt; Tier1
+    
+    Tier1 -- &quot;Fail / Quota 429&quot; --&gt; Tier2
+    Tier2 -- &quot;Exhausted&quot; --&gt; Tier3
+    
+    Tier1 &amp; Tier2 &amp; Tier3 --&gt; Post_Worker
+    Post_Worker --&gt; DB_Embed &amp; DB_Telemetry
+    Post_Worker --&gt; UI_Badge --&gt; UI_Estrange
+    
+    Governance_Daemon -.-&gt;|&quot;Asynchronous Closed-Loop Self-Healing&quot;| DB_Embed
+    UI_Estrange &lt;--&gt; DB_LMS
+</div>
+    </div>
+<hr />
+<h3>2.1 Prompt Engineering Engine: Scaffolding, Harnesses &amp; Headroom Compression</h3>
+<p>At the core of S-SPARC's educational paradigm is the <strong><code>PromptRegistry</code> Engine</strong> (<code>backend/core/prompts.py</code>). Unlike generic chatbot wrappers that transmit unconstrained text directly to LLMs, S-SPARC executes a multi-stage prompt compression and scaffolding pipeline:</p>
+<div class="mermaid-card" onclick="openDiagramModal(this)" title="Click to enlarge diagram">
+        <div class="diagram-header-tag">
+            <span class="diagram-number">FIGURE 4</span>
+            <span class="diagram-zoom-badge">🔍 Click to enlarge / zoom</span>
+        </div>
+        <div class="mermaid">sequenceDiagram
+    autonumber
+    actor Student as Student (Mahasiswa)
+    participant UI as E-STRANGE Chat UI (PHP)
+    participant API as FastAPI Backend (/generate-code)
+    participant PromptGov as C-I-O-E Protocol Validator
+    participant RAG as HybridSearcher (Dense + BM25)
+    participant KB as MySQL (code_embeddings)
+    participant Compress as Headroom CodeCompressor
+    participant Registry as PromptRegistry (CacheAligner)
+    participant Router as AdaptiveRouter (Tier 1/2/3)
+    participant LLM as Gemini Flash (Output Shaper)
+    participant Telemetry as Telemetry &amp; Ingestion
+
+    Student-&gt;&gt;UI: Input Structured Prompt (&gt;= 200 chars) + Select Mode
+    UI-&gt;&gt;API: POST /api/generate-code (UserID, Mode, Language, Prompt)
+    
+    API-&gt;&gt;PromptGov: Validate Length (200-2000 chars) &amp; 60s Cooldown
+    alt Invalid Input Bounds (&lt; 200 chars) or Cooldown Active
+        PromptGov--&gt;&gt;UI: Return HTTP 400/429 with C-I-O-E Protocol Guidance
+        UI--&gt;&gt;Student: Display Scaffold: Context, Input, Output &amp; Error Required
+    else Validation Succeeded
+        PromptGov-&gt;&gt;RAG: check_fast_path(prompt)
+        RAG-&gt;&gt;KB: Scan Vector Embeddings (HNSW Index)
+        KB--&gt;&gt;RAG: Return Top Candidates
+        
+        alt Fast-Path Semantic Hit (s &gt;= 0.88)
+            RAG--&gt;&gt;API: Cache Hit (Verified Solution)
+            API--&gt;&gt;UI: Return Cached Solution (0 Tokens, 0 Wh, &lt; 45ms)
+            UI--&gt;&gt;Student: Render Code + &quot;0-Token Cache Hit&quot; Badge
+        else Cache Miss (s &lt; 0.88)
+            RAG-&gt;&gt;Compress: Extract Top-3 Domain Snippets (Raw 1,800 tokens)
+            Compress-&gt;&gt;Compress: Strip docstrings, dead imports &amp; comments (380 tokens)
+            Compress-&gt;&gt;Registry: Deliver Compressed RAG Context
+            Registry-&gt;&gt;Registry: CacheAligner: Freeze deterministic prefix for KV-cache
+            Registry-&gt;&gt;Router: Dispatch Optimized Chat Harness + Output Shaper
+            Router-&gt;&gt;LLM: Multi-Tier Execution (KV-Cache Hit &gt;= 85%)
+            LLM--&gt;&gt;Router: Terse, High-Precision Generation (0 Fluff)
+            Router--&gt;&gt;API: Stream Response
+            API-&gt;&gt;Telemetry: Log Exact Tokens, Wh, kg CO2e, mL Water
+            Telemetry-&gt;&gt;KB: auto_ingest_knowledge(prompt, code)
+            API--&gt;&gt;UI: Deliver Response + Prompt Efficiency Metrics
+            UI--&gt;&gt;Student: Display Bloom's Scaffolding + Physical Telemetry
+        end
+    end
+</div>
+    </div>
+<h4>Detailed Prompt Mode Specifications &amp; Compression Harness (<code>PromptRegistry</code>)</h4>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Pedagogical Mode</th>
+<th style="text-align:left">Bloom's Level</th>
+<th style="text-align:left">Output Shaper Policy</th>
+<th style="text-align:left">Target Cognitive Outcome</th>
+<th style="text-align:left">System Prompt Formulation (<code>backend/core/prompts.py</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong><code>code</code> (Code Only)</strong></td>
+<td style="text-align:left">C3–C4 (<em>Apply &amp; Analyze</em>)</td>
+<td style="text-align:left">Maximum Terse Constraint (<code>max_output_tokens=400</code>)</td>
+<td style="text-align:left">Algorithmic Precision &amp; Clean Syntax</td>
+<td style="text-align:left">Enforces strictly runnable source code enclosed in standard markdown code fences. Completely suppresses introductory greetings, conversational commentary, and post-explanations.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>summary</code> (Summary Short)</strong></td>
+<td style="text-align:left">C1–C2 (<em>Remember &amp; Understand</em>)</td>
+<td style="text-align:left">Zero-Code Restriction (<code>max_output_tokens=200</code>)</td>
+<td style="text-align:left">Conceptual Mental Modeling</td>
+<td style="text-align:left">Delivers strictly 2–4 concise Indonesian sentences detailing core logic, time complexity, and edge cases. Prohibits raw code generation to prevent copy-pasting.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong><code>summary_code_explanation</code> (Full Scaffolding)</strong></td>
+<td style="text-align:left">C5–C6 (<em>Evaluate &amp; Create</em>)</td>
+<td style="text-align:left">Structured Triad Policy (<code>max_output_tokens=800</code>)</td>
+<td style="text-align:left">Complete Metacognitive Scaffolding</td>
+<td style="text-align:left">Structured 3-tier output: Short Summary (1–2 sentences) $\rightarrow$ Runnable Source Code Fence $\rightarrow$ Step-by-Step Logic Walkthrough.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>2.2 Multi-Tier Adaptive Routing &amp; Autonomous Governance (TRL 7)</h3>
+<p>S-SPARC operates at <strong>TRL 7</strong> through deep operational integration with the PHP 8 E-STRANGE LMS across 37 database tables.</p>
+<div class="mermaid-card" onclick="openDiagramModal(this)" title="Click to enlarge diagram">
+        <div class="diagram-header-tag">
+            <span class="diagram-number">FIGURE 5</span>
+            <span class="diagram-zoom-badge">🔍 Click to enlarge / zoom</span>
+        </div>
+        <div class="mermaid">flowchart TD
+    Start([&quot;Candidate Knowledge Base Entry e = (prompt, code)&quot;]) --&gt; S1[&quot;Stage 1: Static AST Parsing &amp; Radon Maintainability&quot;]
+    
+    S1 --&gt; S2[&quot;Stage 2: Semantic Vector Alignment Cosine Check&quot;]
+    S2 --&gt; S3[&quot;Stage 3: Multi-Criteria LLM-as-a-Judge Evaluation&quot;]
+    S3 --&gt; S4[&quot;Stage 4: Composite Quality Score Calculation&quot;]
+    S4 --&gt; S5[&quot;Stage 5: Cryptographic SHA-256 Exact Deduplication&quot;]
+    S5 --&gt; S6[&quot;Stage 6: 5D Feature Extraction &amp; Isolation Forest Screening&quot;]
+    
+    S6 --&gt; D_Dup{&quot;Duplicate Hash&lt;br/&gt;Seen in Registry?&quot;}
+    D_Dup -- &quot;Yes&quot; --&gt; Action_Dup[&quot;Classification: DUPLICATE&lt;br/&gt;(Candidate for Deletion)&quot;]
+    
+    D_Dup -- &quot;No&quot; --&gt; D_Sim{&quot;Semantic Alignment&lt;br/&gt;S_sem &lt; 0.80?&quot;}
+    D_Sim -- &quot;Yes&quot; --&gt; Action_Inv[&quot;Classification: INVALID&lt;br/&gt;(Candidate for Deletion)&quot;]
+    
+    D_Sim -- &quot;No&quot; --&gt; D_Score{&quot;Composite Score&lt;br/&gt;Score(e) &lt; 4.80?&quot;}
+    D_Score -- &quot;Yes&quot; --&gt; Action_Low[&quot;Classification: LOW_QUALITY&lt;br/&gt;(Candidate for Deletion)&quot;]
+    
+    D_Score -- &quot;No&quot; --&gt; D_Rev{&quot;Composite Score&lt;br/&gt;Score(e) &lt; 5.20?&quot;}
+    D_Rev -- &quot;Yes&quot; --&gt; Action_Rev[&quot;Classification: REVIEW_REQUIRED&lt;br/&gt;(Retain for Human Audit)&quot;]
+    
+    D_Rev -- &quot;No&quot; --&gt; Action_Val[&quot;Classification: VALID&lt;br/&gt;(Retained in Production Corpus)&quot;]
+    
+    Action_Dup &amp; Action_Inv &amp; Action_Low --&gt; Safe_Backup[&quot;Pre-Deletion JSON Serialization &amp; Backup&quot;]
+    Safe_Backup --&gt; DB_Delete[&quot;Execute Database Pruning (DELETE)&quot;]
+    
+    Action_Rev &amp; Action_Val &amp; DB_Delete --&gt; Gen_Report[&quot;Generate Audit Telemetry &amp; Statistics&quot;]
+    Gen_Report --&gt; End([&quot;Hygiene Cycle Finished&quot;])
+</div>
+    </div>
+<h4>Mathematical Formulation of Quality Governance</h4>
+<p>Every ingested snippet $e = (\text{prompt}, \text{code})$ undergoes deterministic multi-criteria scoring:</p>
+<ol>
+<li>
+<p><strong>Static AST Analysis &amp; Radon Maintainability Score ($S_{\text{static}} \in [0, 10]$)</strong>:
+$$S_{\text{static}} = \text{clamp}\left(3.0 \cdot \mathbf{1}_{\text{valid}} + 0.04 \cdot \text{MI} - 0.20 \cdot \max(1, \text{CC}) + \text{Bonus}_{\text{snippet}},\, 0,\, 10\right)$$
+where $\mathbf{1}_{\text{valid}} = 1$ if Python AST parses successfully, $\text{MI}$ is the Maintainability Index ($[0, 100]$), $\text{CC}$ is Cyclomatic Complexity, and $\text{Bonus}_{\text{snippet}} = 2.0$.</p>
+</li>
+<li>
+<p><strong>Semantic Alignment Score ($S_{\text{sem}} \in [0, 1]$)</strong>:
+$$S_{\text{sem}} = \cos\left(\text{Embed}(\text{prompt}),\, \text{Embed}(\text{code})\right)$$</p>
+</li>
+<li>
+<p><strong>Multi-Criteria LLM-as-a-Judge ($A, L, Q \in [0, 10]$)</strong>:</p>
+<ul>
+<li>$A$: Alignment between prompt intent and code functionality.</li>
+<li>$L$: Algorithmic correctness and edge-case resilience.</li>
+<li>$Q$: Code readability and style standard compliance.</li>
+</ul>
+</li>
+<li>
+<p><strong>Composite Quality Index</strong>:
+$$\text{Final Score}(e) = 0.40 \cdot A + 0.25 \cdot L + 0.20 \cdot (S_{\text{sem}} \times 10) + 0.10 \cdot Q + 0.05 \cdot S_{\text{static}}$$</p>
+</li>
+<li>
+<p><strong>Isolation Forest Anomaly Filtering</strong>:
+Vector $\mathbf{x} = [\text{lines}, \text{CC}, S_{\text{sem}}, S_{\text{static}}, S_{\text{pre}}]$ partitioned via <code>IsolationForest</code> ($\gamma = 0.10$).</p>
+</li>
+</ol>
+<hr />
+<h2>3. EMPIRICAL VALIDATION &amp; RESEARCH METHODOLOGY</h2>
+<h3>3.1 Token Optimization &amp; Context Compression Empirical Benchmark</h3>
+<p>To quantitatively validate the token savings achieved by integrating Headroom-style context compression into S-SPARC, an empirical benchmark across <strong>500 student queries</strong> was measured:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Compression Mechanism</th>
+<th style="text-align:left">Raw Token Payload</th>
+<th style="text-align:left">S-SPARC Compressed Payload</th>
+<th style="text-align:left">Measured Token Savings (%)</th>
+<th style="text-align:left">Latency Impact</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>AST CodeCompressor (RAG Top-3)</strong></td>
+<td style="text-align:left">1,820 tokens</td>
+<td style="text-align:left">386 tokens</td>
+<td style="text-align:left"><strong>78.8% Reduction</strong></td>
+<td style="text-align:left">$-420\,\text{ms}$ (Faster TTFT)</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Output Shaper (Verbosity Steering)</strong></td>
+<td style="text-align:left">480 tokens</td>
+<td style="text-align:left">175 tokens</td>
+<td style="text-align:left"><strong>63.5% Reduction</strong></td>
+<td style="text-align:left">$-680\,\text{ms}$ (Faster Generation)</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>CacheAligner (KV-Prompt Cache Hit)</strong></td>
+<td style="text-align:left">950 tokens (full cost)</td>
+<td style="text-align:left">142 tokens (billed)</td>
+<td style="text-align:left"><strong>85.0% Cost Discount</strong></td>
+<td style="text-align:left">$-750\,\text{ms}$ (Prefix Cached)</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Zero-Token Fast-Path ($s \ge 0.88$)</strong></td>
+<td style="text-align:left">2,300 tokens (full generation)</td>
+<td style="text-align:left"><strong>0 tokens</strong></td>
+<td style="text-align:left"><strong>100.0% Elimination</strong></td>
+<td style="text-align:left">$< 45\,\text{ms}$ (Atomic Local)</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>End-to-End Composite Efficiency</strong></td>
+<td style="text-align:left"><strong>3,250 tokens / query</strong></td>
+<td style="text-align:left"><strong>703 tokens / query</strong></td>
+<td style="text-align:left"><strong>78.4% Net Savings</strong></td>
+<td style="text-align:left"><strong>$3.2\times$ Overall Speedup</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>3.2 Retrieval Engine Efficacy: 200-Query Gold Standard Evaluation</h3>
+<p>To validate that S-SPARC's semantic retrieval accurately matches student prompts with verified solutions, an empirical experiment was conducted using <strong>632 queries</strong>, evaluated against a <strong>200-query Gold Standard Ground Truth</strong> (<code>qrels_manual.csv</code>) comprising <strong>4,000 manual relevance judgments</strong>:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Metric Indicator</th>
+<th style="text-align:left">$k = 1$</th>
+<th style="text-align:left">$k = 3$</th>
+<th style="text-align:left">$k = 5$</th>
+<th style="text-align:left">$k = 10$</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>Hit Rate</strong></td>
+<td style="text-align:left"><strong>100.0%</strong></td>
+<td style="text-align:left"><strong>100.0%</strong></td>
+<td style="text-align:left"><strong>100.0%</strong></td>
+<td style="text-align:left"><strong>100.0%</strong></td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Precision</strong></td>
+<td style="text-align:left"><strong>100.0%</strong></td>
+<td style="text-align:left">99.5%</td>
+<td style="text-align:left">98.7%</td>
+<td style="text-align:left">97.6%</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Recall</strong></td>
+<td style="text-align:left">6.32%</td>
+<td style="text-align:left">17.72%</td>
+<td style="text-align:left">27.87%</td>
+<td style="text-align:left">52.25%</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Mean Reciprocal Rank (MRR)</strong></td>
+<td style="text-align:left"><strong>1.000</strong></td>
+<td style="text-align:left"><strong>1.000</strong></td>
+<td style="text-align:left"><strong>1.000</strong></td>
+<td style="text-align:left"><strong>1.000</strong></td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Mean Average Precision (MAP)</strong></td>
+<td style="text-align:left">0.063</td>
+<td style="text-align:left">0.177</td>
+<td style="text-align:left">0.279</td>
+<td style="text-align:left">0.523</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Normalized DCG (nDCG)</strong></td>
+<td style="text-align:left"><strong>1.000</strong></td>
+<td style="text-align:left"><strong>1.000</strong></td>
+<td style="text-align:left"><strong>1.000</strong></td>
+<td style="text-align:left"><strong>1.000</strong></td>
+</tr>
+</tbody>
+</table>
+<div class="mermaid-card" onclick="openDiagramModal(this)" title="Click to enlarge diagram">
+        <div class="diagram-header-tag">
+            <span class="diagram-number">FIGURE 6</span>
+            <span class="diagram-zoom-badge">🔍 Click to enlarge / zoom</span>
+        </div>
+        <div class="mermaid">gantt
+    title Retrieval Metrics at k=1, 3, 5, 10
+    dateFormat X
+    axisFormat %s
+    section Hit Rate (100%)
+    k=1 to k=10 : 0, 100
+    section Precision@k
+    Precision@1 (100.0%) : 0, 100
+    Precision@3 (99.5%)  : 0, 99.5
+    Precision@5 (98.7%)  : 0, 98.7
+    Precision@10 (97.6%) : 0, 97.6
+    section nDCG (1.000)
+    Perfect nDCG@k       : 0, 100
+</div>
+    </div>
+<h4>Decision Threshold Policy Optimization (0.90 Policy)</h4>
+<p>In educational prompt retrieval, delivering an incorrect code snippet (<strong>False Positive / Type I Error</strong>) misleads students and disrupts learning. In contrast, falling back to LLM generation (<strong>False Negative / Type II Error</strong>) incurs only a minor token cost.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Threshold Policy</th>
+<th style="text-align:left">Precision</th>
+<th style="text-align:left">Recall</th>
+<th style="text-align:left">F1-Score</th>
+<th style="text-align:left">Accuracy</th>
+<th style="text-align:left">True Positive (TP)</th>
+<th style="text-align:left">False Positive (FP)</th>
+<th style="text-align:left">False Negative (FN)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>0.80</strong> (Permissive)</td>
+<td style="text-align:left">100.0%</td>
+<td style="text-align:left">100.0%</td>
+<td style="text-align:left">1.000</td>
+<td style="text-align:left">100.0%</td>
+<td style="text-align:left">200</td>
+<td style="text-align:left">0</td>
+<td style="text-align:left">0</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>0.90</strong> (Conservative Policy)</td>
+<td style="text-align:left"><strong>100.0%</strong></td>
+<td style="text-align:left"><strong>96.0%</strong></td>
+<td style="text-align:left"><strong>0.980</strong></td>
+<td style="text-align:left"><strong>96.0%</strong></td>
+<td style="text-align:left"><strong>192</strong></td>
+<td style="text-align:left"><strong>0</strong></td>
+<td style="text-align:left"><strong>8</strong></td>
+</tr>
+</tbody>
+</table>
+<p>At threshold $0.90$, S-SPARC guarantees <strong>zero false positives ($\text{FP} = 0$)</strong>, achieving an optimal balance between precision ($100\%$) and automated retrieval efficiency ($96\%$).</p>
+<hr />
+<h3>3.3 Knowledge Base Self-Healing Case Study (Run <code>20260312T094424Z</code>)</h3>
+<p>The autonomous evaluator was tested on a live production knowledge base of <strong>678 code snippets</strong> (<code>code_evaluator_service/reports/evaluation_report_20260312T094424Z.json</code>) over 18 minutes:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Metric Indicator</th>
+<th style="text-align:left">Empirical Result</th>
+<th style="text-align:left">System Health Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>Total Knowledge Base Entries Evaluated</strong></td>
+<td style="text-align:left"><strong>678 entries</strong></td>
+<td style="text-align:left">Complete Corpus Scan</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Valid Production Snippets Retained</strong></td>
+<td style="text-align:left"><strong>647 entries (95.43%)</strong></td>
+<td style="text-align:left">Clean Production Knowledge</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Snippets Flagged &amp; Pruned for Deletion</strong></td>
+<td style="text-align:left"><strong>30 entries (4.42%)</strong></td>
+<td style="text-align:left">Autonomous Sanitization</td>
+</tr>
+<tr>
+<td style="text-align:left">↳ <em>Exact Cryptographic Duplicates (SHA-256)</em></td>
+<td style="text-align:left"><em>23 entries (3.39%)</em></td>
+<td style="text-align:left">Deduplicated</td>
+</tr>
+<tr>
+<td style="text-align:left">↳ <em>Low Syntactic / Logic Quality (Score &lt; 4.80)</em></td>
+<td style="text-align:left"><em>7 entries (1.03%)</em></td>
+<td style="text-align:left">Low Quality Quarantined</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Snippets Quarantined for Manual Audit</strong></td>
+<td style="text-align:left"><strong>1 entry (0.15%)</strong></td>
+<td style="text-align:left">Human Review Queue</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Mean Semantic Similarity across Corpus</strong></td>
+<td style="text-align:left"><strong>0.8774</strong></td>
+<td style="text-align:left">High Domain Relevance</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Mean Code Quality Score (out of 10.0)</strong></td>
+<td style="text-align:left"><strong>8.61 / 10.0</strong></td>
+<td style="text-align:left">Production Grade</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Pre-Deletion Backup Verification</strong></td>
+<td style="text-align:left"><strong>100% Verified</strong></td>
+<td style="text-align:left">Zero Data Loss Guaranteed</td>
+</tr>
+</tbody>
+</table>
+<div class="mermaid-card" onclick="openDiagramModal(this)" title="Click to enlarge diagram">
+        <div class="diagram-header-tag">
+            <span class="diagram-number">FIGURE 7</span>
+            <span class="diagram-zoom-badge">🔍 Click to enlarge / zoom</span>
+        </div>
+        <div class="mermaid">pie title Knowledge Base Governance Breakdown (678 Entries)
+    &quot;Retained Valid Snippets (95.43%)&quot; : 647
+    &quot;Pruned SHA-256 Duplicates (3.39%)&quot; : 23
+    &quot;Pruned Low-Quality Snippets (1.03%)&quot; : 7
+    &quot;Quarantined for Review (0.15%)&quot; : 1
+</div>
+    </div>
+<hr />
+<h2>4. PROMPT ECONOMICS, BEHAVIORAL GAMIFICATION &amp; SUSTAINABILITY</h2>
+<h3>4.1 Peer-Relative Token Conservation Gamification</h3>
+<p>To structurally discourage prompt-spamming and reward concise, well-structured prompts, S-SPARC integrates a peer-relative dynamic threshold (<code>backend/services/gamification.py</code>):</p>
+<p>$$\text{Threshold}_{\text{tokens}} = \max\left(0,\, 1.10 \times \overline{\text{Usage}}_{\text{peers}}\right)$$</p>
+<p>$$\text{EcoPoints} = \begin{cases} 100.0 & \text{if } \text{Usage} \le \text{Threshold}_{\text{tokens}} \\ \max\left(0,\, 100.0 + 100.0 \times \frac{\text{Threshold}_{\text{tokens}} - \text{Usage}}{\text{Threshold}_{\text{tokens}}}\right) & \text{if } \text{Usage} > \text{Threshold}_{\text{tokens}} \end{cases}$$</p>
+<div class="mermaid-card" onclick="openDiagramModal(this)" title="Click to enlarge diagram">
+        <div class="diagram-header-tag">
+            <span class="diagram-number">FIGURE 8</span>
+            <span class="diagram-zoom-badge">🔍 Click to enlarge / zoom</span>
+        </div>
+        <div class="mermaid">flowchart TD
+    subgraph Gamification_Mechanism [&quot;Peer-Relative Prompt Efficiency Dynamic&quot;]
+        Peer_Avg[&quot;Calculate Cohort Mean Token Usage&quot;] --&gt; Calc_Thresh[&quot;Threshold = 1.10 × Mean Peer Usage&quot;]
+        Student_Usage[&quot;Student Query Token Usage&quot;] --&gt; Compare{&quot;Usage &lt;= Threshold?&quot;}
+        
+        Calc_Thresh --&gt; Compare
+        
+        Compare -- &quot;Yes (Concise / Specific Prompting)&quot; --&gt; Full_Pts[&quot;Award Maximum Eco-Points: 100.0 Pts&lt;br/&gt;Badge: 'High-Efficiency Prompt Engineer'&quot;]
+        Compare -- &quot;No (Prompt Spamming)&quot; --&gt; Scale_Pts[&quot;Linear Penalty Decay:&lt;br/&gt;Points = 100 × (2 - Usage / Threshold)&quot;]
+        
+        Full_Pts --&gt; Leaderboard[&quot;Update Course Leaderboard &amp; Peer Review Rank&quot;]
+        Scale_Pts --&gt; Leaderboard
+    end
+</div>
+    </div>
+<h4>Pedagogical Impact on Prompting Behavior:</h4>
+<ol>
+<li><strong>Incentivizes High-Information-Density Prompting</strong>: Students learn that writing one well-formulated prompt with explicit constraints yields higher leaderboard points than firing 10 vague prompts.</li>
+<li><strong>Rewards Fast-Path 0-Token Retrieval</strong>: Reusing cached solutions consumes zero tokens, encouraging students to study verified repository solutions.</li>
+</ol>
+<hr />
+<h3>4.2 Environmental Telemetry: Green Prompting Literacy</h3>
+<p>S-SPARC couples every prompt with physical externality feedback (<code>backend/services/sustainability.py</code>):</p>
+<div class="mermaid-card" onclick="openDiagramModal(this)" title="Click to enlarge diagram">
+        <div class="diagram-header-tag">
+            <span class="diagram-number">FIGURE 9</span>
+            <span class="diagram-zoom-badge">🔍 Click to enlarge / zoom</span>
+        </div>
+        <div class="mermaid">flowchart LR
+    Token[&quot;Prompt + Output Tokens&lt;br/&gt;(tiktoken cl100k_base)&quot;] --&gt; Energy[&quot;Energy (Wh)&lt;br/&gt;Tokens × 0.003 × PUE&quot;]
+    Energy --&gt; Carbon[&quot;Carbon (kg CO2e)&lt;br/&gt;Energy (kWh) × CIF&quot;]
+    Energy --&gt; Water[&quot;Water (mL)&lt;br/&gt;Energy (kWh) × (WUE_site + WUE_source) × 1000&quot;]
+    
+    subgraph Output_UI [&quot;Prompt Sustainability Feedback Badge&quot;]
+        Badge_E[&quot;Energy: 0.12 Wh&quot;]
+        Badge_C[&quot;Carbon: 0.046 g CO2e&quot;]
+        Badge_W[&quot;Water: 0.52 mL&quot;]
+        Analogy[&quot;Analogy: 'Equivalent to lighting a 5W LED for 1.4 min'&quot;]
+    end
+    
+    Energy --&gt; Badge_E
+    Carbon --&gt; Badge_C
+    Water --&gt; Badge_W
+    Carbon --&gt; Analogy
+</div>
+    </div>
+<p>$$\text{Energy}_{\text{Wh}} = N_{\text{tokens}} \cdot E_{\text{token}} \cdot \text{PUE} \quad \left(E_{\text{token}} = 0.003\,\text{Wh/token},\, \text{PUE} = 1.12\right)$$</p>
+<p>$$\text{Carbon}_{\text{kg}} = \left(\frac{\text{Energy}_{\text{Wh}}}{1000}\right) \cdot \text{CIF} \quad \left(\text{CIF} = 0.384\,\text{kg CO}_2\text{e/kWh}\right)$$</p>
+<p>$$\text{Water}_{\text{mL}} = \left(\frac{\text{Energy}_{\text{Wh}}}{1000}\right) \cdot \left(\text{WUE}_{\text{site}} + \text{WUE}_{\text{source}}\right) \cdot 1000 \quad \left(\text{WUE}_{\text{site}}=0.30,\,\text{WUE}_{\text{source}}=4.35\,\text{L/kWh}\right)$$</p>
+<hr />
+<h2>5. RISK ASSESSMENT, LIMITATIONS, &amp; FUTURE ROADMAP</h2>
+<h3>5.1 Honest Technical Constraints as Open Research Frontiers</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">Constraint Dimension</th>
+<th style="text-align:left">Current Implementation Reality</th>
+<th style="text-align:left">Next-Phase Research &amp; Mitigation Frontier</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>1. Multi-Language AST Granularity</strong></td>
+<td style="text-align:left">Deep AST and Radon metrics natively implemented for Python; Java, C++, and PHP utilize regex heuristics.</td>
+<td style="text-align:left">Integration of <strong>Tree-Sitter</strong> unified C-bindings for language-agnostic concrete syntax tree parsing across all languages.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>2. Embedding Cold-Start Latency</strong></td>
+<td style="text-align:left">First-time initialization of <code>all-MiniLM-L6-v2</code> takes 15–20s on CPU hosting environments.</td>
+<td style="text-align:left">Model quantization to <strong>ONNX Runtime INT8</strong> with persistent memory-mapped vector stores, reducing cold starts to $< 1.2\text{s}$.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>3. Evaluation Microservice Cloud Cost</strong></td>
+<td style="text-align:left">Full knowledge base audits using GPT-4o as judge incur token costs on large multi-thousand corpora.</td>
+<td style="text-align:left">Knowledge distillation into a lightweight <strong>7B Small Language Model (SLM)</strong> fine-tuned on code quality heuristics for offline execution.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>4. Relational Database Session Volatility</strong></td>
+<td style="text-align:left">In-memory fallback tracking resets if MySQL is ungracefully disconnected.</td>
+<td style="text-align:left">Deployment of <strong>Redis persistent caching clusters</strong> with Append-Only File (AOF) journaling for distributed state isolation.</td>
+</tr>
+</tbody>
+</table>
+<div class="mermaid-card" onclick="openDiagramModal(this)" title="Click to enlarge diagram">
+        <div class="diagram-header-tag">
+            <span class="diagram-number">FIGURE 10</span>
+            <span class="diagram-zoom-badge">🔍 Click to enlarge / zoom</span>
+        </div>
+        <div class="mermaid">flowchart LR
+    subgraph Research_Roadmap [&quot;S-SPARC Technical Constraints &amp; Research Frontiers&quot;]
+        direction TB
+        
+        C1[&quot;1. Multi-Language AST Depth&lt;br/&gt;&lt;i&gt;Current: Python AST &amp; Heuristics&lt;/i&gt;&quot;] --&gt; M1[&quot;Frontier 1: Tree-Sitter Parser&lt;br/&gt;&lt;b&gt;Polyglot Concrete Syntax Trees&lt;/b&gt;&quot;]
+        C2[&quot;2. Embedding Cold-Start&lt;br/&gt;&lt;i&gt;Current: 15-20s PyTorch CPU load&lt;/i&gt;&quot;] --&gt; M2[&quot;Frontier 2: ONNX Runtime INT8&lt;br/&gt;&lt;b&gt;Memory-Mapped Zero-Copy Embeddings&lt;/b&gt;&quot;]
+        C3[&quot;3. LLM-as-a-Judge API Cost&lt;br/&gt;&lt;i&gt;Current: Cloud GPT-4o Token Fees&lt;/i&gt;&quot;] --&gt; M3[&quot;Frontier 3: Distilled 7B Local SLM&lt;br/&gt;&lt;b&gt;On-Premises Sovereign Governance&lt;/b&gt;&quot;]
+        C4[&quot;4. Session State Volatility&lt;br/&gt;&lt;i&gt;Current: Process In-Memory Fallback&lt;/i&gt;&quot;] --&gt; M4[&quot;Frontier 4: Redis AOF Cluster&lt;br/&gt;&lt;b&gt;Distributed State Persistence&lt;/b&gt;&quot;]
+    end
+</div>
+    </div>
+<hr />
+<h3>5.2 Scaling Strategy: Democratizing AI for the Global South</h3>
+<div class="mermaid-card" onclick="openDiagramModal(this)" title="Click to enlarge diagram">
+        <div class="diagram-header-tag">
+            <span class="diagram-number">FIGURE 11</span>
+            <span class="diagram-zoom-badge">🔍 Click to enlarge / zoom</span>
+        </div>
+        <div class="mermaid">flowchart TD
+    subgraph Global_South_Deployment [&quot;Global South Scalable Deployment Topology&quot;]
+        direction TB
+        
+        subgraph Tier_A [&quot;Tier A: Connected University (Hybrid Cloud)&quot;]
+            Inst_A[&quot;Higher Ed Institution A&quot;] --&gt; FastPath_A[&quot;S-SPARC Fast-Path (s &gt;= 0.88)&quot;]
+            FastPath_A --&gt; Gemini_A[&quot;Google Gemini API (User Key Isolation)&quot;]
+        end
+        
+        subgraph Tier_B [&quot;Tier B: Bandwidth-Constrained Campus (Local Sovereign)&quot;]
+            Inst_B[&quot;Rural Polytech B&quot;] --&gt; FastPath_B[&quot;S-SPARC Fast-Path (Local Vector DB)&quot;]
+            FastPath_B --&gt; Ollama_B[&quot;Local Edge Server (Ollama Qwen2.5 14B)&quot;]
+        end
+        
+        subgraph Tier_C [&quot;Tier C: Off-Grid Community Hub (Zero-Cloud Solar Node)&quot;]
+            Inst_C[&quot;Vocational Center C&quot;] --&gt; Preloaded_KB[&quot;Static Pre-compiled S-SPARC KB&quot;]
+            Preloaded_KB --&gt; Local_Engine[&quot;Lightweight Embedded Retrieval&quot;]
+        end
+        
+        Federated[&quot;UNU Global AI Network: Federated Knowledge Sync&lt;br/&gt;(Cross-institutional exchange of validated, self-healed snippets)&quot;]
+        
+        Tier_A -.-&gt; Federated
+        Tier_B -.-&gt; Federated
+        Tier_C -.-&gt; Federated
+    end
+</div>
+    </div>
+<ol>
+<li><strong>Zero-Token Sovereign Edge Deployment</strong>: Deployable on commodity workstations via local Ollama weights and pre-seeded vector caches, providing offline prompt literacy training with zero cloud expenses.</li>
+<li><strong>Federated Knowledge Harvesting</strong>: Universities across the UNU Global AI Network can synchronize validated, self-healed prompt-code pairs via lightweight JSON diffs.</li>
+<li><strong>Open-Source Pedagogical Reference</strong>: Positioned as the open-source blueprint for responsible prompt engineering and AI literacy education in developing regions.</li>
+</ol>
+<hr />
+<h2>6. PROJECT ARTIFACTS &amp; EVIDENCE REPOSITORY</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">System Layer</th>
+<th style="text-align:left">Operational Module / File Path</th>
+<th style="text-align:left">Technical Responsibility &amp; Evidence Scope</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>Core Backend</strong></td>
+<td style="text-align:left"><code>backend/main.py</code></td>
+<td style="text-align:left">FastAPI application lifecycle, CORS policy, middleware, and OpenAPI 3.1 documentation endpoints.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Prompt Registry &amp; Compression</strong></td>
+<td style="text-align:left"><code>backend/core/prompts.py</code></td>
+<td style="text-align:left">Mode-specific prompt harnesses, Bloom's cognitive tiering, CacheAligner prefix stabilization, and AST CodeCompressor.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Prompt Bounds</strong></td>
+<td style="text-align:left"><code>backend/api/ai_chat.py</code></td>
+<td style="text-align:left">200–2000 character C-I-O-E protocol validator and 60s deliberate reflection cooldown limiter.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Adaptive Gateway</strong></td>
+<td style="text-align:left"><code>backend/services/adaptive_router.py</code></td>
+<td style="text-align:left">3-tier cascade routing (Student Key $\rightarrow$ 6-Key Pool $\rightarrow$ Local Ollama Qwen2.5 14B) with Output Shaper.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Retrieval Engine</strong></td>
+<td style="text-align:left"><code>backend/services/ai_service.py</code></td>
+<td style="text-align:left">Dense-Sparse Hybrid Search (<code>all-MiniLM-L6-v2</code> + <code>BM25Okapi</code>), RRF fusion ($k=60$), and fast-path gate ($s \ge 0.88$).</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Sustainability Engine</strong></td>
+<td style="text-align:left"><code>backend/services/sustainability.py</code></td>
+<td style="text-align:left">Real-time physical telemetry formulation ($\text{Wh}$, $\text{kg CO}_2\text{e}$, $\text{mL}$ water) with Indonesian Grid factor ($\text{CIF}=0.384$).</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Gamification Engine</strong></td>
+<td style="text-align:left"><code>backend/services/gamification.py</code></td>
+<td style="text-align:left">Peer-relative dynamic token threshold calculation ($\text{Threshold} = 1.10 \times \overline{\text{Usage}}_{\text{peers}}$).</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Data Access Layer</strong></td>
+<td style="text-align:left"><code>backend/core/db.py</code></td>
+<td style="text-align:left">MySQL connection pooling, circuit breakers, user API key isolation, and in-memory fallback queues.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Governance Pipeline</strong></td>
+<td style="text-align:left"><code>code_evaluator_service/evaluator/evaluator_pipeline.py</code></td>
+<td style="text-align:left">5-stage closed-loop quality scoring, duplicate filtering, and automated JSON pre-deletion backups.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Static Code Analysis</strong></td>
+<td style="text-align:left"><code>code_evaluator_service/evaluator/static_analysis.py</code></td>
+<td style="text-align:left">Abstract Syntax Tree (AST) validation, language detection, Radon Cyclomatic Complexity, and Maintainability Index.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Anomaly Detection</strong></td>
+<td style="text-align:left"><code>code_evaluator_service/evaluator/anomaly_detection.py</code></td>
+<td style="text-align:left">Scikit-learn Isolation Forest 5D unsupervised outlier screening model ($\gamma = 0.10$).</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>LLM-as-a-Judge</strong></td>
+<td style="text-align:left"><code>code_evaluator_service/evaluator/llm_judge.py</code></td>
+<td style="text-align:left">Multi-criteria snippet evaluation harness ($A, L, Q$) with heuristic fallback scoring.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Empirical Benchmarks</strong></td>
+<td style="text-align:left"><code>pengujian semantic similarity/EXECUTIVE_SUMMARY.md</code></td>
+<td style="text-align:left">200-query Gold Standard ground truth validation report ($\text{MRR}=1.000, \text{Precision@1}=100\%$).</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Governance Case Run</strong></td>
+<td style="text-align:left"><code>code_evaluator_service/reports/evaluation_report_20260312T094424Z.json</code></td>
+<td style="text-align:left">Live audit dataset of 678 production entries (95.43% valid retention, 30 prunings, 1 quarantine).</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>LMS Chat Client</strong></td>
+<td style="text-align:left"><code>estrange/v2/v2/ssparc/chat.php</code></td>
+<td style="text-align:left">Production PHP interface with live cooldown timer, dynamic quota counter, and 200-char validation.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Academic Integrity</strong></td>
+<td style="text-align:left"><code>estrange/v2/v2/student_assessment_submit.php</code></td>
+<td style="text-align:left">Assignment submission engine with automated AST/token plagiarism detection ($\ge 70\%$ threshold).</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Defense Adjudication</strong></td>
+<td style="text-align:left"><code>estrange/v2/v2/student_assessment_submit_suspicious.php</code></td>
+<td style="text-align:left">Structured student defense response workflow for lecturer resolution.</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>Peer Review Module</strong></td>
+<td style="text-align:left"><code>estrange/v2/v2/student_peer_review.php</code></td>
+<td style="text-align:left">Anonymized peer code evaluation and code clarity points allocation interface.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>Conclusion &amp; Multilateral Commitment</h3>
+<p>S-SPARC demonstrates that transforming the educational paradigm requires moving beyond unstructured conversational chatbots toward <strong>calibrated, specific smart prompting grounded in Bloom's Taxonomy and Headroom-style context compression</strong>. By enforcing the <strong>200-character C-I-O-E protocol</strong>, <strong>AST CodeCompressor context reduction</strong>, <strong>CacheAligner KV-cache optimization</strong>, <strong>0-token semantic caching</strong>, <strong>autonomous closed-loop governance</strong>, and <strong>physical sustainability telemetry</strong>, S-SPARC establishes a mature (TRL 7), youth-led standard for <strong>AI Literacy and Sustainable Higher Education</strong> under the auspices of the <strong>United Nations University Global AI Network</strong>.</p>
+
+
+    <!-- Interactive Diagram Lightbox Modal -->
+    <div id="diagramModal" class="diagram-modal" onclick="handleModalBackdropClick(event)">
+        <div class="diagram-modal-container" onclick="event.stopPropagation()">
+            <div class="diagram-modal-header">
+                <div class="modal-title">
+                    <span>📊</span>
+                    <span id="modalDiagramTitle">S-SPARC Architectural Diagram Inspection</span>
+                </div>
+                <div class="modal-controls">
+                    <button class="modal-btn" onclick="zoomDiagram(1.25)" title="Zoom In">🔍 Zoom In (+)</button>
+                    <button class="modal-btn" onclick="zoomDiagram(0.8)" title="Zoom Out">🔍 Zoom Out (−)</button>
+                    <button class="modal-btn" onclick="resetDiagramZoom()" title="Reset Zoom">↺ Reset (100%)</button>
+                    <button class="modal-close-btn" onclick="closeDiagramModal()" title="Close Viewer (Esc)">✕</button>
+                </div>
+            </div>
+            <div class="diagram-modal-body" id="diagramModalBody" onwheel="handleModalWheel(event)">
+                <div class="diagram-zoom-wrapper" id="diagramZoomWrapper">
+                    <!-- Cloned SVG goes here -->
+                </div>
+            </div>
+            <div class="diagram-modal-footer">
+                <span>💡 Use mouse wheel or buttons to zoom • Click & drag to pan diagram</span>
+                <span>Press <kbd>ESC</kbd> or click outside to close</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentZoom = 1;
+        let isDragging = false;
+        let startX, startY, translateX = 0, translateY = 0;
+
+        function openDiagramModal(cardElement) {
+            const svgElement = cardElement.querySelector('.mermaid svg');
+            if (!svgElement) return;
+
+            const modal = document.getElementById('diagramModal');
+            const wrapper = document.getElementById('diagramZoomWrapper');
+            const titleElement = document.getElementById('modalDiagramTitle');
+
+            // Find closest heading for context title
+            let prevHeading = cardElement.previousElementSibling;
+            while (prevHeading && !['H1', 'H2', 'H3', 'H4'].includes(prevHeading.tagName)) {
+                prevHeading = prevHeading.previousElementSibling;
+            }
+            titleElement.textContent = prevHeading ? `📊 ${prevHeading.textContent}` : '📊 S-SPARC Architectural Diagram Inspection';
+
+            // Clone SVG
+            wrapper.innerHTML = '';
+            const clonedSvg = svgElement.cloneNode(true);
+            clonedSvg.style.maxWidth = '100%';
+            clonedSvg.style.height = 'auto';
+            wrapper.appendChild(clonedSvg);
+
+            // Reset state
+            currentZoom = 1;
+            translateX = 0;
+            translateY = 0;
+            updateTransform();
+
+            // Show modal
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeDiagramModal() {
+            const modal = document.getElementById('diagramModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        function handleModalBackdropClick(event) {
+            if (event.target.id === 'diagramModal') {
+                closeDiagramModal();
+            }
+        }
+
+        function zoomDiagram(factor) {
+            currentZoom = Math.min(Math.max(0.4, currentZoom * factor), 4.0);
+            updateTransform();
+        }
+
+        function resetDiagramZoom() {
+            currentZoom = 1;
+            translateX = 0;
+            translateY = 0;
+            updateTransform();
+        }
+
+        function updateTransform() {
+            const wrapper = document.getElementById('diagramZoomWrapper');
+            if (wrapper) {
+                wrapper.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentZoom})`;
+            }
+        }
+
+        function handleModalWheel(event) {
+            event.preventDefault();
+            const delta = event.deltaY > 0 ? 0.85 : 1.18;
+            zoomDiagram(delta);
+        }
+
+        // Keyboard navigation (Escape to close)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeDiagramModal();
+            } else if (e.key === '+' || e.key === '=') {
+                zoomDiagram(1.2);
+            } else if (e.key === '-') {
+                zoomDiagram(0.8);
+            } else if (e.key === '0') {
+                resetDiagramZoom();
+            }
+        });
+
+        // Pan and Drag support
+        const modalBody = document.getElementById('diagramModalBody');
+        modalBody.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startX = e.clientX - translateX;
+            startY = e.clientY - translateY;
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            translateX = e.clientX - startX;
+            translateY = e.clientY - startY;
+            updateTransform();
+        });
+
+        window.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+    </script>
+</body>
+</html>

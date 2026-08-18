@@ -410,7 +410,7 @@ select.select2-hidden-accessible {
             
             <!-- Textarea Area -->
             <label for="chat-input" class="sr-only">Write a message</label>
-            <textarea id="chat-input" rows="3" class="w-full min-h-[5.5rem] max-h-56 resize-none overflow-y-auto bg-transparent px-3 pt-1.5 pb-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 leading-relaxed font-sans" placeholder="Tuliskan pertanyaan pemrograman, analisis error, atau paste kode tugas Anda di sini (min. 10 karakter, maks. 2000)..." required></textarea>
+            <textarea id="chat-input" rows="3" class="w-full min-h-[5.5rem] max-h-56 resize-none overflow-y-auto bg-transparent px-3 pt-1.5 pb-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 leading-relaxed font-sans" placeholder="Tuliskan pertanyaan pemrograman, analisis error, atau paste kode tugas Anda di sini (min. 200 karakter, maks. 2000)..." required></textarea>
 
             <!-- Bottom Toolbar inside Gemini Box -->
             <div class="mt-3 pt-3 px-1 border-t border-slate-100 flex items-center justify-between gap-3">
@@ -1098,11 +1098,11 @@ select.select2-hidden-accessible {
       if (e) e.preventDefault();
       const prompt = chatInput.value.trim();
       
-      if (!prompt || prompt.length < 10) {
+      if (!prompt || prompt.length < 200) {
         Swal.fire({
           icon: 'warning',
           title: 'Prompt Terlalu Pendek',
-          text: 'Harap masukkan pertanyaan pemrograman minimal 10 karakter.',
+          text: 'Harap masukkan pertanyaan pemrograman minimal 200 karakter dengan menyertakan konteks masalah, batasan input/output, atau kode/error terkait.',
           confirmButtonColor: '#00A0A5'
         });
         return;
@@ -1261,7 +1261,7 @@ select.select2-hidden-accessible {
             <ol class="list-decimal pl-4 space-y-2">
               <li><strong>Gunakan Mode Code (only):</strong> Output langsung berupa kode tanpa teks pembuka, menghemat token hingga 60%.</li>
               <li><strong>Sertakan Detail Parameter & Tipe Data:</strong> Tuliskan nama fungsi, tipe input/output, dan batas waktu eksekusi yang diharapkan.</li>
-              <li><strong>Patuhi Batas Karakter:</strong> Minimal 10 karakter dan maksimal 2000 karakter per prompt.</li>
+              <li><strong>Patuhi Batas Karakter:</strong> Minimal 200 karakter dan maksimal 2000 karakter per prompt untuk memastikan spesifikasi masalah yang terstruktur.</li>
               <li><strong>Rate Limit 1 Menit:</strong> Terdapat jeda 60 detik antar pengiriman pesan untuk menjaga kestabilan sistem dan mendorong pembelajaran mandiri.</li>
             </ol>
           </div>
