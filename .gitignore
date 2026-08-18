@@ -1,0 +1,116 @@
+# =========================
+# Python cache and binaries
+# =========================
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# =========================
+# Virtual environments
+# =========================
+venv/
+.venv/
+env/
+
+# =========================
+# Environment and secrets
+# =========================
+.env
+.env.*
+*.env
+!.env.example
+
+# =========================
+# Jupyter
+# =========================
+.ipynb_checkpoints/
+
+# =========================
+# Logs and runtime outputs
+# =========================
+*.log
+logs/
+code_evaluator_service/logs/
+code_evaluator_service/reports/
+code_evaluator_service/backup/
+
+# =========================
+# Temp/session artifacts
+# =========================
+tmp/
+sessions/
+scratch/
+.system_generated/
+
+# =========================
+# Editor and OS files
+# =========================
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+*.swo
+
+# Keep workspace settings out by default
+.vscode/
+
+# =========================
+# Frontend/package artifacts
+# =========================
+node_modules/
+**/node_modules/
+vendor/
+**/vendor/
+
+# =========================
+# Local backup and scratch data
+# =========================
+*.bak
+gpt_queue_status.json
+mbpp_clone.json
+mbpp_real.json
+rs_scrape_api.json
+run.txt
+ZZZ_OLD*.json
+
+# =========================
+# Local personal files
+# =========================
+Yehezkiel_2479011.docx
+
+# =========================
+# Large local model artifacts & dumps (>100MB)
+# =========================
+pretrained_model/
+**/models--*/
+**/*.safetensors
+**/*.bin
+**/*.spm
+*.sql
+*.zip
+!*.sql.gz
+
+# =========================
+# E-STRANGE Student Submissions & Upload Cache
+# =========================
+estrange/v2/v2/uploads/
+estrange/v2/v2/uploads_2025/
+estrange/v2/v2/internal_rep_submissions/
+estrange/v2/v2/internal_rep_submissions_2025/
+estrange/v2/v2/simreports/
+estrange/v2/v2/simreports_2025/
+estrange/v2/v2/karina/uploads/
+
+# =========================
+# VS Code temp runner files
+# =========================
+**/tempCodeRunnerFile.py
+
+# =========================
+# Generated visualization outputs
+# =========================
+pengujian semantic similarity/outputs/
+RMP/

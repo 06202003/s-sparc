@@ -1,0 +1,201 @@
+query_id,query_text,query_text_paraphrase
+0,Write a function to find the shared elements from the given two lists.,Create a function that finds the common elements between two provided lists.
+1,Write a python function to identify non-prime numbers.,Create a Python function that determines which numbers are not prime.
+2,"Write a function to find the n largest integers from a given list of numbers, returned in descending order.","Create a function that returns the n largest integers from a given list, sorted in descending order."
+3,Write a python function to check whether the two numbers differ at one bit position only or not.,Create a Python function to determine if two numbers differ by exactly one bit.
+4,Write a function to find all words which are at least 4 characters long in a string.,Create a function that extracts all words from a string that have at least 4 characters.
+5,Write a function to find squares of individual elements in a list.,Create a function that computes the square of each element in a list.
+6,Write a python function to find the minimum number of rotations (greater than 0) required to get the same string.,Create a Python function that calculates the minimum number of rotations (greater than zero) needed to obtain the same string.
+7,Write a python function to remove first and last occurrence of a given character from the string.,Create a Python function that removes the first and last occurrence of a specified character from a string.
+8,Write a function to sort a given matrix in ascending order according to the sum of its rows.,Create a function that sorts a given matrix in ascending order based on the sum of each row.
+9,Write a python function to find the volume of a triangular prism.,Create a Python function that calculates the volume of a triangular prism.
+10,Write a function to that returns true if the input string contains sequences of lowercase letters joined with an underscore and false otherwise.,"Create a function that returns true if the input string consists of sequences of lowercase letters separated by underscores, and false otherwise."
+11,Write a function that returns the perimeter of a square given its side length as input.,Create a function that returns the perimeter of a square when given its side length as input.
+12,Write a function to remove characters from the first string which are present in the second string.,Create a function that removes characters from the first string if they appear in the second string.
+13,Write a function to find whether a given array of integers contains any duplicate element.,Implement a function to check if an integer array contains any duplicates.
+14,Write a function to check if the given number is woodball or not.,Create a function that checks whether a given number is a woodball number or not.
+15,Write a python function to check if a given number is one less than twice its reverse.,Create a Python function that checks if a given number is one less than twice its reverse.
+16,Write a python function to find the largest number that can be formed with the given list of digits.,Create a Python function that finds the largest number that can be formed from a given list of digits.
+17,Write a python function to check whether the given two integers have opposite sign or not.,Write a Python function to verify if two integers have opposite signs.
+18,Write a function to find the nth octagonal number.,Create a function that calculates the nth octagonal number.
+19,Write a python function to count the number of substrings with the sum of digits equal to their length.,Create a Python function that counts how many substrings have a sum of digits equal to their length.
+20,Write a python function to find smallest number in a list.,Develop a Python function to identify the smallest number in a list.
+21,Write a function to find the maximum difference between available pairs in the given tuple list.,Write a function to calculate the maximum difference between pairs in a list of tuples.
+22,Write a function to sort a list of tuples using the second value of each tuple.,Implement a function that sorts a list of tuples based on the second element of each tuple.
+23,Write a function to flatten a list and sum all of its elements.,Implement a function that flattens a list and returns the sum of its elements.
+24,Write a python function to count the number of positive numbers in a list.,Implement a Python function that counts how many positive numbers are in a list.
+25,Write a function to find the number of ways to partition a set of Bell numbers.,Implement a function that calculates the number of ways to partition a set corresponding to Bell numbers.
+26,Write a python function to check whether the given array is monotonic or not.,Implement a Python function that determines if the provided array is monotonic.
+27,Write a function to check whether a list contains the given sublist or not.,Implement a function that determines if a list includes a specified sublist.
+28,Write a function to find whether all the given tuples have equal length or not.,Write a function that checks if all provided tuples are of the same length.
+29,Write a function to sort a list of elements.,Create a function to sort a list of elements in order.
+30,Write a python function to check whether the given number can be represented as the difference of two squares or not.,Create a function to check whether the given number can be represented as the difference of two squares or not..
+31,Write a function to check whether it follows the sequence given in the patterns array.,Create a function to check whether it follows the sequence given in the patterns array..
+32,Write a function to find tuples which have all elements divisible by k from the given list of tuples.,Implement a function to extract tuples from a list where all elements are divisible by k.
+33,Write a python function to find whether a number is divisible by 11.,Write a Python function to check if a number is divisible by 11.
+34,Write a python function to check whether the length of the word is odd or not.,Create a function to check whether the length of the word is odd or not..
+35,Write a function to find the nth tetrahedral number.,Create a function to find the nth tetrahedral number..
+36,Write a function to find the volume of a sphere.,Create a function to find the volume of a sphere..
+37,Write a python function to find the character made by adding the ASCII value of all the characters of the given string modulo 26.,"Create a Python function that sums ASCII values of a string's characters, takes modulo 26, and returns the corresponding character."
+38,Write a function to find the nth number in the newman conway sequence.,Write a function to find the nth term in the Newman-Conway sequence.
+39,Write a function to find the surface area of a sphere.,Create a function to find the surface area of a sphere..
+40,Write a function to find nth centered hexagonal number.,Create a function to find nth centered hexagonal number..
+41,Write a function to merge three dictionaries into a single dictionary.,Develop a function to merge three dictionaries into one.
+42,"Write a function to get the frequency of all the elements in a list, returned as a dictionary.",Create a function that returns a dictionary with the frequency of each element in a list.
+44,Write a python function to find the length of the longest word.,Write a Python function to find the length of the longest word in a list.
+50,Write a python function to find the number of divisors of a given integer.,Implement a Python function to count the number of divisors of an integer.
+51,"Write a function to find frequency of each element in a flattened list of lists, returned in a dictionary.","Write a function to compute the frequency of elements in a flattened list of lists, returning a dictionary."
+54,"Write a function to find the next smallest palindrome of a specified integer, returned as an integer.","Create a function to find the next smallest palindrome greater than a given integer, returning it as an integer."
+55,Write a function to find the kth element in the given array using 1-based indexing.,Write a function to retrieve the kth element from an array using 1-based indexing.
+57,"Write a function to find the Eulerian number a(n, m).","Implement a function to compute the Eulerian number a(n, m)."
+63,Write a function to find the common elements in given nested lists.,Write a function to find common elements across multiple nested lists.
+64,Write a function to check if a string represents an integer or not.,Create a function to check if a string can be interpreted as an integer.
+65,Write a function to check whether all dictionaries in a list are empty or not.,Create a function to verify if every dictionary in a list is empty.
+74,Write a python function to find the sum of common divisors of two given numbers.,Implement a Python function to calculate the sum of common divisors of two numbers.
+75,Write a function to multiply two integers.,Define a function that multiplies two integers.
+76,Write a function to find words that are longer than n characters from a given list of words.,Write a function to extract words longer than n characters from a list.
+78,Write a function to find the item with maximum frequency in a given list.,Create a function to identify the most frequent item in a list.
+82,Write a function to find the nth hexagonal number.,Implement a function to compute the nth hexagonal number.
+83,Write a function to find the ratio of zeroes to non-zeroes in an array of integers.,Write a function to calculate the ratio of zeros to non-zero integers in an array.
+88,Write a python function to check whether all the bits are unset in the given range or not.,Define a Python function to check if all bits are unset within a specified range.
+93,Write a python function to find the maximum difference between any two elements in a given array.,Create a Python function to find the largest difference between any two elements in an array.
+94,"Write a function that returns integers x and y that satisfy ax + by = n as a tuple, or return None if no solution exists.","Write a function returning integers x and y as a tuple satisfying ax + by = n, or None if no solution exists."
+95,Write a function to remove all elements from a given list present in another list.,Implement a function to remove all elements from one list that appear in another list.
+98,Write a function to determine if the sum of the divisors of two integers are the same.,Write a function to check if two integers have equal sums of their divisors.
+100,Write a function that counts the number of pairs of integers in a list that xor to an even number.,Create a function that counts pairs of integers in a list whose XOR results in an even number.
+102,Write a function to find the sum of numbers in a list within a range specified by two indices.,Define a function to sum elements in a list between two given indices.
+105,Write a function to check if all the elements in tuple have same data type or not.,Write a function to determine if all elements in a tuple share the same data type.
+106,"Write a function that takes in a sorted array, its length (n), and an element and returns whether the element is the majority element in the given sorted array. (The majority element is the element that occurs more than n/2 times.)","Implement a function that, given a sorted array, its length n, and an element, checks if the element occurs more than n/2 times."
+115,Write a function to find the lateral surface area of a cube given its side length.,Create a function to calculate the lateral surface area of a cube from its side length.
+123,Write a function that takes in the radius and height of a cylinder and returns the the volume.,Write a function that returns the volume of a cylinder given its radius and height.
+126,Write a function to find the nth decagonal number.,Define a function to find the nth decagonal number.
+130,Write a python function takes in an integer and check whether the frequency of each digit in the integer is less than or equal to the digit itself.,Implement a Python function that checks if each digit's frequency in an integer is less than or equal to the digit itself.
+135,Write a function to find the list of maximum length in a list of lists.,Create a function that returns the longest list within a list of lists.
+148,"Write a function to find the maximum sum of increasing subsequence from prefix until ith index and also including a given kth element which is after i, i.e., k > i .","Create a function to find the maximum sum of an increasing subsequence from the start up to index i, including a specified element at index k where k > i."
+150,"Write a function to find the specified number of largest products from two given lists, selecting one factor from each list.",Create a function to find the top specified number of largest products formed by pairing one element from each of two lists.
+152,Write a function to convert a given string to a tuple of characters.,Create a function to transform a string into a tuple of its characters.
+159,Write a function to convert more than one list to nested dictionary.,Create a function to convert multiple lists into a nested dictionary structure.
+162,Write a python function to find the first non-repeated character in a given string.,Create a Python function to identify the first character in a string that does not repeat.
+164,Write a function to find the median of three numbers.,Create a function to determine the median value among three numbers.
+168,Write a function to perform index wise addition of tuple elements in the given two nested tuples.,Create a function to add corresponding elements of two nested tuples index-wise.
+172,Write a function to create the next bigger number by rearranging the digits of a given number.,Create a function to generate the next greater number by rearranging the digits of a given number.
+176,Write a function to convert the given snake case string to camel case string.,Create a function to convert a snake_case string into camelCase format.
+181,Write a function to find common first element in given list of tuple.,Create a function to find the common first element among a list of tuples.
+184,Write a python function to find the cube sum of first n even natural numbers.,Create a Python function to calculate the sum of cubes of the first n even natural numbers.
+185,Write a function to concatenate each element of tuple by the delimiter.,Create a function to join each tuple element into a string separated by a delimiter.
+187,Write a function to extract only the rear index element of each string in the given tuple.,Create a function to extract the last character from each string in a given tuple.
+189,Write a function to filter odd numbers.,Create a function to filter out odd numbers from a collection.
+191,Write a function to sort the given array by using shell sort.,Create a function to sort an array using the shell sort algorithm.
+192,Write a function to extract the elementwise and tuples from the given two tuples.,Create a function to extract element-wise tuples from two given tuples.
+198,Write a python function to find the last digit of a given number.,Create a Python function to find the last digit of a given number.
+200,Write a function to remove odd characters in a string.,Create a function to remove characters at odd indices from a string.
+203,Write a function to find the first adverb and their positions in a given sentence.,Create a function to locate the first adverb and its position in a given sentence.
+204,Write a function to find the surface area of a cube of a given size.,Create a function to calculate the surface area of a cube given its side length.
+208,Write a function to perform index wise multiplication of tuple elements in the given two tuples.,Create a function that multiplies elements at corresponding positions from two tuples.
+213,Write a function to remove all whitespaces from the given string.,Create a function to eliminate all whitespace characters from a string.
+215,Write a python function to find the sum of even factors of a number.,Create a Python function to sum all even factors of a given number.
+224,Write a function to find all possible combinations of the elements of a given list.,Create a function to generate every possible combination of elements from a list.
+226,Write a function to check whether the given dictionary is empty,Create a function to determine if a given dictionary contains no items.
+227,Write a function to drop empty items from a given dictionary.,Create a function to remove all empty entries from a dictionary.
+230,Write a python function to find the product of the array multiplication modulo n.,Create a Python function to compute the product of array elements modulo n.
+233,Write a function to replace characters in a string.,Create a function to substitute specified characters within a string.
+235,Write a python function to find the sum of the largest and smallest value in a given array.,Create a Python function to sum the smallest and largest values in an array.
+236,Write a python function to convert the given string to lower case.,Create a Python function to convert a string entirely to lowercase.
+241,Write a python function to count the number of pairs whose xor value is odd.,Create a Python function to count pairs whose XOR result is an odd number.
+242,Write a function to toggle the case of all characters in a string.,Create a function to invert the case of each character in a string.
+243,Write a python function to find the sum of the per-digit difference between two integers.,Create a Python function to sum the absolute differences of each digit between two integers.
+249,Write a python function to split a string into characters.,Create a Python function to split a string into its individual characters.
+250,Write a function to get the sum of the digits of a non-negative integer.,Create a function to compute the sum of digits of a non-negative integer.
+251,Write a function to check whether a specified list is sorted or not.,Create a function to verify if a given list is sorted in order.
+254,Write a python function to remove duplicate numbers from a given number of lists.,Create a Python function to remove duplicate numbers from multiple lists.
+255,Write a python function to calculate the product of the unique numbers in a given list.,Create a Python function to calculate the product of unique numbers in a list.
+258,Write a python function to find the last digit in factorial of a given number.,Create a Python function to find the last digit of the factorial of a number.
+261,Write a function to remove uneven elements in the nested mixed tuple.,Create a function that removes all odd elements from a nested mixed tuple.
+267,Write a python function to split a list at the nth eelment and add the first part to the end.,Write a Python function that splits a list at the nth element and appends the first segment to the end.
+275,Write a function to find the difference of the first even and first odd number of a given list.,Write a function to compute the difference between the first even and first odd numbers in a list.
+276,Write a python function to count minimum number of swaps required to convert one binary number represented as a string to another.,Implement a Python function to find the minimum swaps needed to transform one binary string into another.
+280,Write a function to find sum and average of first n natural numbers.,Write a function to calculate the sum and average of the first n natural numbers.
+284,Write a function to reverse words seperated by spaces in a given string.,Create a function that reverses the order of words separated by spaces in a given string.
+288,Write a python function to find nth bell number.,Write a Python function to compute the nth Bell number.
+294,Create a function that returns the elements found in both of the provided lists.,Create a function that returns the common elements between two given lists.
+298,Write a function that extracts all words with a minimum length of four characters from a string.,Write a function to extract all words with at least four characters from a string.
+302,Implement a function that sorts a matrix by the sum of each row in ascending order.,Implement a function that sorts a matrix by ascending row sums.
+305,Create a function to compute the perimeter of a square from its side length.,Create a function to calculate the perimeter of a square given its side length.
+306,Develop a function that deletes all characters from the first string that also appear in the second string.,Write a function that removes all characters from the first string that appear in the second string.
+311,Create a Python function to verify if two integers have different signs.,Create a Python function to check if two integers have opposite signs.
+312,Implement a function that calculates the nth octagonal number.,Implement a function to calculate the nth octagonal number.
+315,Create a function that returns the largest difference among pairs in a list of tuples.,Write a function that finds the maximum difference between pairs in a list of tuples.
+316,Implement a function to sort tuples in a list based on their second element.,Create a function to sort a list of tuples based on their second elements.
+318,Develop a Python function to count how many numbers in a list are positive.,Develop a Python function to count the number of positive numbers in a list.
+320,Develop a Python function to determine if an array is monotonic (entirely non-increasing or non-decreasing).,Write a Python function to determine if an array is monotonic (entirely non-increasing or non-decreasing).
+322,Develop a function to check if all tuples in a list have the same length.,Develop a function to check whether all tuples in a list share the same length.
+325,Develop a function to verify if a list matches the sequence pattern provided.,Create a function to verify if a list follows a given sequence pattern.
+326,Create a function that returns tuples from a list where every element is divisible by a given number k.,Write a function that returns tuples from a list where each element is divisible by a specified number k.
+327,Develop a Python function to check if a number can be divided by 11 without remainder.,Implement a Python function to verify if a number is divisible by 11 without any remainder.
+328,Create a Python function to determine if the length of a word is an odd number.,Write a Python function to check whether the length of a word is odd.
+332,Create a function to compute the nth value in the Newman-Conway sequence.,Create a function to calculate the nth term in the Newman-Conway sequence.
+335,Develop a function that combines three dictionaries into one.,Implement a function that merges three dictionaries into a single one.
+336,Create a function that counts how often each element appears in a list and returns the result as a dictionary.,Write a function that counts the frequency of each element in a list and returns a dictionary with these counts.
+338,Create a Python function to determine the maximum word length in a list.,Create a Python function to find the longest word length in a list of words.
+339,Develop a function to check if any string in a list contains a given substring.,Implement a function to determine if any string in a list contains a specified substring.
+342,Create a function that finds the first element from the tuple with the lowest second value in a list.,Write a function that returns the first tuple with the smallest second element from a list of tuples.
+343,Develop a Python function to return the length of the shortest list among a list of lists.,Create a Python function that returns the length of the shortest list within a list of lists.
+348,Create a function that returns the next palindrome greater than a given integer.,Write a function that finds the next palindrome number greater than a given integer.
+352,Create a function that sorts every sublist of strings within a list of lists.,Implement a function that sorts each sublist of strings within a list of lists.
+356,Create a Python function that counts the number of ones in the first n positions of a binary string.,Create a Python function to count how many ones appear in the first n characters of a binary string.
+357,Develop a function that returns the elements shared by all nested lists.,Write a function that returns the elements common to all nested lists.
+359,Develop a function that checks if every dictionary in a list is empty.,Implement a function to check if every dictionary in a list is empty.
+361,Develop a function that converts all convertible elements in a list of lists to float type.,Create a function that converts all elements that can be converted to float within a list of lists.
+362,Create a function that splits a string into a list of words using spaces as separators.,Write a function that splits a string into words using spaces as delimiters.
+363,Develop a Python function to identify the unique element in a sorted array where all others are duplicated.,Implement a Python function to find the unique element in a sorted array where all other elements appear twice.
+364,Create a function that finds the largest absolute product among all pairs in a list of tuples.,Create a function that identifies the pair of elements in a list of tuples with the largest absolute product.
+367,Develop a function that finds the largest difference between the count of zeros and ones in any substring of a binary string.,Write a function to find the maximum difference between the count of zeros and ones in any substring of a binary string.
+370,Create a function that returns all words longer than n characters from a string.,Write a function that extracts all words from a string longer than n characters.
+375,Develop a function that sums all negative numbers in a list.,Implement a function that calculates the sum of all negative values in a list.
+376,Create a function that computes the nth hexagonal number.,Write a function to compute the nth hexagonal number.
+378,Create a Python function to determine if a number can be written as a sum of non-zero powers of two.,Create a Python function to verify if a number can be expressed as a sum of non-zero powers of two.
+379,Create a function that returns the circumference of a circle given its radius.,Write a function that returns the circumference of a circle given its radius.
+382,Create a Python function to determine if a number has all bits set to zero within a specified range.,Develop a Python function to check if all bits in a given range of a number are zero.
+388,"Create a function that finds integers x and y such that ax plus by equals n, or returns None if not possible.","Create a function to find integers x and y satisfying ax + by = n, or return None if no solution exists."
+389,Develop a function that removes every element from one list that also appears in a second list.,Implement a function that removes from one list all elements found in another list.
+393,Develop a function that counts characters whose position in a string matches their position in the alphabet.,Write a function that counts characters in a string whose positions match their alphabetical order.
+394,Create a function that counts all pairs in a list whose XOR result is even.,Create a function that counts pairs in a list whose XOR is an even number.
+400,Create a function to check if a given element is the majority in a sorted array (appears more than n/2 times).,Write a function to determine if an element is the majority in a sorted array (appears more than half the time).
+402,Create a Python function that removes all characters at odd indices from a string.,Create a Python function that deletes all characters at odd indices from a string.
+414,Create a Python function that calculates the sum of the fifth powers of the first n even natural numbers.,Implement a Python function that sums the fifth powers of the first n even natural numbers.
+420,Implement a function that returns the nth decagonal number.,Write a function that returns the nth decagonal number.
+421,"Create a function that checks whether an element exists in an array and returns (found, index) where index is -1 if not found.","Create a function that checks if an element exists in an array and returns (found, index), with index -1 if absent."
+422,Develop a Python function that determines whether all elements in a list are unique.,Develop a Python function to verify if all elements in a list are unique.
+423,Create a function that performs element-wise subtraction between two lists.,Write a function that subtracts elements of one list from another element-wise.
+424,Develop a function that checks if the frequency of each digit in an integer n does not exceed the value of the digit.,Implement a function to check if each digit's frequency in an integer n does not exceed the digit's own value.
+425,Create a function that checks if all elements in a list are the same as the given element.,Create a function to verify if all elements in a list are identical to a specified element.
+427,Create a function that finds the maximum sum of a contiguous subarray in an array formed by repeating the original array k times.,Write a function that finds the maximum sum of a contiguous subarray in an array repeated k times.
+428,Develop a function that calculates the sum of squares of the first n even natural numbers.,Write a function to compute the sum of squares of the first n even natural numbers.
+429,Create a function that identifies the longest sublist from a collection of nested lists.,Write a function to find the longest sublist within a list of nested lists.
+430,Implement a function to calculate how many ways we can paint n fence posts using k colors where no more than 2 consecutive posts can be the same color.,"Implement a function to count the ways to paint n fence posts with k colors, ensuring no more than two consecutive posts share the same color."
+433,Write a function to determine the highest integer value in a mixed list of data types.,Write a function to find the largest integer in a list containing mixed data types.
+434,Create a function that calculates the total sum of all divisors of a given number.,Write a function that sums all divisors of a given number.
+436,Create a function that flattens a nested list into a single list with all the values.,Write a function to convert a nested list into a flat list containing all elements.
+437,Determine the highest total score from a list of student score tuples.,Write a function to find the highest total score from a list of student score tuples.
+441,Find and return two words from a list that both start with the letter 'p'.,Write a function to find and return two words from a list that both begin with 'p'.
+443,"Create a function that adds a specified element to a specific position in a tuple, returning the modified tuple.",Write a function that inserts a given element at a specified position in a tuple and returns the new tuple.
+450,Create a function to determine the maximum power of two that does not exceed the input number n.,Write a function to find the greatest power of two less than or equal to a given number n.
+451,Create a function that calculates and returns the lucas number at position n in the sequence.,Write a function to compute the Lucas number at position n.
+454,"Create a function that calculates the highest possible sum using the formula f(n) = max( (f(n/2) + f(n/3) + f(n/4) + f(n/5)), n).","Write a function that returns the maximum of n and the sum of f(n/2), f(n/3), f(n/4), and f(n/5) for a given n."
+459,Create a function that calculates the sum of digits for every number in a list.,Write a function to compute the sum of digits for each number in a list.
+463,Create a function that identifies the smaller of two given numbers.,Write a function to return the smaller of two numbers.
+464,Create a function that verifies the existence of an element in a tuple.,Write a function to check if an element exists within a tuple.
+466,Create a function that generates the next larger number by permuting the digits of the current number.,Write a function to generate the next larger number by rearranging the digits of a given number.
+473,Create a function that checks for the existence of any value from one sequence in another sequence.,Write a function to check if any element from one sequence appears in another sequence.
+475,Create a function that identifies the shared first element in a list of tuples.,Write a function to find the common first element among a list of tuples.
+476,Create a function that identifies the element with the greatest length in a list.,Write a function to find the longest element in a list based on length.
+477,"Create a function that rounds each number in a list, then returns the total sum multiplied by the list's length.","Write a function that rounds each number in a list, sums them, and multiplies the sum by the list's length."
+479,Create a function that concatenates the elements of a tuple using a specified delimiter.,Write a function that joins tuple elements into a string using a given delimiter.
+482,Create a function that tallies the number of sublists that include a specific element.,Write a function that counts how many sublists contain a particular element.
+485,Create a function that arranges an array using the shell sort algorithm.,Write a function that sorts an array using the shell sort technique.
+486,Create a function that retrieves the element-wise AND results of two tuples.,Write a function that returns a tuple of element-wise AND results from two tuples.
+493,Create a function that filters and returns negative numbers from a list.,Write a function that extracts all negative numbers from a list.
+496,Create a function that concatenates multiple integers from a list into one single integer.,Write a function that merges multiple integers from a list into a single integer.
+498,Create a function that calculates the surface area of a cube based on its size.,Write a function that computes the surface area of a cube from its side length.
+500,Create a function that identifies the largest negative number in a list.,Write a function that finds the largest negative number in a list.
+504,Create a function that computes the cube of each element in a list.,Write a function that cubes every element in a list.

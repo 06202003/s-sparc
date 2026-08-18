@@ -1,0 +1,1004 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "S-SPARC AI & E-STRANGE Platform - API Reference",
+    "version": "3.0.0",
+    "summary": "Sustainable Smart Personal Assistant for Responsible Consumption & Code Evaluation Microservice",
+    "description": "# S-SPARC AI & E-STRANGE Platform Documentation\n\nWelcome to the official developer documentation and API reference for **S-SPARC (Sustainable Smart Personal Assistant for Responsible Consumption)** integrated with the **E-STRANGE Learning Management Platform**.\n\n---\n\n## System Architecture Overview\n\nS-SPARC is engineered around 4 core operational tiers designed for high-concurrency academic software engineering tutoring:\n\n1. **E-STRANGE Parent LMS (PHP Platform)**:\n   - Handles student course enrollment, assignment submissions, automated similarity analysis (`suspicion`), peer reviews (`code_clarity_suggestion`), gamification leaderboards, and grade tracking.\n2. **S-SPARC AI Frontend (PHP/JS Client)**:\n   - Interactive eco-aware coding workspace featuring token usage gauges, real-time AI responses, and environmental footprint visualizers.\n3. **S-SPARC FastAPI Backend (Python Core)**:\n   - Core API layer delivering user session auth, semantic search cache (0 Token FREE tier), **Adaptive Router** (Gemini Flash Lite 6-Key Pool + Ollama Qwen2.5-Coder 14B), and environmental footprint telemetry (Wh, kg CO2e, mL H2O).\n4. **Code Evaluator Microservice (Quality Control Engine)**:\n   - Snippet-aware governance service utilizing LLM-as-a-Judge, static code analysis (Radon/AST), cosine similarity filtering, and Isolation Forest anomaly detection.\n\n---\n\n## Hybrid LLM Adaptive Router Rules\n\nThe updated **Adaptive Router** intelligently routes student inference requests based on course game policy and Gemini key availability:\n\n* **Game ON Courses (`game_course.is_active = 1`)**:\n  - Governed by E-STRANGE Gamification Points (>= 100 pts required).\n  - If points >= 100: Routed to **Cloud (Google Gemini Flash Lite)**. Deducts 10 points per successful request.\n  - If points < 100: Routed to **Local (Ollama Qwen2.5-Coder 14B)**. Zero points deducted.\n* **Game OFF Courses (`game_course.is_active = 0`)**:\n  - Governed by Token Quota Limit (`GAME_OFF_TOKEN_LIMIT=5000` tokens). Gamification points are NOT deducted (0 pts).\n  - If tokens < 5000: Routed to **Cloud (Google Gemini Flash Lite)**.\n  - If tokens >= 5000: Routed to **Local (Ollama Qwen2.5-Coder 14B)**.\n* **Technical Failover (Rate Limit 429)**:\n  - If all 6 Gemini API Keys in the key pool (`GEMINI_API_KEY_1..6`) experience rate limits, request automatically fails over to **Local Ollama** (`fallback_triggered = True`) without deducting points.\n\n---\n\n## Complete System Flow Diagrams (11 Workflows & Visual Diagrams)\n\n# Dokumentasi Lengkap Diagram Alir Alur Proses Sistem E-STRANGE & S-SPARC (Terperbarui)\n\nDokumen ini berisi dokumentasi visual alur proses (flowchart & sequence diagram) menyeluruh yang terjadi pada sistem **E-STRANGE** (PHP E-Learning & Assessment Framework) dan **S-SPARC** (FastAPI AI Assistant Backend) setelah pembaruan arsitektur **Hybrid LLM** (Gemini Flash Lite 6-Key Pool, Ollama Qwen2.5-Coder 14B, & Adaptive Router).\n\n---\n\n## Daftar Diagram Alir:\n\n### BAGIAN A: Alur Proses Utama Sistem E-STRANGE (PHP Web Framework)\n1. **Diagram 1: E-STRANGE Student Code Submission & Automated Similarity Check Engine**\n2. **Diagram 2: E-STRANGE Peer Review Workflow & Review Rating Sequence Diagram**\n3. **Diagram 3: E-STRANGE Plagiarism Suspicion Detection & Student Defense Response Flowchart**\n4. **Diagram 4: E-STRANGE Course Administration & Gamification Activation Flowchart (`game_course.is_active`)**\n5. **Diagram 5: E-STRANGE Gamification Leaderboard & Point Aggregation Pipeline**\n\n### BAGIAN B: Alur Proses Utama Sistem S-SPARC AI (FastAPI Python Backend)\n6. **Diagram 6: Arsitektur Umum & Alur Data Lintas Sistem (E-STRANGE <-> S-SPARC)**\n7. **Diagram 7: Alur Keputusan Adaptive Router (Semantic Cache, Game ON/OFF, & Failover)**\n8. **Diagram 8: Alur Rotasi Key & Rate Limit Failover Multi-Provider Gemini Gateway (6 API Keys)**\n9. **Diagram 9: Sequence Diagram Agregasi Poin Gamification E-STRANGE & Pemotongan Poin**\n10. **Diagram 10: Siklus Hidup Knowledge Base (Self-Growing Auto-Ingestion & Evaluator Service)**\n11. **Diagram 11: Pipeline Pelacakan Jejak Lingkungan & Keberlanjutan (Eco-Aware Footprint)**\n\n---\n\n# BAGIAN A: ALUR PROSES UTAMA SISTEM E-STRANGE (PHP)\n\n## 1. Diagram 1: E-STRANGE Student Code Submission & Automated Similarity Check Engine\n\nDiagram ini memperlihatkan alur pengiriman tugas koding oleh mahasiswa pada sistem E-STRANGE, analisis kemiripan kode (plagiarism/similarity check), serta ekstraksi nilai Originalitas (`originality_point`) dan Efisiensi (`efficiency_point`).\n\n<div align=\"center\" style=\"margin: 20px 0;\">\n  <img src=\"images/diagram_1.png\" alt=\"Diagram 1\" style=\"max-width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\" />\n</div>\n\n```mermaid\nflowchart TD\n Start([\"Mahasiswa Buka student_assessment_submit.php\"]) --> SelectAssessment[\"Pilih Matakuliah & Assessment Tugas\"]\n SelectAssessment --> UploadCode[\"Upload Source Code (Python/C++/Java)\"]\n UploadCode --> FormValidate{\"Validasi Format File & Ekstensi?\"}\n \n FormValidate -- \"TIDAK Valid\" --> ShowError[\"Tampilkan Pesan Error Validasi\"]\n ShowError --> UploadCode\n \n FormValidate -- \"YA Valid\" --> SaveSubmission[\"Simpan File ke Server Directory & Insert Record ke Table submission\"]\n SaveSubmission --> SimEngine[\"Jalankan Engine Analisis Kemiripan Kode (SIM / Token Matcher)\"]\n \n SimEngine --> QueryPrevious[\"Fetch Seluruh Submission Sebelumnya di Assessment yang Sama\"]\n QueryPrevious --> CompareSim[\"Hitung persentase Kemiripan (Similarity Rate %) & Skoring Efisiensi (AST Complexity)\"]\n \n CompareSim --> CalcPoints[\"Hitung Originality Point & Efficiency Point\"]\n CalcPoints --> SaveSuspicion[\"Insert Record ke Tabel suspicion (originality_point, efficiency_point, suspicion_type)\"]\n \n SaveSuspicion --> CheckSuspicionLimit{\"Similarity Rate >= 70% (Rose Badge / High Suspicion)?\"}\n \n CheckSuspicionLimit -- \"YA (Terindikasi Plagiarisme)\" --> FlagSuspicious[\"Set Status Flag Plagiarisme & Kirim Notifikasi Email ke Mahasiswa/Dosen\"]\n CheckSuspicionLimit -- \"TIDAK (Normal)\" --> CompleteSub[\"Status Submission Normal / Sukses\"]\n \n FlagSuspicious --> End([\"Selesai\"])\n CompleteSub --> End\n```\n\n---\n\n## 2. Diagram 2: E-STRANGE Peer Review Workflow & Review Rating Sequence Diagram\n\nDiagram ini menggambarkan alur penilaian antar sejawat (Peer Review) di mana mahasiswa saling memeriksa kode rekan sejawat dan memberikan penilaian kejelasan kode (`quality_point`).\n\n<div align=\"center\" style=\"margin: 20px 0;\">\n  <img src=\"images/diagram_2.png\" alt=\"Diagram 2\" style=\"max-width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\" />\n</div>\n\n```mermaid\nsequenceDiagram\n autonumber\n actor Lecturer as Lecturer / Admin\n actor StudentA as Student Reviewer\n actor StudentB as Student Author\n participant PHP as E-STRANGE PHP (student_peer_review.php)\n participant DB as Shared MySQL DB\n\n Lecturer->>PHP: lecturer_peer_review_add.php (Set Jadwal Peer Review & Distribusi Tugas)\n PHP->>DB: INSERT INTO peer_review & Assign Review Pairs\n DB-->>PHP: OK\n \n StudentA->>PHP: Access student_peer_review.php (Lihat Kode Rekan StudentB)\n PHP->>DB: SELECT submission, code FROM submission WHERE submitter_id = StudentB\n DB-->>PHP: Return Source Code StudentB\n PHP-->>StudentA: Display Source Code & Form Penilaian Peer Review\n \n StudentA->>PHP: Input Scoring, Clarity Feedback, & Quality Points (code_clarity_suggestion)\n PHP->>DB: INSERT INTO code_clarity_suggestion (submission_id, quality_point, explanation_info)\n DB-->>PHP: Record Saved\n \n PHP->>DB: UPDATE peer_review SET status = 'completed'\n PHP-->>StudentA: Peer Review Berhasil Disimpan\n \n StudentB->>PHP: Access student_dashboard.php / peer review summary\n PHP->>DB: SELECT quality_point FROM code_clarity_suggestion\n DB-->>StudentB: Tampilkan Nilai Quality Point & Feedback Rekan\n```\n\n---\n\n## 3. Diagram 3: E-STRANGE Plagiarism Suspicion Detection & Student Defense Response Flowchart\n\nDiagram ini memperlihatkan prosedur penanganan ketika mahasiswa terdeteksi memiliki kemiripan kode tinggi (Suspicion Report), lalu mahasiswa mengajukan klarafikasi/pembelaan (defense response).\n\n<div align=\"center\" style=\"margin: 20px 0;\">\n  <img src=\"images/diagram_3.png\" alt=\"Diagram 3\" style=\"max-width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\" />\n</div>\n\n```mermaid\nflowchart TD\n Start([\"Sistem Mendeteksi High Suspicion Rate (>= 70%)\"]) --> CreateNotif[\"Buat Notifikasi & Trigger Email via _suspicion_email.php\"]\n CreateNotif --> StudentLogin[\"Mahasiswa Login & Akses user_suspicion_report.php\"]\n \n StudentLogin --> ViewReport[\"Mahasiswa Memeriksa Laporan Kemiripan & Snippet Kode yang Berdampingan\"]\n ViewReport --> DecideResponse{\"Mahasiswa Mengajukan Klarifikasi / Pembelaan?\"}\n \n DecideResponse -- \"YA (Submit Defense)\" --> FillReason[\"Isi Form student_response (Penjelasan Logika Kode & Bukti Karya)\"]\n FillReason --> SubmitDefense[\"Submit Form ke student_assessment_submit_suspicious.php\"]\n SubmitDefense --> UpdateDB[\"UPDATE suspicion SET student_response = :reason\"]\n UpdateDB --> NotifLecturer[\"Kirim Notifikasi Pembelaan ke Dosen Pengampu (lecturer_submission.php)\"]\n NotifLecturer --> LecturerReview[\"Dosen Meninjau Pembelaan & Kode\"]\n \n LecturerReview --> LecturerDecision{\"Dosen Menerima Pembelaan?\"}\n LecturerDecision -- \"YA (Diterima)\" --> AcceptReason[\"Update Suspicion Type = 'resolved_accepted' & Pertahankan Poin\"]\n LecturerDecision -- \"TIDAK (Ditolak)\" --> RejectReason[\"Update Suspicion Type = 'confirmed_plagiarism' & Penalti Poin\"]\n \n DecideResponse -- \"TIDAK (Abaikan)\" --> TimeoutPeriod[\"Batas Waktu Klarifikasi Habis -> Auto-Confirm Plagiarism\"]\n \n AcceptReason --> End([\"Selesai\"])\n RejectReason --> End\n TimeoutPeriod --> End\n```\n\n---\n\n## 4. Diagram 4: E-STRANGE Course Administration & Gamification Activation Flowchart (`game_course.is_active`)\n\nDiagram ini memperlihatkan alur kerja Admin/Dosen dalam membuat mata kuliah, menambah assessment, serta mengaktifkan atau mematikan fitur gamifikasi (`game_course.is_active = 1` atau `0`).\n\n<div align=\"center\" style=\"margin: 20px 0;\">\n  <img src=\"images/diagram_4.png\" alt=\"Diagram 4\" style=\"max-width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\" />\n</div>\n\n```mermaid\nflowchart TD\n Start([\"Dosen / Admin Login (admin_course.php / lecturer_course_add.php)\"]) --> ActionType{\"Pilih Tindakan Management\"}\n \n ActionType -- \"Tambah / Update Course\" --> InputCourse[\"Input Nama Matakuliah, Kode, & Deskripsi\"]\n InputCourse --> SaveCourse[\"INSERT / UPDATE table course\"]\n \n SaveCourse --> ToggleGame{\"Aktifkan Fitur Game Gamifikasi Matakuliah?\"}\n \n ToggleGame -- \"YA (Enable Game)\" --> SetGameActive[\"INSERT / UPDATE game_course SET is_active = 1, prize_text = :prize\"]\n ToggleGame -- \"TIDAK (Disable Game)\" --> SetGameInactive[\"INSERT / UPDATE game_course SET is_active = 0\"]\n \n ActionType -- \"Tambah Assessment\" --> InputAssessment[\"Input Nama Assessment, Deadline, & Target Goals (lecturer_assessment_add.php)\"]\n InputAssessment --> SaveAssessment[\"INSERT INTO assessment (course_id, name, end_date)\"]\n \n ActionType -- \"Enroll Mahasiswa\" --> StudentEnroll[\"Enroll Mahasiswa ke Matakuliah (admin_enrollment_student.php / Bulk CSV)\"]\n StudentEnroll --> SaveEnrollment[\"INSERT INTO user_courses / enrollment\"]\n \n SetGameActive --> SystemReady[\"Matakuliah & Sistem Gamifikasi Siap Digunakan\"]\n SetGameInactive --> SystemReady\n SaveAssessment --> SystemReady\n SaveEnrollment --> SystemReady\n \n SystemReady --> End([\"Selesai\"])\n```\n\n---\n\n## 5. Diagram 5: E-STRANGE Gamification Leaderboard & Point Aggregation Pipeline\n\nDiagram ini menggambarkan alur perhitungan akumulasi poin gamifikasi siswa dari 3 tabel E-STRANGE, serta opsi mahasiswa untuk mengaktifkan/mematikan keikutsertaan game (`student_game_toggle.php`).\n\n<div align=\"center\" style=\"margin: 20px 0;\">\n  <img src=\"images/diagram_5.png\" alt=\"Diagram 5\" style=\"max-width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\" />\n</div>\n\n```mermaid\nflowchart TD\n Start([\"Mahasiswa / Dosen Akses student_game.php / admin_game.php\"]) --> CheckEnrollment[\"Cek Matakuliah Terdaftar (user_courses / enrollment)\"]\n CheckEnrollment --> QueryGameCourse[\"Query game_course WHERE course_id = :id AND is_active = 1\"]\n \n QueryGameCourse --> IsGameOn{\"Fitur Game Matakuliah Aktif (is_active == 1)?\"}\n \n IsGameOn -- \"TIDAK (Game OFF)\" --> ShowNoGame[\"Tampilkan Halaman student_no_game.php (Fitur Game Non-Aktif)\"]\n ShowNoGame --> End([\"Selesai\"])\n \n IsGameOn -- \"YA (Game ON)\" --> CheckParticipation[\"Query game_student_course WHERE student_id = :uid\"]\n CheckParticipation --> IsParticipating{\"Mahasiswa Berpartisipasi (is_participating == 1)?\"}\n \n IsParticipating -- \"TIDAK (Opt-Out)\" --> ShowOptInNotice[\"Tampilkan Banner: Fitur Game Aktif Tapi Anda Belum Opt-In\"]\n ShowOptInNotice --> ToggleAction{\"Mahasiswa Klik Toggle Opt-In (student_game_toggle.php)?\"}\n ToggleAction -- \"YA\" --> UpdateOptIn[\"UPDATE game_student_course SET is_participating = 1\"]\n UpdateOptIn --> FetchPointsEngine\n ToggleAction -- \"TIDAK\" --> End\n \n IsParticipating -- \"YA (Opt-In)\" --> FetchPointsEngine[\"Jalankan Engine Aggregator Poin Gamifikasi\"]\n \n FetchPointsEngine --> QueryPointsDB[\"Query SUM(suspicion.originality_point) + SUM(suspicion.efficiency_point) + SUM(code_clarity_suggestion.quality_point) WHERE username = :username\"]\n QueryPointsDB --> ComputeLeaderboard[\"Urutkan Skor Total Poin Seluruh Mahasiswa Terdaftar (ORDER BY total_points DESC)\"]\n \n ComputeLeaderboard --> RenderDashboard[\"Tampilkan Rangking Leaderboard, Badges, & Progres Poin Mahasiswa\"]\n RenderDashboard --> End\n```\n\n---\n\n# BAGIAN B: ALUR PROSES UTAMA SISTEM S-SPARC AI (FASTAPI PYTHON)\n\n## 6. Diagram 6: Arsitektur Umum & Alur Data Lintas Sistem (E-STRANGE <-> S-SPARC)\n\nDiagram ini menggambarkan hubungan dan alur komunikasi data antara Pengguna, Frontend E-STRANGE (PHP), Backend S-SPARC (FastAPI), Database MySQL Bersama, Cloud Gemini Gateway, Local Ollama, dan Evaluator Service.\n\n<div align=\"center\" style=\"margin: 20px 0;\">\n  <img src=\"images/diagram_6.png\" alt=\"Diagram 6\" style=\"max-width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\" />\n</div>\n\n```mermaid\nflowchart TD\n subgraph Client [\"Client Layer\"]\n User[\"Student / User Interface\"]\n end\n\n subgraph Frontend [\"E-STRANGE System (PHP Frontend)\"]\n PHP_UI[\"PHP Pages (student_game.php, chat, dashboard)\"]\n PHP_Auth[\"Session Authentication (username / user_id)\"]\n end\n\n subgraph Backend [\"S-SPARC System (FastAPI Backend)\"]\n API_Gateway[\"API Endpoints (/generate-code, /enqueue-gpt)\"]\n Semantic_Search[\"Semantic Vector Search (Cosine Sim >= 90%)\"]\n Adaptive_Router[\"Adaptive Router Engine\"]\n Evaluator_Service[\"Automated Code Evaluator Service\"]\n end\n\n subgraph DB [\"Shared Database Layer (MySQL)\"]\n Estrange_Tables[\"E-STRANGE Tables (submission, suspicion, code_clarity_suggestion, game_course)\"]\n SSparc_Tables[\"S-SPARC Tables (code_embeddings, chat_history, session_tokens, gpt_jobs, cloud_point_deductions)\"]\n end\n\n subgraph LLM_Cloud [\"Cloud Provider Layer\"]\n Gemini_Pool[\"Multi-Provider Gemini Gateway (6 API Keys Pool)\"]\n Gemini_API[\"Google Gemini Flash Lite Model\"]\n end\n\n subgraph LLM_Local [\"Local Runtime Layer\"]\n Ollama_Server[\"Ollama Local REST API (localhost:11434)\"]\n Ollama_Model[\"Qwen2.5-Coder 14B Model\"]\n end\n\n User -->|\"1. Submit Coding Prompt\"| PHP_UI\n PHP_UI -->|\"2. Forward API Request + Cookie Session\"| API_Gateway\n API_Gateway -->|\"3. Query Embeddings Cache\"| Semantic_Search\n Semantic_Search -->|\"DB Lookup\"| SSparc_Tables\n \n Semantic_Search -->|\"4a. Similarity >= 90% (FREE Tier)\"| User\n Semantic_Search -->|\"4b. Similarity < 90% (Cache Miss)\"| Adaptive_Router\n \n Adaptive_Router -->|\"5. Fetch Points & Game Status\"| Estrange_Tables\n Adaptive_Router -->|\"6a. Route to Cloud (Sufficient Points / Token Quota)\"| Gemini_Pool\n Gemini_Pool --> Gemini_API\n \n Adaptive_Router -->|\"6b. Route to Local (Low Points / Exceeded Quota)\"| Ollama_Server\n Gemini_Pool -->|\"6c. Technical Failover (All 6 Keys Rate Limited)\"| Ollama_Server\n Ollama_Server --> Ollama_Model\n\n Gemini_API -->|\"7a. Response + Deduct Points\"| SSparc_Tables\n Ollama_Model -->|\"7b. Zero-Cost Response\"| API_Gateway\n API_Gateway -->|\"8. Return Answer + Gamification Metadata\"| User\n\n Evaluator_Service -->|\"Async KB Quality Scanning & Cleaning\"| SSparc_Tables\n```\n\n---\n\n## 7. Diagram 7: Alur Keputusan Adaptive Router (Decision Flowchart)\n\nDiagram ini memperlihatkan alur logika eksekusi keputusan pada `AdaptiveRouter`, mulai dari pengecekan cache vektor, penentuan status game matakuliah (`game_course.is_active`), pengecekan poin gamifikasi/kuota token, hingga failover teknis.\n\n<div align=\"center\" style=\"margin: 20px 0;\">\n  <img src=\"images/diagram_7.png\" alt=\"Diagram 7\" style=\"max-width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\" />\n</div>\n\n```mermaid\nflowchart TD\n Start([\"Input Prompt & Username\"]) --> CheckCache{\"Cosine Similarity >= 90%?\"}\n \n CheckCache -- \"YA (Cache Hit)\" --> ReturnCache[\"Kembalikan Jawaban dari Semantic Cache (0 Token Cost)\"]\n ReturnCache --> End([\"Selesai\"])\n \n CheckCache -- \"TIDAK (Cache Miss)\" --> CheckGameStatus[\"Query game_course.is_active dari E-STRANGE DB\"]\n \n CheckGameStatus --> IsGameActive{\"Is Game Active? (is_active == 1)\"}\n \n %% Branch 1: Game ON\n IsGameActive -- \"YA (Game ON)\" --> FetchPoints[\"Query Total Poin Gamifikasi E-STRANGE\"]\n FetchPoints --> CheckPoints{\"Total Poin >= 100?\"}\n \n CheckPoints -- \"YA (Poin Cukup)\" --> TryGeminiCloud1[\"Coba Cloud: Gemini Multi-Provider Gateway\"]\n CheckPoints -- \"TIDAK (Poin Kurang)\" --> RouteOllama1[\"Route ke Local Ollama (Qwen2.5-Coder 14B)\"]\n \n %% Branch 2: Game OFF\n IsGameActive -- \"TIDAK (Game OFF)\" --> FetchTokenUsage[\"Query Total Pemakaian Token (session_tokens)\"]\n FetchTokenUsage --> CheckTokenQuota{\"Pemakaian Token < 5000?\"}\n \n CheckTokenQuota -- \"YA (Kuota Mencukupi)\" --> TryGeminiCloud2[\"Coba Cloud: Gemini Multi-Provider Gateway\"]\n CheckTokenQuota -- \"TIDAK (Kuota Habis)\" --> RouteOllama2[\"Route ke Local Ollama (Qwen2.5-Coder 14B)\"]\n \n %% Cloud Execution & Failover\n TryGeminiCloud1 --> GeminiExec{\"Gemini 6 Keys Success?\"}\n TryGeminiCloud2 --> GeminiExec\n \n GeminiExec -- \"YA (Sukses)\" --> DeductPointsLogic{\"Status Game Matakuliah?\"}\n DeductPointsLogic -- \"Game ON\" --> Deduct10[\"Potong 10 Poin Gamifikasi\"]\n DeductPointsLogic -- \"Game OFF\" --> Deduct0[\"0 Poin Dipotong (Gratis Kuota)\"]\n \n Deduct10 --> ReturnCloudResp[\"Kembalikan Jawaban Gemini Flash Lite\"]\n Deduct0 --> ReturnCloudResp\n \n GeminiExec -- \"TIDAK (All 6 Keys Rate Limited 429)\" --> FailoverOllama[\"Technical Failover: Route ke Local Ollama\"]\n \n RouteOllama1 --> ReturnOllamaResp[\"Kembalikan Jawaban Ollama Local (Zero Cost)\"]\n RouteOllama2 --> ReturnOllamaResp\n FailoverOllama --> ReturnOllamaResp\n \n ReturnCloudResp --> End\n ReturnOllamaResp --> End\n```\n\n---\n\n## 8. Diagram 8: Alur Rotasi Key & Rate Limit Failover Multi-Provider Gemini Gateway\n\nDiagram ini memperlihatkan mekanisme rotasi 6 API Key Gemini Flash Lite (`GEMINI_API_KEY_1..6`) dalam penanganan error HTTP 429 (Rate Limit).\n\n<div align=\"center\" style=\"margin: 20px 0;\">\n  <img src=\"images/diagram_8.png\" alt=\"Diagram 8\" style=\"max-width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\" />\n</div>\n\n```mermaid\nflowchart TD\n InitGateway([\"Request Masuk ke GeminiMultiProviderGateway\"]) --> LoadKeys[\"Load GEMINI_API_KEY_1 s/d GEMINI_API_KEY_6\"]\n LoadKeys --> SetIndex[\"Key Index = (current_idx + attempt) % N\"]\n \n SetIndex --> TryKey1[\"Coba API Key #Index (LiteLLM / REST API)\"]\n \n TryKey1 --> CheckSuccess{\"Inference Berhasil?\"}\n \n CheckSuccess -- \"YA\" --> UpdateIndex[\"Update current_idx = Index + 1\"]\n UpdateIndex --> ReturnSuccess[\"Kembalikan Konten Response Gemini Flash Lite\"]\n \n CheckSuccess -- \"TIDAK\" --> CheckErrorType{\"Tipe Error?\"}\n \n CheckErrorType -- \"HTTP 429 / Rate Limit / ResourceExhausted\" --> IncrementLimitCount[\"Rate Limit Counter + 1\"]\n CheckErrorType -- \"Error Lain (403/500)\" --> LogWarning[\"Log Warning Error\"]\n \n IncrementLimitCount --> HasMoreKeys{\"Masih ada Key lain di Pool?\"}\n LogWarning --> HasMoreKeys\n \n HasMoreKeys -- \"YA (Attempt < N)\" --> NextAttempt[\"Attempt + 1\"]\n NextAttempt --> SetIndex\n \n HasMoreKeys -- \"TIDAK (Seluruh 6 Key Gagal)\" --> RaiseExhausted[\"Throw Exception: GeminiRateLimitExhausted\"]\n RaiseExhausted --> TriggerFailover[\"Picu Failover Otomatis ke Ollama Local\"]\n```\n\n---\n\n## 9. Diagram 9: Sequence Diagram Agregasi Poin Gamification E-STRANGE & Pemotongan Poin\n\nDiagram ini menggambarkan urutan interaksi objek (sequence) antara FastAPI Handler, `PointsAggregator`, `AdaptiveRouter`, Database E-STRANGE, dan Gemini Gateway.\n\n<div align=\"center\" style=\"margin: 20px 0;\">\n  <img src=\"images/diagram_9.png\" alt=\"Diagram 9\" style=\"max-width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\" />\n</div>\n\n```mermaid\nsequenceDiagram\n autonumber\n actor Student as Student (User)\n participant API as FastAPI (ai_chat.py)\n participant Router as AdaptiveRouter\n participant Aggregator as PointsAggregator\n participant DB as Shared MySQL DB (E-STRANGE & S-SPARC)\n participant Gemini as Gemini Multi-Key Gateway\n participant Ollama as Ollama Local Runtime\n\n Student->>API: POST /generate-code (prompt, assessment_id)\n API->>Router: route_and_generate(messages, username, assessment_id)\n \n Router->>Aggregator: is_game_active_for_assessment(assessment_id)\n Aggregator->>DB: SELECT is_active FROM game_course WHERE course_id = ...\n DB-->>Aggregator: return is_active (1 or 0)\n Aggregator-->>Router: return game_active status\n \n alt Game Feature is ON (is_active == 1)\n Router->>Aggregator: get_user_points(username)\n Aggregator->>DB: SUM(originality + efficiency + quality) WHERE username = :username\n DB-->>Aggregator: return total_points\n Aggregator-->>Router: return total_points (e.g. 150)\n \n alt total_points >= 100\n Router->>Gemini: generate(messages)\n Gemini-->>Router: return Gemini Flash Lite Code Solution\n Router->>Aggregator: deduct_user_points(username, 10)\n Aggregator->>DB: INSERT INTO cloud_point_deductions (10 pts)\n DB-->>Aggregator: OK\n else total_points < 100\n Router->>Ollama: generate(messages)\n Ollama-->>Router: return Ollama Qwen2.5 Code Solution\n end\n\n else Game Feature is OFF (is_active == 0)\n Router->>Aggregator: get_user_token_usage(username, assessment_id)\n Aggregator->>DB: SELECT SUM(tokens_used) FROM session_tokens\n DB-->>Aggregator: return used_tokens (e.g. 1200)\n Aggregator-->>Router: return used_tokens\n \n alt used_tokens < 5000 (Quota OK)\n Router->>Gemini: generate(messages)\n Gemini-->>Router: return Gemini Flash Lite Code Solution (0 pts deducted)\n else used_tokens >= 5000 (Quota Exceeded)\n Router->>Ollama: generate(messages)\n Ollama-->>Router: return Ollama Qwen2.5 Code Solution\n end\n end\n\n Router-->>API: return dict {content, routed_to, points_deducted, routing_reason}\n API->>DB: UPDATE gpt_jobs SET status='done', code=...\n API-->>Student: Return JSON Response + Gamification Metadata\n```\n\n---\n\n## 10. Diagram 10: Siklus Hidup Knowledge Base (Self-Growing Auto-Ingestion & Evaluator Service)\n\nDiagram ini memperlihatkan bagaimana kode solusi baru yang dihasilkan LLM secara otomatis di-vektorisasi dan masuk ke knowledge base, serta bagaimana `Evaluator Service` melakukan pembersihan otomatis secara berkala.\n\n<div align=\"center\" style=\"margin: 20px 0;\">\n  <img src=\"images/diagram_10.png\" alt=\"Diagram 10\" style=\"max-width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\" />\n</div>\n\n```mermaid\nflowchart TD\n subgraph Generation [\"1. Generation & Ingestion Phase\"]\n NewSolution[\"Solusi Kode Dihasilkan oleh LLM (Gemini / Ollama)\"] --> IngestCheck{\"Apakah Prompt Sudah Ada di code_embeddings?\"}\n IngestCheck -- \"YA\" --> SkipIngest[\"Abaikan (Cegah Duplikasi Langsung)\"]\n IngestCheck -- \"TIDAK\" --> CalcEmb[\"Hitung Vector Embedding (SentenceTransformer all-MiniLM-L6-v2)\"]\n CalcEmb --> InsertKB[\"INSERT INTO code_embeddings (id, user_id, prompt, code, embedding)\"]\n end\n\n subgraph Cleaning [\"2. Evaluator Service Scanning & Quality Control Phase\"]\n CronTrigger([\"Periodic Scheduler / Evaluator Trigger\"]) --> FetchBatch[\"Fetch Batch Entries dari code_embeddings\"]\n FetchBatch --> StaticAnalysis[\"Static Analysis (AST Parsing, Syntax Check, Complexity)\"]\n StaticAnalysis --> SimCheck[\"Semantic Similarity & Duplicate Detection\"]\n SimCheck --> LLMJudge[\"LLM Judge / Quality Scoring\"]\n \n LLMJudge --> ClassifyEntry{\"Kategori Kualitas Entry?\"}\n ClassifyEntry -- \"High Quality & Valid\" --> KeepEntry[\"Pertahankan di Knowledge Base\"]\n ClassifyEntry -- \"Duplicate / Low Quality / Anomaly\" --> FlagDelete[\"Tandai untuk Deletion / Archiving\"]\n \n FlagDelete --> SoftDelete[\"Backup JSON Report & Hapus dari Database\"]\n end\n\n InsertKB --> CronTrigger\n```\n\n---\n\n## 11. Diagram 11: Pipeline Pelacakan Jejak Lingkungan & Keberlanjutan (Eco-Aware Footprint)\n\nDiagram ini menggambarkan bagaimana setiap request inferensi dihitung dampak konsumsi energi, emisi karbon, dan penggunaan airnya.\n\n<div align=\"center\" style=\"margin: 20px 0;\">\n  <img src=\"images/diagram_11.png\" alt=\"Diagram 11\" style=\"max-width: 100%; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\" />\n</div>\n\n```mermaid\nflowchart LR\n subgraph Input [\"Token Metrics Input\"]\n InTokens[\"Input Tokens (Prompt + Context)\"]\n OutTokens[\"Output Tokens (Generated Code)\"]\n end\n\n subgraph Calculation [\"Sustainability Metrics Pipeline (sustainability.py)\"]\n TotalTokens[\"Total Tokens = Input + Output\"]\n \n EnergyCalc[\"Energy Consumption (Wh)<br/>Formula: Tokens * GPU Power Coefficient\"]\n CarbonCalc[\"Carbon Footprint (kg CO2e)<br/>Formula: Energy (kWh) * IDN Emission Factor\"]\n WaterCalc[\"Freshwater Cooling (mL)<br/>Formula: Energy (kWh) * PUE * Water Intensity\"]\n end\n\n subgraph Output [\"Database & Dashboard Reporting\"]\n LogDB[\"INSERT INTO environmental_impact_logs\"]\n UI_Dashboard[\"Tampilkan di Frontend Dashboard (Wh, kg CO2e, mL)\"]\n end\n\n InTokens --> TotalTokens\n OutTokens --> TotalTokens\n \n TotalTokens --> EnergyCalc\n EnergyCalc --> CarbonCalc\n CarbonCalc --> WaterCalc\n \n WaterCalc --> LogDB\n LogDB --> UI_Dashboard\n```\n\n\n---\n\n## Quick Start: Running the Full Stack (FE + BE + E-STRANGE + S-SPARC)\n\n### 1. Database Setup (MySQL / MariaDB)\n```bash\nmysql -u root -p -e \"CREATE DATABASE IF NOT EXISTS estrange_ssparc;\"\nmysql -u root -p estrange_ssparc < db_semantic_vfinal.sql\n```\n\n### 2. Environment Configuration (`.env`)\n```env\nMYSQL_HOST=127.0.0.1\nMYSQL_PORT=3306\nMYSQL_USER=root\nMYSQL_PASSWORD=your_password\nMYSQL_DB=estrange_ssparc\n\nGEMINI_API_KEY_1=AIzaSy...\nGEMINI_API_KEY_2=AIzaSy...\nOLLAMA_BASE_URL=http://localhost:11434\nOLLAMA_MODEL=qwen2.5-coder:14b\nMIN_POINTS_CLOUD=100\nPOINTS_PER_CLOUD_REQUEST=10\nGAME_OFF_TOKEN_LIMIT=5000\nFLASK_SECRET_KEY=supersecretkey_ssparc_2026\n```\n\n### 3. Running Component 1: E-STRANGE Parent Platform (PHP Core)\n```bash\ncd estrange/v2/v2\nphp -S 0.0.0.0:8080\n```\n\n### 4. Running Component 2: S-SPARC Frontend (PHP/JS App)\n```bash\ncd frontend\nphp -S 0.0.0.0:8000\n```\n\n### 5. Running Component 3: S-SPARC FastAPI Backend (Python Core)\n```bash\npython run_fastapi.py\n```\n\n---\n\n## Scientific Environmental Footprint Formulas\n\n$$\text{Energy (Wh)} = P_{\text{GPU/CPU}} \times T_{\text{inference}}$$\n\n$$\text{Carbon (kg CO}_2\text{e)} = \frac{\text{Energy (Wh)}}{1000} \times \text{Emission Factor (0.725 kg CO}_2\text{e/kWh)}$$\n\n$$\text{Water (mL)} = \text{Energy (kWh)} \times \text{Cooling Factor (1.8 L/kWh)} \times 1000$$\n\n$$\text{Eco Token Threshold} = \\max(0, 1.10 \times \text{Peer Average Tokens})$$\n\n---\n",
+    "contact": {
+      "name": "S-SPARC Engineering & Research Team",
+      "email": "support@s-sparc.ac.id",
+      "url": "http://localhost:5000/redocly"
+    },
+    "license": {
+      "name": "Academic Research & Sustainability License 1.0",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:5000",
+      "description": "S-SPARC FastAPI Backend (Development / Local)"
+    },
+    {
+      "url": "http://localhost:5000",
+      "description": "S-SPARC Production ASGI Server (Uvicorn / GPU)"
+    },
+    {
+      "url": "http://localhost:8080",
+      "description": "E-STRANGE Parent LMS Server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "System Health",
+      "description": "Core uptime, service diagnostics, and connection health endpoints."
+    },
+    {
+      "name": "Authentication",
+      "description": "User registration, login session establishment, whoami profile validation, and password recovery."
+    },
+    {
+      "name": "AI Chatbot",
+      "description": "Eco-aware programming assistant with Semantic Search Fast-Path (0 Token / FREE Tier), streaming inference, and auto-knowledge ingestion."
+    },
+    {
+      "name": "Domain/Learning",
+      "description": "Academic course enrollment, assessment tracking, daily/weekly token quota consumption, scientific environmental metrics, and leaderboards."
+    },
+    {
+      "name": "Administrative",
+      "description": "Restricted instructor and administrator tools: aggregate sustainability metrics, CSV exports, and point recalculation algorithms."
+    },
+    {
+      "name": "Code Evaluator Microservice",
+      "description": "Snippet quality control service: LLM-as-a-Judge, static Radon analysis, and anomaly detection."
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "System Health"
+        ],
+        "summary": "Service Health Check",
+        "description": "Returns current operational status confirming that the FastAPI backend is running and healthy.",
+        "operationId": "healthCheck",
+        "responses": {
+          "200": {
+            "description": "Service is operational.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                },
+                "example": {
+                  "status": "ok",
+                  "message": "S-SPARC FastAPI backend is running.",
+                  "version": "3.0.0"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/register": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Register New Account",
+        "description": "Registers a new student or instructor user account with SHA-256 password hashing.",
+        "operationId": "registerUser",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              },
+              "example": {
+                "username": "mahasiswa_sipil_2026",
+                "email": "mahasiswa@s-sparc.ac.id",
+                "password": "RahasiaSuper123!"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User account registered successfully.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Registrasi berhasil."
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing required fields.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Username or email already registered.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/login": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "User Login & Session Establishment",
+        "description": "Authenticates credentials against database records, establishing a secure HTTP-only session cookie.",
+        "operationId": "loginUser",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              },
+              "example": {
+                "username": "mahasiswa_sipil_2026",
+                "password": "RahasiaSuper123!"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful. Session cookie issued.",
+            "headers": {
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "HTTP-only session cookie matching Flask/PHP session key."
+              }
+            },
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Login berhasil."
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/logout": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "User Logout",
+        "description": "Clears current user session cookies and invalidates active credentials.",
+        "operationId": "logoutUser",
+        "responses": {
+          "200": {
+            "description": "Logout successful.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "message": "Logout berhasil."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/whoami": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Get Logged-In User Profile",
+        "description": "Retrieves user details of the active authenticated session.",
+        "operationId": "whoAmI",
+        "security": [
+          {
+            "SessionCookieAuth": []
+          },
+          {
+            "HeaderUserIdAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profile data retrieved.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfileResponse"
+                },
+                "example": {
+                  "user_id": "usr-8f3a-9901-b2c3",
+                  "username": "mahasiswa_sipil_2026",
+                  "email": "mahasiswa@s-sparc.ac.id",
+                  "is_admin": 0
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized access."
+          }
+        }
+      }
+    },
+    "/change-password": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Change User Password",
+        "description": "Allows logged-in users to update password by verifying current credentials.",
+        "operationId": "changePassword",
+        "security": [
+          {
+            "SessionCookieAuth": []
+          },
+          {
+            "HeaderUserIdAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password updated successfully."
+          }
+        }
+      }
+    },
+    "/forgot-password": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Request Password Reset Token / OTP",
+        "description": "Generates a 32-character reset token and 6-digit OTP code for password recovery.",
+        "operationId": "forgotPassword",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Reset token/OTP generated."
+          }
+        }
+      }
+    },
+    "/reset-password": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Reset Password via Token / OTP",
+        "description": "Validates recovery token or OTP to update user password.",
+        "operationId": "resetPasswordWithToken",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordWithTokenRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password successfully reset."
+          }
+        }
+      }
+    },
+    "/direct-reset-password": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Direct Password Reset Verification",
+        "description": "Resets password by verifying matched username and registered email.",
+        "operationId": "directResetPassword",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DirectResetPasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset successful."
+          }
+        }
+      }
+    },
+    "/generate-code": {
+      "post": {
+        "tags": [
+          "AI Chatbot"
+        ],
+        "summary": "Generate Code / Dispatch Chat Job",
+        "description": "Processes coding prompts via **Semantic Search fast-path (FREE tier, similarity >= 90%)**, \nor falls back to queued GPT inference with auto-vectorization into `code_embeddings`.",
+        "operationId": "generateCode",
+        "security": [
+          {
+            "SessionCookieAuth": []
+          },
+          {
+            "HeaderUserIdAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateRequest"
+              },
+              "example": {
+                "prompt": "Buatkan fungsi Python untuk menghitung debit air sungai berdasarkan metode rasional Q = C * I * A.",
+                "assessment_id": "ASSESS-CIVIL-2026-01",
+                "language": "python",
+                "response_mode": "code"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Semantic Fast-Path match (0 Token) or Background Job dispatched.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateResponse"
+                },
+                "examples": {
+                  "SemanticFastPath": {
+                    "summary": "Semantic Match >= 90% (0 Tokens Used)",
+                    "value": {
+                      "status": "fast_path",
+                      "job_id": "e6f47021-9876-4321-a1b2-c3d4e5f67890",
+                      "response": "def calculate_discharge(C, I, A):\n    \"\"\"\n    Menghitung debit limpasan permukaan (Metode Rasional)\n    Q = C * I * A\n    \"\"\"\n    return C * I * A",
+                      "similarity": 0.945,
+                      "tokens_used": 0,
+                      "free_tier": true
+                    }
+                  },
+                  "BackgroundGPTJob": {
+                    "summary": "GPT Inference Job Dispatched",
+                    "value": {
+                      "status": "pending",
+                      "job_id": "b1a2c3d4-5678-90ef-1234-567890abcdef",
+                      "message": "Job queued for GPT processing."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/job-status/{job_id}": {
+      "get": {
+        "tags": [
+          "AI Chatbot"
+        ],
+        "summary": "Poll GPT Background Job Status",
+        "description": "Queries status of asynchronous GPT generation jobs.",
+        "operationId": "getJobStatus",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "description": "Job UUID string",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Job status and response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobStatusResponse"
+                },
+                "example": {
+                  "job_id": "b1a2c3d4-5678-90ef-1234-567890abcdef",
+                  "status": "completed",
+                  "response": "def calculate_discharge(C, I, A):\n    return C * I * A"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chat-history": {
+      "get": {
+        "tags": [
+          "AI Chatbot"
+        ],
+        "summary": "Retrieve Chat History",
+        "description": "Retrieves chat exchange history for the user.",
+        "operationId": "getChatHistory",
+        "security": [
+          {
+            "SessionCookieAuth": []
+          },
+          {
+            "HeaderUserIdAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "assessment_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Historical chat logs."
+          }
+        }
+      }
+    },
+    "/courses": {
+      "get": {
+        "tags": [
+          "Domain/Learning"
+        ],
+        "summary": "List Enrolled Courses",
+        "description": "Retrieves enrolled academic courses for the student.",
+        "operationId": "listCourses",
+        "security": [
+          {
+            "SessionCookieAuth": []
+          },
+          {
+            "HeaderUserIdAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of courses.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "courses": [
+                    {
+                      "course_id": "CIVIL-101",
+                      "name": "Mekanika Tanah & Hidrologi",
+                      "description": "Mata kuliah teknik sipil dasar."
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/assessments": {
+      "get": {
+        "tags": [
+          "Domain/Learning"
+        ],
+        "summary": "List Course Assessments",
+        "description": "Retrieves active coding assignments and submission windows.",
+        "operationId": "listAssessments",
+        "security": [
+          {
+            "SessionCookieAuth": []
+          },
+          {
+            "HeaderUserIdAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "course_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of active assessments."
+          }
+        }
+      }
+    },
+    "/user-token-info": {
+      "get": {
+        "tags": [
+          "Domain/Learning"
+        ],
+        "summary": "User Token Quota & Environmental Telemetry",
+        "description": "Returns token usage, peer usage averages, eco threshold, efficiency score, and scientific footprint metrics (energy Wh, carbon kg CO2e, water mL).",
+        "operationId": "getUserTokenInfo",
+        "security": [
+          {
+            "SessionCookieAuth": []
+          },
+          {
+            "HeaderUserIdAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "assessment_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Token usage and footprint breakdown.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserTokenInfoResponse"
+                },
+                "example": {
+                  "user_tokens": 1250,
+                  "avg_tokens": 2800,
+                  "threshold": 3080,
+                  "eco_points": 95,
+                  "environmental_footprint": {
+                    "energy_wh": 14.5,
+                    "carbon_kg": 0.0105,
+                    "water_ml": 26.1
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/leaderboard": {
+      "get": {
+        "tags": [
+          "Domain/Learning"
+        ],
+        "summary": "Gamification Token Efficiency Leaderboard",
+        "description": "Returns student rankings ordered by eco-conservation points.",
+        "operationId": "getLeaderboard",
+        "parameters": [
+          {
+            "name": "assessment_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Leaderboard list."
+          }
+        }
+      }
+    },
+    "/admin-environmental-stats": {
+      "get": {
+        "tags": [
+          "Administrative"
+        ],
+        "summary": "Admin Environmental Impact Metrics",
+        "description": "Retrieves aggregate sustainability metrics for total energy (kWh), carbon footprint (kg CO2e), water usage (mL), and daily timeseries.",
+        "operationId": "getAdminEnvironmentalStats",
+        "security": [
+          {
+            "SessionCookieAuth": []
+          },
+          {
+            "HeaderUserIdAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 30
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Aggregate environmental metrics."
+          }
+        }
+      }
+    },
+    "/admin-environmental-csv": {
+      "get": {
+        "tags": [
+          "Administrative"
+        ],
+        "summary": "Export Environmental Impact Logs to CSV",
+        "description": "Streams downloadable CSV spreadsheet containing detailed environmental logs.",
+        "operationId": "getAdminEnvironmentalCSV",
+        "security": [
+          {
+            "SessionCookieAuth": []
+          },
+          {
+            "HeaderUserIdAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CSV spreadsheet binary stream."
+          }
+        }
+      }
+    },
+    "/admin-recompute-points": {
+      "post": {
+        "tags": [
+          "Administrative"
+        ],
+        "summary": "Recalculate Assessment Points",
+        "description": "Recomputes final efficiency points for all student submissions under an assessment.",
+        "operationId": "adminRecomputePoints",
+        "security": [
+          {
+            "SessionCookieAuth": []
+          },
+          {
+            "HeaderUserIdAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Points recomputed."
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "SessionCookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "session",
+        "description": "HTTP-only session cookie established via POST /login."
+      },
+      "HeaderUserIdAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-User-ID",
+        "description": "Explicit user ID header."
+      }
+    },
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "ok"
+          },
+          "message": {
+            "type": "string",
+            "example": "S-SPARC FastAPI backend is running."
+          },
+          "version": {
+            "type": "string",
+            "example": "3.0.0"
+          }
+        }
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "required": [
+          "username",
+          "email",
+          "password"
+        ],
+        "properties": {
+          "username": {
+            "type": "string",
+            "example": "mahasiswa_sipil_2026"
+          },
+          "email": {
+            "type": "string",
+            "example": "mahasiswa@s-sparc.ac.id"
+          },
+          "password": {
+            "type": "string",
+            "example": "RahasiaSuper123!"
+          }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "properties": {
+          "username": {
+            "type": "string",
+            "example": "mahasiswa_sipil_2026"
+          },
+          "password": {
+            "type": "string",
+            "example": "RahasiaSuper123!"
+          }
+        }
+      },
+      "ChangePasswordRequest": {
+        "type": "object",
+        "required": [
+          "old_password",
+          "new_password"
+        ],
+        "properties": {
+          "old_password": {
+            "type": "string"
+          },
+          "new_password": {
+            "type": "string"
+          }
+        }
+      },
+      "ForgotPasswordRequest": {
+        "type": "object",
+        "required": [
+          "username",
+          "email"
+        ],
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        }
+      },
+      "ResetPasswordWithTokenRequest": {
+        "type": "object",
+        "required": [
+          "reset_token",
+          "new_password"
+        ],
+        "properties": {
+          "reset_token": {
+            "type": "string"
+          },
+          "new_password": {
+            "type": "string"
+          }
+        }
+      },
+      "DirectResetPasswordRequest": {
+        "type": "object",
+        "required": [
+          "username",
+          "email",
+          "new_password"
+        ],
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "new_password": {
+            "type": "string"
+          }
+        }
+      },
+      "GenerateRequest": {
+        "type": "object",
+        "required": [
+          "prompt"
+        ],
+        "properties": {
+          "prompt": {
+            "type": "string",
+            "example": "Buatkan fungsi Python untuk menghitung debit air sungai berdasarkan metode rasional Q = C * I * A."
+          },
+          "assessment_id": {
+            "type": "string",
+            "example": "ASSESS-CIVIL-2026-01"
+          },
+          "language": {
+            "type": "string",
+            "example": "python"
+          },
+          "response_mode": {
+            "type": "string",
+            "example": "code"
+          }
+        }
+      },
+      "GenerateResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "fast_path"
+          },
+          "job_id": {
+            "type": "string",
+            "example": "e6f47021-9876-4321-a1b2-c3d4e5f67890"
+          },
+          "response": {
+            "type": "string",
+            "example": "def calculate_discharge(C, I, A):\n    return C * I * A"
+          },
+          "similarity": {
+            "type": "number",
+            "example": 0.945
+          },
+          "tokens_used": {
+            "type": "integer",
+            "example": 0
+          },
+          "free_tier": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "JobStatusResponse": {
+        "type": "object",
+        "properties": {
+          "job_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "processing",
+              "completed",
+              "failed"
+            ]
+          },
+          "response": {
+            "type": "string"
+          }
+        }
+      },
+      "UserProfileResponse": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "is_admin": {
+            "type": "integer"
+          }
+        }
+      },
+      "UserTokenInfoResponse": {
+        "type": "object",
+        "properties": {
+          "user_tokens": {
+            "type": "integer",
+            "example": 1250
+          },
+          "avg_tokens": {
+            "type": "number",
+            "example": 2800.0
+          },
+          "threshold": {
+            "type": "number",
+            "example": 3080.0
+          },
+          "eco_points": {
+            "type": "number",
+            "example": 95.0
+          },
+          "environmental_footprint": {
+            "type": "object",
+            "properties": {
+              "energy_wh": {
+                "type": "number",
+                "example": 14.5
+              },
+              "carbon_kg": {
+                "type": "number",
+                "example": 0.0105
+              },
+              "water_ml": {
+                "type": "number",
+                "example": 26.1
+              }
+            }
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "detail": {
+            "type": "string",
+            "example": "Terjadi kesalahan pada server."
+          }
+        }
+      }
+    }
+  }
+}
