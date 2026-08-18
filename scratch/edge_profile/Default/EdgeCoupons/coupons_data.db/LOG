@@ -1,0 +1,6 @@
+2026/08/18-16:05:13.344 8640 Reusing MANIFEST c:\S-SPARC_FINAL EDIT\scratch\edge_profile\Default\EdgeCoupons/coupons_data.db/MANIFEST-000001
+2026/08/18-16:05:13.367 8640 Recovering log #23
+2026/08/18-16:05:13.367 8640 Reusing old log c:\S-SPARC_FINAL EDIT\scratch\edge_profile\Default\EdgeCoupons/coupons_data.db/000023.log 
+2026/08/18-16:05:13.496 4e7c Level-0 table #27: started
+2026/08/18-16:05:13.501 4e7c Level-0 table #27: 683376 bytes OK
+2026/08/18-16:05:13.503 4e7c Delete type=0 #23

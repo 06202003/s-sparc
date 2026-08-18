@@ -404,13 +404,31 @@ select.select2-hidden-accessible {
           <span id="rate-limit-timer-badge" class="px-2 py-0.5 rounded-md bg-amber-600 text-white font-mono font-bold text-[11px]">60s</span>
         </div>
 
-        <!-- Chat Form Input (Gemini-Style Unified Box) -->
+        <!-- Chat Form Input (Gemini-Style Unified Box with C-I-O-E Pedagogical Scaffold) -->
         <form id="chat-form" class="mt-4" onsubmit="sendMessage(event)">
           <div class="rounded-3xl border border-slate-300/90 bg-white p-4 shadow-sm focus-within:border-[#00A0A5] focus-within:ring-2 focus-within:ring-[#00A0A5]/20 transition flex flex-col justify-between">
             
+            <!-- C-I-O-E Metacognitive Protocol Live Indicator Bar -->
+            <div class="mb-2 pb-2 border-b border-slate-100 flex items-center justify-between gap-2 text-[11px]">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="font-bold text-slate-700 flex items-center gap-1">
+                  <span class="text-[#00A0A5]">★</span> C-I-O-E Protocol:
+                </span>
+                <span id="cioe-badge-c" class="px-2 py-0.5 rounded-md font-mono font-semibold bg-slate-100 text-slate-400 border border-slate-200 transition" title="Context (Bahasa / Topik)">[C] Context</span>
+                <span id="cioe-badge-i" class="px-2 py-0.5 rounded-md font-mono font-semibold bg-slate-100 text-slate-400 border border-slate-200 transition" title="Input (Pre-kondisi / Parameter)">[I] Input</span>
+                <span id="cioe-badge-o" class="px-2 py-0.5 rounded-md font-mono font-semibold bg-slate-100 text-slate-400 border border-slate-200 transition" title="Output (Post-kondisi / Kompleksitas)">[O] Output</span>
+                <span id="cioe-badge-e" class="px-2 py-0.5 rounded-md font-mono font-semibold bg-slate-100 text-slate-400 border border-slate-200 transition" title="Error (Traceback / Expected vs Actual)">[E] Error/Trace</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <button type="button" onclick="insertCIOETemplate()" class="text-[#00A0A5] hover:underline font-semibold text-[11px] flex items-center gap-1">
+                  <span>+ Template C-I-O-E</span>
+                </button>
+              </div>
+            </div>
+
             <!-- Textarea Area -->
             <label for="chat-input" class="sr-only">Write a message</label>
-            <textarea id="chat-input" rows="3" class="w-full min-h-[5.5rem] max-h-56 resize-none overflow-y-auto bg-transparent px-3 pt-1.5 pb-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 leading-relaxed font-sans" placeholder="Tuliskan pertanyaan pemrograman, analisis error, atau paste kode tugas Anda di sini (min. 200 karakter, maks. 2000)..." required></textarea>
+            <textarea id="chat-input" rows="3" class="w-full min-h-[5.5rem] max-h-56 resize-none overflow-y-auto bg-transparent px-3 pt-1.5 pb-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 leading-relaxed font-sans" placeholder="Tuliskan pertanyaan pemrograman sesuai protokol C-I-O-E: [Context] + [Input Data] + [Output yang Diharapkan] + [Error Trace / Bug] (min. 200 karakter, maks. 2000)..." required></textarea>
 
             <!-- Bottom Toolbar inside Gemini Box -->
             <div class="mt-3 pt-3 px-1 border-t border-slate-100 flex items-center justify-between gap-3">
@@ -429,10 +447,10 @@ select.select2-hidden-accessible {
                   <option value="SQL">SQL</option>
                 </select>
 
-                <select id="response-mode" class="gemini-pill-select" title="Pilih Format Respon">
-                  <option value="code" selected>Code (only)</option>
-                  <option value="summary">Explanation (short)</option>
-                  <option value="summary_code_explanation">Summary + Code + Explanation</option>
+                <select id="response-mode" class="gemini-pill-select" title="Pilih Format Respon & Taksonomi Bloom">
+                  <option value="code" selected>Code (Apply C3-C4)</option>
+                  <option value="summary">Concept (Understand C1-C2)</option>
+                  <option value="summary_code_explanation">Scaffolding (Evaluate C5-C6)</option>
                 </select>
               </div>
 
@@ -443,9 +461,9 @@ select.select2-hidden-accessible {
                   <span>Sisa Query: <strong id="query-remaining-count" class="font-mono font-bold text-teal-900">1,500</strong> / <span id="query-limit-count" class="font-mono text-slate-500">1,500</span></span>
                 </div>
                 <div id="char-counter" class="text-[11px] font-mono text-slate-400">
-                  0 / 2000 chars (min. 10)
+                  0 / 2000 chars (min. 200)
                 </div>
-                <button id="send-btn" type="submit" class="w-10 h-10 flex items-center justify-center rounded-full bg-[#00A0A5] text-white hover:bg-[#008589] transition shadow-sm hover:scale-105 active:scale-95 disabled:opacity-50" title="Send Message (min. 10 chars)">
+                <button id="send-btn" type="submit" class="w-10 h-10 flex items-center justify-center rounded-full bg-[#00A0A5] text-white hover:bg-[#008589] transition shadow-sm hover:scale-105 active:scale-95 disabled:opacity-50" title="Kirim Prompt C-I-O-E (min. 200 karakter)">
                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
                   </svg>
@@ -778,23 +796,68 @@ select.select2-hidden-accessible {
       return html;
     }
 
-    // Real-Time Prompt Length & Character Validation
+    // Real-Time Prompt Length, C-I-O-E & Character Validation
+    // Real-Time C-I-O-E Protocol Dynamic Lighting & Character Validation
+    function updateCIOEIndicators(text) {
+      const lower = text.toLowerCase();
+      
+      const badgeC = document.getElementById('cioe-badge-c');
+      const badgeI = document.getElementById('cioe-badge-i');
+      const badgeO = document.getElementById('cioe-badge-o');
+      const badgeE = document.getElementById('cioe-badge-e');
+
+      const hasC = /python|java|c\+\+|cpp|javascript|php|sql|algoritma|framework|context|konteks|tugas/i.test(lower);
+      const hasI = /input|given|parameter|parameter|array|list|integer|string|diberikan|prekondisi|data/i.test(lower);
+      const hasO = /output|return|hasil|expected|kompleksitas|complexity|o\(|postkondisi|kembalikan/i.test(lower);
+      const hasE = /error|bug|traceback|exception|failed|line|salah|baris|tidak berjalan|expected.*got/i.test(lower);
+
+      const activeClass = "px-2 py-0.5 rounded-md font-mono font-bold bg-teal-100 text-teal-800 border border-teal-300 shadow-2xs transition";
+      const inactiveClass = "px-2 py-0.5 rounded-md font-mono font-semibold bg-slate-100 text-slate-400 border border-slate-200 transition";
+
+      if (badgeC) badgeC.className = hasC ? activeClass : inactiveClass;
+      if (badgeI) badgeI.className = hasI ? activeClass : inactiveClass;
+      if (badgeO) badgeO.className = hasO ? activeClass : inactiveClass;
+      if (badgeE) badgeE.className = hasE ? activeClass : inactiveClass;
+    }
+
+    function insertCIOETemplate() {
+      if (!chatInput) return;
+      const tpl = `[CONTEXT: Mata kuliah Pemrograman / Python]
+Saya sedang mengimplementasikan algoritma pencarian biner pada tugas struktur data.
+
+[INPUT: Parameter & Tipe Data]
+Diberikan array integer terurut 'arr' berukuran N (1 <= N <= 10^5) dan nilai target 'x'.
+
+[OUTPUT: Kondisi Akhir & Kompleksitas]
+Mengembalikan index elemen 'x' jika ditemukan, atau -1 jika tidak ada, dengan kompleksitas waktu O(log N).
+
+[ERROR TRACE / KENDALA]
+Kode saya mengalami infinite loop saat 'left == right'. Mohon jelaskan logika perbaikan pointer mid dan binary search tanpa memberikan full spoiler.`;
+      
+      chatInput.value = tpl;
+      validatePromptInput();
+      chatInput.focus();
+    }
+
     function validatePromptInput() {
       if (!chatInput || !sendBtn) return;
-      const len = chatInput.value.trim().length;
+      const text = chatInput.value.trim();
+      const len = text.length;
+
+      updateCIOEIndicators(text);
 
       if (charCounter) {
-        charCounter.textContent = `${len} / 2000 chars (min. 10)`;
-        if (len < 10 && len > 0) {
+        charCounter.textContent = `${len} / 2000 chars (min. 200)`;
+        if (len < 200 && len > 0) {
           charCounter.className = "text-[11px] font-mono text-amber-600 font-semibold";
         } else if (len > 2000) {
           charCounter.className = "text-[11px] font-mono text-rose-600 font-bold";
         } else {
-          charCounter.className = "text-[11px] font-mono text-slate-400";
+          charCounter.className = "text-[11px] font-mono text-emerald-600 font-medium";
         }
       }
 
-      const isValid = (len >= 10 && len <= 2000);
+      const isValid = (len >= 200 && len <= 2000);
       if (!state.inCooldown) {
         sendBtn.disabled = !isValid;
         sendBtn.classList.toggle('opacity-50', !isValid);

@@ -13,6 +13,8 @@ from backend.core.db import (
 )
 from backend.api.auth import get_current_user_id
 from backend.services.gamification import get_user_token_info
+from backend.services.prompt_linter import PromptLinter
+from backend.services.learning_analytics import LearningAnalyticsService
 import logging
 
 try:
@@ -35,6 +37,9 @@ class GenerateRequest(BaseModel):
     course_id: Optional[str] = None
     language: Optional[str] = None
     response_mode: Optional[str] = "code"
+
+class LintPromptRequest(BaseModel):
+    prompt: str
 
 _in_memory_jobs = {}
 
@@ -221,6 +226,21 @@ async def generate_code(request: Request, data: GenerateRequest, background_task
     increment_user_query_count(user_id)
     query_quota = get_user_query_quota(user_id)
 
+    # 4. Perform Real-Time Prompt Literacy & C-I-O-E Linting
+    prompt_analytics = PromptLinter.analyze(raw_prompt)
+
+    # 5. Log Educational Learning Analytics Event
+    LearningAnalyticsService.record_learning_event(
+        session_id=session_id,
+        user_id=user_id,
+        prompt_analysis=prompt_analytics,
+        bloom_mode=data.response_mode or "code",
+        is_fast_path=is_retrieval,
+        tokens_consumed=req_tokens,
+        latency_ms=round((time.time() - now) * 1000, 2),
+        course_id=int(data.course_id) if data.course_id and data.course_id.isdigit() else None
+    )
+
     return {
         "mode": "success",
         "job_id": job_id,
@@ -233,7 +253,8 @@ async def generate_code(request: Request, data: GenerateRequest, background_task
         "similarity": sim_score,
         "gamification": gamification,
         "cooldown_seconds": RATE_LIMIT_COOLDOWN_SECONDS,
-        "query_quota": query_quota
+        "query_quota": query_quota,
+        "prompt_analytics": prompt_analytics
     }
 
 @router.post(
@@ -302,6 +323,18 @@ async def enqueue_gpt(request: Request, data: GenerateRequest, background_tasks:
     increment_user_query_count(user_id)
     query_quota = get_user_query_quota(user_id)
 
+    prompt_analytics = PromptLinter.analyze(raw_prompt)
+    LearningAnalyticsService.record_learning_event(
+        session_id=session_id,
+        user_id=user_id,
+        prompt_analysis=prompt_analytics,
+        bloom_mode=data.response_mode or "code",
+        is_fast_path=False,
+        tokens_consumed=int(job_data.get("tokens_used") or 0),
+        latency_ms=round((time.time() - now) * 1000, 2),
+        course_id=int(data.course_id) if data.course_id and data.course_id.isdigit() else None
+    )
+
     return {
         "mode": "success",
         "job_id": job_id,
@@ -310,7 +343,8 @@ async def enqueue_gpt(request: Request, data: GenerateRequest, background_tasks:
         "message": ai_response,
         "gamification": gamification,
         "cooldown_seconds": RATE_LIMIT_COOLDOWN_SECONDS,
-        "query_quota": query_quota
+        "query_quota": query_quota,
+        "prompt_analytics": prompt_analytics
     }
 
 
@@ -343,4 +377,36 @@ async def check_status(job_id: str):
         return {"status": "error", "error": job.get("error") or "Unknown error"}
         
     return {"status": "unknown"}
+
+# ==========================================================
+# EDUCATIONAL ANALYTICS & AI LITERACY ENDPOINTS
+# ==========================================================
+
+@router.post(
+    "/educational/lint-prompt",
+    summary="Real-Time Pre-Flight C-I-O-E & Shannon Entropy Prompt Linter",
+    description="Analyzes prompt in real time for C-I-O-E protocol completeness, technical keyword density, and Shannon entropy, returning constructive pedagogical feedback before submission.",
+    response_description="Prompt quality metrics and pedagogical improvement suggestions"
+)
+async def lint_prompt_endpoint(data: LintPromptRequest):
+    return PromptLinter.analyze(data.prompt)
+
+@router.get(
+    "/educational/student-profile/{user_id}",
+    summary="Get Student AI Literacy & Cognitive Progression Profile",
+    description="Returns student cumulative C-I-O-E adherence, average prompt density, cognitive independence index, and dynamic literacy badges.",
+    response_description="Student AI literacy profile"
+)
+async def student_profile_endpoint(user_id: str):
+    return LearningAnalyticsService.get_student_profile(user_id)
+
+@router.get(
+    "/educational/summary",
+    summary="Get Aggregated Class Educational Analytics",
+    description="Returns class-wide C-I-O-E adherence rate, Bloom mode distribution, zero-token fast path utilization, and empirical research validation telemetry.",
+    response_description="Aggregated educational analytics for faculty and UNU competition evaluation"
+)
+async def educational_summary_endpoint(course_id: Optional[int] = None):
+    return LearningAnalyticsService.get_class_analytics_summary(course_id)
+
 

@@ -1,0 +1,83 @@
+{
+   "checksum": "2809ead4c3869a26fa26c4b82483bf94",
+   "roots": {
+      "bookmark_bar": {
+         "children": [ {
+            "children": [ {
+               "date_added": "13268866141230995",
+               "date_last_used": "0",
+               "guid": "7339e0d7-7b89-4003-8aae-0a57d3721489",
+               "id": "8",
+               "name": "Lenovo Support",
+               "show_icon": false,
+               "source": "sync",
+               "type": "url",
+               "url": "http://support.lenovo.com/",
+               "visit_count": 0
+            }, {
+               "date_added": "13268866141230995",
+               "date_last_used": "0",
+               "guid": "8e28e8c0-a7ed-458c-b3dd-b1f582061f48",
+               "id": "9",
+               "name": "Lenovo",
+               "show_icon": false,
+               "source": "sync",
+               "type": "url",
+               "url": "http://www.lenovo.com/",
+               "visit_count": 0
+            } ],
+            "date_added": "13341998687384941",
+            "date_last_used": "0",
+            "date_modified": "13341998687384941",
+            "guid": "67e3c8e2-7c81-4eb5-a262-01476bef7e12",
+            "id": "7",
+            "name": "Lenovo",
+            "source": "unknown",
+            "type": "folder"
+         } ],
+         "date_added": "13431500763506773",
+         "date_last_used": "0",
+         "date_modified": "0",
+         "guid": "0bc5d13f-2cba-5d74-951f-3f233fe6c908",
+         "id": "1",
+         "name": "Favorites bar",
+         "source": "unknown",
+         "type": "folder"
+      },
+      "other": {
+         "children": [  ],
+         "date_added": "13431500763506773",
+         "date_last_used": "0",
+         "date_modified": "0",
+         "guid": "82b081ec-3dd3-529c-8475-ab6c344590dd",
+         "id": "2",
+         "name": "Other favorites",
+         "source": "unknown",
+         "type": "folder"
+      },
+      "synced": {
+         "children": [  ],
+         "date_added": "13431500763506773",
+         "date_last_used": "0",
+         "date_modified": "0",
+         "guid": "4cf2e351-0e85-532b-bb37-df045d8f8d0f",
+         "id": "3",
+         "name": "Mobile favorites",
+         "source": "unknown",
+         "type": "folder"
+      },
+      "workspaces_v2": {
+         "children": [  ],
+         "date_added": "13431500763506773",
+         "date_last_used": "0",
+         "date_modified": "0",
+         "guid": "75aa6670-344f-549d-b742-660f029506ab",
+         "id": "5",
+         "name": "Workspaces",
+         "source": "unknown",
+         "type": "folder"
+      }
+   },
+   "sync_metadata": "CkEKHgiIgQISCD8YGxOgAQAAKg4QABgBIAAoBTAAOABAABIAKhhnOUNnMzlIVXUybTVUMllNVEFkdFJRPT1IA6AGDBKOAQgFEokBChx3UkJyWkwrNlBBOWF2S2dqTlA3SlhETGNmdnM9EiQ5OWVjNmM1YS0yZTgyLTU4MmMtYmNmNS0zMzhmNjFhMjZlMDEYACAAKAAwweHolqwzOOPl6JasM0Dj5eiWrDNKHG5teDY1c1FEdnhJOFRnRWV2K0ErbnR0b1NuND1aAGUAAAAAwj4CYAASjgEIAxKJAQocbmpnRHU4OGVDcnZYcDg2cEQ3ZkhHY3FGcDg4PRIkYmU2NjUzNDctOGJiMC01ZmM4LWI1MWMtZDE4ZDMwOTZjNjE1GAAgACgAMMzao5qxMDiH6Yih7S9Ah+mIoe0vShx5ek5CMDFjbjU0QTdjUlUwdVQrL1BnbVR0VW89WgBlAAAAAMI+AmAAEq0BCAkSqAEKHEEzZ2pRdzFsTnhaTTAyZGZZcjc4NmxuU2xPOD0SJDhlMjhlOGMwLWE3ZWQtNDU4Yy1iM2RkLWIxZjU4MjA2MWY0OBgAIAAoADC3sJnkszE4yrWZ5LMxQMq1meSzMUocdmhsdHFiYVRRTWV1UWF1KzRQMG90Qk9lN0lnPVofIh2xVk5SVjNueG5UeXh2aFJMVk5yekdnN2JCLzFvPWUAAAAAwj4CYAUSrAEICBKnAQocVEh3aXBLeUd6VXJRcUpZelVBTnBmSmlISjQ4PRIkNzMzOWUwZDctN2I4OS00MDAzLThhYWUtMGE1N2QzNzIxNDg5GAAgACgAMLawmeSzMTjptJnkszFA6bSZ5LMxShxFZEF2Qzh1OThRYmRzMzA0WDlwbWRVd3F1dXM9Wh4iHGJlbkthQ2srWFVjREY3bEcvQTlrT21LQkFQcz1lAAAAAMI+AmAFEo4BCAESiQEKHHl4Si82ZnZrZWNyN2twNUVRekI0dFdMcGRiRT0SJGNjNmExNjc1LTMwMmYtNTc1NC04NDBmLTQyMjhiNjQzYzIxMRgAIAAoADDM2qOasTA4pumIoe0vQKbpiKHtL0ocYVJDV0xnaEY5YjVJbnFLSUR2dUovanZRa0ZjPVoAZQAAAADCPgJgABKsAQgHEqcBChxMVk5YdnVSa1FWc1JmTnZzOHhCRHU3WTA1d0k9EiQ2N2UzYzhlMi03YzgxLTRlYjUtYTI2Mi0wMTQ3NmJlZjdlMTIYACAAKAAwtbCZ5LMxOL+0meSzMUC/tJnkszFKHFpIMmVhNk5TRE16aVNJSWczT2tWc2dXU1FsTT1aHiIceHhESWMvaGxlNDhLMkxiVFU3cEJEajRtQkY0PWUAAAAAwj4CYAASjgEIAhKJAQocWWNTVG9udkVTUHdxQ3M0TDJjclZodjY4TDk4PRIkYTRlODM2NWQtYWIyMS01MDAxLTlhYjAtZmNhMjQwMmQ0NmJlGAAgACgAMMzao5qxMDjo6Iih7S9A6OiIoe0vShxvUFZraHdCUmJWNjVLQ1dSMitJT05IV29PdTg9WgBlAAAAAMI+AmAAMAA4AA==",
+   "version": 1
+}
