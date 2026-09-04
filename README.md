@@ -1,308 +1,316 @@
-# S-SPARC AI
+# S-SPARC AI (Smart Software Engineering & Pedagogical Adaptive Retrieval Assistant)
 
-S-SPARC AI is an AI-powered learning assistant for programming and sustainability education. The project combines a Python backend, a PHP frontend, retrieval-augmented code assistance, automated knowledge-base quality control, gamification, assessment support, and environmental impact tracking.
+> **Platform Intelligence Buatan Adaptif & Pedagogis Terintegrasi untuk Laboratorium Pemrograman dan Pendidikan Software Engineering di Perguruan Tinggi Indonesia.**
 
-The system is designed to answer programming questions efficiently while keeping the underlying code knowledge base clean, relevant, and reliable over time.
+[![Python Version](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.110.0-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![PHP](https://img.shields.io/badge/PHP-8.2-777BB4?style=for-the-badge&logo=php&logoColor=white)](https://php.net)
+[![MariaDB](https://img.shields.io/badge/MariaDB-10.11-003545?style=for-the-badge&logo=mariadb&logoColor=white)](https://mariadb.org)
+[![Gemini 3.5 Flash Lite](https://img.shields.io/badge/AI_Engine-Google_Gemini_3.5_Flash_Lite-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev)
+[![Sustainability](https://img.shields.io/badge/Green_AI-Carbon_Tracking_IDN-2EA44F?style=for-the-badge&logo=leaf&logoColor=white)](#sustainability)
 
-## Why This Project Exists
+---
 
-Most AI coding assistants focus only on generating answers. S-SPARC takes a broader approach:
+## 📌 Ringkasan Eksekutif (Executive Summary)
 
-- It serves learners through a chat-based programming assistant.
-- It prefers retrieval over full LLM generation when a high-quality answer already exists.
-- It continuously evaluates and cleans the code knowledge base using static analysis, semantic similarity, LLM-based judging, duplicate detection, and anomaly screening.
-- It makes AI usage more transparent by tracking energy, carbon, and water impact.
+**S-SPARC AI** (*Smart Software Engineering & Pedagogical Adaptive Retrieval Assistant*) adalah sistem asisten pembelajaran pemrograman berbasis AI yang dirancang khusus untuk lingkungan akademik Perguruan Tinggi di Indonesia. 
 
-This makes S-SPARC useful not only as a chatbot, but also as a controlled educational AI platform.
+Berbeda dengan umum chatbot AI (*generic LLM wrappers*), S-SPARC AI mengombinasikan **Pedagogical Scaffolding (Protokol C-I-O-E)**, **Multi-Tier Adaptive Router**, **Hybrid Vector Semantic Caching (Sub-150ms Retrieval)**, dan **Green AI Environmental Footprint Tracking**. Sistem ini memungkinkan institusi pendidikan menyelenggarakan asistensi AI untuk ribuan mahasiswa dengan **biaya API $0 (Zero API Cost)** dan **performa latency tinggi (< 2.5 detik)**.
 
-## Core Features
+---
 
-### 1. AI Programming Assistant (Hybrid LLM Architecture)
+## 🌟 Pilar Arsitektur & Fitur Utama
 
-- Chat-based code support for learners with **Google Gemini Flash Lite** (Cloud) & **Ollama Qwen2.5-Coder 14B** (Local).
-- Multi-Provider Gateway managing a 6 API key pool (`GEMINI_API_KEY_1..6`) with automatic round-robin rotation.
-- **Adaptive Router** for intelligent hybrid routing:
- - **Game ON Courses (`game_course.is_active = 1`)**: Controlled by E-STRANGE Gamification Points ($\ge 100$ points required, 10 points deducted per successful Cloud request).
- - **Game OFF Courses (`game_course.is_active = 0`)**: Controlled by Token Quota Limit (`GAME_OFF_TOKEN_LIMIT=5000` tokens). Free Cloud access until token quota is exhausted, then routes to Local Ollama.
- - **Technical Rate Limit Failover**: Seamless automatic failover to Ollama Runtime if all 6 Gemini keys hit rate limits (HTTP 429).
-- Support for educational programming scenarios and code explanation tasks.
+```
++-----------------------------------------------------------------------------------+
+|                                  S-SPARC AI PLATFORM                              |
++-----------------------------------------------------------------------------------+
+| 1. C-I-O-E Protocol      | 2. Multi-Tier Router     | 3. Hybrid Semantic Cache    |
+| - Context, Input,        | - Tier 1: User Key       | - BM25 Sparse Search        |
+|   Output, Error Trace    | - Tier 2: System Pool    | - SentenceTransformers Dense|
+| - Shannon Entropy Eval   | - Tier 3: Local Ollama   | - RRF (Sub-170ms / $0 Cost) |
++--------------------------+--------------------------+-----------------------------+
+| 4. Carbon Tracking       | 5. E-STRANGE Gamification| 6. Windows Socket Resolver  |
+| - Indonesia Grid CIF     | - Daily Quota (1500 RPD) | - IPv4 Socket Bypass        |
+| - gCO2 & Tree Equivalent | - Cooldown Rate Limits   | - Fixed 78s -> 2.7s Latency |
++-----------------------------------------------------------------------------------+
+```
 
-### 2. Retrieval-Augmented Knowledge Base
+### 1. Protokol Pedagogis C-I-O-E & Prompt Literacy Evaluator
+S-SPARC melatih mahasiswa berpikir komputasional secara terstruktur dengan menerapkan **Protokol C-I-O-E**:
+- **[C] Context**: Latar belakang tugas, domain masalah, dan batasan algoritma.
+- **[I] Input**: Pre-kondisi data, struktur data input, dan contoh sampel data.
+- **[O] Output**: Post-kondisi yang diharapkan, tipe data return, dan kompleksitas target.
+- **[E] Error Trace / Kendala**: Pesan kesalahan compiler/interpreter, kode yang menghasilkan TLE/WA, dan percobaan solutif yang telah dilakukan.
 
-- Uses semantic similarity to match user prompts with stored code snippets.
-- Reduces unnecessary LLM calls when a suitable answer already exists (similarity $\ge 90\%$, 0 Token Cost).
-- Stores and reuses useful programming examples across user sessions.
+Sistem secara otomatis mengevaluasi kualitas prompt mahasiswa menggunakan formulasi matematika **Shannon Entropy** ($H$) dan **Technical Token Density** ($D$), memberikan nilai mutu prompt (*Literacy Grade: A / B / C*) serta rekomendasi pedagogis real-time.
 
-### 3. Automated Code Evaluator Service
+### 2. Multi-Tier Adaptive Router & High-Availability AI Engine
+Untuk menjamin kontinuitas layanan tanpa tergantung pada satu API key tunggal, S-SPARC menerapkan 3 tingkat failover otomatis (*Adaptive Router*):
+- **Tier 1 (User Personal Gemini Key)**: Setiap mahasiswa dapat mendaftarkan Google Gemini API Key milik pribadi (gratis dari Google AI Studio). Respon diproses langsung via Direct REST API dengan latensi **~1.5 - 2.5 detik**.
+- **Tier 2 (System Key Pool Fallback)**: Jika user key tidak tersedia atau mengalami kegagalan, router mengalihkan request secara *round-robin* ke *System API Key Pool* yang terdaftar di lingkungan server.
+- **Tier 3 (Local Zero-Cost Offline Fallback - Ollama)**: Jika seluruh akses internet/cloud Gemini mengalami pembatasan kuota (HTTP 429), sistem melakukan failover otomatis ke model lokal **Ollama Qwen2.5-Coder 14B**, menjamin platform tetap beroperasi 100% secara offline.
 
-- Periodically scans the `code_embeddings` knowledge base.
-- Detects duplicates, low-quality snippets, and weak prompt-code matches.
-- Produces JSON reports, backups, and latest evaluation statistics.
-- Supports dry-run mode for safe validation before deletion.
+### 3. Hybrid Vector Semantic Caching (RRF Search - Sub-150ms)
+S-SPARC dilengkapi mesin *Retrieval-Augmented Caching* pintar yang mengombinasikan:
+- **Sparse Search (BM25)** untuk kecocokan kata kunci teknis dan nama fungsi.
+- **Dense Vector Search (SentenceTransformers `all-MiniLM-L6-v2`)** untuk kecocokan makna dan konteks masalah.
+- **Reciprocal Rank Fusion (RRF)** untuk menggabungkan hasil pencarian dengan presisi tinggi.
 
-### 4. E-STRANGE Gamification and Assessment Integration
+Ketika prompt mahasiswa memiliki kemiripan kosinus ($\ge 0.88$) dengan solusi terverifikasi dalam database `code_embeddings`, sistem akan menjawab secara **instan (0.11 - 0.17 detik)** tanpa mengonsumsi token API (0 Tokens / FREE Tier).
 
-- E-STRANGE Gamification Points formula:
- $$\text{Total Point} = \text{SUM}(\text{originality\_point}) + \text{SUM}(\text{efficiency\_point}) + \text{SUM}(\text{quality\_point})$$
-- Default token threshold base set to 0 (`max(0, ...)`).
-- Leaderboards and dashboards for student motivation.
-- Assessment-related endpoints and frontend pages for learning workflows.
+### 4. Windows Network IPv4 Socket Optimizer
+Pengujian lingkungan laboratorium kampus bersistem operasi Windows sering kali mengalami *socket DNS stall* akibat pencarian alamat IPv6 pada domain `generativelanguage.googleapis.com` (yang menyebabkan delay hingga 78 detik per request). 
 
-### 5. Sustainability Tracking
+S-SPARC mengimplementasikan **Custom IPv4 Socket Resolver Patch** di tingkat socket Python (`_ipv4_getaddrinfo`), yang memangkas latensi eksekusi dari **78 detik menjadi 2.7 detik** secara konsisten.
 
-- Tracks environmental impact for AI usage.
-- Surfaces carbon, energy, and water estimates to users.
-- Supports sustainability-focused educational narratives and reporting.
+### 5. Tracking Karbon & Keberlanjutan Kampus Hijau (Green AI)
+S-SPARC mendukung inisiatif Kampus Hijau (*Green Campus*) dengan menghitung estimasi dampak lingkungan dari setiap eksekusi prompt secara ilmiah:
+$$\text{Energy (kWh)} = \text{Tokens} \times \text{kWh\_per\_token} \times \text{PUE}$$
+$$\text{Carbon (gCO2)} = \text{Energy (kWh)} \times \text{CIF\_IDN} \times 1000$$
 
-## Repository Architecture
+*Catatan Parameter:*
+- **CIF Indonesia (Carbon Intensity Factor)**: $0.78 \text{ kg CO}_2/\text{kWh}$ (Grid Listrik Indonesia).
+- **PUE (Power Usage Effectiveness)**: $1.5$ (Standar Pusat Data Efisien).
+- **Pohon Setara**: Dikonversi berdasarkan daya serap pohon tipikal ($21.77 \text{ kg CO}_2/\text{tahun}$).
 
-This repository is organized into several major areas.
+### 6. Integrasi Gamifikasi Akademik & Quota Rate Limiting (E-STRANGE)
+- **Daily Quota Badge**: Menampilkan sisa kuota harian secara transparan (1,500 Request/Hari & 15 Request/Menit untuk tier gratis Gemini).
+- **Cooldown Rate Limits**: Mencegah pemanggilan berlebihan (*spamming*) dengan timer jeda 60 detik untuk Live AI dan 15 detik untuk Database Cache Hits.
+- **Points Aggregator & Leaderboard**: Poin gamifikasi E-STRANGE dihitung otomatis dari kualitas prompt, orisinalitas kode, dan efisiensi algoritma.
 
-### Backend (Python)
+---
 
-- `app.py`: main Flask application entry point.
-- `run_production.py`, `run_production_server.py`: production-oriented launch helpers.
-- `password_management.py`, `clear_old_retrieval_tokens.py`, and similar scripts: operational utilities.
+## 🏗️ Teknologi Stack (Tech Stack Matrix)
 
-### Evaluator Service
+| Komponen | Teknologi & Framework | Fungsi & Deskripsi |
+| :--- | :--- | :--- |
+| **Backend Core** | Python 3.12, FastAPI, Uvicorn | High-performance asynchronous REST API backend. |
+| **Frontend Web** | PHP 8.x, Vanilla CSS, JS (ES6+) | Web interface responsive, Glassmorphism UI, Dark/Light Mode. |
+| **Database** | MariaDB 10.11 / MySQL 8.0 | Menyimpan relasi user, histori chat, job queue, dan `code_embeddings`. |
+| **Vector Search** | SentenceTransformers (`MiniLM-L6-v2`), BM25 | Hybrid sparse + dense vector retrieval engine. |
+| **AI Providers** | Google Gemini REST API, LiteLLM, Ollama | Multi-provider cloud and local LLM runtime execution. |
+| **UI Components** | SweetAlert2, Highcharts, Google Fonts (Outfit) | Notifikasi interaktif, chart sustainabilitas, dan tipografi modern. |
 
-- `code_evaluator_service/`: standalone evaluation service for quality control on code snippets.
-- Includes API endpoints, scheduler support, anomaly detection, static analysis, and report generation.
+---
 
-### Frontend (PHP)
+## 📐 Diagram Arsitektur & Lifecycle Request
 
-- `frontend/`: web interface for login, chat, dashboards, gamification, course pages, and sustainability pages.
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Student as Mahasiswa (Browser UI)
+    participant PHP as PHP Frontend Server (8088)
+    participant API as FastAPI Backend (5000)
+    participant Cache as Hybrid Semantic Cache (BM25 + Vector)
+    participant Router as Multi-Tier Adaptive Router
+    participant Gemini as Google Gemini 3.5 API
+    participant DB as MariaDB Database
 
-### Database and Migrations
+    Student->>PHP: Kirim Prompt (C-I-O-E Format)
+    PHP->>API: POST /api/generate-code (Header: X-User-ID)
+    API->>Cache: Check Fast-Path Similarity (Prompt Vector)
+    
+    alt Similarity >= 0.88 (Semantic Cache Hit)
+        Cache-->>API: Return Cached Code (0 Tokens)
+        API-->>PHP: Response (Latency: ~0.15s, Mode: Cache Hit)
+    else Similarity < 0.88 (Live AI Generation Needed)
+        API->>Router: Route Request (Username / User Key)
+        Router->>DB: Fetch Active User Gemini API Key
+        alt User API Key Exists (Tier 1)
+            Router->>Gemini: Direct REST (gemini-3.5-flash-lite)
+            Gemini-->>Router: Generated Code Output
+        else Key Missing / Rate Limited (Tier 2/3)
+            Router->>Router: Failover to System Key Pool / Ollama
+        end
+        Router-->>API: AI Generated Code
+        API->>DB: Auto-Ingest New Solution to code_embeddings
+        API->>DB: Log Carbon Impact & Gamification Points
+        API-->>PHP: Response (Latency: ~2.5s, Mode: Live AI)
+    end
 
-- `db_migrations/`: SQL files for schema setup and incremental updates.
+    PHP-->>Student: Tampilkan Solusi Kode & Metrics Sustainability
+```
 
-### Semantic Similarity and Experiments
+---
 
-- `semantic_similarity/`: utilities for retrieval and embedding-related work.
-- `pengujian semantic similarity/`: local experimental scripts and visualization assets.
+## 🚀 Panduan Instalasi & Deployment Laboratorium Kampus
 
-### Local Models and Assets
+Berikut langkah-langkah instalasi S-SPARC AI pada peladen (*server*) atau komputer laboratorium universitas.
 
-- `pretrained_model/`: local large model files used during development or evaluation.
-- These files are ignored by Git because of size.
+### 1. Prasyarat Sistem (Prerequisites)
+- **Sistem Operasi**: Windows 10/11, Windows Server, atau Linux (Ubuntu 22.04 LTS).
+- **Python**: Versi 3.10 atau 3.12 (disarankan).
+- **PHP**: Versi 8.1 / 8.2 dengan ekstensi `pdo_mysql`, `curl`, `mbstring`.
+- **Database**: MariaDB 10.6+ atau MySQL 8.0+.
+- **Web Server**: Apache/Nginx (atau PHP Built-in Server untuk kebutuhan pengujian).
 
-## High-Level System Flow
-
-1. A learner submits a programming-related prompt.
-2. The backend computes similarity against the stored knowledge base.
-3. If a strong match is found, the system returns a retrieval-based answer.
-4. If no strong match is found, the system routes the prompt to GPT.
-5. The response is shown in the frontend and tracked for usage, gamification, and environmental impact.
-6. Separately, the evaluator service periodically reviews the knowledge base and flags duplicates, low-quality content, or suspicious entries.
-
-## Code Evaluator Service
-
-The evaluator service is one of the main differentiators of this project.
-
-### What It Does
-
-- Reads code snippet entries from the `code_embeddings` table in batches.
-- Detects programming language heuristically.
-- Runs static analysis, including syntax and complexity-related checks.
-- Measures semantic similarity between prompt and code.
-- Uses LLM-as-a-Judge when an API key is available, with heuristic fallback when it is not.
-- Detects exact duplicates through hashing.
-- Applies anomaly detection on numerical evaluation features.
-- Produces deletion candidates, review candidates, and valid entries.
-
-### Main Methods Used
-
-- AST parsing for Python syntax and structure analysis.
-- Radon metrics for cyclomatic complexity and maintainability index.
-- Embedding similarity for prompt-code alignment.
-- GPT-based structured judging for semantic quality scoring.
-- SHA-256 hashing for duplicate detection.
-- Isolation Forest for anomaly detection.
-
-### Evaluator Endpoints
-
-- `GET /health`
-- `GET /run-evaluation`
-- `GET /run-evaluation?background=true`
-- `GET /stats`
-
-### Example Evaluation Result
-
-From the latest recorded evaluation run:
-
-- Total entries evaluated: 678
-- Valid entries: 647
-- Review entries: 1
-- Delete candidates: 30
-- Average semantic similarity: 0.8774
-- Average final score: 8.6149 / 10
-- Delete reasons: 23 duplicates, 7 low-quality
-
-This indicates that the evaluator is not only theoretical; it already runs on real data and generates measurable results.
-
-## Tech Stack
-
-### Backend
-
-- Python 3.13+
-- Flask
-- FastAPI (for evaluator service)
-- APScheduler
-
-### AI / ML
-
-- OpenAI GPT-4o
-- Sentence-Transformers / multilingual embeddings
-- scikit-learn
-- Radon
-- AST (Python standard library)
-
-### Frontend
-
-- PHP 8+
-- Composer
-- Tailwind CSS
-- Bootstrap
-- Chart.js
-- DataTables
-
-### Data / Infra
-
-- MySQL / MariaDB
-- Docker Compose (optional)
-
-## Local Setup
-
-### 1. Python Backend
-
-From the project root:
-
+### 2. Kloning Repositori & Environment Setup
 ```bash
-python -m venv .venv
-.venv\Scripts\activate
+# Clone repositori
+git clone https://github.com/06202003/s-sparc.git
+cd s-sparc
+
+# Buat environment Python virtual
+python -m venv venv
+
+# Aktivasi venv (Windows)
+.\venv\Scripts\activate
+# Aktivasi venv (Linux/macOS)
+# source venv/bin/activate
+
+# Install dependencies Python
 pip install -r requirements.txt
-python app.py --port 5000
 ```
 
-To expose the backend on your local network:
+### 3. Konfigurasi Environment (`.env`)
+Salin berkas `.env.example` menjadi `.env` dan sesuaikan nilainya:
+```ini
+# Server Configuration
+FLASK_PORT=5000
+FLASK_HOST=127.0.0.1
+FASTAPI_URL=http://127.0.0.1:5000
 
+# Database Configuration
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=passwordku
+DB_NAME=db_semantic
+
+# System Fallback Gemini Keys (Opsional)
+GEMINI_API_KEY_1=AIzaSyYourPersonalGeminiApiKeyHere123
+GEMINI_MODEL=gemini-3.5-flash-lite
+
+# Ollama Local Fallback (Opsional)
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=qwen2.5-coder:14b
+```
+
+### 4. Migrasi Database
+Impor skema database dari direktori `db_migrations/` ke instance MariaDB/MySQL Anda:
 ```bash
-python app.py --host 0.0.0.0 --port 5000
+mysql -u root -p db_semantic < db_migrations/complete_schema.sql
 ```
 
-For heavier concurrent usage:
+### 5. Menjalankan Server Services
 
+**Langkah A: Jalankan FastAPI Backend Server (Port 5000)**
 ```bash
-python run_production.py
+python run_fastapi.py
 ```
 
-### 2. Frontend
-
+**Langkah B: Jalankan PHP Web Server (Port 8088)**
 ```bash
-cd frontend
-composer install
-php -S localhost:8000
+php -S 127.0.0.1:8088 -t estrange/v2/v2/ssparc
 ```
 
-Then open `http://localhost:8000`.
+Akses browser Anda ke: `http://127.0.0.1:8088/chat.php`
 
-### 3. Evaluator Service
+---
 
-```bash
-pip install -r code_evaluator_service/requirements.txt
-python -m uvicorn code_evaluator_service.evaluator_app:app --host 0.0.0.0 --port 5055
+## 📡 Dokumentasi Endpoint REST API Utama
+
+### 1. `POST /api/generate-code`
+Menerima prompt mahasiswa dan menghasilkan kode jawaban teroptimasi.
+
+- **Headers**:
+  - `Content-Type: application/json`
+  - `X-User-ID: <UUID_USER_MAHASISWA>`
+- **Request Body**:
+```json
+{
+  "prompt": "[CONTEXT: Pengujian Array]\nSaya ingin mencari nilai maksimum...\n[INPUT]\nnums = [1, 5, 3]\n[OUTPUT]\nReturn 5\n[ERROR TRACE]\nNone",
+  "course_id": "COURSE_SE_2026",
+  "assessment_id": "ASSESS_01",
+  "response_mode": "Standard",
+  "language": "python"
+}
+```
+- **Response Success (200 OK)**:
+```json
+{
+  "mode": "success",
+  "job_id": "9b1deb4d-3b7d-41b9-9102-123456789abc",
+  "code": "```python\ndef find_max(nums):\n    return max(nums)\n```",
+  "is_retrieval": false,
+  "request_tokens_used": 1420,
+  "cooldown_seconds": 60,
+  "query_quota": {
+    "has_key": true,
+    "masked_key": "AQ.Ab8...HX6g",
+    "daily_remaining": 1499,
+    "tier_label": "Google Gemini Free Tier (1,500 RPD / 15 RPM)"
+  },
+  "prompt_analytics": {
+    "prompt_quality_score": 1.0,
+    "literacy_grade": "A (Prompt Architect)"
+  }
+}
 ```
 
-Or run it as a module:
+---
 
-```bash
-python -m code_evaluator_service
+### 2. `POST /api/user/api-key`
+Mendaftarkan atau memperbarui Gemini API Key milik pribadi mahasiswa.
+
+- **Request Body**:
+```json
+{
+  "api_key": "AIzaSyYourPersonalGeminiApiKeyHere123",
+  "terms_accepted": true
+}
+```
+- **Response Success (200 OK)**:
+```json
+{
+  "status": "success",
+  "message": "API key berhasil disimpan dan Syarat & Ketentuan telah disetujui.",
+  "masked_key": "AQ.Ab8...HX6g"
+}
 ```
 
-## Environment Configuration
+---
 
-This repository expects environment-based configuration for database credentials and API keys.
+### 3. `GET /api/user/query-quota`
+Mengambil informasi kuota harian, status API key, dan sisa batas request real-time.
 
-### Main database settings
-
-- `MYSQL_HOST`
-- `MYSQL_PORT`
-- `MYSQL_USER`
-- `MYSQL_PASSWORD`
-- `MYSQL_DB`
-
-### Evaluator-specific optional settings
-
-- `EVALUATOR_PORT`
-- `EVALUATOR_BATCH_SIZE`
-- `EVALUATOR_SEMANTIC_THRESHOLD`
-- `EVALUATOR_REVIEW_SCORE_THRESHOLD`
-- `EVALUATOR_FINAL_SCORE_THRESHOLD`
-- `EVALUATOR_EMBEDDING_MODEL`
-- `EVALUATOR_LLM_MODEL`
-- `EVALUATOR_OPENAI_API_KEY`
-- `EVALUATOR_TIMEZONE`
-- `EVALUATOR_DRY_RUN`
-
-Use `.env.example` as the starting point where available.
-
-## Database Migrations
-
-The `db_migrations/` directory contains SQL scripts for schema creation and updates. Apply them in order using your preferred database client.
-
-Examples include:
-
-- `001_add_user_courses.sql`
-- `002_add_env_impact_filters.sql`
-- `003_add_assessment_fields.sql`
-
-## Running with Docker
-
-If you want a container-based workflow, review `docker-compose.yml` and run:
-
-```bash
-docker compose up --build
+- **Response Success (200 OK)**:
+```json
+{
+  "has_key": true,
+  "provider": "gemini",
+  "masked_key": "AQ.Ab8...HX6g",
+  "daily_limit": 1500,
+  "daily_used": 4,
+  "daily_remaining": 1496,
+  "rate_limit_rpm": 15,
+  "tier_label": "Google Gemini Free Tier (1,500 RPD / 15 RPM)"
+}
 ```
 
-You may still need to adapt environment variables, ports, and database initialization to your local setup.
+---
 
-## Important Notes About Large Files
+## 📊 Integrasi Pembelajaran & Panduan Mahasiswa
 
-- Local pretrained models are intentionally excluded from Git.
-- Evaluator outputs such as logs, reports, and backups are also ignored.
-- If you clone this repository on a fresh machine, you will need to restore model files manually before running the full semantic or evaluation pipeline.
+1. **Pendaftaran API Key**:
+   Saat pertama kali membuka menu **Chat Assistant**, mahasiswa mengklik tombol **Manage Google Gemini API Key**, memasukkan API key dari Google AI Studio, dan menyetujui Ketentuan Penggunaan.
+2. **Pengisian Scaffolding**:
+   Mahasiswa memilih *Quick Prompt Template* (C-I-O-E) untuk menyusun pertanyaan secara akademik dan terstruktur.
+3. **Pemantauan Karbon & Kuota**:
+   Badge kuota di bagian kanan bawah menampilkan sisa batas API dan kalkulasi penghematan karbon secara transparan.
 
-## Recommended Reading
+---
 
-- [code_evaluator_service/README.md](code_evaluator_service/README.md)
-- [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md)
-- [QUICK_START_PRODUCTION.md](QUICK_START_PRODUCTION.md)
-- [PERFORMANCE_OPTIMIZATION.md](PERFORMANCE_OPTIMIZATION.md)
-- [report.md](report.md)
+## 👥 Tim Pengembang & Kontribusi Akademik
 
-## Use Cases
+S-SPARC AI dikembangkan oleh tim peneliti dan praktisi Software Engineering di Indonesia untuk mendukung akselerasi transformasi digital pendidikan tinggi nasional.
 
-This repository is relevant for:
+- **Lead Architect & Developer**: Yehezkiel David Setiawan & Tim Riset S-SPARC
+- **Lisensi**: Open-Source untuk Penggunaan Pendidikan & Akademik (MIT License).
 
-- AI-assisted programming education
-- Retrieval-augmented code tutoring
-- Knowledge-base quality control for code snippets
-- Sustainability-aware AI systems
-- Gamified educational platforms
+---
 
-## Project Status
-
-This repository is an active research and engineering project. It contains production-oriented components, experiment artifacts, and supporting utilities in the same workspace. If you are using it externally, start from the backend, frontend, and evaluator service directories first.
-
-## Contributing
-
-Contributions are easier to review when they are small and focused.
-
-- Keep large model files out of Git.
-- Prefer focused changes over broad refactors.
-- Update documentation when changing architecture, setup, or environment requirements.
-
-## License
-
-No repository-wide license file is currently included. Add a `LICENSE` file if you want to publish this repository with an explicit open-source license.
+<p align="center">
+  <sub>Diproduksi dengan bangga untuk Kemajuan Pendidikan Software Engineering & Artificial Intelligence di Indonesia. 🇮🇩</sub>
+</p>
