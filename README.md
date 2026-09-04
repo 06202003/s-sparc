@@ -98,11 +98,13 @@ S-SPARC AI incorporates a custom **IPv4 Socket Resolver Patch** at the socket la
 
 ### 5. Green Computing & Environmental Footprint Tracking
 S-SPARC AI advances institutional *Green Campus* initiatives by calculating the environmental footprint of every AI prompt in real time:
-$$\text{Energy (kWh)} = \text{Tokens} \times \text{kWh\_per\_token} \times \text{PUE}$$
-$$\text{Carbon (gCO2)} = \text{Energy (kWh)} \times \text{CIF\_IDN} \times 1000$$
+
+$$\text{Energy (kWh)} = \text{Tokens} \times \text{kWh/token} \times \text{PUE}$$
+
+$$\text{Carbon (gCO2)} = \text{Energy (kWh)} \times \text{CIF} \times 1000$$
 
 *Parameters:*
-- **CIF Indonesia (Carbon Intensity Factor)**: $0.78 \text{ kg CO}_2/\text{kWh}$ (Indonesian Electrical Grid Baseline).
+- **CIF (Carbon Intensity Factor - Indonesia)**: $0.78 \text{ kg CO}_2/\text{kWh}$ (Indonesian Electrical Grid Baseline).
 - **PUE (Power Usage Effectiveness)**: $1.5$ (Efficient Data Center Benchmark).
 - **Tree Absorption Equivalent**: Calculated based on standard annual absorption rates ($21.77 \text{ kg CO}_2/\text{year}$).
 
@@ -121,35 +123,24 @@ $$\text{Carbon (gCO2)} = \text{Energy (kWh)} \times \text{CIF\_IDN} \times 1000$
 sequenceDiagram
     autonumber
     actor Student as Student (Browser UI)
-    participant PHP as PHP Frontend Server (cPanel / Enterprise Server)
-    participant API as S-SPARC FastAPI Backend (Port 5000)
-    participant Cache as Hybrid Semantic Cache (BM25 + Vector RRF)
-    participant Router as Multi-Tier Adaptive Router
-    participant Java as SSTRANGE LSH Engine (Scheduled Runnable JAR)
-    participant DB as MariaDB Enterprise Cluster
+    participant PHP as PHP Frontend (cPanel)
+    participant API as S-SPARC Backend (FastAPI)
+    participant Cache as Semantic Cache (BM25 + Vector)
+    participant Router as Adaptive AI Router
+    participant DB as MariaDB Database
 
-    rect rgb(240, 248, 255)
-        Note over Student, API: 1. S-SPARC AI Interactive Tutoring Flow
-        Student->>PHP: Submit Scaffolded Prompt (C-I-O-E Protocol)
-        PHP->>API: POST /api/generate-code (Header: X-User-ID)
-        API->>Cache: Evaluate Cosine Similarity (Fast-Path >= 0.88)
-        alt Cache Hit (0 Tokens / Sub-170ms)
-            Cache-->>API: Return Verified Solution Code
-        else Live Cloud / On-Prem AI Generation
-            API->>Router: Route Request (Tier 1 User Key -> Tier 2 Pool -> Tier 3 Local Ollama)
-            Router-->>API: Generated AI Solution
-            API->>DB: Auto-Ingest Solution & Log Sustainability Metrics
-        end
-        API-->>PHP: Response Payload
-        PHP-->>Student: Render Code Solution & Carbon Footprint Metrics
+    Student->>PHP: Submit Prompt (C-I-O-E Protocol)
+    PHP->>API: POST /api/generate-code (Header: X-User-ID)
+    API->>Cache: Evaluate Cosine Similarity (Fast-Path >= 0.88)
+    alt Cache Hit (0 Tokens / Sub-170ms)
+        Cache-->>API: Return Verified Solution Code
+    else Live Cloud / On-Prem AI Generation
+        API->>Router: Route Request (User Key -> System Pool -> Local Ollama)
+        Router-->>API: Generated AI Solution
+        API->>DB: Auto-Ingest Solution & Log Carbon Metrics
     end
-
-    rect rgb(255, 245, 238)
-        Note over Java, DB: 2. E-STRANGE Assessment & SSTRANGE LSH Engine (CRON)
-        Java->>DB: Fetch New Student Submissions (Every 60 Seconds)
-        Java->>Java: Compute MinHash & Super-Bit Similarity Matrices
-        Java->>DB: Store Originality, Quality & Gamification Points
-    end
+    API-->>PHP: Response Payload
+    PHP-->>Student: Render Code Solution & Carbon Footprint Metrics
 ```
 
 ---
@@ -167,90 +158,56 @@ sequenceDiagram
 
 ---
 
-## 🔧 Enterprise Deployment & Installation Guide
+## 🔧 S-SPARC Backend Installation & Deployment Guide
 
-Follow these instructions to deploy S-SPARC AI and the E-STRANGE platform on institutional IT infrastructure.
+Follow these step-by-step instructions to deploy the S-SPARC AI Python Backend service on institutional server infrastructure.
 
-### System Requirements:
-- **Server OS**: Linux (Ubuntu 22.04 LTS / RHEL 9) or Windows Server 2022.
-- **Web Server**: Apache 2.4 / Nginx 1.24 with PHP 8.1+ (`pdo_mysql`, `curl`, `mbstring`).
+### 1. Prerequisites
+- **Operating System**: Linux (Ubuntu 22.04 LTS / RHEL 9) or Windows Server.
 - **Python**: Version 3.10 or 3.12.
-- **Java**: JRE / JDK 11+.
 - **Database**: MariaDB 10.6+ or MySQL 8.0+.
 
 ---
 
-### Step 1: E-STRANGE Supporting Directory & Java Engine
-1. Deploy the supporting directory to the server root (e.g., `/var/www/supporting_dir` or `C:\supporting_dir`).
-2. Configure `prefixPath` in `ScheduledSuspicionGenerator.java` to point to the server path of the supporting directory.
-3. Compile the Java project into a **runnable JAR file** (`ScheduledSuspicionGenerator.jar`) with `ScheduledSuspicionGenerator.java` as the main class.
-4. Place the runnable JAR into the supporting directory.
-5. In `serverinfo.txt`, configure MySQL database credentials and `server_base_path` (pointing to the `public_html` PHP root).
-
----
-
-### Step 2: Database Initialization
-Import the production schema into your MariaDB/MySQL database cluster:
+### 2. Environment Setup & Dependencies
 ```bash
-mysql -u root -p db_semantic < db_migrations/complete_schema.sql
+# Clone the repository
+git clone https://github.com/06202003/s-sparc.git
+cd s-sparc
+
+# Create virtual environment
+python -m venv venv
+
+# Activate venv (Windows)
+.\venv\Scripts\activate
+# Activate venv (Linux/macOS)
+# source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
 ```
 
 ---
 
-### Step 3: PHP Frontend Deployment (`public_html`)
-1. Copy the PHP project into the server's web root (`public_html`).
-2. Update `_config.php` with production credentials:
-   ```php
-   $servername = "localhost";
-   $username = "your_db_user";
-   $password = "your_db_password";
-   $dbname = "db_semantic";
-   $baseDomainLink = "https://estrange.your-university.ac.id/";
-   $registered_email_domain = "@maranatha.ac.id";
-   ```
-3. Configure `_phpmailerlib.php` with institutional email credentials (XOAUTH2 authentication).
-
----
-
-### Step 4: S-SPARC FastAPI Backend Deployment
-1. Deploy the S-SPARC Python backend to the server.
-2. Initialize virtual environment and install dependencies:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate
-   pip install -r requirements.txt
-   ```
-3. Configure production `.env`:
-   ```ini
-   FLASK_PORT=5000
-   FASTAPI_URL=https://estrangeinternal.itmaranatha.org
-   DB_HOST=127.0.0.1
-   DB_USER=your_db_user
-   DB_PASSWORD=your_db_password
-   DB_NAME=db_semantic
-   GEMINI_MODEL=gemini-3.5-flash-lite
-   ```
-4. Start backend service:
-   ```bash
-   python run_fastapi.py
-   ```
-
----
-
-### Step 5: CRON Job Setup (Java SSTRANGE Engine)
-Configure a system CRON job to execute the background similarity engine every minute:
-```cron
-* * * * * java -jar /var/www/supporting_dir/ScheduledSuspicionGenerator.jar >> /var/www/supporting_dir/cron.log 2>&1
+### 3. Environment Configuration (`.env`)
+Copy `.env.example` to `.env` and set your credentials:
+```ini
+FLASK_PORT=5000
+FASTAPI_URL=https://estrangeinternal.itmaranatha.org
+DB_HOST=127.0.0.1
+DB_USER=your_db_user
+DB_PASSWORD=your_db_password
+DB_NAME=db_semantic
+GEMINI_MODEL=gemini-3.5-flash-lite
 ```
 
 ---
 
-### Step 6: Initial System Access & Security Setup
-1. Access the web interface at your institutional domain (`$baseDomainLink`).
-2. Log in with initial administrative credentials:
-   - **Username**: `adminacc`
-   - **Password**: `adminacc`
-3. ⚠️ **MANDATORY SECURITY ACTION**: Update default administrative credentials and institutional notification emails immediately upon first login.
+### 4. Running the Backend Service
+Start the S-SPARC FastAPI production server:
+```bash
+python run_fastapi.py
+```
 
 ---
 
