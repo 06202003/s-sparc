@@ -179,7 +179,7 @@ The imposition of the 200-character **C-I-O-E protocol** and the 60-second refle
 
 ---
 
-## 🌍 UN Sustainable Development Goals (SDGs) & UNU Ethos Alignment
+## 🌍 UN Sustainable Development Goals (SDGs) Alignment
 
 S-SPARC AI is systematically designed to advance multiple UN Sustainable Development Goals (SDGs), anchoring its pedagogical mechanisms in global sustainability, equitable access, and responsible resource consumption. The architectural philosophy reflects the UNU Macau mandate to bridge technological innovation with equitable growth, focusing on insights, challenges, and scalable contributions applicable to higher education in the Global South.
 
