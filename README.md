@@ -1,8 +1,10 @@
-# S-SPARC AI: Smart Software Engineering & Pedagogical Adaptive Retrieval Assistant
+# E-STRANGE™ & S-SPARC AI: Smart Software Engineering & Pedagogical Adaptive Retrieval Assistant
 
-> **An Enterprise-Grade, Pedagogically Scaffolded AI Learning Engine & High-Performance Retrieval System Built on top of the E-STRANGE™ LMS Platform.**
+> **An Enterprise-Grade Educational Platform Integrating Performance Support (E-STRANGE™), Code Similarity Detection (SSTRANGE LSH), and Pedagogical AI Retrieval (S-SPARC).**
 
 [![Platform Version](https://img.shields.io/badge/Platform-v3.2_Enterprise-0052CC?style=for-the-badge&logo=rocket&logoColor=white)](#)
+[![AIREA 2026 Award](https://img.shields.io/badge/Award-AIREA_2026_Merit_Award-FFD700?style=for-the-badge&logo=trophy&logoColor=black)](#publications)
+[![IEEE Award](https://img.shields.io/badge/IEEE-ICALT_2023_Best_Paper-006699?style=for-the-badge&logo=ieee&logoColor=white)](#publications)
 [![Python Version](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110.0-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![PHP](https://img.shields.io/badge/PHP-8.2_Enterprise-777BB4?style=for-the-badge&logo=php&logoColor=white)](https://php.net)
@@ -232,6 +234,16 @@ python run_fastapi.py
   "terms_accepted": true
 }
 ```
+
+---
+
+## 🏆 Major Awards & International Recognition
+
+1. **🏆 AIREA 2026 Merit Award**: Awarded at the *2nd International Competition of AI in Education (AIREA 2026)* hosted by **The Education University of Hong Kong (EdUHK)**. Selected as a top winner among **212 project submissions from 13 countries**.
+   - **Project Title**: *"S-SPARC: The Next Level of Eco-Conscious AI for Education, Empowering Sustainable Habits through Gamification"*
+   - **Team**: Yehezkiel David Setiawan (Team Lead, Master of Computer Science), Johanes Mario Pranata, Archangela Sheilla Haryanto
+   - **Faculty Advisor**: Oscar Karnalim, S.T., M.T., Ph.D., SMIEEE
+2. **🏆 IEEE ICALT 2023 Best Discussion Paper Award**: Awarded by the IEEE Computer Society at the *2023 IEEE International Conference on Advanced Learning Technologies (ICALT)* for the SSTRANGE LSH engine algorithm.
 
 ---
 
