@@ -1,44 +1,56 @@
-# E-STRANGE™ Enterprise & S-SPARC AI Ecosystem
+# S-SPARC AI: Smart Software Engineering & Pedagogical Adaptive Retrieval Assistant
 
-> **The Next-Generation AI-Powered Software Engineering Education Platform: Integrating Performance Support, Automated Code Assessment (SSTRANGE LSH), Pedagogical AI Scaffolding (S-SPARC), and Institutional Sustainability Intelligence.**
+> **An Enterprise-Grade, Pedagogically Scaffolded AI Learning Engine & High-Performance Retrieval System Built on top of the E-STRANGE™ LMS Platform.**
 
 [![Platform Version](https://img.shields.io/badge/Platform-v3.2_Enterprise-0052CC?style=for-the-badge&logo=rocket&logoColor=white)](#)
 [![Python Version](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110.0-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![PHP](https://img.shields.io/badge/PHP-8.2_Enterprise-777BB4?style=for-the-badge&logo=php&logoColor=white)](https://php.net)
-[![Java CRON Engine](https://img.shields.io/badge/Java-CRON_LSH_Engine-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white)](https://java.com)
 [![MariaDB](https://img.shields.io/badge/MariaDB-10.11_Cluster-003545?style=for-the-badge&logo=mariadb&logoColor=white)](https://mariadb.org)
 [![Gemini 3.5 Flash Lite](https://img.shields.io/badge/AI_Engine-Google_Gemini_3.5_Flash_Lite-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev)
 [![Green Computing](https://img.shields.io/badge/Green_Campus-Carbon_Tracking_IDN-2EA44F?style=for-the-badge&logo=leaf&logoColor=white)](#sustainability)
 
 ---
 
-## Executive Summary & Institutional Value Proposition
+## 📌 Executive Summary & Foundational Platform
 
-The **E-STRANGE™ & S-SPARC AI Ecosystem** is an enterprise-grade EdTech solution engineered by leading software engineering researchers and technology innovators. Designed for higher education institutions, polytechnics, and corporate training academies, the platform bridges the gap between AI-assisted learning, academic integrity, and operational sustainability.
+**S-SPARC AI** (*Smart Software Engineering & Pedagogical Adaptive Retrieval Assistant*) is an advanced AI-powered educational engine specifically built to enhance programming and software engineering instruction in higher education institutions.
 
 ```
 +---------------------------------------------------------------------------------------------------+
-|                            E-STRANGE™ & S-SPARC AI ENTERPRISE PLATFORM                            |
+|                                     S-SPARC AI ENTERPRISE ECOSYSTEM                               |
 +---------------------------------------------------------------------------------------------------+
-|  1. E-STRANGE™ PLATFORM       |  2. SSTRANGE ENGINE          |  3. S-SPARC AI TUTOR ENGINE       |
-|  - Performance Support System |  - Locality Sensitive Hashing|  - C-I-O-E Protocol Scaffolding  |
-|  - Formative Code Assessment  |    (MinHash & Super-Bit)     |  - Multi-Tier Adaptive Router    |
-|  - Code Quality & Efficiency  |  - Multi-Language (Java, Py, |    (User Key -> System -> Ollama)|
-|  - Academic Gamification      |    C#, Dart, Web Stack)      |  - Sub-150ms Hybrid Semantic Cache|
-|  - Student Analytics          |  - Award-Winning IEEE Papers |  - Green Campus Carbon Metrics   |
+|  1. C-I-O-E PROTOCOL         |  2. MULTI-TIER ROUTER        |  3. HYBRID SEMANTIC CACHE            |
+|  - Context, Input, Output,   |  - Tier 1: User Key         |  - BM25 Sparse Search                |
+|    Error Trace Scaffolding   |  - Tier 2: System Key Pool   |  - SentenceTransformers Dense        |
+|  - Shannon Entropy Eval      |  - Tier 3: Local Ollama      |  - Reciprocal Rank Fusion (RRF)      |
+|  - Bloom's Taxonomy Alignment|  - IPv4 Socket Optimizer     |  - Sub-150ms / 0 Token Overhead      |
++---------------------------------------------------------------------------------------------------+
+|  FOUNDATION: E-STRANGE™ LMS Platform (Student Performance Support) & SSTRANGE LSH Engine          |
 +---------------------------------------------------------------------------------------------------+
 ```
 
-### Strategic Benefits for Institutional Stakeholders:
+---
+
+### 🏛️ The Foundational LMS Baseline: E-STRANGE™ & SSTRANGE
+
+S-SPARC AI is engineered to integrate into **E-STRANGE™**, an established educational Learning Management System (LMS) and performance support platform:
+
+- **E-STRANGE™ Platform**: Serves as the overarching student performance support and assessment environment. It helps students understand code ethics (originality/similarity), code quality (readability and modularity), and computational efficiency through formative feedback and academic gamification.
+- **SSTRANGE Similarity Engine**: The foundational background code similarity detection engine powered by **Locality Sensitive Hashing (MinHash & Super-Bit)** across Java, Python, C#, Dart, and Web Stack submissions. SSTRANGE's algorithmic foundation is backed by peer-reviewed publications, including the **Best Discussion Paper Award at IEEE ICALT 2023** ([IEEE ICALT Paper](https://ieeexplore.ieee.org/abstract/document/10260942)), **MDPI Education Sciences 2023** ([MDPI Paper](https://www.mdpi.com/2227-7102/13/1/54)), and **IEEE EDUNINE 2024** ([IEEE EDUNINE Paper](https://ieeexplore.ieee.org/abstract/document/10500603/)).
+- **Evolution to S-SPARC AI**: S-SPARC AI elevates E-STRANGE™ into a next-generation smart LMS by embedding real-time AI tutoring, sub-150ms vector semantic caching, multi-tier failover routing, and green computing sustainability analytics directly into the student learning workflow.
+
+---
+
+### Strategic Institutional Value Proposition:
 
 1. **For University Deans & Executive Leadership**:
-   - **Zero Institutional API Infrastructure Cost ($0/year)**: Through the **Distributed Student API Protocol**, institutions deliver high-speed AI tutoring without recurring cloud LLM bills.
+   - **Zero Institutional API Cost ($0/year)**: Through the **Distributed Student API Protocol**, institutions deliver high-speed AI tutoring without recurring cloud LLM bills.
    - **Green Campus Compliance**: Integrated carbon footprint tracking calibrated for the Indonesian power grid baseline ($0.78 \text{ kg CO}_2/\text{kWh}$).
 
 2. **For Computer Science & IT Faculty**:
-   - **Automated Academic Integrity (SSTRANGE Engine)**: High-speed code similarity and plagiarism detection powered by Locality Sensitive Hashing (MinHash & Super-Bit).
-   - **Formative Feedback Engine**: Automated evaluation of code quality, structure, readability, and algorithmic time/space complexity.
+   - **Automated Academic Integrity**: Seamless integration with E-STRANGE™ and SSTRANGE LSH for code quality, structure, and originality assessment.
+   - **Formative Pedagogical Feedback**: Automatic evaluation of code structure, readability, and algorithmic complexity.
 
 3. **For Students**:
    - **Structured AI Guidance (C-I-O-E Protocol)**: Prevents dependency on copy-paste AI by requiring context, input, output, and error trace definition.
@@ -46,45 +58,60 @@ The **E-STRANGE™ & S-SPARC AI Ecosystem** is an enterprise-grade EdTech soluti
 
 ---
 
-## Core Product Ecosystem Components
+## 🌟 Core S-SPARC AI Architecture & Technological Pillars
 
-### 1. E-STRANGE™: Student Performance Support & Assessment Platform
-**E-STRANGE™** is an educational performance support platform designed to assist students throughout their programming curriculum. The platform focuses on three critical pillars:
-- **Code Ethics & Originality**: Distinguishes ethical code reuse from plagiarism, instilling professional engineering standards.
-- **Code Quality & Readability**: Evaluates naming conventions, architectural modularity, and maintainability.
-- **Algorithmic Efficiency**: Analyzes time/space complexity ($O(N)$, $O(N \log N)$), highlighting computational bottlenecks.
+### 1. Standardized C-I-O-E Pedagogical Protocol & Prompt Literacy Evaluator
+S-SPARC AI trains students to develop structured computational thinking by enforcing the **C-I-O-E Protocol**:
+- **[C] Context**: Task background, problem domain, and algorithmic constraints.
+- **[I] Input**: Data pre-conditions, input data structures, and sample test cases.
+- **[O] Output**: Expected post-conditions, return data types, and target time/space complexity.
+- **[E] Error Trace / Constraints**: Compiler/interpreter error trace, failing test cases (WA/TLE), and self-debugging steps taken.
 
-E-STRANGE™ features an **Academic Gamification Suite**—including dynamic leaderboards, originality badges, quality scores, and daily query allowances—proven to boost student course engagement by over 40%.
-
----
-
-### 2. SSTRANGE Engine: Scalable Locality Sensitive Hashing
-**SSTRANGE** (*Scalable Similarity TRacker in Academia with Natural lanGuage Explanation*) is the proprietary background analysis engine powering similarity observation across student submissions.
-
-#### Key Capabilities & Supported Technologies:
-- **Locality Sensitive Hashing (LSH)**: Implements **MinHash** and **Super-Bit** for rapid similarity detection across large dataset volumes.
-- **Multi-Language Support**: Java, Python, C#, Dart, and Web Stack (HTML + CSS + JavaScript + PHP).
-- **Sensitive Similarity Detection**: Identifies structural code transformations, identifier renaming, and control-flow obfuscation.
-
-#### Scientific Peer Review & International Recognition:
-- 📄 **MDPI Education Sciences (2023)**: *SSTRANGE: Scalable Similarity TRacker in Academia with Natural Language Explanation*. ([MDPI Paper](https://www.mdpi.com/2227-7102/13/1/54))
-- 🏆 **IEEE ICALT (2023) — Best Discussion Paper Award**: *Scalable Code Similarity Detection for C# Submissions*. ([IEEE Xplore](https://ieeexplore.ieee.org/abstract/document/10260942))
-- 📄 **IEEE EDUNINE (2024)**: *Sensitive Code Similarity Detection for Higher Education*. ([IEEE Xplore](https://ieeexplore.ieee.org/abstract/document/10500603/))
+The system automatically assesses student prompt quality using mathematical **Shannon Entropy** ($H$) and **Technical Token Density** ($D$), assigning a real-time **Literacy Grade** (*Grade A / B / C*) alongside automated pedagogical guidance aligned with Bloom's Taxonomy.
 
 ---
 
-### 3. S-SPARC AI: Adaptive Tutoring & High-Speed Retrieval
-**S-SPARC AI** (*Smart Software Engineering & Pedagogical Adaptive Retrieval Assistant*) is the interactive AI engine embedded directly within E-STRANGE™.
+### 2. Multi-Tier Adaptive Router & High-Availability Engine
+To guarantee zero service disruption regardless of network conditions or individual quota limits, S-SPARC AI employs a 3-tier failover routing engine:
+- **Tier 1 (User Personal Gemini Key)**: Students register their personal Google Gemini API Key (available for free via Google AI Studio). Inference requests execute directly via REST with latencies of **~1.5 - 2.5 seconds**.
+- **Tier 2 (System Key Pool Fallback)**: If a user key is unconfigured or rate-limited, the router seamlessly falls back to a load-balanced *System API Key Pool* managed on the server.
+- **Tier 3 (Local Zero-Cost Offline Fallback - Ollama)**: Should cloud network connectivity fail completely or hit rate limits (HTTP 429), the platform automatically redirects inference to a local **Ollama Qwen2.5-Coder 14B** instance, ensuring 100% offline reliability.
 
-#### Technological Innovations:
-1. **Pedagogical Scaffolding (C-I-O-E Protocol)**: Mandates structured prompt inputs (**[C]** Context, **[I]** Input, **[O]** Output, **[E]** Error Trace / Constraints), evaluating student prompt quality using mathematical **Shannon Entropy** ($H$) and **Technical Token Density** ($D$).
-2. **Multi-Tier Adaptive Failover Router**:
-   - **Tier 1 (Personal API Key)**: Direct REST execution via student Gemini keys with **~1.5 - 2.5s** latency.
-   - **Tier 2 (System Key Pool)**: Load-balanced institutional key pool fallback.
-   - **Tier 3 (Local Ollama Fallback)**: On-premise **Qwen2.5-Coder 14B** runtime ensuring 100% offline continuity.
-3. **Hybrid Vector Semantic Caching**: Fuses Sparse **BM25** and Dense **SentenceTransformers** (`all-MiniLM-L6-v2`) via **Reciprocal Rank Fusion (RRF)** for **sub-150ms instant responses** ($0 Token Cost).
-4. **Windows Socket Latency Resolver**: Proprietary socket patch (`_ipv4_getaddrinfo`) eliminating Windows IPv6 DNS stalls, reducing latency from **78s to 2.7s**.
-5. **Green Computing Footprint Engine**: Real-time logging of energy consumption (kWh), carbon emissions ($\text{gCO}_2$), and tree absorption equivalents based on the Indonesian electrical grid ($0.78 \text{ kg CO}_2/\text{kWh}$).
+---
+
+### 3. Hybrid Vector Semantic Caching (BM25 + SentenceTransformers RRF)
+S-SPARC AI features a high-performance *Retrieval-Augmented Caching Engine* that combines:
+- **Sparse Search (BM25)** for exact keyword, syntax, and function signature matching.
+- **Dense Vector Search (SentenceTransformers `all-MiniLM-L6-v2`)** for semantic context and problem intent matching.
+- **Reciprocal Rank Fusion (RRF)** to fuse sparse and dense rankings into a unified high-precision score.
+
+When a student prompt exhibits high cosine similarity ($\ge 0.88$) with a verified solution in the `code_embeddings` database, S-SPARC AI responds **instantly (0.11 - 0.17 seconds)** without consuming API tokens (0 Tokens / FREE Tier).
+
+---
+
+### 4. Windows Network IPv4 Socket Optimizer
+When deployed in university computer laboratories operating on Windows environments, standard Python `requests` calls to `generativelanguage.googleapis.com` often experience severe socket stalls due to IPv6 DNS resolution attempts (causing delays up to 78 seconds per request).
+
+S-SPARC AI incorporates a custom **IPv4 Socket Resolver Patch** at the socket layer (`_ipv4_getaddrinfo`), which slashes execution latency from **78 seconds down to 2.7 seconds** consistently.
+
+---
+
+### 5. Green Computing & Environmental Footprint Tracking
+S-SPARC AI advances institutional *Green Campus* initiatives by calculating the environmental footprint of every AI prompt in real time:
+$$\text{Energy (kWh)} = \text{Tokens} \times \text{kWh\_per\_token} \times \text{PUE}$$
+$$\text{Carbon (gCO2)} = \text{Energy (kWh)} \times \text{CIF\_IDN} \times 1000$$
+
+*Parameters:*
+- **CIF Indonesia (Carbon Intensity Factor)**: $0.78 \text{ kg CO}_2/\text{kWh}$ (Indonesian Electrical Grid Baseline).
+- **PUE (Power Usage Effectiveness)**: $1.5$ (Efficient Data Center Benchmark).
+- **Tree Absorption Equivalent**: Calculated based on standard annual absorption rates ($21.77 \text{ kg CO}_2/\text{year}$).
+
+---
+
+### 6. E-STRANGE Gamification Integration & Quotas
+- **Daily Quota Badges**: Displays student daily allowance transparently (1,500 Requests/Day & 15 Requests/Minute for Gemini Free Tier).
+- **Cooldown Rate Limiting**: Prevents automated spamming via enforced timers (60s for Live AI generation / 15s for Database Cache Hits).
+- **Points Aggregator & Leaderboards**: E-STRANGE gamification scores are updated automatically based on prompt quality, code originality, and algorithmic efficiency.
 
 ---
 
@@ -95,14 +122,14 @@ sequenceDiagram
     autonumber
     actor Student as Student (Browser UI)
     participant PHP as PHP Frontend Server (cPanel / Enterprise Server)
-    participant API as FastAPI Backend Engine (Port 5000)
+    participant API as S-SPARC FastAPI Backend (Port 5000)
     participant Cache as Hybrid Semantic Cache (BM25 + Vector RRF)
     participant Router as Multi-Tier Adaptive Router
     participant Java as SSTRANGE LSH Engine (Scheduled Runnable JAR)
     participant DB as MariaDB Enterprise Cluster
 
     rect rgb(240, 248, 255)
-        Note over Student, API: 1. S-SPARC AI Interactive Assistance Lifecycle
+        Note over Student, API: 1. S-SPARC AI Interactive Tutoring Flow
         Student->>PHP: Submit Scaffolded Prompt (C-I-O-E Protocol)
         PHP->>API: POST /api/generate-code (Header: X-User-ID)
         API->>Cache: Evaluate Cosine Similarity (Fast-Path >= 0.88)
@@ -118,7 +145,7 @@ sequenceDiagram
     end
 
     rect rgb(255, 245, 238)
-        Note over Java, DB: 2. E-STRANGE™ Assessment & SSTRANGE LSH Engine (CRON)
+        Note over Java, DB: 2. E-STRANGE Assessment & SSTRANGE LSH Engine (CRON)
         Java->>DB: Fetch New Student Submissions (Every 60 Seconds)
         Java->>Java: Compute MinHash & Super-Bit Similarity Matrices
         Java->>DB: Store Originality, Quality & Gamification Points
@@ -131,8 +158,8 @@ sequenceDiagram
 
 | Layer | Component | Specification / Framework | Purpose |
 | :--- | :--- | :--- | :--- |
-| **Backend Core** | FastAPI Service | Python 3.12, Uvicorn Async | High-throughput asynchronous REST API gateway. |
-| **Frontend UI** | Web Interface | PHP 8.2, Vanilla CSS, JS (ES6+) | Glassmorphism UI, Dark/Light mode, Responsive layout. |
+| **AI Backend Core** | S-SPARC FastAPI Service | Python 3.12, Uvicorn Async | High-throughput asynchronous REST API gateway. |
+| **LMS Frontend** | E-STRANGE Web Interface | PHP 8.2, Vanilla CSS, JS (ES6+) | Glassmorphism UI, Dark/Light mode, Responsive layout. |
 | **Database Layer** | Enterprise Relational DB | MariaDB 10.11 / MySQL 8.0 | Stores user profiles, chat logs, queues, and vector embeddings. |
 | **Vector Engine** | Hybrid Retrieval | SentenceTransformers (`MiniLM-L6-v2`), BM25 | RRF-fused dense and sparse vector search engine. |
 | **LSH Engine** | Background Processor | Java 11+ Runnable JAR (`ScheduledSuspicionGenerator.jar`) | Computes SSTRANGE MinHash & Super-Bit similarity scores. |
@@ -142,7 +169,7 @@ sequenceDiagram
 
 ## 🔧 Enterprise Deployment & Installation Guide
 
-Follow these instructions to deploy E-STRANGE™ & S-SPARC AI on institutional IT infrastructure.
+Follow these instructions to deploy S-SPARC AI and the E-STRANGE platform on institutional IT infrastructure.
 
 ### System Requirements:
 - **Server OS**: Linux (Ubuntu 22.04 LTS / RHEL 9) or Windows Server 2022.
@@ -186,7 +213,7 @@ mysql -u root -p db_semantic < db_migrations/complete_schema.sql
 ---
 
 ### Step 4: S-SPARC FastAPI Backend Deployment
-1. Deploy the Python backend to the server.
+1. Deploy the S-SPARC Python backend to the server.
 2. Initialize virtual environment and install dependencies:
    ```bash
    python -m venv venv
@@ -253,7 +280,7 @@ Configure a system CRON job to execute the background similarity engine every mi
 
 ## 📚 Scientific Citations & Publications
 
-If referencing E-STRANGE™, SSTRANGE, or S-SPARC in academic literature, grant proposals, or institutional evaluations, please use the following citations:
+If referencing E-STRANGE™, SSTRANGE, or S-SPARC AI in academic literature, grant proposals, or institutional evaluations, please use the following citations:
 
 ```bibtex
 @article{karnalim2023sstrange,
@@ -288,6 +315,6 @@ If referencing E-STRANGE™, SSTRANGE, or S-SPARC in academic literature, grant 
 ---
 
 <p align="center">
-  <b>E-STRANGE™ & S-SPARC Enterprise</b> • EdTech Research & Engineering Labs<br>
+  <b>S-SPARC AI Enterprise & E-STRANGE™ Ecosystem</b> • EdTech Research & Engineering Labs<br>
   <sub>Designed & Built for Next-Generation Higher Education in Indonesia. 🇮🇩</sub>
 </p>
