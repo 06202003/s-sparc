@@ -1,6 +1,6 @@
-# S-SPARC AI (Smart Software Engineering & Pedagogical Adaptive Retrieval Assistant)
+# S-SPARC AI: Smart Software Engineering & Pedagogical Adaptive Retrieval Assistant
 
-> **Platform Intelligence Buatan Adaptif & Pedagogis Terintegrasi untuk Laboratorium Pemrograman dan Pendidikan Software Engineering di Perguruan Tinggi Indonesia.**
+> **An Adaptive, Pedagogically Scaffolded AI Learning Engine & High-Performance Retrieval Platform Designed for Software Engineering Education in Higher Education.**
 
 [![Python Version](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110.0-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
@@ -11,15 +11,15 @@
 
 ---
 
-## 📌 Ringkasan Eksekutif (Executive Summary)
+## 📌 Executive Summary
 
-**S-SPARC AI** (*Smart Software Engineering & Pedagogical Adaptive Retrieval Assistant*) adalah sistem asisten pembelajaran pemrograman berbasis AI yang dirancang khusus untuk lingkungan akademik Perguruan Tinggi di Indonesia. 
+**S-SPARC AI** (*Smart Software Engineering & Pedagogical Adaptive Retrieval Assistant*) is an advanced AI-powered educational platform specifically built to enhance programming and software engineering instruction in university computer laboratories.
 
-Berbeda dengan umum chatbot AI (*generic LLM wrappers*), S-SPARC AI mengombinasikan **Pedagogical Scaffolding (Protokol C-I-O-E)**, **Multi-Tier Adaptive Router**, **Hybrid Vector Semantic Caching (Sub-150ms Retrieval)**, dan **Green AI Environmental Footprint Tracking**. Sistem ini memungkinkan institusi pendidikan menyelenggarakan asistensi AI untuk ribuan mahasiswa dengan **biaya API $0 (Zero API Cost)** dan **performa latency tinggi (< 2.5 detik)**.
+Unlike generic AI coding chatbots (*unstructured LLM wrappers*), S-SPARC AI integrates **Pedagogical Scaffolding (the C-I-O-E Protocol)**, a **Multi-Tier Adaptive Router**, **Hybrid Vector Semantic Caching (Sub-150ms Retrieval)**, and **Green Computing Sustainability Tracking**. The system enables educational institutions to deliver scalable, high-speed AI assistance for thousands of students with **Zero Institutional API Cost ($0)** and **ultra-fast response latencies (< 2.5 seconds)**.
 
 ---
 
-## 🌟 Pilar Arsitektur & Fitur Utama
+## 🌟 Core Architectural Pillars
 
 ```
 +-----------------------------------------------------------------------------------+
@@ -30,76 +30,76 @@ Berbeda dengan umum chatbot AI (*generic LLM wrappers*), S-SPARC AI mengombinasi
 |   Output, Error Trace    | - Tier 2: System Pool    | - SentenceTransformers Dense|
 | - Shannon Entropy Eval   | - Tier 3: Local Ollama   | - RRF (Sub-170ms / $0 Cost) |
 +--------------------------+--------------------------+-----------------------------+
-| 4. Carbon Tracking       | 5. E-STRANGE Gamification| 6. Windows Socket Resolver  |
-| - Indonesia Grid CIF     | - Daily Quota (1500 RPD) | - IPv4 Socket Bypass        |
+| 4. Green Computing       | 5. E-STRANGE Gamification| 6. Windows Socket Resolver  |
+| - Indonesia Grid CIF     | - Daily Quotas (1500 RPD)| - IPv4 Socket Bypass        |
 | - gCO2 & Tree Equivalent | - Cooldown Rate Limits   | - Fixed 78s -> 2.7s Latency |
 +-----------------------------------------------------------------------------------+
 ```
 
-### 1. Protokol Pedagogis C-I-O-E & Prompt Literacy Evaluator
-S-SPARC melatih mahasiswa berpikir komputasional secara terstruktur dengan menerapkan **Protokol C-I-O-E**:
-- **[C] Context**: Latar belakang tugas, domain masalah, dan batasan algoritma.
-- **[I] Input**: Pre-kondisi data, struktur data input, dan contoh sampel data.
-- **[O] Output**: Post-kondisi yang diharapkan, tipe data return, dan kompleksitas target.
-- **[E] Error Trace / Kendala**: Pesan kesalahan compiler/interpreter, kode yang menghasilkan TLE/WA, dan percobaan solutif yang telah dilakukan.
+### 1. Standardized C-I-O-E Pedagogical Protocol & Prompt Literacy Evaluator
+S-SPARC trains students to develop structured computational thinking by enforcing the **C-I-O-E Protocol**:
+- **[C] Context**: Task background, problem domain, and algorithmic constraints.
+- **[I] Input**: Data pre-conditions, input data structures, and sample test cases.
+- **[O] Output**: Expected post-conditions, return data types, and target time/space complexity.
+- **[E] Error Trace / Constraints**: Compiler/interpreter error trace, failing test cases (WA/TLE), and self-debugging steps taken.
 
-Sistem secara otomatis mengevaluasi kualitas prompt mahasiswa menggunakan formulasi matematika **Shannon Entropy** ($H$) dan **Technical Token Density** ($D$), memberikan nilai mutu prompt (*Literacy Grade: A / B / C*) serta rekomendasi pedagogis real-time.
+The system automatically assesses student prompt quality using mathematical **Shannon Entropy** ($H$) and **Technical Token Density** ($D$), assigning a real-time **Literacy Grade** (*Grade A / B / C*) alongside automated pedagogical guidance aligned with Bloom's Taxonomy.
 
-### 2. Multi-Tier Adaptive Router & High-Availability AI Engine
-Untuk menjamin kontinuitas layanan tanpa tergantung pada satu API key tunggal, S-SPARC menerapkan 3 tingkat failover otomatis (*Adaptive Router*):
-- **Tier 1 (User Personal Gemini Key)**: Setiap mahasiswa dapat mendaftarkan Google Gemini API Key milik pribadi (gratis dari Google AI Studio). Respon diproses langsung via Direct REST API dengan latensi **~1.5 - 2.5 detik**.
-- **Tier 2 (System Key Pool Fallback)**: Jika user key tidak tersedia atau mengalami kegagalan, router mengalihkan request secara *round-robin* ke *System API Key Pool* yang terdaftar di lingkungan server.
-- **Tier 3 (Local Zero-Cost Offline Fallback - Ollama)**: Jika seluruh akses internet/cloud Gemini mengalami pembatasan kuota (HTTP 429), sistem melakukan failover otomatis ke model lokal **Ollama Qwen2.5-Coder 14B**, menjamin platform tetap beroperasi 100% secara offline.
+### 2. Multi-Tier Adaptive Router & High-Availability Engine
+To guarantee zero service disruption regardless of network conditions or individual quota limits, S-SPARC employs a 3-tier failover routing engine:
+- **Tier 1 (User Personal Gemini Key)**: Students can register their personal Google Gemini API Key (available for free via Google AI Studio). Inference requests are executed directly via REST with latencies of **~1.5 - 2.5 seconds**.
+- **Tier 2 (System Key Pool Fallback)**: If a user key is unconfigured or rate-limited, the router seamlessly falls back to a load-balanced *System API Key Pool* managed on the server.
+- **Tier 3 (Local Zero-Cost Offline Fallback - Ollama)**: Should cloud network connectivity fail completely or hit rate limits (HTTP 429), the platform automatically redirects inference to a local **Ollama Qwen2.5-Coder 14B** instance, ensuring 100% offline reliability.
 
-### 3. Hybrid Vector Semantic Caching (RRF Search - Sub-150ms)
-S-SPARC dilengkapi mesin *Retrieval-Augmented Caching* pintar yang mengombinasikan:
-- **Sparse Search (BM25)** untuk kecocokan kata kunci teknis dan nama fungsi.
-- **Dense Vector Search (SentenceTransformers `all-MiniLM-L6-v2`)** untuk kecocokan makna dan konteks masalah.
-- **Reciprocal Rank Fusion (RRF)** untuk menggabungkan hasil pencarian dengan presisi tinggi.
+### 3. Hybrid Vector Semantic Caching (BM25 + SentenceTransformers RRF)
+S-SPARC features a high-performance *Retrieval-Augmented Caching Engine* that combines:
+- **Sparse Search (BM25)** for exact keyword, syntax, and function signature matching.
+- **Dense Vector Search (SentenceTransformers `all-MiniLM-L6-v2`)** for semantic context and problem intent matching.
+- **Reciprocal Rank Fusion (RRF)** to fuse sparse and dense rankings into a unified high-precision score.
 
-Ketika prompt mahasiswa memiliki kemiripan kosinus ($\ge 0.88$) dengan solusi terverifikasi dalam database `code_embeddings`, sistem akan menjawab secara **instan (0.11 - 0.17 detik)** tanpa mengonsumsi token API (0 Tokens / FREE Tier).
+When a student prompt exhibits high cosine similarity ($\ge 0.88$) with a verified solution in the `code_embeddings` database, S-SPARC responds **instantly (0.11 - 0.17 seconds)** without consuming API tokens (0 Tokens / FREE Tier).
 
 ### 4. Windows Network IPv4 Socket Optimizer
-Pengujian lingkungan laboratorium kampus bersistem operasi Windows sering kali mengalami *socket DNS stall* akibat pencarian alamat IPv6 pada domain `generativelanguage.googleapis.com` (yang menyebabkan delay hingga 78 detik per request). 
+When deployed in university computer laboratories operating on Windows environments, standard Python `requests` calls to `generativelanguage.googleapis.com` often experience severe socket stalls due to IPv6 DNS resolution attempts (causing delays up to 78 seconds per request).
 
-S-SPARC mengimplementasikan **Custom IPv4 Socket Resolver Patch** di tingkat socket Python (`_ipv4_getaddrinfo`), yang memangkas latensi eksekusi dari **78 detik menjadi 2.7 detik** secara konsisten.
+S-SPARC incorporates a custom **IPv4 Socket Resolver Patch** at the socket layer (`_ipv4_getaddrinfo`), which slashes execution latency from **78 seconds down to 2.7 seconds** consistently.
 
-### 5. Tracking Karbon & Keberlanjutan Kampus Hijau (Green AI)
-S-SPARC mendukung inisiatif Kampus Hijau (*Green Campus*) dengan menghitung estimasi dampak lingkungan dari setiap eksekusi prompt secara ilmiah:
+### 5. Green Computing & Environmental Footprint Tracking
+S-SPARC advances institutional *Green Campus* initiatives by calculating the environmental footprint of every AI prompt in real time:
 $$\text{Energy (kWh)} = \text{Tokens} \times \text{kWh\_per\_token} \times \text{PUE}$$
 $$\text{Carbon (gCO2)} = \text{Energy (kWh)} \times \text{CIF\_IDN} \times 1000$$
 
-*Catatan Parameter:*
-- **CIF Indonesia (Carbon Intensity Factor)**: $0.78 \text{ kg CO}_2/\text{kWh}$ (Grid Listrik Indonesia).
-- **PUE (Power Usage Effectiveness)**: $1.5$ (Standar Pusat Data Efisien).
-- **Pohon Setara**: Dikonversi berdasarkan daya serap pohon tipikal ($21.77 \text{ kg CO}_2/\text{tahun}$).
+*Parameters:*
+- **CIF Indonesia (Carbon Intensity Factor)**: $0.78 \text{ kg CO}_2/\text{kWh}$ (Indonesian Electrical Grid Baseline).
+- **PUE (Power Usage Effectiveness)**: $1.5$ (Efficient Data Center Benchmark).
+- **Tree Absorption Equivalent**: Calculated based on standard annual absorption rates ($21.77 \text{ kg CO}_2/\text{year}$).
 
-### 6. Integrasi Gamifikasi Akademik & Quota Rate Limiting (E-STRANGE)
-- **Daily Quota Badge**: Menampilkan sisa kuota harian secara transparan (1,500 Request/Hari & 15 Request/Menit untuk tier gratis Gemini).
-- **Cooldown Rate Limits**: Mencegah pemanggilan berlebihan (*spamming*) dengan timer jeda 60 detik untuk Live AI dan 15 detik untuk Database Cache Hits.
-- **Points Aggregator & Leaderboard**: Poin gamifikasi E-STRANGE dihitung otomatis dari kualitas prompt, orisinalitas kode, dan efisiensi algoritma.
+### 6. E-STRANGE Academic Gamification & Quota Limits
+- **Daily Quota Badges**: Displays student daily allowance transparently (1,500 Requests/Day & 15 Requests/Minute for Gemini Free Tier).
+- **Cooldown Rate Limiting**: Prevents automated spamming via enforced timers (60s for Live AI generation / 15s for Database Cache Hits).
+- **Points Aggregator & Leaderboards**: E-STRANGE gamification scores are updated automatically based on prompt quality, code originality, and algorithmic efficiency.
 
 ---
 
-## 🏗️ Teknologi Stack (Tech Stack Matrix)
+## 🏗️ Tech Stack Matrix
 
-| Komponen | Teknologi & Framework | Fungsi & Deskripsi |
+| Component | Framework / Technology | Purpose & Description |
 | :--- | :--- | :--- |
-| **Backend Core** | Python 3.12, FastAPI, Uvicorn | High-performance asynchronous REST API backend. |
-| **Frontend Web** | PHP 8.x, Vanilla CSS, JS (ES6+) | Web interface responsive, Glassmorphism UI, Dark/Light Mode. |
-| **Database** | MariaDB 10.11 / MySQL 8.0 | Menyimpan relasi user, histori chat, job queue, dan `code_embeddings`. |
-| **Vector Search** | SentenceTransformers (`MiniLM-L6-v2`), BM25 | Hybrid sparse + dense vector retrieval engine. |
-| **AI Providers** | Google Gemini REST API, LiteLLM, Ollama | Multi-provider cloud and local LLM runtime execution. |
-| **UI Components** | SweetAlert2, Highcharts, Google Fonts (Outfit) | Notifikasi interaktif, chart sustainabilitas, dan tipografi modern. |
+| **Backend Core** | Python 3.12, FastAPI, Uvicorn | Asynchronous, high-throughput REST API backend engine. |
+| **Frontend Web** | PHP 8.2, Vanilla CSS, JavaScript (ES6+) | Glassmorphism responsive web UI, Dark/Light Mode. |
+| **Database** | MariaDB 10.11 / MySQL 8.0 | Stores user credentials, chat histories, job queues, and `code_embeddings`. |
+| **Vector Search** | SentenceTransformers (`MiniLM-L6-v2`), BM25 | Hybrid sparse + dense vector retrieval search engine. |
+| **AI Providers** | Google Gemini REST API, LiteLLM, Ollama | Multi-provider cloud and local LLM execution runtime. |
+| **UI Components** | SweetAlert2, Highcharts, Google Fonts (Outfit) | Interactive notifications, sustainability charts, and modern typography. |
 
 ---
 
-## 📐 Diagram Arsitektur & Lifecycle Request
+## 📐 System Architecture & Request Lifecycle
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Student as Mahasiswa (Browser UI)
+    actor Student as Student (Browser UI)
     participant PHP as PHP Frontend Server (8088)
     participant API as FastAPI Backend (5000)
     participant Cache as Hybrid Semantic Cache (BM25 + Vector)
@@ -107,7 +107,7 @@ sequenceDiagram
     participant Gemini as Google Gemini 3.5 API
     participant DB as MariaDB Database
 
-    Student->>PHP: Kirim Prompt (C-I-O-E Format)
+    Student->>PHP: Submit Prompt (C-I-O-E Format)
     PHP->>API: POST /api/generate-code (Header: X-User-ID)
     API->>Cache: Check Fast-Path Similarity (Prompt Vector)
     
@@ -129,42 +129,42 @@ sequenceDiagram
         API-->>PHP: Response (Latency: ~2.5s, Mode: Live AI)
     end
 
-    PHP-->>Student: Tampilkan Solusi Kode & Metrics Sustainability
+    PHP-->>Student: Display Solution Code & Sustainability Metrics
 ```
 
 ---
 
-## 🚀 Panduan Instalasi & Deployment Laboratorium Kampus
+## 🚀 Installation & Campus Lab Deployment Guide
 
-Berikut langkah-langkah instalasi S-SPARC AI pada peladen (*server*) atau komputer laboratorium universitas.
+Follow these steps to deploy S-SPARC AI on a campus laboratory server or workstation.
 
-### 1. Prasyarat Sistem (Prerequisites)
-- **Sistem Operasi**: Windows 10/11, Windows Server, atau Linux (Ubuntu 22.04 LTS).
-- **Python**: Versi 3.10 atau 3.12 (disarankan).
-- **PHP**: Versi 8.1 / 8.2 dengan ekstensi `pdo_mysql`, `curl`, `mbstring`.
-- **Database**: MariaDB 10.6+ atau MySQL 8.0+.
-- **Web Server**: Apache/Nginx (atau PHP Built-in Server untuk kebutuhan pengujian).
+### 1. System Requirements
+- **Operating System**: Windows 10/11, Windows Server, or Linux (Ubuntu 22.04 LTS recommended).
+- **Python**: Version 3.10 or 3.12.
+- **PHP**: Version 8.1 or 8.2 with `pdo_mysql`, `curl`, `mbstring` extensions enabled.
+- **Database**: MariaDB 10.6+ or MySQL 8.0+.
+- **Web Server**: Apache/Nginx (or PHP Built-in Server for testing).
 
-### 2. Kloning Repositori & Environment Setup
+### 2. Repository Cloning & Environment Setup
 ```bash
-# Clone repositori
+# Clone the repository
 git clone https://github.com/06202003/s-sparc.git
 cd s-sparc
 
-# Buat environment Python virtual
+# Create virtual environment
 python -m venv venv
 
-# Aktivasi venv (Windows)
+# Activate venv (Windows)
 .\venv\Scripts\activate
-# Aktivasi venv (Linux/macOS)
+# Activate venv (Linux/macOS)
 # source venv/bin/activate
 
-# Install dependencies Python
+# Install Python dependencies
 pip install -r requirements.txt
 ```
 
-### 3. Konfigurasi Environment (`.env`)
-Salin berkas `.env.example` menjadi `.env` dan sesuaikan nilainya:
+### 3. Environment Configuration (`.env`)
+Copy `.env.example` to `.env` and configure your parameters:
 ```ini
 # Server Configuration
 FLASK_PORT=5000
@@ -175,59 +175,59 @@ FASTAPI_URL=http://127.0.0.1:5000
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_USER=root
-DB_PASSWORD=passwordku
+DB_PASSWORD=your_password
 DB_NAME=db_semantic
 
-# System Fallback Gemini Keys (Opsional)
+# System Fallback Gemini Keys (Optional)
 GEMINI_API_KEY_1=AIzaSyYourPersonalGeminiApiKeyHere123
 GEMINI_MODEL=gemini-3.5-flash-lite
 
-# Ollama Local Fallback (Opsional)
+# Ollama Local Fallback (Optional)
 OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODEL=qwen2.5-coder:14b
 ```
 
-### 4. Migrasi Database
-Impor skema database dari direktori `db_migrations/` ke instance MariaDB/MySQL Anda:
+### 4. Database Migration
+Import the initial database schema into your MariaDB/MySQL instance:
 ```bash
 mysql -u root -p db_semantic < db_migrations/complete_schema.sql
 ```
 
-### 5. Menjalankan Server Services
+### 5. Launching Server Services
 
-**Langkah A: Jalankan FastAPI Backend Server (Port 5000)**
+**Step A: Start FastAPI Backend Server (Port 5000)**
 ```bash
 python run_fastapi.py
 ```
 
-**Langkah B: Jalankan PHP Web Server (Port 8088)**
+**Step B: Start PHP Web Server (Port 8088)**
 ```bash
 php -S 127.0.0.1:8088 -t estrange/v2/v2/ssparc
 ```
 
-Akses browser Anda ke: `http://127.0.0.1:8088/chat.php`
+Navigate your browser to: `http://127.0.0.1:8088/chat.php`
 
 ---
 
-## 📡 Dokumentasi Endpoint REST API Utama
+## 📡 REST API Endpoint Reference
 
 ### 1. `POST /api/generate-code`
-Menerima prompt mahasiswa dan menghasilkan kode jawaban teroptimasi.
+Processes student prompts and returns optimized solution code alongside literacy analytics.
 
 - **Headers**:
   - `Content-Type: application/json`
-  - `X-User-ID: <UUID_USER_MAHASISWA>`
+  - `X-User-ID: <STUDENT_USER_UUID>`
 - **Request Body**:
 ```json
 {
-  "prompt": "[CONTEXT: Pengujian Array]\nSaya ingin mencari nilai maksimum...\n[INPUT]\nnums = [1, 5, 3]\n[OUTPUT]\nReturn 5\n[ERROR TRACE]\nNone",
+  "prompt": "[CONTEXT: Array Processing]\nI need to find the maximum value...\n[INPUT]\nnums = [1, 5, 3]\n[OUTPUT]\nReturn 5\n[ERROR TRACE]\nNone",
   "course_id": "COURSE_SE_2026",
   "assessment_id": "ASSESS_01",
   "response_mode": "Standard",
   "language": "python"
 }
 ```
-- **Response Success (200 OK)**:
+- **Response (200 OK)**:
 ```json
 {
   "mode": "success",
@@ -252,7 +252,7 @@ Menerima prompt mahasiswa dan menghasilkan kode jawaban teroptimasi.
 ---
 
 ### 2. `POST /api/user/api-key`
-Mendaftarkan atau memperbarui Gemini API Key milik pribadi mahasiswa.
+Registers or updates a student's personal Gemini API Key.
 
 - **Request Body**:
 ```json
@@ -261,11 +261,11 @@ Mendaftarkan atau memperbarui Gemini API Key milik pribadi mahasiswa.
   "terms_accepted": true
 }
 ```
-- **Response Success (200 OK)**:
+- **Response (200 OK)**:
 ```json
 {
   "status": "success",
-  "message": "API key berhasil disimpan dan Syarat & Ketentuan telah disetujui.",
+  "message": "API key successfully registered and Terms accepted.",
   "masked_key": "AQ.Ab8...HX6g"
 }
 ```
@@ -273,9 +273,9 @@ Mendaftarkan atau memperbarui Gemini API Key milik pribadi mahasiswa.
 ---
 
 ### 3. `GET /api/user/query-quota`
-Mengambil informasi kuota harian, status API key, dan sisa batas request real-time.
+Retrieves real-time quota metrics, API key registration status, and daily request balances.
 
-- **Response Success (200 OK)**:
+- **Response (200 OK)**:
 ```json
 {
   "has_key": true,
@@ -291,26 +291,15 @@ Mengambil informasi kuota harian, status API key, dan sisa batas request real-ti
 
 ---
 
-## 📊 Integrasi Pembelajaran & Panduan Mahasiswa
+## 👥 Authors, Research & License
 
-1. **Pendaftaran API Key**:
-   Saat pertama kali membuka menu **Chat Assistant**, mahasiswa mengklik tombol **Manage Google Gemini API Key**, memasukkan API key dari Google AI Studio, dan menyetujui Ketentuan Penggunaan.
-2. **Pengisian Scaffolding**:
-   Mahasiswa memilih *Quick Prompt Template* (C-I-O-E) untuk menyusun pertanyaan secara akademik dan terstruktur.
-3. **Pemantauan Karbon & Kuota**:
-   Badge kuota di bagian kanan bawah menampilkan sisa batas API dan kalkulasi penghematan karbon secara transparan.
+S-SPARC AI is developed by software engineering researchers and practitioners to advance AI-driven computer science education.
 
----
-
-## 👥 Tim Pengembang & Kontribusi Akademik
-
-S-SPARC AI dikembangkan oleh tim peneliti dan praktisi Software Engineering di Indonesia untuk mendukung akselerasi transformasi digital pendidikan tinggi nasional.
-
-- **Lead Architect & Developer**: Yehezkiel David Setiawan & Tim Riset S-SPARC
-- **Lisensi**: Open-Source untuk Penggunaan Pendidikan & Akademik (MIT License).
+- **Lead Architect & Developer**: Yehezkiel David Setiawan & The S-SPARC Research Team
+- **License**: Released under the **MIT License** for open educational and academic use.
 
 ---
 
 <p align="center">
-  <sub>Diproduksi dengan bangga untuk Kemajuan Pendidikan Software Engineering & Artificial Intelligence di Indonesia. 🇮🇩</sub>
+  <sub>Designed & Developed for Software Engineering & Artificial Intelligence Education. 🇮🇩</sub>
 </p>
