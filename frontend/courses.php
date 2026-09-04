@@ -139,15 +139,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       padding: 0.1rem 0.4rem;
       border-radius: 0.375rem;
     }
-    /* Banded row untuk DataTables (kontras lebih kuat) */
-    table.dataTable tbody tr:nth-child(odd) {
-      background-color: #e2e8f0; /* slate-200 */
+    /* DataTables modern row styling */
+    table.dataTable tbody tr {
+      background-color: #ffffff;
+      border-bottom: 1px solid #f1f5f9;
+      transition: background-color 0.2s ease;
     }
     table.dataTable tbody tr:nth-child(even) {
-      background-color: #f9fafb; /* slate-50 */
+      background-color: #f8fafc; /* very light slate */
     }
     table.dataTable tbody tr:hover {
-      background-color: #dbeafe !important; /* blue-100 */
+      background-color: #f1f5f9 !important; /* light slate hover */
     }
     /* Perkecil tinggi dan padding Select2 di kolom Aksi */
     .select2-container .select2-selection--single {
@@ -174,13 +176,105 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       padding-bottom: 0.15rem;
     }
   </style>
+  <style>
+/* Premium Teal Dropdown Styling for E-STRANGE & S-SPARC */
+/* Ensure SweetAlert2 hidden select is never displayed */
+.swal2-container select,
+.swal2-popup select,
+.swal2-select {
+  display: none !important;
+}
+
+select:not(.select2-hidden-accessible):not(.swal2-select), .form-select, .custom-select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2300A0A5' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 0.85rem center !important;
+  background-size: 1.15rem 1.15rem !important;
+  padding-left: 1rem !important;
+  padding-right: 2.5rem !important;
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+  min-width: 130px !important;
+  min-height: 40px !important;
+  border-radius: 0.75rem !important;
+  border: 1.5px solid #cbd5e1 !important;
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+  transition: all 0.2s ease-in-out !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+  cursor: pointer !important;
+  flex-shrink: 0 !important;
+  display: inline-block !important;
+  box-sizing: border-box !important;
+}
+
+select:not(.select2-hidden-accessible):not(.swal2-select):hover, .form-select:hover {
+  border-color: #00A0A5 !important;
+  background-color: #f8fafc !important;
+  box-shadow: 0 4px 12px rgba(0, 160, 165, 0.08) !important;
+}
+
+select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:focus {
+  outline: none !important;
+  border-color: #00A0A5 !important;
+  box-shadow: 0 0 0 3px rgba(0, 160, 165, 0.2) !important;
+  background-color: #ffffff !important;
+}
+
+/* Ensure Select2 Native Input Remains Completely Hidden */
+select.select2-hidden-accessible {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  position: absolute !important;
+  pointer-events: none !important;
+}
+
+/* Select2 Plugin Custom Teal Enhancements */
+.select2-container--default .select2-selection--single {
+  border-radius: 0.75rem !important;
+  border: 1.5px solid #cbd5e1 !important;
+  height: 42px !important;
+  min-width: 140px !important;
+  padding: 6px 12px !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+.select2-container--default .select2-selection--single:hover {
+  border-color: #00A0A5 !important;
+}
+
+.select2-container--default.select2-container--open .select2-selection--single,
+.select2-container--default.select2-container--focus .select2-selection--single {
+  border-color: #00A0A5 !important;
+  box-shadow: 0 0 0 3px rgba(0, 160, 165, 0.2) !important;
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+  background-color: #00A0A5 !important;
+  color: #ffffff !important;
+}
+
+</style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 text-slate-900">
   <div class="min-h-screen flex flex-col">
     <header class="sticky top-0 z-10 border-b border-slate-200/70 bg-white/80 backdrop-blur">
       <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
         <div class="flex items-center gap-3">
-          <div class="h-10 w-10 rounded-xl bg-emerald-600 text-white grid place-items-center font-semibold">MK</div>
+          <div class="h-10 w-10 rounded-xl bg-[#00A0A5] text-white grid place-items-center font-semibold">MK</div>
           <div>
             <div class="text-lg font-semibold">Select Course & Assessment</div>
             <div class="text-xs text-slate-500">Logged in as <span class="font-medium"><?php echo htmlspecialchars($username); ?></span></div>
@@ -190,7 +284,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           <a class="text-slate-900 font-semibold active" href="courses.php">Courses</a>
           <!-- <a class="text-slate-700 hover:text-slate-900" href="chat.php">Chat</a> -->
           <a class="text-slate-400 hover:text-slate-700" href="dashboard.php">Dashboard</a>
-          <a class="ml-2 inline-flex items-center gap-2 rounded-full bg-teal-600 text-white px-3 py-1 hover:bg-teal-800 shadow-sm" href="change_password.php">Change Password</a>
+          <a class="ml-2 inline-flex items-center gap-2 rounded-full bg-[#00A0A5] text-white px-3 py-1 hover:bg-[#008488] shadow-sm" href="change_password.php">Change Password</a>
           <a href="logout.php" class="ml-2 inline-flex items-center gap-2 rounded-full bg-red-800 text-white px-3 py-1 hover:bg-red-600 shadow-sm">Logout</a>
         </nav>
       </div>
@@ -210,12 +304,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <?php else: ?>
         <div class="overflow-x-auto">
           <table id="courses-table" class="min-w-full text-sm text-left border border-slate-200 rounded-lg overflow-hidden">
-            <thead class="bg-slate-100 text-slate-700">
+            <thead class="bg-slate-50 text-slate-600 font-semibold uppercase text-xs tracking-wider border-b border-slate-200">
               <tr>
-                <th class="px-3 py-2 border-b border-slate-200">Course Code</th>
-                <th class="px-3 py-2 border-b border-slate-200">Course Name</th>
-                <th class="px-3 py-2 border-b border-slate-200">Assessment & Status</th>
-                <th class="px-3 py-2 border-b border-slate-200 text-center">Action</th>
+                <th class="px-4 py-3 text-left">Course Code</th>
+                <th class="px-4 py-3 text-left">Course Name</th>
+                <th class="px-4 py-3 text-left">Assessment & Status</th>
+                <th class="px-4 py-3 text-center">Action</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
@@ -226,10 +320,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                   $name = $c['name'] ?? $code;
                   $courseAssessments = $assessmentsByCourse[$cid] ?? [];
                 ?>
-                <tr class="hover:bg-slate-50">
-                  <td class="px-3 py-2 align-top whitespace-nowrap font-mono text-xs text-slate-700"><?php echo htmlspecialchars($code); ?></td>
-                  <td class="px-3 py-2 align-top text-slate-800"><?php echo htmlspecialchars($name); ?></td>
-                  <td class="px-3 py-2 align-top">
+                <tr class="transition-colors">
+                  <td class="px-4 py-3 align-middle whitespace-nowrap font-mono text-[13px] font-semibold text-slate-700"><?php echo htmlspecialchars($code); ?></td>
+                  <td class="px-4 py-3 align-middle text-[13px] font-medium text-slate-800"><?php echo htmlspecialchars($name); ?></td>
+                  <td class="px-4 py-3 align-middle">
                     <?php if (empty($courseAssessments)): ?>
                       <span class="text-xs text-slate-500">No assessments yet.</span>
                     <?php else: ?>
@@ -239,28 +333,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             $end = $a['end_date'] ?? '';
                             $assessmentLabel = htmlspecialchars($a['code'] ?? ($a['name'] ?? $a['assessment_id'] ?? '-'));
                             
+
                             if ($end) {
-                              // Strip 'GMT' label if present (backend sends WIB time with GMT label)
                               $endCleaned = str_replace(' GMT', '', $end);
-                              
-                              // Parse as WIB time directly
                               $dt = new DateTime($endCleaned, new DateTimeZone('Asia/Jakarta'));
-                              
                               $now = new DateTime('now', new DateTimeZone('Asia/Jakarta'));
                               $isEnded = $dt < $now;
-                              $badgeColor = $isEnded ? 'bg-red-50 border-red-200 text-red-700' : 'bg-emerald-50 border-emerald-200 text-emerald-700';
-                              $icon = $isEnded ? '🔴' : '🟢';
+                              
+                              if ($isEnded) {
+                                $badgeColor = 'bg-rose-50 border-rose-200 text-rose-700';
+                                $icon = '<svg class="w-3.5 h-3.5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+                              } else {
+                                $badgeColor = 'bg-emerald-50 border-emerald-200 text-emerald-700';
+                                $icon = '<svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+                              }
                               $dateStr = $dt->format('d M Y, H:i') . ' WIB';
                             } else {
                               $badgeColor = 'bg-slate-50 border-slate-200 text-slate-600';
-                              $icon = '⚪';
+                              $icon = '<svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
                               $dateStr = 'No end date';
                             }
                           ?>
-                          <div class="inline-flex items-center justify-between gap-3 px-3 py-2 rounded-lg border <?php echo $badgeColor; ?> text-xs font-medium">
-                            <span class="font-semibold"><?php echo $assessmentLabel; ?></span>
-                            <span class="flex items-center gap-1.5">
-                              <span><?php echo $icon; ?></span>
+                          <div class="inline-flex items-center justify-between gap-3 px-3 py-1.5 rounded-full border <?php echo $badgeColor; ?> text-[11px] font-semibold tracking-wide shadow-sm">
+                            <span><?php echo $assessmentLabel; ?></span>
+                            <span class="flex items-center gap-1.5 opacity-90">
+                              <?php echo $icon; ?>
                               <span><?php echo $dateStr; ?></span>
                             </span>
                           </div>
@@ -323,9 +420,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         echo "<!-- Total assessments: " . count($courseAssessments) . " | Active: " . count($activeAssessments) . " -->\n";
                       ?>
                       <?php if (!empty($activeAssessments)): ?>
-                        <form method="post" class="inline-flex items-center justify-center gap-1.5 w-full">
+                        <form method="post" class="inline-flex items-center justify-center gap-2 w-full mt-1">
                           <input type="hidden" name="course_id" value="<?php echo htmlspecialchars($cid); ?>">
-                          <select name="assessment_id" class="rounded border border-slate-200 text-xs focus:border-blue-500 focus:ring-0 select2 min-w-[250px]" required>
+                          <select name="assessment_id" class="rounded-lg border border-slate-200 text-xs focus:border-[#00A0A5] focus:ring-1 focus:ring-[#00A0A5]/20 select2 min-w-[220px]" required>
                             <option class="text-xs text-slate-700" value="">Select active assessment (<?php echo count($activeAssessments); ?>/<?php echo count($courseAssessments); ?>)</option>
                             <?php foreach ($activeAssessments as $a): ?>
                               <?php
@@ -346,7 +443,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                               <option value="<?php echo htmlspecialchars($aid); ?>"><?php echo htmlspecialchars($alabel); ?></option>
                             <?php endforeach; ?>
                           </select>
-                          <button type="submit" class="rounded bg-blue-600 px-2 py-1 text-xs font-semibold text-white hover:bg-blue-700 whitespace-nowrap">Chat</button>
+                          <button type="submit" class="rounded-lg bg-[#00A0A5] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#008488] shadow-md hover:shadow-lg transition-all duration-200 whitespace-nowrap flex items-center gap-1">
+                            Chat
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path></svg>
+                          </button>
                         </form>
                       <?php else: ?>
                         <span class="text-xs text-slate-400">All assessments expired</span>

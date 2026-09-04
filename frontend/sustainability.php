@@ -26,7 +26,99 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
-  </head>
+    <style>
+/* Premium Teal Dropdown Styling for E-STRANGE & S-SPARC */
+/* Ensure SweetAlert2 hidden select is never displayed */
+.swal2-container select,
+.swal2-popup select,
+.swal2-select {
+  display: none !important;
+}
+
+select:not(.select2-hidden-accessible):not(.swal2-select), .form-select, .custom-select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2300A0A5' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 0.85rem center !important;
+  background-size: 1.15rem 1.15rem !important;
+  padding-left: 1rem !important;
+  padding-right: 2.5rem !important;
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+  min-width: 130px !important;
+  min-height: 40px !important;
+  border-radius: 0.75rem !important;
+  border: 1.5px solid #cbd5e1 !important;
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+  transition: all 0.2s ease-in-out !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+  cursor: pointer !important;
+  flex-shrink: 0 !important;
+  display: inline-block !important;
+  box-sizing: border-box !important;
+}
+
+select:not(.select2-hidden-accessible):not(.swal2-select):hover, .form-select:hover {
+  border-color: #00A0A5 !important;
+  background-color: #f8fafc !important;
+  box-shadow: 0 4px 12px rgba(0, 160, 165, 0.08) !important;
+}
+
+select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:focus {
+  outline: none !important;
+  border-color: #00A0A5 !important;
+  box-shadow: 0 0 0 3px rgba(0, 160, 165, 0.2) !important;
+  background-color: #ffffff !important;
+}
+
+/* Ensure Select2 Native Input Remains Completely Hidden */
+select.select2-hidden-accessible {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  position: absolute !important;
+  pointer-events: none !important;
+}
+
+/* Select2 Plugin Custom Teal Enhancements */
+.select2-container--default .select2-selection--single {
+  border-radius: 0.75rem !important;
+  border: 1.5px solid #cbd5e1 !important;
+  height: 42px !important;
+  min-width: 140px !important;
+  padding: 6px 12px !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+.select2-container--default .select2-selection--single:hover {
+  border-color: #00A0A5 !important;
+}
+
+.select2-container--default.select2-container--open .select2-selection--single,
+.select2-container--default.select2-container--focus .select2-selection--single {
+  border-color: #00A0A5 !important;
+  box-shadow: 0 0 0 3px rgba(0, 160, 165, 0.2) !important;
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+  background-color: #00A0A5 !important;
+  color: #ffffff !important;
+}
+
+</style>
+</head>
   <body style="font-family: 'Plus Jakarta Sans', sans-serif; background: radial-gradient(circle at top left, #e0f7f4, #f5faf8);">
     <div id="particles-js"></div>
     <style>
@@ -62,14 +154,14 @@
           <a
             href="login.php"
             class="btn btn-outline-primary me-2 px-4"
-            style="border-color: teal; color: teal; background-color: transparent"
+            style="border-color: #00A0A5; color: #00A0A5; background-color: transparent"
           >
             Login
           </a>
           <a
             href="register.php"
             class="btn btn-primary ms-2 px-4"
-            style="background-color: teal !important; border-color: teal"
+            style="background-color: #00A0A5 !important; border-color: #00A0A5"
           >
             Create Account
           </a>
@@ -169,6 +261,176 @@
           </div>
         </div>
         <?php endif; ?>
+
+        <div class="mt-5">
+          <h2 class="fw-bold mb-3" style="font-size: 2.1rem">Reduction Rate Analysis</h2>
+          <p class="mb-4" style="color: #444; max-width: 900px">
+            Analisis berikut merangkum dampak optimasi S-SPARC terhadap reduction rate, yaitu seberapa besar inferensi dapat diselesaikan melalui mekanisme lokal dibandingkan inferensi langsung ke GPT. Hasil ini menegaskan bahwa penghematan token bukan hanya terjadi sesaat, tetapi juga konsisten selama periode observasi.
+          </p>
+
+          <div class="row g-3 mb-4">
+            <div class="col-6 col-lg-3">
+              <div class="simple-metric-card">
+                <div class="metric-label">Token Reduction</div>
+                <div class="metric-value">77%</div>
+                <div class="metric-desc">Rata-rata eksperimen terkontrol</div>
+              </div>
+            </div>
+            <div class="col-6 col-lg-3">
+              <div class="simple-metric-card">
+                <div class="metric-label">Token Reduction</div>
+                <div class="metric-value">84%</div>
+                <div class="metric-desc">Quasi-experiment</div>
+              </div>
+            </div>
+            <div class="col-6 col-lg-3">
+              <div class="simple-metric-card">
+                <div class="metric-label">Significance</div>
+                <div class="metric-value">p = 0.029</div>
+                <div class="metric-desc">Statistically significant</div>
+              </div>
+            </div>
+            <div class="col-6 col-lg-3">
+              <div class="simple-metric-card">
+                <div class="metric-label">Effect Size</div>
+                <div class="metric-value">d = 0.53</div>
+                <div class="metric-desc">Cohen's d, medium effect</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-4">
+            <div class="col-lg-6">
+              <div class="p-4 h-100" style="border: 1px solid #dde6e2; border-radius: 1.25rem; background: rgba(255,255,255,0.8); box-shadow: 0 6px 24px rgba(15, 23, 42, 0.05);">
+                <h5 class="fw-bold mb-3">Hypothesis Test: Paired Sample T-Test</h5>
+                <div class="mb-3" style="color: #445; font-size: 0.95rem;">
+                  <div><strong>H0</strong> &rarr; Tidak terdapat perbedaan reduction rate antara fase awal dan fase akhir penggunaan sistem.</div>
+                  <div><strong>H1</strong> &rarr; Terdapat perbedaan reduction rate antara fase awal dan fase akhir penggunaan sistem.</div>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-sm align-middle mb-3">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Fase</th>
+                        <th>Definisi</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>Early</td>
+                        <td>Rata-rata reduction rate 3 minggu pertama</td>
+                      </tr>
+                      <tr>
+                        <td>Late</td>
+                        <td>Rata-rata reduction rate 3 minggu terakhir</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <p class="mb-2"><strong>p-value (two-tail):</strong> 0.273</p>
+                <p class="mb-2"><strong>Keputusan:</strong> H0 diterima dan H1 ditolak</p>
+                <p class="mb-0" style="color: #4b5563; font-size: 0.95rem;">
+                  Tidak terdapat perbedaan reduction rate yang signifikan antara fase awal dan fase akhir penggunaan SSPARC. SSPARC mampu mempertahankan reduction rate pada level tinggi secara konsisten, sehingga mayoritas inferensi tetap diselesaikan secara lokal dan kebutuhan inferensi langsung ke GPT tetap rendah.
+                </p>
+              </div>
+            </div>
+
+            <div class="col-lg-6">
+              <div class="p-4 h-100" style="border: 1px solid #dde6e2; border-radius: 1.25rem; background: rgba(255,255,255,0.8); box-shadow: 0 6px 24px rgba(15, 23, 42, 0.05);">
+                <h5 class="fw-bold mb-3">Repeated Measures ANOVA</h5>
+                <div class="mb-3" style="color: #445; font-size: 0.95rem;">
+                  <div><strong>H0</strong> &rarr; Tidak terdapat perbedaan reduction rate SSPARC antar minggu pengamatan.</div>
+                  <div><strong>H1</strong> &rarr; Terdapat minimal satu minggu yang memiliki reduction rate berbeda signifikan.</div>
+                </div>
+                <div class="table-responsive">
+                  <table class="table table-sm align-middle mb-3">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Parameter</th>
+                        <th>Nilai</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>F-statistic</td>
+                        <td>0.859</td>
+                      </tr>
+                      <tr>
+                        <td>p-value</td>
+                        <td>0.527</td>
+                      </tr>
+                      <tr>
+                        <td>GG-corrected p-value</td>
+                        <td>0.452</td>
+                      </tr>
+                      <tr>
+                        <td>Effect Size (ng²)</td>
+                        <td>0.0217</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <p class="mb-2"><strong>Keputusan:</strong> H0 diterima dan H1 ditolak</p>
+                <p class="mb-0" style="color: #4b5563; font-size: 0.95rem;">
+                  Tidak terdapat perubahan reduction rate yang signifikan antar minggu pengamatan. Efisiensi reduksi inferensi GPT oleh SSPARC relatif stabil sepanjang penggunaan sistem, dengan effect size yang tergolong kecil.
+                </p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <h2 class="fw-bold mb-3 mt-5" style="font-size: 2.1rem">Key Findings</h2>
+        <div class="p-4" style="border: 1px solid #dde6e2; border-radius: 1.25rem; background: #ffffff; box-shadow: 0 6px 24px rgba(15, 23, 42, 0.05);">
+          <p class="mb-4" style="color: #444; max-width: 900px">
+            S-SPARC membuktikan bahwa analisis perilaku, gamifikasi, dan optimasi inferensi dapat secara simultan meningkatkan efisiensi, menjaga kualitas, dan mengurangi dampak lingkungan dalam pembelajaran pemrograman berbasis AI.
+          </p>
+
+          <div class="row g-3 mb-4">
+            <div class="col-md-4">
+              <div class="simple-metric-card" style="min-height: 150px;">
+                <div class="metric-label">Behavior Shift</div>
+                <div class="metric-value" style="font-size: 1.25rem">More efficient interaction</div>
+                <div class="metric-desc">Prompt quality lebih berpengaruh dibanding jumlah token.</div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="simple-metric-card" style="min-height: 150px;">
+                <div class="metric-label">Gamification</div>
+                <div class="metric-value" style="font-size: 1.25rem">Self-monitoring improved</div>
+                <div class="metric-desc">Mendorong selektivitas prompt dan menekan interaksi tidak esensial.</div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="simple-metric-card" style="min-height: 150px;">
+                <div class="metric-label">Efficiency</div>
+                <div class="metric-value" style="font-size: 1.25rem">Up to 84%</div>
+                <div class="metric-desc">Pengurangan beban komputasi pada quasi-experiment.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-4 align-items-stretch">
+            <div class="col-lg-7">
+              <div class="p-4 h-100" style="border: 1px solid #e0e6ed; border-radius: 1.1rem; background: #ffffff;">
+                <h5 class="fw-bold mb-3">What changed</h5>
+                <ul class="mb-0" style="color: #445; padding-left: 1.2rem;">
+                  <li>Terjadi pergeseran perilaku interaksi menuju penggunaan yang lebih efisien.</li>
+                  <li>Gamifikasi meningkatkan selektivitas saat pembuatan prompt dan memperkuat self-monitoring.</li>
+                  <li>Interaksi yang tidak esensial menurun, sehingga penggunaan AI menjadi lebih terarah.</li>
+                  <li>Kualitas tetap terjaga: 88.13% pada S-SPARC dibanding 87.72% pada baseline.</li>
+                </ul>
+              </div>
+            </div>
+            <div class="col-lg-5">
+              <div class="p-4 h-100" style="border: 1px solid #e0e6ed; border-radius: 1.1rem; background: #ffffff; display: flex; flex-direction: column; justify-content: center;">
+                <blockquote class="mb-0" style="font-size: 2.1rem; font-weight: 700; color: #0f766e; line-height: 1.55;">
+                  The problem is not the AI, it’s how we use it. <br/> S-SPARC changes that.
+                </blockquote>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div class="mt-5">
           <h5 class="fw-bold mb-2" style="font-size: 1.1rem">References</h5>

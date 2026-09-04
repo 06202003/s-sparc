@@ -201,9 +201,8 @@ $botman->hears('.*', function ($bot) {
     $respMode = $data['mode'] ?? '';
     if (strpos($respMode, 'gpt-queued') !== false && !empty($data['job_id'])) {
         $jobId = $data['job_id'];
-        $bot->reply('Your request is being processed (queued). job_id: ' . $jobId . '. I will check for up to 24 seconds, or type "status ' . $jobId . '" to check manually.');
 
-        $maxPoll = 30; // ~60 detik (2s * 30)
+        $maxPoll = 35; // ~70 detik (2s * 35)
         for ($i = 0; $i < $maxPoll; $i++) {
             sleep(2);
             // Kirim user_id dan assessment_id jika ada
@@ -225,7 +224,7 @@ $botman->hears('.*', function ($bot) {
             if (!$pollData) {
                 continue;
             }
-            if (($pollData['status'] ?? '') === 'pending') {
+            if (($pollData['status'] ?? '') === 'pending' || ($pollData['status'] ?? '') === 'running') {
                 continue;
             }
             if (($pollData['status'] ?? '') === 'done') {
@@ -240,7 +239,7 @@ $botman->hears('.*', function ($bot) {
                         }
                         $bot->reply($prefix . "\n" . $pollData['code']);
                     } else {
-                        $bot->reply("Here is the code result:\n" . $pollData['code']);
+                        $bot->reply($pollData['code']);
                     }
                 } else {
                     $debug = json_encode($pollData, JSON_PRETTY_PRINT);
@@ -253,7 +252,7 @@ $botman->hears('.*', function ($bot) {
                 return;
             }
         }
-        $bot->reply('Still processing. To check again anytime, type: status ' . $jobId);
+        $bot->reply('Still processing in background. To check status anytime, type: status ' . $jobId);
         return;
     }
 

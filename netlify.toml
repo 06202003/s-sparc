@@ -1,0 +1,18 @@
+# Netlify Configuration File for S-SPARC Redocly Documentation
+
+[build]
+  publish = "docs"
+  command = "echo 'Building S-SPARC Redocly Documentation...' && npx -y @redocly/cli build-docs docs/openapi.yaml -o docs/index.html || true"
+
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

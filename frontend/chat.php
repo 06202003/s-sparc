@@ -42,13 +42,105 @@ if (!$assessmentId) {
     .copy-btn { position: absolute; top: 8px; right: 8px; font-size: 12px; padding: 4px 8px; border-radius: 12px; border: 1px solid #cbd5e1; background: #ffffff; color: #0f172a; cursor: pointer; }
     .copy-btn:hover { background: #e2e8f0; }
   </style>
+  <style>
+/* Premium Teal Dropdown Styling for E-STRANGE & S-SPARC */
+/* Ensure SweetAlert2 hidden select is never displayed */
+.swal2-container select,
+.swal2-popup select,
+.swal2-select {
+  display: none !important;
+}
+
+select:not(.select2-hidden-accessible):not(.swal2-select), .form-select, .custom-select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2300A0A5' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 0.85rem center !important;
+  background-size: 1.15rem 1.15rem !important;
+  padding-left: 1rem !important;
+  padding-right: 2.5rem !important;
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+  min-width: 130px !important;
+  min-height: 40px !important;
+  border-radius: 0.75rem !important;
+  border: 1.5px solid #cbd5e1 !important;
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+  transition: all 0.2s ease-in-out !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+  cursor: pointer !important;
+  flex-shrink: 0 !important;
+  display: inline-block !important;
+  box-sizing: border-box !important;
+}
+
+select:not(.select2-hidden-accessible):not(.swal2-select):hover, .form-select:hover {
+  border-color: #00A0A5 !important;
+  background-color: #f8fafc !important;
+  box-shadow: 0 4px 12px rgba(0, 160, 165, 0.08) !important;
+}
+
+select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:focus {
+  outline: none !important;
+  border-color: #00A0A5 !important;
+  box-shadow: 0 0 0 3px rgba(0, 160, 165, 0.2) !important;
+  background-color: #ffffff !important;
+}
+
+/* Ensure Select2 Native Input Remains Completely Hidden */
+select.select2-hidden-accessible {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  position: absolute !important;
+  pointer-events: none !important;
+}
+
+/* Select2 Plugin Custom Teal Enhancements */
+.select2-container--default .select2-selection--single {
+  border-radius: 0.75rem !important;
+  border: 1.5px solid #cbd5e1 !important;
+  height: 42px !important;
+  min-width: 140px !important;
+  padding: 6px 12px !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+.select2-container--default .select2-selection--single:hover {
+  border-color: #00A0A5 !important;
+}
+
+.select2-container--default.select2-container--open .select2-selection--single,
+.select2-container--default.select2-container--focus .select2-selection--single {
+  border-color: #00A0A5 !important;
+  box-shadow: 0 0 0 3px rgba(0, 160, 165, 0.2) !important;
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+  background-color: #00A0A5 !important;
+  color: #ffffff !important;
+}
+
+</style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 text-slate-900">
   <div class="min-h-screen flex flex-col">
     <header class="sticky top-0 z-10 border-b border-slate-200/70 bg-white/80 backdrop-blur">
       <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
         <div class="flex min-w-0 items-center gap-3">
-          <div class="h-10 w-10 rounded-xl bg-slate-900 text-white grid place-items-center font-semibold">AI</div>
+          <div class="h-10 w-10 rounded-xl bg-[#00A0A5] text-white grid place-items-center font-semibold">AI</div>
           <div class="min-w-0">
             <div class="text-lg font-semibold">Chat Assistant</div>
             <div class="text-xs text-slate-500 truncate max-w-[36rem]">courses: <strong><?= htmlspecialchars($currentCourse ?? '-') ?></strong> &mdash; Assessment: <strong><?= htmlspecialchars($currentAssessment ?? '-') ?></strong></div>
@@ -57,10 +149,14 @@ if (!$assessmentId) {
           </div>
         </div>
         <nav class="flex shrink-0 items-center gap-2 text-sm font-medium">
+          <button id="btn-api-key" onclick="openApiKeyModal()" type="button" class="inline-flex h-10 items-center gap-1.5 rounded-full border border-teal-300 bg-teal-50 px-4 text-teal-800 font-semibold hover:bg-teal-100 whitespace-nowrap shadow-2xs">
+            <span>🔑</span>
+            <span id="api-key-btn-text">API Key</span>
+          </button>
           <a class="inline-flex h-10 items-center rounded-full px-3 text-slate-500 hover:bg-slate-100 hover:text-slate-700 whitespace-nowrap" href="dashboard.php">Dashboard</a>
           <a class="inline-flex h-10 items-center rounded-full px-3 text-slate-500 hover:bg-slate-100 hover:text-slate-700 whitespace-nowrap" href="courses.php">Change courses</a>
           <button id="view-prompt-tips" type="button" class="inline-flex h-10 items-center rounded-full border border-slate-200 px-4 text-slate-700 hover:border-slate-400 whitespace-nowrap">Lihat Tips Prompting</button>
-          <button id="new-chat" type="button" class="inline-flex h-10 items-center rounded-full bg-slate-900 text-white px-4 hover:bg-slate-800 whitespace-nowrap">New chat</button>
+          <button id="new-chat" type="button" class="inline-flex h-10 items-center rounded-full bg-[#00A0A5] text-white px-4 hover:bg-[#008488] whitespace-nowrap">New chat</button>
           <button id="clear-chat" type="button" class="inline-flex h-10 items-center rounded-full border border-slate-200 px-4 text-slate-700 hover:border-slate-400 whitespace-nowrap">Clear history</button>
           <?php if ($loggedIn): ?>
             <a href="logout.php" class="inline-flex h-10 items-center rounded-full bg-red-500 text-white px-4 hover:bg-red-600 shadow-sm whitespace-nowrap">Logout</a>
@@ -93,7 +189,7 @@ if (!$assessmentId) {
             <div class="flex-1 flex flex-col gap-2">
               <div class="flex gap-2 items-center">
                 <label for="language-select" class="text-xs text-slate-600">Language</label>
-                <select id="language-select" class="text-sm rounded-md border border-slate-200 px-2 py-1">
+                <select id="language-select" class="min-w-[200px] shrink-0 text-sm rounded-md border border-slate-200 px-2 py-1">
                   <option value="">Auto-detect</option>
                   <option value="Python">Python</option>
                   <option value="JavaScript">JavaScript</option>
@@ -104,7 +200,7 @@ if (!$assessmentId) {
                   <option value="PHP">PHP</option>
                 </select>
                 <label for="response-mode" class="text-xs text-slate-600 ml-3">Mode</label>
-                <select id="response-mode" class="text-sm rounded-md border border-slate-200 px-2 py-1">
+                <select id="response-mode" class="min-w-[200px] shrink-0 text-sm rounded-md border border-slate-200 px-2 py-1">
                   <option value="code">Code (only)</option>
                   <option value="summary">Summary (short)</option>
                   <option value="summary_code_explanation">Summary + Code + Explanation</option>
@@ -112,14 +208,24 @@ if (!$assessmentId) {
               </div>
               <div class="flex items-center gap-3">
                 <label for="chat-input" class="sr-only">Write a message</label>
-                <div class="rounded-2xl border border-slate-200 bg-white shadow-sm focus-within:border-slate-400 flex-1 flex">
-                  <textarea id="chat-input" rows="3" class="w-full min-h-[4.5rem] resize-none overflow-y-auto bg-transparent px-4 py-2 outline-none" placeholder="Write your code question here…" required></textarea>
+                <div class="rounded-2xl border border-slate-200 bg-white shadow-sm focus-within:border-[#00A0A5] flex-1 flex flex-col p-2">
+                  <textarea id="chat-input" rows="3" class="w-full min-h-[4.5rem] resize-none overflow-y-auto bg-transparent px-2 py-1 outline-none text-sm" placeholder="Write your code question here (min. 10, max. 2000 chars)…" required></textarea>
+                  <div class="flex flex-wrap justify-between items-center px-2 pt-1 border-t border-slate-100 gap-2">
+                    <span id="char-counter" class="text-[11px] font-mono text-slate-400">0 / 2000 chars (min. 10)</span>
+                    <div class="flex items-center gap-3">
+                      <div id="query-quota-badge" onclick="showTermsModal()" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-teal-50/90 border border-teal-200/80 text-[11px] font-semibold text-teal-800 shadow-2xs cursor-pointer hover:bg-teal-100 transition" title="Klik untuk rincian kuota & syarat ketentuan">
+                        <span class="text-teal-600">⚡</span>
+                        <span>Sisa Query: <strong id="query-remaining-count" class="font-mono font-bold text-teal-900">1,500</strong> / <span id="query-limit-count" class="font-mono text-slate-500">1,500</span></span>
+                      </div>
+                      <span class="text-[10px] text-slate-400 hidden sm:inline">Shift+Enter for newline</span>
+                    </div>
+                  </div>
                 </div>
-                <button id="send-btn" type="submit" class="h-11 self-center flex items-center justify-center rounded-xl bg-slate-900 text-white px-4 font-semibold hover:bg-slate-800 focus:ring focus:ring-slate-200">Send</button>
+                <button id="send-btn" type="submit" class="h-11 self-center flex items-center justify-center rounded-xl bg-[#00A0A5] text-white px-4 font-semibold hover:bg-[#008488] focus:ring focus:ring-[#00A0A5]/20 disabled:opacity-50">Send</button>
               </div>
             </div>
           </form>
-          <div id="rate-limit-notice" class="hidden mt-2 text-sm text-amber-700"></div>
+          <div id="rate-limit-notice" class="hidden mt-2 p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-xs font-semibold text-amber-900 flex items-center gap-2 animate-pulse"></div>
           <div class="mt-3 flex flex-wrap gap-2 text-sm" id="suggestions">
             <button type="button" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-700 hover:border-slate-400" data-suggest="Create a Python function named calculate_factorial that takes a single integer argument and returns its factorial. The function should include type annotations, a detailed docstring explaining the algorithm, and handle invalid input such as negative numbers or non-integer values by raising appropriate exceptions. Please also add inline comments explaining each logical step, and provide an example usage in the docstring. The function should be efficient and avoid recursion for very large numbers, using an iterative approach instead. Assume the input can be very large, so optimize for performance and memory usage. The code should be clear and easy to understand, following PEP8 style guidelines.">Factorial Python</button>
             <button type="button" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-700 hover:border-slate-400" data-suggest="Write an SQL query that selects the top 10 most recently registered users from a users table, joining with a profiles table to retrieve each user's full name and email address. The query should filter out users who have not verified their email, sort the results by the created_at column in descending order, and include comments explaining each part of the query. Please ensure the query is well-formatted, readable, and uses table aliases for clarity.">SQL Query top 10 </button>
@@ -130,34 +236,89 @@ if (!$assessmentId) {
 
         <aside class="hidden lg:block space-y-3">
           <div class="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm">
-            <div class="text-sm font-semibold text-slate-800 mb-2">Quick Tips</div>
-            <ul class="space-y-2 text-sm text-slate-600">
-              <li>Use a clear format, for example: “Create a Python function to calculate factorials.”</li>
-              <li>To check the queue: type <span class="font-mono">status &lt;job_id&gt;</span>.</li>
-              <li><strong class="text-green-600">FREE:</strong> Database retrieval (similarity ≥95%) uses 0 tokens and 0 quota.</li>
-              <li><strong class="text-blue-600">GPT:</strong> New questions use tokens and quota.</li>
-            </ul>
-          </div>
-          <!-- Kartu status sesi disembunyikan sesuai permintaan -->
-          <div class="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm">
-            <div class="text-sm font-semibold text-slate-800 mb-2">GPT Token usage this week</div>
-            <div class="text-sm text-slate-700 flex flex-col gap-1">
-              <div class="flex flex-col gap-2">
-                <div class="flex items-center justify-between">
-                  <span class="text-slate-500">Threshold</span>
-                  <span><span id="token-threshold">-</span> tokens</span>
-                </div>
-                <div class="flex items-center justify-between">
-                  <span class="text-slate-500">Used (GPT only)</span>
-                  <span><span id="token-used">-</span> tokens</span>
-                </div>
-                <!-- Remaining removed: points are dynamic and sufficient -->
-                <!-- <div class="flex items-center justify-between">
-                  <span class="text-slate-500">Active points</span>
-                  <span><span id="token-points">-</span> points</span>
-                </div> -->
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                Template Prompt Cepat
+              </span>
+              <span class="text-[11px] font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">Klik untuk Isi</span>
+            </div>
+            <p class="text-xs text-slate-500 mb-3">Pilih format prompt siap pakai untuk hasil AI yang lebih cepat, presisi, dan hemat token:</p>
+            <div class="space-y-2 text-xs" id="quick-prompt-templates">
+              <button type="button" class="w-full text-left p-2.5 rounded-xl border border-slate-100 bg-slate-50 hover:bg-indigo-50/70 hover:border-indigo-200 transition text-slate-700 flex flex-col gap-0.5" data-fill="Buatkan fungsi Python bernama [nama_fungsi] yang menerima input [parameter] dan menghasilkan output [hasil]. Tambahkan validasi error handling, type hints, dan contoh pengujian sederhana.">
+                <span class="font-medium text-slate-800 flex items-center gap-1">Implementasi Fungsi / Algoritma</span>
+                <span class="text-[11px] text-slate-500">Format standar pembuatan logika kode baru</span>
+              </button>
+
+              <button type="button" class="w-full text-left p-2.5 rounded-xl border border-slate-100 bg-slate-50 hover:bg-rose-50/70 hover:border-rose-200 transition text-slate-700 flex flex-col gap-0.5" data-fill="Saya mendapatkan error [pesan_error_lengkap] pada potongan kode berikut:&#10;&#10;[paste_kode_anda_di_sini]&#10;&#10;Tolong jelaskan akar penyebab masalahnya dan berikan kode perbaikannya.">
+                <span class="font-medium text-slate-800 flex items-center gap-1">Debugging & Perbaikan Error</span>
+                <span class="text-[11px] text-slate-500">Analisis akar masalah dan solusi perbaikan</span>
+              </button>
+
+              <button type="button" class="w-full text-left p-2.5 rounded-xl border border-slate-100 bg-slate-50 hover:bg-emerald-50/70 hover:border-emerald-200 transition text-slate-700 flex flex-col gap-0.5" data-fill="Tolong refactor dan optimasi kode berikut agar lebih efisien dalam penggunaan memori dan kecepatan eksekusi tanpa mengubah fungsionalitas aslinya:&#10;&#10;[paste_kode_di_sini]">
+                <span class="font-medium text-slate-800 flex items-center gap-1">Refactor & Optimasi Kode</span>
+                <span class="text-[11px] text-slate-500">Meningkatkan efisiensi & keterbacaan kode</span>
+              </button>
+
+              <button type="button" class="w-full text-left p-2.5 rounded-xl border border-slate-100 bg-slate-50 hover:bg-amber-50/70 hover:border-amber-200 transition text-slate-700 flex flex-col gap-0.5" data-fill="Buatkan unit test menggunakan pytest untuk menguji fungsi/kelas berikut, mencakup skenario normal (happy path), edge cases (nilai batas), dan penanganan input tidak valid (exception handling):&#10;&#10;[paste_kode_di_sini]">
+                <span class="font-medium text-slate-800 flex items-center gap-1">Pembuatan Unit Test (Pytest)</span>
+                <span class="text-[11px] text-slate-500">Uji otomatis kasus sukses dan kasus gagal</span>
+              </button>
+            </div>
+            
+            <div class="mt-3 pt-2.5 border-t border-slate-100 text-[11px] text-slate-500 space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-slate-600 font-medium">Tips Hemat Token:</span>
+                <span class="text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded">Mode: Code (only)</span>
               </div>
-              <p class="mt-2 text-xs text-slate-500">Only GPT requests count toward token usage. <strong class="text-green-600">Retrieval from database is FREE</strong> (similarity ≥95%) and does not use tokens or affect your quota.</p>
+              <p class="leading-relaxed">Gunakan mode <strong>Code (only)</strong> untuk menghemat kuota token hingga 60% dan mempercepat respons AI.</p>
+              <button type="button" onclick="showPromptingTipsModal()" class="w-full py-1.5 px-3 rounded-xl border border-indigo-200 bg-indigo-50/80 hover:bg-indigo-100/80 text-indigo-800 text-xs font-semibold flex items-center justify-center gap-1.5 transition shadow-sm">
+                Buka Panduan Lengkap Prompting
+              </button>
+            </div>
+          </div>
+          
+          <!-- Access & Policy Card -->
+          <div class="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="text-sm font-bold text-slate-800 flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                </svg>
+                <span>S-SPARC Access &amp; Policy</span>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase">Free Access</span>
+            </div>
+            
+            <div class="text-xs text-slate-700 flex flex-col gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100">
+              <div class="flex items-center justify-between">
+                <span class="text-slate-500 font-medium">Access Tier:</span>
+                <span class="font-bold text-teal-700">Personal Gemini Key</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-slate-500 font-medium">Sisa Kuota Hari Ini:</span>
+                <span id="sidebar-query-remaining" class="font-bold text-teal-800 font-mono">1,500 req</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-slate-500 font-medium">Rate Limit:</span>
+                <span class="font-bold text-slate-900 font-mono">1 request / minute</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-slate-500 font-medium">Prompt Limits:</span>
+                <span class="font-bold text-slate-900 font-mono">10 &ndash; 2,000 chars</span>
+              </div>
+            </div>
+
+            <div class="pt-1 space-y-2">
+              <button type="button" onclick="openApiKeyModal()" class="w-full py-2 px-3 rounded-xl border border-teal-300 bg-white hover:bg-teal-50 text-teal-800 text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-2xs">
+                <span>🔑</span>
+                <span>Kelola Google Gemini API Key</span>
+              </button>
+              <button type="button" onclick="showTermsModal()" class="w-full py-1.5 px-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-900 text-[11px] font-semibold flex items-center justify-center gap-1.5 transition">
+                <span>📜</span>
+                <span>Syarat &amp; Ketentuan API Pribadi</span>
+              </button>
+            </div>
           </div>
         </aside>
       </div>
@@ -323,7 +484,7 @@ if (!$assessmentId) {
           info.textContent = "The code above is taken from a database (free). If it's not suitable, you can request a new version from ChatGPT.";
           const gptBtn = document.createElement('button');
           gptBtn.type = 'button';
-          gptBtn.className = 'gpt-generate inline-flex items-center gap-1 rounded-full bg-slate-900 text-white px-3 py-1 text-xs hover:bg-slate-800';
+          gptBtn.className = 'gpt-generate inline-flex items-center gap-1 rounded-full bg-[#00A0A5] text-white px-3 py-1 text-xs hover:bg-[#008488]';
           gptBtn.dataset.prompt = msg.originalPrompt;
           gptBtn.textContent = 'Generate with ChatGPT';
           footer.appendChild(info);
@@ -355,8 +516,8 @@ if (!$assessmentId) {
 
     async function refreshGamification() {
       try {
-        if (!assessmentId) return;
-        const res = await fetch(`gamification.php?assessment_id=${encodeURIComponent(assessmentId)}`, { method: 'GET' });
+        const url = assessmentId ? `gamification.php?assessment_id=${encodeURIComponent(assessmentId)}` : 'gamification.php';
+        const res = await fetch(url, { method: 'GET' });
         if (!res.ok) return;
         const data = await res.json();
         const g = data.gamification;
@@ -402,26 +563,37 @@ if (!$assessmentId) {
       e.preventDefault();
       const text = chatInput.value.trim();
       if (!text) return;
-      // final client-side guard: require >=100 chars and no emoji
-      function _containsEmoji(s){
-        try{
-          return /[\u{1F300}-\u{1F5FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}]/u.test(s);
-        }catch(e){
-          return false;
+      
+      if (text.length < 10) {
+        if (typeof Swal !== 'undefined') {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Prompt Terlalu Pendek',
+            text: 'Harap masukkan pertanyaan pemrograman minimal 10 karakter.',
+            confirmButtonColor: '#00A0A5'
+          });
+        } else {
+          alert('Prompt terlalu pendek. Minimal 10 karakter.');
         }
-      }
-      if (text.length < 100){
-        alert('Please provide at least 100 characters in your prompt.');
         return;
       }
-      if (_containsEmoji(text)){
-        alert('Please remove emoji or unsupported characters from the prompt.');
+      if (text.length > 2000) {
+        if (typeof Swal !== 'undefined') {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Prompt Terlalu Panjang',
+            text: `Panjang prompt saat ini ${text.length} karakter. Maksimal yang diizinkan adalah 2000 karakter.`,
+            confirmButtonColor: '#00A0A5'
+          });
+        } else {
+          alert('Prompt terlalu panjang. Maksimal 2000 karakter.');
+        }
         return;
       }
+
       chatInput.value = '';
       autoResizeTextarea();
-      // Jalankan pengiriman di background; tidak perlu menunggu untuk
-      // mengosongkan input sehingga UX terasa lebih responsif.
+      // Jalankan pengiriman di background
       sendMessageCore(text, text);
     }
 
@@ -514,9 +686,12 @@ if (!$assessmentId) {
             // Hanya tampilkan hasil akhirnya, bukan pesan antrian mentah
             addMessage('bot', codeOnly, meta);
           } else {
-            // Default: render semua pesan apa adanya
+            // Render response messages cleanly
             msgs.forEach(msg => {
               const body = msg.text || '[empty message]';
+              if (body.startsWith('Your request is being processed (queued)')) {
+                return; // Suppress queue notification banner
+              }
               // Answers from the database (retrieval/suggestion): baris pertama berisi keterangan sumber
               const isDbRetrieval =
                 body.startsWith('Answers taken from database') ||
@@ -573,27 +748,289 @@ if (!$assessmentId) {
 
     chatInput.addEventListener('input', autoResizeTextarea);
 
-    // Disable send button if prompt too short or contains emoji
+    // Real-Time Prompt Length & Character Validation
     function validateInputState(){
       if(!sendBtn || !chatInput) return;
       const v = chatInput.value || '';
-      let ok = v.trim().length >= 100;
-      try{
-        ok = ok && !(/[\u{1F300}-\u{1F5FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}]/u.test(v));
-      }catch(e){ }
-      sendBtn.disabled = !ok;
-      sendBtn.classList.toggle('opacity-50', !ok);
+      const len = v.trim().length;
+      const charCounter = document.getElementById('char-counter');
+      if (charCounter) {
+        charCounter.textContent = `${len} / 2000 chars (min. 10)`;
+        if (len < 10 && len > 0) {
+          charCounter.className = "text-[11px] font-mono text-amber-600 font-semibold";
+        } else if (len > 2000) {
+          charCounter.className = "text-[11px] font-mono text-rose-600 font-bold";
+        } else {
+          charCounter.className = "text-[11px] font-mono text-slate-400";
+        }
+      }
+
+      let ok = (len >= 10 && len <= 2000);
+      if (!_rateLimitTimer) {
+        sendBtn.disabled = !ok;
+        sendBtn.classList.toggle('opacity-50', !ok);
+      }
     }
     chatInput.addEventListener('input', validateInputState);
+    chatInput.addEventListener('keyup', validateInputState);
     // initial validation
     validateInputState();
+
+    // Terms and Conditions Modal Dialog
+    function showTermsModal() {
+      Swal.fire({
+        title: '📜 Syarat & Ketentuan Penggunaan API Key Pribadi',
+        html: `
+          <div class="text-left text-xs leading-relaxed space-y-3.5 text-slate-700 max-h-[60vh] overflow-y-auto pr-1">
+            <div class="p-3 bg-teal-50/90 border border-teal-200 rounded-xl text-[11px] text-teal-900 font-medium">
+              S-SPARC AI mengadopsi model <em>Bring Your Own Key (BYOK)</em> Google Gemini Flash untuk menjamin kebebasan eksplorasi coding mahasiswa secara mandiri tanpa pemotongan poin gamifikasi.
+            </div>
+
+            <div class="space-y-3">
+              <div class="p-2.5 rounded-xl border border-slate-200 bg-slate-50">
+                <div class="font-bold text-slate-900 flex items-center gap-1.5 mb-1 text-xs">
+                  <span class="text-teal-600">1.</span> Kerahasiaan & Keamanan Data (Data Privacy)
+                </div>
+                <p class="text-[11px] text-slate-600">
+                  Google Gemini API Key Anda disimpan secara terenkripsi dan terisolasi di database. Kunci ini semata-mata digunakan untuk memproses permintaan inferensi asisten coding pada akun Anda dan tidak pernah dibagikan kepada pihak ketiga manapun.
+                </p>
+              </div>
+
+              <div class="p-2.5 rounded-xl border border-slate-200 bg-slate-50">
+                <div class="font-bold text-slate-900 flex items-center gap-1.5 mb-1 text-xs">
+                  <span class="text-teal-600">2.</span> Tanggung Jawab Kepemilikan Kunci
+                </div>
+                <p class="text-[11px] text-slate-600">
+                  Pengguna bertanggung jawab penuh atas API key pribadi yang didaftarkan melalui Google AI Studio. Dilarang memasukkan kunci milik orang lain, menyalahgunakan kuota untuk aktivitas non-akademik, atau mengeksekusi prompt yang melanggar hukum/kebijakan Google Cloud.
+                </p>
+              </div>
+
+              <div class="p-2.5 rounded-xl border border-slate-200 bg-slate-50">
+                <div class="font-bold text-slate-900 flex items-center gap-1.5 mb-1 text-xs">
+                  <span class="text-teal-600">3.</span> Alokasi Kuota & Batasan Bebas Biaya (Free Tier Limits)
+                </div>
+                <p class="text-[11px] text-slate-600">
+                  Paket gratis Google Gemini 2.0/2.5 Flash Free Tier mengalokasikan hingga <strong>1.500 requests per hari (RPD)</strong> dan <strong>15 requests per menit (RPM)</strong>. S-SPARC memberlakukan aturan jeda rate limit 1 menit (60 detik) per prompt untuk menjaga stabilitas akun dan melatih kebiasaan berpikir komputasional mandiri.
+                </p>
+              </div>
+
+              <div class="p-2.5 rounded-xl border border-slate-200 bg-slate-50">
+                <div class="font-bold text-slate-900 flex items-center gap-1.5 mb-1 text-xs">
+                  <span class="text-teal-600">4.</span> Jaminan Multi-Tier Failover
+                </div>
+                <p class="text-[11px] text-slate-600">
+                  Jika kuota API key pribadi Anda mengalami limit atau gangguan koneksi cloud, sistem S-SPARC secara transparan mengalihkan eksekusi ke <em>System Pool Key</em> cadangan atau <em>Local LLM Ollama</em> agar proses belajar Anda tidak terputus.
+                </p>
+              </div>
+
+              <div class="p-2.5 rounded-xl border border-slate-200 bg-slate-50">
+                <div class="font-bold text-slate-900 flex items-center gap-1.5 mb-1 text-xs">
+                  <span class="text-teal-600">5.</span> Integritas Akademik & Etika Penggunaan AI
+                </div>
+                <p class="text-[11px] text-slate-600">
+                  Asisten AI ini difungsikan sebagai tutor interaktif (membantu diagnosis pesan error, memahami alur algoritma, dan mengoptimalkan efisiensi kode). Mahasiswa tetap wajib memahami dan mampu mempertanggungjawabkan setiap baris kode solusi yang diserahkan dalam tugas E-STRANGE.
+                </p>
+              </div>
+            </div>
+          </div>
+        `,
+        confirmButtonText: 'Saya Mengerti & Setuju',
+        confirmButtonColor: '#00A0A5',
+        width: '580px'
+      });
+    }
+
+    // Fetch and Update Real-time Query Quota
+    async function fetchQueryQuota() {
+      try {
+        const res = await fetch(`http://127.0.0.1:5000/api/user/query-quota`, {
+          headers: { 'X-User-ID': userId }
+        });
+        if (res.ok) {
+          const quota = await res.json();
+          updateQueryQuotaUI(quota);
+        }
+      } catch (e) {
+        console.debug('Failed to fetch query quota:', e);
+      }
+    }
+
+    function updateQueryQuotaUI(quota) {
+      if (!quota) return;
+      const remainingEl = document.getElementById('query-remaining-count');
+      const limitEl = document.getElementById('query-limit-count');
+      const sidebarRemainingEl = document.getElementById('sidebar-query-remaining');
+      const badgeEl = document.getElementById('query-quota-badge');
+
+      const remaining = Number(quota.daily_remaining !== undefined ? quota.daily_remaining : 1500);
+      const limit = Number(quota.daily_limit || 1500);
+
+      if (remainingEl) remainingEl.textContent = remaining.toLocaleString();
+      if (limitEl) limitEl.textContent = limit.toLocaleString();
+      if (sidebarRemainingEl) sidebarRemainingEl.textContent = `${remaining.toLocaleString()} req`;
+
+      if (badgeEl) {
+        if (!quota.has_key) {
+          badgeEl.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-rose-50 border border-rose-200 text-[11px] font-semibold text-rose-800 shadow-2xs cursor-pointer hover:bg-rose-100 transition";
+          badgeEl.innerHTML = `<span class="text-rose-600">⚠️</span><span>Set Gemini API Key</span>`;
+          badgeEl.onclick = () => openApiKeyModal(true);
+        } else if (remaining < 50) {
+          badgeEl.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-rose-50 border border-rose-200 text-[11px] font-semibold text-rose-800 shadow-2xs cursor-pointer hover:bg-rose-100 transition";
+          badgeEl.onclick = showTermsModal;
+        } else if (remaining < 300) {
+          badgeEl.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-amber-50 border border-amber-200 text-[11px] font-semibold text-amber-800 shadow-2xs cursor-pointer hover:bg-amber-100 transition";
+          badgeEl.onclick = showTermsModal;
+        } else {
+          badgeEl.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-teal-50/90 border border-teal-200/80 text-[11px] font-semibold text-teal-800 shadow-2xs cursor-pointer hover:bg-teal-100 transition";
+          badgeEl.onclick = showTermsModal;
+        }
+      }
+    }
+
+    // API Key Management Modal (SweetAlert2)
+    async function openApiKeyModal(isFirstTime = false) {
+      let currentMasked = '';
+      try {
+        const res = await fetch(`http://127.0.0.1:5000/api/user/api-key`, {
+          headers: { 'X-User-ID': userId }
+        });
+        if (res.ok) {
+          const info = await res.json();
+          if (info.has_key && info.masked_key) {
+            currentMasked = info.masked_key;
+          }
+        }
+      } catch (e) {
+        console.debug('Failed to fetch API key info:', e);
+      }
+
+      const titleText = isFirstTime ? 'Masukkan Google Gemini API Key Anda' : 'Kelola Google Gemini API Key';
+      const introText = isFirstTime 
+        ? 'Untuk menggunakan asisten coding <strong>S-SPARC AI</strong>, Anda wajib memasukkan Google Gemini API Key pribadi Anda. Kunci ini tersimpan aman dan digunakan untuk setiap pertanyaan pemrograman Anda.'
+        : 'Google Gemini API Key pribadi Anda saat ini: <strong class="font-mono text-teal-700">' + (currentMasked || 'Belum diatur') + '</strong>.';
+
+      const { value: formValues } = await Swal.fire({
+        title: titleText,
+        html: `
+          <div class="text-left text-xs text-slate-600 space-y-3">
+            <p>${introText}</p>
+            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+              <label class="block font-bold text-slate-800 mb-1">Google Gemini API Key:</label>
+              <input id="swal-api-key-input" type="password" placeholder="AIzaSy..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-mono focus:outline-none focus:ring-2 focus:ring-[#00A0A5] bg-white text-slate-900" autocomplete="off">
+              <div class="flex items-center justify-between mt-1.5 text-[11px] text-slate-500">
+                <span>Panjang minimal 10 karakter</span>
+                <button type="button" onclick="const inp = document.getElementById('swal-api-key-input'); inp.type = (inp.type === 'password' ? 'text' : 'password');" class="text-teal-600 hover:underline font-semibold">Tampilkan / Sembunyikan</button>
+              </div>
+            </div>
+            
+            <div class="p-2.5 bg-slate-100/90 rounded-xl border border-slate-200 text-left">
+              <label class="flex items-start gap-2 cursor-pointer text-[11px] text-slate-700 select-none">
+                <input type="checkbox" id="swal-terms-checkbox" checked class="mt-0.5 rounded border-slate-300 text-teal-600 focus:ring-teal-500">
+                <span>Saya menyetujui <a href="javascript:void(0)" onclick="showTermsModal()" class="font-bold text-teal-700 underline hover:text-teal-900">Syarat & Ketentuan Penggunaan API Key Pribadi</a> di S-SPARC / E-STRANGE.</span>
+              </label>
+            </div>
+
+            <div class="p-2.5 bg-teal-50 border border-teal-200 rounded-xl text-[11px] text-teal-900 flex items-center gap-2">
+              <svg class="w-4 h-4 text-teal-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <span>Belum punya key? Dapatkan gratis di <a href="https://aistudio.google.com/app/apikey" target="_blank" class="font-bold underline text-teal-800">Google AI Studio</a>.</span>
+            </div>
+          </div>
+        `,
+        focusConfirm: false,
+        showCancelButton: !isFirstTime,
+        confirmButtonText: 'Simpan API Key',
+        confirmButtonColor: '#00A0A5',
+        cancelButtonText: 'Batal',
+        preConfirm: () => {
+          const keyVal = document.getElementById('swal-api-key-input')?.value.trim();
+          const termsChecked = document.getElementById('swal-terms-checkbox')?.checked;
+          if (!keyVal || keyVal.length < 10) {
+            Swal.showValidationMessage('Silakan masukkan API key yang valid (minimal 10 karakter)');
+            return false;
+          }
+          if (!termsChecked) {
+            Swal.showValidationMessage('Anda wajib menyetujui Syarat & Ketentuan Penggunaan API Key Pribadi.');
+            return false;
+          }
+          return { apiKey: keyVal, termsAccepted: termsChecked };
+        }
+      });
+
+      if (formValues && formValues.apiKey) {
+        try {
+          Swal.fire({
+            title: 'Menyimpan API Key...',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+          });
+
+          const postRes = await fetch(`http://127.0.0.1:5000/api/user/api-key`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-User-ID': userId
+            },
+            body: JSON.stringify({ 
+              api_key: formValues.apiKey, 
+              provider: 'gemini',
+              terms_accepted: formValues.termsAccepted
+            })
+          });
+
+          if (!postRes.ok) {
+            const errData = await postRes.json().catch(() => ({}));
+            throw new Error(errData.detail || 'Gagal menyimpan API key.');
+          }
+
+          const saveRes = await postRes.json();
+          const apiKeyBtnText = document.getElementById('api-key-btn-text');
+          if (apiKeyBtnText) apiKeyBtnText.textContent = 'API Key (Aktif)';
+
+          // Refresh query quota UI
+          fetchQueryQuota();
+
+          Swal.fire({
+            icon: 'success',
+            title: 'API Key Berhasil Disimpan!',
+            text: `Kunci aktif: ${saveRes.masked_key || 'Tersimpan'}. Anda sekarang siap menggunakan S-SPARC AI.`,
+            confirmButtonColor: '#00A0A5'
+          });
+        } catch (saveErr) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Gagal Menyimpan API Key',
+            text: saveErr.message,
+            confirmButtonColor: '#0f172a'
+          });
+        }
+      }
+    }
+
+    async function checkUserApiKey() {
+      try {
+        const res = await fetch(`http://127.0.0.1:5000/api/user/api-key`, {
+          headers: { 'X-User-ID': userId }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const apiKeyBtnText = document.getElementById('api-key-btn-text');
+          if (data.has_key) {
+            if (apiKeyBtnText) apiKeyBtnText.textContent = 'API Key (Aktif)';
+          } else {
+            if (apiKeyBtnText) apiKeyBtnText.textContent = 'Set API Key';
+            setTimeout(() => { openApiKeyModal(true); }, 500);
+          }
+        }
+      } catch (e) {
+        console.debug('Error checking user API key status:', e);
+      }
+    }
 
     // Rate-limit countdown UI
     let _rateLimitTimer = null;
     const rateLimitEl = document.getElementById('rate-limit-notice');
     function startRateLimitCountdown(seconds){
       if (!sendBtn) return;
-      // clear any existing timer
       if (_rateLimitTimer) {
         clearInterval(_rateLimitTimer);
         _rateLimitTimer = null;
@@ -603,11 +1040,11 @@ if (!$assessmentId) {
       sendBtn.classList.add('opacity-50');
       if (rateLimitEl) {
         rateLimitEl.classList.remove('hidden');
-        rateLimitEl.textContent = `Rate limit reached. Try again in ${remaining}s.`;
+        rateLimitEl.textContent = `⏱ Cooldown aktif. Mohon tunggu ${remaining} detik sebelum mengirim prompt berikutnya.`;
       }
       _rateLimitTimer = setInterval(() => {
         remaining -= 1;
-        if (rateLimitEl) rateLimitEl.textContent = `Rate limit reached. Try again in ${remaining}s.`;
+        if (rateLimitEl) rateLimitEl.textContent = `⏱ Cooldown aktif. Mohon tunggu ${remaining} detik sebelum mengirim prompt berikutnya.`;
         if (remaining <= 0) {
           clearInterval(_rateLimitTimer);
           _rateLimitTimer = null;
@@ -615,7 +1052,6 @@ if (!$assessmentId) {
             rateLimitEl.classList.add('hidden');
             rateLimitEl.textContent = '';
           }
-          // re-validate input (this may re-enable sendBtn if input valid)
           validateInputState();
         }
       }, 1000);
@@ -660,8 +1096,22 @@ if (!$assessmentId) {
       if (!target) return;
       chatInput.value = target.dataset.suggest;
       autoResizeTextarea();
+      validateInputState();
       chatInput.focus();
     });
+
+    // Quick prompt templates click handler
+    const promptTemplatesContainer = document.getElementById('quick-prompt-templates');
+    if (promptTemplatesContainer) {
+      promptTemplatesContainer.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-fill]');
+        if (!btn) return;
+        chatInput.value = btn.dataset.fill;
+        autoResizeTextarea();
+        validateInputState();
+        chatInput.focus();
+      });
+    }
 
     // Scroll-to-bottom helper
     function ensureScrollBtn() {
@@ -669,7 +1119,7 @@ if (!$assessmentId) {
       scrollBtn = document.createElement('button');
       scrollBtn.type = 'button';
       scrollBtn.textContent = '↓ Ke bawah';
-      scrollBtn.className = 'hidden fixed right-6 bottom-6 rounded-full bg-slate-900 text-white px-4 py-2 shadow-lg hover:bg-slate-800';
+      scrollBtn.className = 'hidden fixed right-6 bottom-6 rounded-full bg-[#00A0A5] text-white px-4 py-2 shadow-lg hover:bg-[#008488]';
       scrollBtn.addEventListener('click', () => {
         chatWindow.scrollTop = chatWindow.scrollHeight;
         scrollBtn.classList.add('hidden');
@@ -694,166 +1144,272 @@ if (!$assessmentId) {
     function showPromptingTipsModal() {
       if (typeof Swal === 'undefined') return;
 
-      const promptingProfiles = [
+      const templates = [
         {
-          id: 'debug-error',
-          title: 'Debugging Error (Paling Penting)',
-          badge: 'Wajib untuk kasus error',
-          focus: 'Cocok saat kamu dapat error/bug dan butuh solusi cepat + aman.',
-          checklist: [
-            'Sebutkan pesan error lengkap (copy-paste).',
-            'Sertakan potongan kode yang error (minimal reproduksi).',
-            'Jelaskan ekspektasi hasil vs hasil aktual.',
-            'Sebutkan bahasa, versi, dan langkah menjalankan.',
-          ],
-          template: `Konteks: Saya sedang mengerjakan [topik/tugas].\nError: [paste pesan error lengkap].\nKode terkait: [paste potongan kode minimal yang error].\nEkspektasi: [hasil yang seharusnya].\nHasil aktual: [hasil saat ini].\nOutput diminta: 1) akar masalah 2) perbaikan kode 3) alasan perbaikan 4) cara verifikasi.`
+          id: 'tpl-algo',
+          tag: 'Algoritma & Logika',
+          color: 'indigo',
+          title: 'Implementasi Algoritma & Struktur Data',
+          desc: 'Gunakan template ini untuk membuat fungsi logika, pemrosesan data, atau algoritma komputasi baru.',
+          template: `Buatkan fungsi Python bernama [nama_fungsi] yang menerima parameter [tipe_parameter: nama_param] dan mengembalikan [tipe_output: deskripsi_hasil].\n\nKetentuan Tambahan:\n1. Tambahkan validasi error handling untuk input negatif atau tipe data tidak valid.\n2. Sertakan type annotations dan docstring penjelasan algoritma.\n3. Optimalkan efisiensi waktu eksekusi dan penggunaan memori.\n4. Berikan contoh pengujian pemanggilan fungsi.`
         },
         {
-          id: 'generate-code',
-          title: 'Generate Kode Baru',
-          badge: 'Untuk mulai dari nol',
-          focus: 'Cocok untuk minta implementasi fitur/fungsi baru secara terstruktur.',
-          checklist: [
-            'Jelaskan requirement fungsional utama.',
-            'Sebutkan input/output dengan contoh.',
-            'Tetapkan bahasa pemrograman dan batasan.',
-            'Minta format jawaban yang kamu mau.',
-          ],
-          template: `Konteks: Saya butuh implementasi [fitur].\nBahasa: [Python/JS/Java/dll].\nInput: [struktur data + contoh].\nOutput: [format hasil yang diharapkan].\nBatasan: [kompleksitas, library, style].\nOutput diminta: kode runnable + contoh uji singkat.`
+          id: 'tpl-debug',
+          tag: 'Debugging & Error',
+          color: 'rose',
+          title: 'Analisis Akar Masalah & Solusi Error',
+          desc: 'Gunakan template ini saat kode Anda menghasilkan traceback atau pesan error.',
+          template: `Saya mendapatkan error berikut saat menjalankan program:\n\n[PASTE_PESAN_ERROR_LENGKAP_DI_SINI]\n\nBerikut potongan kode terkait yang saya gunakan:\n\`\`\`python\n[PASTE_KODE_ANDA_DI_SINI]\n\`\`\`\n\nMohon bantuannya untuk:\n1. Jelaskan secara ringkas akar penyebab masalah (root cause).\n2. Berikan kode perbaikan yang sudah diperbaiki.\n3. Jelaskan langkah pencegahan agar error serupa tidak terulang.`
         },
         {
-          id: 'refactor',
-          title: 'Refactor / Rapikan Kode',
-          badge: 'Untuk perbaikan kualitas',
-          focus: 'Cocok saat kode jalan tapi ingin lebih bersih, cepat, dan mudah maintain.',
-          checklist: [
-            'Berikan kode awal yang ingin dirapikan.',
-            'Sebutkan masalah utama (duplikasi, lambat, sulit dibaca).',
-            'Minta tetap menjaga behavior awal.',
-            'Minta ringkasan perubahan penting.',
-          ],
-          template: `Konteks: Tolong refactor kode berikut tanpa mengubah behavior.\nKode awal: [paste kode].\nMasalah: [mis. duplikasi, naming, performa].\nBatasan: [jangan ubah API publik, tetap kompatibel].\nOutput diminta: kode hasil refactor + ringkasan perubahan + alasan.`
+          id: 'tpl-refactor',
+          tag: 'Refactor & Clean Code',
+          color: 'emerald',
+          title: 'Optimasi Memori, Kecepatan & Keterbacaan',
+          desc: 'Gunakan template ini untuk merapikan kode yang sudah jalan agar lebih modular dan efisien.',
+          template: `Tolong refactor dan optimasi kode berikut agar lebih modular, bersih (clean code PEP8), dan efisien dalam konsumsi memori tanpa mengubah fungsionalitas aslinya:\n\n\`\`\`python\n[PASTE_KODE_YANG_INGIN_DIREFACTOR]\n\`\`\`\n\nMohon sertakan ringkasan poin-poin penting perbaikan yang dilakukan.`
         },
         {
-          id: 'sql',
-          title: 'SQL Query / Analisis Data',
-          badge: 'Untuk query DB',
-          focus: 'Cocok saat butuh query SQL akurat sesuai skema tabel.',
-          checklist: [
-            'Sebutkan nama tabel dan kolom kunci.',
-            'Jelaskan relasi/join yang dibutuhkan.',
-            'Sebutkan filter, sorting, dan limit.',
-            'Minta contoh output.',
-          ],
-          template: `Konteks: Saya perlu query SQL untuk [tujuan].\nTabel & kolom: [daftar tabel + kolom penting].\nRelasi: [join antar tabel].\nFilter/sort: [syarat where, order, limit].\nOutput diminta: query final + penjelasan singkat tiap bagian.`
+          id: 'tpl-pytest',
+          tag: 'Unit Testing (Pytest)',
+          color: 'amber',
+          title: 'Pembuatan Kasus Uji Otomatis Lengkap',
+          desc: 'Gunakan template ini untuk membuat pengujian otomatis dengan skenario normal, edge cases, dan exception.',
+          template: `Buatkan suite unit test menggunakan pytest untuk menguji fungsi/kelas berikut:\n\n\`\`\`python\n[PASTE_FUNGSI_ATAU_KELAS_DI_SINI]\n\`\`\`\n\nCakupan pengujian yang diminta:\n1. Test case skenario normal (happy path).\n2. Test case nilai batas dan edge cases (misal: data kosong, nilai 0, nilai ekstrem).\n3. Test case penanganan exception/error handling saat input tidak valid.`
         },
         {
-          id: 'concept',
-          title: 'Penjelasan Konsep',
-          badge: 'Untuk belajar teori',
-          focus: 'Cocok untuk pemahaman konsep sebelum coding.',
-          checklist: [
-            'Sebutkan konsep yang ingin dipahami.',
-            'Minta analogi sederhana.',
-            'Minta contoh kode kecil.',
-            'Minta rangkuman poin penting.',
-          ],
-          template: `Konteks: Jelaskan konsep [nama konsep] untuk mahasiswa.\nLevel: [pemula/menengah].\nMinta: definisi singkat, analogi, contoh kode sederhana, dan kapan konsep ini dipakai.`
+          id: 'tpl-oop',
+          tag: 'OOP & Validasi Model',
+          color: 'teal',
+          title: 'Pembuatan Kelas Model dengan Enkapsulasi & Validasi',
+          desc: 'Cocok untuk membuat class entity (seperti Product, User, Account) dengan setter validation.',
+          template: `Buatkan kelas Python bernama [NamaKelas] dengan atribut [id, name, price, stock].\n\nKetentuan:\n1. Gunakan method setter/property untuk memvalidasi bahwa harga (price) dan stok (stock) tidak boleh negatif.\n2. Tambahkan method [nama_method_tambahan] untuk memproses [tujuan_method].\n3. Tambahkan method __str__ yang mudah dibaca.\n4. Sertakan contoh instansiasi objek dan penanganan ValueError jika input tidak valid.`
+        },
+        {
+          id: 'tpl-sql',
+          tag: 'SQL & Query Database',
+          color: 'sky',
+          title: 'Query Relasional Terstruktur & Efisien',
+          desc: 'Cocok untuk query JOIN, agregasi, subquery, dan indexing database.',
+          template: `Saya butuh query SQL yang efisien untuk [tujuan query].\n\nStruktur Tabel:\n- Tabel [tabel_1] (kolom: id, user_id, status, created_at)\n- Tabel [tabel_2] (kolom: id, name, category)\n\nKetentuan:\n1. Lakukan INNER/LEFT JOIN yang tepat antar tabel.\n2. Filter data dengan syarat [kondisi_where].\n3. Urutkan berdasarkan [kolom_order] secara descending dengan LIMIT [jumlah].\n4. Berikan penjelasan singkat mengenai logika query.`
         }
       ];
 
-      const defaultProfileId = 'debug-error';
-      const todayIndex = Math.floor(Date.now() / 86400000) % promptingProfiles.length;
-      const tipOfSession = promptingProfiles[todayIndex];
-      const chipsHtml = promptingProfiles.map((p) => (
-        `<button type="button" class="prompt-chip" data-id="${p.id}" style="border:1px solid #cbd5e1; background:#fff; color:#334155; border-radius:999px; padding:6px 10px; font-size:12px; cursor:pointer;">${p.title}</button>`
-      )).join('');
-
       Swal.fire({
-        title: 'Prompting Dinamis Biar Tepat & Minim Error ✅',
-        width: 860,
-        confirmButtonText: 'Siap, Mulai Chat',
-        confirmButtonColor: '#0f172a',
+        title: '<div class="text-left"><span class="text-xl font-bold text-slate-900">Panduan Prompting Dinamis: Hasil Tepat & Minim Error</span><p class="text-xs font-normal text-slate-500 mt-1">Kiat praktis menyusun prompt cerdas pemrograman untuk mendapatkan jawaban akurat, siap pakai, dan hemat kuota token.</p></div>',
+        width: 900,
+        showConfirmButton: true,
+        confirmButtonText: 'Tutup & Mulai Chat',
+        confirmButtonColor: '#00A0A5',
         showCloseButton: true,
+        customClass: {
+          popup: 'rounded-2xl shadow-2xl border border-slate-200 text-left p-6',
+        },
         html: `
-          <div style="text-align:left; font-size:14px; line-height:1.55; color:#334155;">
-            <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:10px;">
-              <span style="font-size:12px; color:#475569;"><b>Tip sesi ini:</b></span>
-              <span style="font-size:12px; background:#ecfeff; color:#0f766e; border:1px solid #99f6e4; border-radius:999px; padding:4px 10px;">${tipOfSession.title}</span>
-              <span style="font-size:12px; background:#fff7ed; color:#9a3412; border:1px solid #fdba74; border-radius:999px; padding:4px 10px;">Fokus utama: debugging error mahasiswa</span>
+          <div class="text-left text-sm text-slate-700 space-y-4">
+            <!-- Navigation Tabs -->
+            <div class="flex flex-wrap gap-1 border-b border-slate-200 pb-2" id="modal-tab-nav">
+              <button type="button" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-[#00A0A5] text-white transition" data-tab="tab-gold">Kaidah Utama</button>
+              <button type="button" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition" data-tab="tab-framework">Framework 4L</button>
+              <button type="button" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition" data-tab="tab-compare">Sebelum vs Sesudah</button>
+              <button type="button" class="tab-btn px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 transition" data-tab="tab-templates">Koleksi Template Siap Pakai</button>
             </div>
 
-            <p style="margin:0 0 8px;"><b>Pilih tipe prompting:</b></p>
-            <div id="promptTypeChips" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;">${chipsHtml}</div>
+            <!-- TAB 1: Kaidah Utama -->
+            <div id="tab-gold" class="tab-pane space-y-3">
+              <div class="grid sm:grid-cols-2 gap-3">
+                <div class="p-3.5 rounded-xl border border-indigo-100 bg-indigo-50/50">
+                  <div class="font-semibold text-indigo-950 flex items-center gap-1.5 mb-1">
+                    <span class="w-5 h-5 rounded-full bg-indigo-600 text-white text-[11px] grid place-items-center font-bold">1</span>
+                    Spesifik & Eksplisitkan Parameter
+                  </div>
+                  <p class="text-xs text-indigo-900/80 leading-relaxed">
+                    Sebutkan dengan jelas nama fungsi/kelas, tipe input (misal: <code class="bg-indigo-100 px-1 py-0.5 rounded text-[11px]">list[int]</code>), dan tipe nilai kembalian agar AI tidak mengarang asumsi sendiri.
+                  </p>
+                </div>
 
-            <div id="promptTypeDetail" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px;">
-              <div id="promptTitle" style="font-weight:700; color:#0f172a; margin-bottom:4px;"></div>
-              <div id="promptBadge" style="display:inline-block; font-size:11px; border-radius:999px; padding:2px 8px; border:1px solid #cbd5e1; color:#475569; margin-bottom:8px;"></div>
-              <div id="promptFocus" style="margin-bottom:8px;"></div>
-              <div style="margin-bottom:6px;"><b>Checklist:</b></div>
-              <ul id="promptChecklist" style="margin:0 0 10px 18px; padding:0;"></ul>
-              <div style="margin-bottom:6px;"><b>Template siap pakai:</b></div>
-              <pre id="promptTemplate" style="margin:0; background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:10px; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:12px; white-space:pre-wrap;"></pre>
-              <button id="usePromptTemplate" type="button" style="margin-top:10px; border:none; background:#0f172a; color:#fff; border-radius:8px; padding:7px 12px; font-size:12px; cursor:pointer;">Gunakan template ini ke chat</button>
+                <div class="p-3.5 rounded-xl border border-rose-100 bg-rose-50/50">
+                  <div class="font-semibold text-rose-950 flex items-center gap-1.5 mb-1">
+                    <span class="w-5 h-5 rounded-full bg-rose-600 text-white text-[11px] grid place-items-center font-bold">2</span>
+                    Sertakan Validasi & Edge Cases
+                  </div>
+                  <p class="text-xs text-rose-900/80 leading-relaxed">
+                    Instruksikan batasan nyata seperti <code class="bg-rose-100 px-1 py-0.5 rounded text-[11px]">nilai tidak boleh negatif</code>, <code class="bg-rose-100 px-1 py-0.5 rounded text-[11px]">input kosong</code>, atau exception handling agar kode siap lolos unit test.
+                  </p>
+                </div>
+
+                <div class="p-3.5 rounded-xl border border-emerald-100 bg-emerald-50/50">
+                  <div class="font-semibold text-emerald-950 flex items-center gap-1.5 mb-1">
+                    <span class="w-5 h-5 rounded-full bg-emerald-600 text-white text-[11px] grid place-items-center font-bold">3</span>
+                    Pilih Mode Respons yang Tepat
+                  </div>
+                  <p class="text-xs text-emerald-900/80 leading-relaxed">
+                    Pilih mode <strong class="text-emerald-800">Code (only)</strong> saat mengerjakan tugas koding untuk <strong>menghemat token hingga 60%</strong> dan mendapatkan kode bersih tanpa teks narasi.
+                  </p>
+                </div>
+
+                <div class="p-3.5 rounded-xl border border-amber-100 bg-amber-50/50">
+                  <div class="font-semibold text-amber-950 flex items-center gap-1.5 mb-1">
+                    <span class="w-5 h-5 rounded-full bg-amber-600 text-white text-[11px] grid place-items-center font-bold">4</span>
+                    Manfaatkan Konteks Multi-Turn
+                  </div>
+                  <p class="text-xs text-amber-900/80 leading-relaxed">
+                    Jangan ketik ulang seluruh kode; cukup katakan: <em class="text-amber-800">"Sekarang tambahkan method apply_discount pada kelas di atas"</em>, AI akan otomatis mengingat kode sebelumnya.
+                  </p>
+                </div>
+              </div>
+
+              <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600">
+                <span><strong>Pencarian Semantik Otomatis (FREE):</strong> Jika pertanyaan serupa sudah ada di basis data semantik (&gt;= 90%), sistem menjawab instan dengan <strong>0 Token (Gratis)</strong>.</span>
+              </div>
             </div>
 
-            <p style="margin:10px 0 0; font-size:12px; color:#64748b;">
-              <b>Catatan:</b> Prompt yang detail biasanya lebih akurat, dan untuk kasus error selalu sertakan <b>pesan error lengkap</b> + <b>kode minimal</b>.
-            </p>
+            <!-- TAB 2: Framework 4L -->
+            <div id="tab-framework" class="tab-pane hidden space-y-3">
+              <p class="text-xs text-slate-500">Framework <strong>4L (Logika, Larangan, Luaran, Latihan)</strong> adalah standar industri agar AI menghasilkan solusi tepat sasaran pada percobaan pertama:</p>
+              
+              <div class="space-y-2 text-xs">
+                <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-start gap-2.5">
+                  <span class="font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded uppercase text-[11px] shrink-0">1. Logika</span>
+                  <div><strong>Tujuan Utama:</strong> Jelaskan secara lugas apa tugas atau algoritma yang ingin dibangun (misal: <em>"Algoritma Dijkstra untuk graf berbobot positif"</em>).</div>
+                </div>
+
+                <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-start gap-2.5">
+                  <span class="font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded uppercase text-[11px] shrink-0">2. Larangan</span>
+                  <div><strong>Batasan & Validasi:</strong> Sebutkan aturan ketat (misal: <em>"Gunakan modul heapq bawaan, jangan gunakan recursion untuk menghindari stack overflow"</em>).</div>
+                </div>
+
+                <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-start gap-2.5">
+                  <span class="font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded uppercase text-[11px] shrink-0">3. Luaran</span>
+                  <div><strong>Format Kode:</strong> Tentukan format yang diharapkan (misal: <em>"Kembalikan pure code dengan type hints dan dictionary jarak terpendek"</em>).</div>
+                </div>
+
+                <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-start gap-2.5">
+                  <span class="font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded uppercase text-[11px] shrink-0">4. Latihan</span>
+                  <div><strong>Kasus Uji:</strong> Minta contoh pemanggilan fungsi dan penanganan input salah (misal: <em>"Sertakan blok try-except untuk menguji graf terputus"</em>).</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- TAB 3: Sebelum vs Sesudah -->
+            <div id="tab-compare" class="tab-pane hidden space-y-3">
+              <div class="space-y-3 text-xs">
+                <!-- Case 1 -->
+                <div class="p-3 rounded-xl border border-slate-200 bg-white shadow-sm space-y-2">
+                  <div class="font-semibold text-slate-800 text-[13px]">Kasus 1: Pembuatan Kelas OOP & Validasi</div>
+                  <div class="grid sm:grid-cols-2 gap-2">
+                    <div class="p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-900">
+                      <div class="font-bold text-rose-700 mb-0.5">Format Kurang Efektif (Terlalu Ambigu)</div>
+                      <p class="italic font-mono text-[11px]">"Bikin class product buat e-commerce python"</p>
+                      <div class="text-[10px] text-rose-600 mt-1">Dampak: Tidak ada validasi harga negatif, atribut tidak konsisten, boros token karena penjelasan terlalu panjang.</div>
+                    </div>
+                    <div class="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900">
+                      <div class="font-bold text-emerald-700 mb-0.5">Format Tepat & Terstruktur</div>
+                      <p class="font-mono text-[11px]">"Buatkan kelas Python Product dengan atribut id, name, price, stock. Tambahkan setter validation agar price dan stock tidak boleh negatif."</p>
+                      <div class="text-[10px] text-emerald-700 mt-1">Hasil: Kode 100% tepat, ada ValueError exception, langsung lolos unit test.</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Case 2 -->
+                <div class="p-3 rounded-xl border border-slate-200 bg-white shadow-sm space-y-2">
+                  <div class="font-semibold text-slate-800 text-[13px]">Kasus 2: Debugging Error Message</div>
+                  <div class="grid sm:grid-cols-2 gap-2">
+                    <div class="p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-900">
+                      <div class="font-bold text-rose-700 mb-0.5">Format Kurang Efektif</div>
+                      <p class="italic font-mono text-[11px]">"Kode saya error tolong benerin dong"</p>
+                      <div class="text-[10px] text-rose-600 mt-1">Dampak: AI tidak mengetahui letak baris error dan harus menebak konteks.</div>
+                    </div>
+                    <div class="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-900">
+                      <div class="font-bold text-emerald-700 mb-0.5">Format Tepat & Lengkap</div>
+                      <p class="font-mono text-[11px]">"Saya mendapat TypeError: unsupported operand '+' int and str pada baris 'total = harga + pajak'. Berikut kodenya: [...] Tolong berikan solusinya."</p>
+                      <div class="text-[10px] text-emerald-700 mt-1">Hasil: AI langsung mengidentifikasi type mismatch dan memberikan konversi float() yang benar.</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- TAB 4: Koleksi Template Siap Pakai -->
+            <div id="tab-templates" class="tab-pane hidden space-y-3">
+              <p class="text-xs text-slate-500">Pilih salah satu template di bawah, lalu klik <strong>"Gunakan di Chat"</strong> untuk langsung menggunakannya:</p>
+              
+              <div class="grid sm:grid-cols-2 gap-2.5 max-h-[320px] overflow-y-auto pr-1" id="template-cards-list">
+                ${templates.map(t => `
+                  <div class="p-3 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-white hover:border-slate-300 transition flex flex-col justify-between gap-2">
+                    <div>
+                      <div class="flex items-center justify-between gap-1 mb-1">
+                        <span class="font-semibold text-xs text-slate-900 truncate">${t.title}</span>
+                        <span class="text-[10px] font-bold text-${t.color}-700 bg-${t.color}-50 px-1.5 py-0.5 rounded shrink-0">${t.tag}</span>
+                      </div>
+                      <p class="text-[11px] text-slate-500 line-clamp-2">${t.desc}</p>
+                    </div>
+                    <div class="flex items-center gap-2 pt-1 border-t border-slate-100">
+                      <button type="button" class="btn-insert-tpl flex-1 py-1 px-2 rounded-lg bg-[#00A0A5] hover:bg-[#008488] text-white text-[11px] font-medium transition text-center" data-template="${encodeURIComponent(t.template)}">
+                        Gunakan di Chat
+                      </button>
+                      <button type="button" class="btn-copy-tpl py-1 px-2 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 text-[11px] transition" data-template="${encodeURIComponent(t.template)}">
+                        Salin
+                      </button>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
           </div>
         `,
         didOpen: () => {
-          const chipsWrap = document.getElementById('promptTypeChips');
-          const titleEl = document.getElementById('promptTitle');
-          const badgeEl = document.getElementById('promptBadge');
-          const focusEl = document.getElementById('promptFocus');
-          const checklistEl = document.getElementById('promptChecklist');
-          const templateEl = document.getElementById('promptTemplate');
-          const applyBtn = document.getElementById('usePromptTemplate');
+          // Tab switching logic
+          const tabBtns = document.querySelectorAll('#modal-tab-nav .tab-btn');
+          const tabPanes = document.querySelectorAll('.tab-pane');
 
-          let activeId = defaultProfileId;
+          tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+              const targetTab = btn.getAttribute('data-tab');
+              
+              tabBtns.forEach(b => {
+                b.classList.remove('bg-[#00A0A5]', 'text-white');
+                b.classList.add('text-slate-600', 'hover:bg-slate-100');
+              });
+              btn.classList.add('bg-[#00A0A5]', 'text-white');
+              btn.classList.remove('text-slate-600', 'hover:bg-slate-100');
 
-          function renderProfile(profileId) {
-            const p = promptingProfiles.find(x => x.id === profileId) || promptingProfiles[0];
-            activeId = p.id;
-            if (titleEl) titleEl.textContent = p.title;
-            if (badgeEl) badgeEl.textContent = p.badge;
-            if (focusEl) focusEl.textContent = p.focus;
-            if (templateEl) templateEl.textContent = p.template;
-            if (checklistEl) {
-              checklistEl.innerHTML = (p.checklist || []).map(item => `<li>${item}</li>`).join('');
-            }
-
-            const chips = chipsWrap ? chipsWrap.querySelectorAll('.prompt-chip') : [];
-            chips.forEach(ch => {
-              const selected = ch.getAttribute('data-id') === p.id;
-              ch.style.background = selected ? '#0f172a' : '#ffffff';
-              ch.style.color = selected ? '#ffffff' : '#334155';
-              ch.style.borderColor = selected ? '#0f172a' : '#cbd5e1';
+              tabPanes.forEach(pane => {
+                if (pane.id === targetTab) {
+                  pane.classList.remove('hidden');
+                } else {
+                  pane.classList.add('hidden');
+                }
+              });
             });
-          }
+          });
 
-          if (chipsWrap) {
-            chipsWrap.addEventListener('click', (ev) => {
-              const chip = ev.target.closest('.prompt-chip');
-              if (!chip) return;
-              renderProfile(chip.getAttribute('data-id'));
+          // Insert template button handler
+          document.querySelectorAll('.btn-insert-tpl').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const rawTpl = decodeURIComponent(btn.getAttribute('data-template') || '');
+              if (chatInput && rawTpl) {
+                chatInput.value = rawTpl;
+                autoResizeTextarea();
+                validateInputState();
+                chatInput.focus();
+                try { Swal.close(); } catch (e) {}
+              }
             });
-          }
+          });
 
-          if (applyBtn) {
-            applyBtn.addEventListener('click', () => {
-              const p = promptingProfiles.find(x => x.id === activeId);
-              if (!p || !chatInput) return;
-              chatInput.value = p.template;
-              autoResizeTextarea();
-              validateInputState();
-              chatInput.focus();
-              try { Swal.close(); } catch (e) {}
+          // Copy template button handler
+          document.querySelectorAll('.btn-copy-tpl').forEach(btn => {
+            btn.addEventListener('click', () => {
+              const rawTpl = decodeURIComponent(btn.getAttribute('data-template') || '');
+              if (rawTpl) {
+                navigator.clipboard.writeText(rawTpl).then(() => {
+                  btn.textContent = 'Tersalin';
+                  setTimeout(() => { btn.textContent = 'Salin'; }, 1500);
+                });
+              }
             });
-          }
-
-          renderProfile(defaultProfileId);
+          });
         }
       });
     }
@@ -864,9 +1420,9 @@ if (!$assessmentId) {
       });
     }
 
-    showPromptingTipsModal();
-
-    // Ambil informasi token awal untuk mengisi kartu
+    // Ambil status API key dan informasi awal
+    checkUserApiKey();
+    fetchQueryQuota();
     refreshGamification();
     if (state.messages.length === 0) {
       addMessage('bot', 'Hello! I\'m ready to help with any questions about programming. Just ask me anything related to coding.');

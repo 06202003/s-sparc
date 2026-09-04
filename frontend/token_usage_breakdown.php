@@ -19,11 +19,15 @@ if (empty($_SESSION['flask_cookie'])) {
     exit;
 }
 
+$period = isset($_GET['period']) ? $_GET['period'] : 'week';
 $options = [
     'headers' => [
         'Content-Type' => 'application/json',
         'Cookie'       => $_SESSION['flask_cookie'],
     ],
+    'query' => [
+        'period' => $period
+    ]
 ];
 
 try {

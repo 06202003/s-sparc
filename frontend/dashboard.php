@@ -270,13 +270,105 @@ if ($scope === 'course' && $selectedCourseId !== '') {
   <style>
     body { font-family: 'Manrope', system-ui, -apple-system, sans-serif; }
   </style>
+  <style>
+/* Premium Teal Dropdown Styling for E-STRANGE & S-SPARC */
+/* Ensure SweetAlert2 hidden select is never displayed */
+.swal2-container select,
+.swal2-popup select,
+.swal2-select {
+  display: none !important;
+}
+
+select:not(.select2-hidden-accessible):not(.swal2-select), .form-select, .custom-select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2300A0A5' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 0.85rem center !important;
+  background-size: 1.15rem 1.15rem !important;
+  padding-left: 1rem !important;
+  padding-right: 2.5rem !important;
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+  min-width: 130px !important;
+  min-height: 40px !important;
+  border-radius: 0.75rem !important;
+  border: 1.5px solid #cbd5e1 !important;
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+  transition: all 0.2s ease-in-out !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+  cursor: pointer !important;
+  flex-shrink: 0 !important;
+  display: inline-block !important;
+  box-sizing: border-box !important;
+}
+
+select:not(.select2-hidden-accessible):not(.swal2-select):hover, .form-select:hover {
+  border-color: #00A0A5 !important;
+  background-color: #f8fafc !important;
+  box-shadow: 0 4px 12px rgba(0, 160, 165, 0.08) !important;
+}
+
+select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:focus {
+  outline: none !important;
+  border-color: #00A0A5 !important;
+  box-shadow: 0 0 0 3px rgba(0, 160, 165, 0.2) !important;
+  background-color: #ffffff !important;
+}
+
+/* Ensure Select2 Native Input Remains Completely Hidden */
+select.select2-hidden-accessible {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  position: absolute !important;
+  pointer-events: none !important;
+}
+
+/* Select2 Plugin Custom Teal Enhancements */
+.select2-container--default .select2-selection--single {
+  border-radius: 0.75rem !important;
+  border: 1.5px solid #cbd5e1 !important;
+  height: 42px !important;
+  min-width: 140px !important;
+  padding: 6px 12px !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+.select2-container--default .select2-selection--single:hover {
+  border-color: #00A0A5 !important;
+}
+
+.select2-container--default.select2-container--open .select2-selection--single,
+.select2-container--default.select2-container--focus .select2-selection--single {
+  border-color: #00A0A5 !important;
+  box-shadow: 0 0 0 3px rgba(0, 160, 165, 0.2) !important;
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+  background-color: #00A0A5 !important;
+  color: #ffffff !important;
+}
+
+</style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 text-slate-900">
   <div class="min-h-screen flex flex-col">
     <header class="sticky top-0 z-10 border-b border-slate-200/70 bg-white/80 backdrop-blur">
       <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
         <div class="flex items-center gap-3">
-          <div class="h-10 w-10 rounded-xl bg-emerald-600 text-white grid place-items-center font-semibold">CO₂</div>
+          <div class="h-10 w-10 rounded-xl bg-[#00A0A5] text-white grid place-items-center font-semibold">CO₂</div>
           <div>
             <div class="text-lg font-semibold">Environmental Impact Dashboard</div>
             <div class="text-xs text-slate-500">Summary of environmental footprint for user: <strong><?= htmlspecialchars($username) ?></strong></div>
@@ -302,22 +394,22 @@ if ($scope === 'course' && $selectedCourseId !== '') {
           <form method="get" class="flex flex-col sm:flex-row sm:items-center gap-2 text-sm">
             <div class="flex items-center gap-2">
               <label for="days" class="text-slate-600">Range of days:</label>
-              <select id="days" name="days" class="rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm select2">
-                <?php foreach ([7, 30, 90] as $opt): ?>
-                  <option value="<?= $opt ?>" <?= $opt === $rangeDays ? 'selected' : '' ?>><?= $opt ?> days</option>
+              <select id="days" name="days" class="min-w-[200px] shrink-0 rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm select2">
+                <?php foreach ([7, 30, 90, 9999] as $opt): ?>
+                  <option value="<?= $opt ?>" <?= $opt === $rangeDays ? 'selected' : '' ?>><?= $opt === 9999 ? 'All time' : $opt . ' days' ?></option>
                 <?php endforeach; ?>
               </select>
             </div>
             <div class="flex items-center gap-2">
               <label for="scope" class="text-slate-600">Filter:</label>
-              <select id="scope" name="scope" class="rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm select2">
+              <select id="scope" name="scope" class="min-w-[200px] shrink-0 rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm select2">
                 <option value="all" <?= $scope === 'all' ? 'selected' : '' ?>>All</option>
                 <option value="course" <?= $scope === 'course' ? 'selected' : '' ?>>Per course</option>
                 <option value="assessment" <?= $scope === 'assessment' ? 'selected' : '' ?>>Per assessment</option>
               </select>
             </div>
             <div class="flex items-center gap-2">
-              <select id="course_id" name="course_id" class="rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm select2" <?= $scope === 'course' || $scope === 'assessment' ? '' : 'disabled' ?>>
+              <select id="course_id" name="course_id" class="min-w-[200px] shrink-0 rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm select2" <?= $scope === 'course' || $scope === 'assessment' ? '' : 'disabled' ?>>
                 <option value="">Select course</option>
                 <?php foreach ($courses as $c): ?>
                   <?php $cid = (string)($c['course_id'] ?? ''); ?>
@@ -326,7 +418,7 @@ if ($scope === 'course' && $selectedCourseId !== '') {
                   </option>
                 <?php endforeach; ?>
               </select>
-              <select id="assessment_id" name="assessment_id" class="rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm select2" <?= $scope === 'assessment' ? '' : 'disabled' ?>>
+              <select id="assessment_id" name="assessment_id" class="min-w-[200px] shrink-0 rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm select2" <?= $scope === 'assessment' ? '' : 'disabled' ?>>
                 <option value="">Select assessment</option>
                 <?php foreach ($assessments as $a): ?>
                   <?php
@@ -340,7 +432,7 @@ if ($scope === 'course' && $selectedCourseId !== '') {
                 <?php endforeach; ?>
               </select>
             </div>
-            <button type="submit" class="rounded-lg bg-slate-900 text-white px-3 py-1 hover:bg-slate-800">Apply</button>
+            <button type="submit" class="rounded-lg bg-[#00A0A5] text-white px-3 py-1 hover:bg-[#008488]">Apply</button>
           </form>
         </div>
 
@@ -407,7 +499,7 @@ if ($scope === 'course' && $selectedCourseId !== '') {
                   <li>Peak day: <?= htmlspecialchars($maxEnergyDayLabel) ?></li>
                 <?php endif; ?>
               </ul>
-              <button type="button" id="factNext" class="mt-4 w-full rounded-xl bg-slate-900 text-white px-4 py-2 text-sm font-semibold hover:bg-slate-800">Next fact</button>
+              <button type="button" id="factNext" class="mt-4 w-full rounded-xl bg-[#00A0A5] text-white px-4 py-2 text-sm font-semibold hover:bg-[#008488]">Next fact</button>
             </div>
           </div>
         </section>
@@ -418,7 +510,7 @@ if ($scope === 'course' && $selectedCourseId !== '') {
             <p class="text-xs text-slate-500">Daily summary of environmental impact logs.</p>
           </div>
           <div class="mb-4">
-            <canvas id="impactChart" height="120"></canvas>
+            <canvas id="impactChart" height="350"></canvas>
           </div>
           <div class="overflow-x-auto">
             <table id="impactDailyTable" class="min-w-full text-sm display">
@@ -501,7 +593,18 @@ if ($scope === 'course' && $selectedCourseId !== '') {
     const waterData = <?= json_encode($waterSeries) ?>;
     if (chartLabels.length > 0) {
       const ctx = document.getElementById('impactChart').getContext('2d');
-      // eslint-disable-next-line no-undef
+      const gradientEnergy = ctx.createLinearGradient(0, 0, 0, 400);
+      gradientEnergy.addColorStop(0, 'rgba(37, 99, 235, 0.4)');
+      gradientEnergy.addColorStop(1, 'rgba(37, 99, 235, 0.02)');
+      
+      const gradientCarbon = ctx.createLinearGradient(0, 0, 0, 400);
+      gradientCarbon.addColorStop(0, 'rgba(16, 185, 129, 0.4)');
+      gradientCarbon.addColorStop(1, 'rgba(16, 185, 129, 0.02)');
+      
+      const gradientWater = ctx.createLinearGradient(0, 0, 0, 400);
+      gradientWater.addColorStop(0, 'rgba(234, 179, 8, 0.4)');
+      gradientWater.addColorStop(1, 'rgba(234, 179, 8, 0.02)');
+
       new Chart(ctx, {
         type: 'line',
         data: {
@@ -511,24 +614,43 @@ if ($scope === 'course' && $selectedCourseId !== '') {
               label: 'Energy (kWh)',
               data: energyData,
               borderColor: 'rgb(37, 99, 235)',
-              backgroundColor: 'rgba(37, 99, 235, 0.1)',
-              tension: 0.25,
+              backgroundColor: gradientEnergy,
+              borderWidth: 3,
+              pointRadius: 4,
+              pointHoverRadius: 6,
+              pointBackgroundColor: '#ffffff',
+              pointBorderColor: 'rgb(37, 99, 235)',
+              pointBorderWidth: 2,
+              tension: 0.4,
               fill: true,
             },
             {
               label: 'Carbon (kg CO₂e)',
               data: carbonData,
               borderColor: 'rgb(16, 185, 129)',
-              backgroundColor: 'rgba(16, 185, 129, 0.1)',
-              tension: 0.25,
+              backgroundColor: gradientCarbon,
+              borderWidth: 3,
+              pointRadius: 4,
+              pointHoverRadius: 6,
+              pointBackgroundColor: '#ffffff',
+              pointBorderColor: 'rgb(16, 185, 129)',
+              pointBorderWidth: 2,
+              tension: 0.4,
               fill: true,
             },
             {
               label: 'Water (L)',
               data: waterData,
               borderColor: 'rgb(234, 179, 8)',
-              backgroundColor: 'rgba(234, 179, 8, 0.1)',
-              tension: 0.25,
+              backgroundColor: gradientWater,
+              borderWidth: 3,
+              pointRadius: 4,
+              pointHoverRadius: 6,
+              pointBackgroundColor: '#ffffff',
+              pointBorderColor: 'rgb(234, 179, 8)',
+              pointBorderWidth: 2,
+              borderDash: [5, 5],
+              tension: 0.4,
               fill: true,
             },
           ],

@@ -1,7 +1,36 @@
 <?php
 require __DIR__ . '/config.php';
+require __DIR__ . '/vendor/autoload.php';
+
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
+
 $loggedIn = !empty($_SESSION['flask_cookie']);
 $username = $_SESSION['username'] ?? 'Guest';
+
+$courses = [];
+if ($loggedIn) {
+    $backendBase = backend_base();
+    $httpClient = new Client([
+        'base_uri' => $backendBase . '/',
+        'timeout'  => 10,
+    ]);
+    try {
+        $optionsBase = [
+            'headers' => [
+                'Content-Type' => 'application/json',
+                'Cookie'       => $_SESSION['flask_cookie'],
+            ],
+        ];
+        $respC = $httpClient->request('GET', 'courses', $optionsBase);
+        $dataC = json_decode((string) $respC->getBody(), true);
+        if (is_array($dataC) && !empty($dataC['courses']) && is_array($dataC['courses'])) {
+            $courses = $dataC['courses'];
+        }
+    } catch (\Throwable $e) {
+        // ignore
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -89,6 +118,98 @@ $username = $_SESSION['username'] ?? 'Guest';
     }
     body { font-family: 'Manrope', system-ui, -apple-system, sans-serif; }
   </style>
+  <style>
+/* Premium Teal Dropdown Styling for E-STRANGE & S-SPARC */
+/* Ensure SweetAlert2 hidden select is never displayed */
+.swal2-container select,
+.swal2-popup select,
+.swal2-select {
+  display: none !important;
+}
+
+select:not(.select2-hidden-accessible):not(.swal2-select), .form-select, .custom-select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2300A0A5' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 0.85rem center !important;
+  background-size: 1.15rem 1.15rem !important;
+  padding-left: 1rem !important;
+  padding-right: 2.5rem !important;
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+  min-width: 130px !important;
+  min-height: 40px !important;
+  border-radius: 0.75rem !important;
+  border: 1.5px solid #cbd5e1 !important;
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+  transition: all 0.2s ease-in-out !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+  cursor: pointer !important;
+  flex-shrink: 0 !important;
+  display: inline-block !important;
+  box-sizing: border-box !important;
+}
+
+select:not(.select2-hidden-accessible):not(.swal2-select):hover, .form-select:hover {
+  border-color: #00A0A5 !important;
+  background-color: #f8fafc !important;
+  box-shadow: 0 4px 12px rgba(0, 160, 165, 0.08) !important;
+}
+
+select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:focus {
+  outline: none !important;
+  border-color: #00A0A5 !important;
+  box-shadow: 0 0 0 3px rgba(0, 160, 165, 0.2) !important;
+  background-color: #ffffff !important;
+}
+
+/* Ensure Select2 Native Input Remains Completely Hidden */
+select.select2-hidden-accessible {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  position: absolute !important;
+  pointer-events: none !important;
+}
+
+/* Select2 Plugin Custom Teal Enhancements */
+.select2-container--default .select2-selection--single {
+  border-radius: 0.75rem !important;
+  border: 1.5px solid #cbd5e1 !important;
+  height: 42px !important;
+  min-width: 140px !important;
+  padding: 6px 12px !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+.select2-container--default .select2-selection--single:hover {
+  border-color: #00A0A5 !important;
+}
+
+.select2-container--default.select2-container--open .select2-selection--single,
+.select2-container--default.select2-container--focus .select2-selection--single {
+  border-color: #00A0A5 !important;
+  box-shadow: 0 0 0 3px rgba(0, 160, 165, 0.2) !important;
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+  background-color: #00A0A5 !important;
+  color: #ffffff !important;
+}
+
+</style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 text-slate-900">
   <div class="min-h-screen flex flex-col">
@@ -113,7 +234,13 @@ $username = $_SESSION['username'] ?? 'Guest';
       <div class="max-w-6xl mx-auto px-4 py-6 space-y-6">
         <section class="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm">
           <h1 class="text-lg font-semibold text-slate-900 mb-1">Weekly token usage</h1>
-          <p class="text-sm text-slate-600 mb-4">Overview of your weekly token usage and active points. Retrieval-only answers from the database do not reduce your token.</p>
+          <div class="flex justify-between items-start mb-4">
+            <p class="text-sm text-slate-600 max-w-2xl">Overview of your weekly token usage and active points. Retrieval-only answers from the database do not reduce your token.</p>
+            <select id="periodSelect" class="min-w-[200px] shrink-0 rounded-md border-slate-200 text-sm py-1 shadow-sm" onchange="renderTokenChart()">
+              <option value="week">Current Week</option>
+              <option value="all">All Time</option>
+            </select>
+          </div>
           <div class="grid gap-4 md:grid-cols-[2fr_1fr] items-center">
             <div class="h-64">
               <canvas id="tokenChart"></canvas>
@@ -134,7 +261,7 @@ $username = $_SESSION['username'] ?? 'Guest';
                   </div>
                 <div class="pt-2">
                   <label class="text-xs text-slate-500">Filter chart by course</label>
-                  <select id="chartCourseSelect" class="block mt-1 w-full rounded-md border-slate-200 text-sm max-w-md">
+                  <select id="chartCourseSelect" class="min-w-[200px] shrink-0 block mt-1 w-full rounded-md border-slate-200 text-sm max-w-md">
                     <option value="">All courses</option>
                   </select>
                 </div>
@@ -158,11 +285,11 @@ $username = $_SESSION['username'] ?? 'Guest';
           <h1 class="text-lg font-semibold text-slate-900 mb-1">Leaderboard</h1>
           <div class="flex items-center gap-3 mb-3">
             <label class="text-xs text-slate-500">Course</label>
-            <select id="leaderboardCourseSelect" class="block mt-1 w-full rounded-md border-slate-200 text-sm max-w-md">
+            <select id="leaderboardCourseSelect" class="min-w-[200px] shrink-0 block mt-1 w-full rounded-md border-slate-200 text-sm max-w-md">
               <option value="">Select course</option>
             </select>
             <label class="text-xs text-slate-500">Assessment</label>
-            <select id="leaderboardSelect" class="block mt-1 w-full rounded-md border-slate-200 text-sm max-w-md" disabled>
+            <select id="leaderboardSelect" class="min-w-[200px] shrink-0 block mt-1 w-full rounded-md border-slate-200 text-sm max-w-md" disabled>
               <option value="">Select assessment</option>
             </select>
           </div>
@@ -182,14 +309,17 @@ $username = $_SESSION['username'] ?? 'Guest';
         const thresholdEl = document.getElementById('dash-token-threshold');
         const usedEl = document.getElementById('dash-token-used');
         const remainingEl = document.getElementById('dash-token-remaining');
-      let chart = null;
       function createChart(cfg) {
-        if (chart) { try { chart.destroy(); } catch (e) {} chart = null; }
+        const existingChart = Chart.getChart("tokenChart");
+        if (existingChart) {
+          existingChart.destroy();
+        }
         const ctx = document.getElementById('tokenChart').getContext('2d');
-        chart = new Chart(ctx, cfg);
+        new Chart(ctx, cfg);
       }
       try {
-        const res = await fetch('token_usage_breakdown.php', { method: 'GET' });
+        const period = document.getElementById('periodSelect') ? document.getElementById('periodSelect').value : 'week';
+        const res = await fetch('token_usage_breakdown.php?period=' + period, { method: 'GET' });
         
         if (!res.ok) return;
         const data = await res.json();
@@ -233,12 +363,12 @@ $username = $_SESSION['username'] ?? 'Guest';
           datasets.push({ label: 'Used', data: overall_used_array, backgroundColor: '#ef4444', borderRadius: 6, stack: 'stack1' });
           datasets.push({ label: 'Remaining', data: overall_remaining_array, backgroundColor: '#06b6d4', borderRadius: 6, stack: 'stack1' });
         }
-        if (overall_thresholds_array.some(t => t > 0)) {
-          datasets.unshift({ label: 'Threshold', data: overall_thresholds_array, type: 'line', backgroundColor: '#51ff00', pointRadius: 4.5, pointHoverRadius: 6, pointBackgroundColor: '#51ff00', pointBorderColor: '#51ff00', tension: 0, fill: false, order: 0 });
+        if (overall_thresholds_array.some(t=>t>0)) {
+          datasets.push({ label: 'Threshold', data: overall_thresholds_array, type: 'line', borderColor: '#000000', borderDash: [6,4], borderWidth: 2.5, pointRadius: 4.5, pointHoverRadius: 6, pointBackgroundColor: '#000000', pointBorderColor: '#000000', tension: 0, fill: false, order: 0 });
         }
         createChart({
           type: 'bar',
-          data: { labels: overall_labels, datasets },
+          data: { labels: overall_labels, datasets: datasets.map(d => d.type === 'line' ? d : { ...d, order: 1 }) },
           options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { beginAtZero: true, stacked: true } }, plugins: { legend: { position: 'top' } } }
         });
         // Populate leaderboard select from assessments
@@ -393,19 +523,28 @@ $username = $_SESSION['username'] ?? 'Guest';
         }
         function escapeHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
         try {
-          const courses = data.by_course || [];
           const courseSelect = document.getElementById('leaderboardCourseSelect');
           const assessmentSelect = document.getElementById('leaderboardSelect');
-          // Build course list; if backend didn't return by_course, derive from by_assessment
+          
           let coursesList = [];
-          if (Array.isArray(courses) && courses.length) {
-            coursesList = courses.map(c => ({ course_id: c.course_id, course_name: c.course_name }));
-          } else if (Array.isArray(data.by_assessment) && data.by_assessment.length) {
-            const seen = new Map();
-            data.by_assessment.forEach(a => {
-              if (a.course_id && !seen.has(String(a.course_id))) seen.set(String(a.course_id), { course_id: a.course_id, course_name: null });
-            });
-            coursesList = Array.from(seen.values());
+          const enrolledCourses = <?php echo json_encode($courses); ?>;
+          
+          if (Array.isArray(enrolledCourses) && enrolledCourses.length) {
+            coursesList = enrolledCourses.map(c => ({ 
+              course_id: c.course_id, 
+              course_name: (c.code ? c.code + ' - ' : '') + (c.name || 'Unknown')
+            }));
+          } else {
+            const courses = data.by_course || [];
+            if (Array.isArray(courses) && courses.length) {
+              coursesList = courses.map(c => ({ course_id: c.course_id, course_name: c.course_name }));
+            } else if (Array.isArray(data.by_assessment) && data.by_assessment.length) {
+              const seen = new Map();
+              data.by_assessment.forEach(a => {
+                if (a.course_id && !seen.has(String(a.course_id))) seen.set(String(a.course_id), { course_id: a.course_id, course_name: null });
+              });
+              coursesList = Array.from(seen.values());
+            }
           }
           if (courseSelect && coursesList.length) {
             courseSelect.innerHTML = '<option value="">Select course</option>' + coursesList.map(c => `<option value="${c.course_id}">${escapeHtml(c.course_name || c.course_id)}</option>`).join('');
@@ -467,7 +606,7 @@ $username = $_SESSION['username'] ?? 'Guest';
                 if (remainingEl) remainingEl.textContent = (typeof displayed_overall_remaining !== 'undefined' ? String(displayed_overall_remaining) : '-');
                 createChart({
                   type: 'bar',
-                  data: { labels: overall_labels, datasets: (function(){ let d=[]; if (overall_thresholds_array.some(t=>t>0)) d.push({ label: 'Threshold', data: overall_thresholds_array, type: 'line', borderColor: '#a16207', borderWidth: 2.5, pointRadius: 4.5, pointHoverRadius: 6, pointBackgroundColor: '#a16207', pointBorderColor: '#a16207', tension: 0, fill: false, order: 0 }); if (overall_labels.length){ d.push({ label: 'Used', data: overall_used_array, backgroundColor: '#ef4444', borderRadius: 6, stack: 'stack1' }); d.push({ label: 'Remaining', data: overall_remaining_array, backgroundColor: '#06b6d4', borderRadius: 6, stack: 'stack1' }); } return d; })() },
+                  data: { labels: overall_labels, datasets: (function(){ let d=[]; if (overall_thresholds_array.some(t=>t>0)) d.push({ label: 'Threshold', data: overall_thresholds_array, type: 'line', borderColor: '#000000', borderDash: [6,4], borderWidth: 2.5, pointRadius: 4.5, pointHoverRadius: 6, pointBackgroundColor: '#000000', pointBorderColor: '#000000', tension: 0, fill: false, order: 0 }); if (overall_labels.length){ d.push({ label: 'Used', data: overall_used_array, backgroundColor: '#ef4444', borderRadius: 6, stack: 'stack1', order: 1 }); d.push({ label: 'Remaining', data: overall_remaining_array, backgroundColor: '#06b6d4', borderRadius: 6, stack: 'stack1', order: 1 }); } return d; })() },
                   options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { beginAtZero: true, stacked: true } }, plugins: { legend: { position: 'top' } } }
                 });
                 return;
@@ -493,7 +632,7 @@ $username = $_SESSION['username'] ?? 'Guest';
                 try {
                   createChart({
                     type: 'bar',
-                    data: { labels: [courseEntry.course_name || courseEntry.course_id], datasets: [ { label: 'Used', data: [course_used], backgroundColor: '#ef4444', borderRadius: 6, stack: 'stack1' }, { label: 'Remaining', data: [course_remaining], backgroundColor: '#06b6d4', borderRadius: 6, stack: 'stack1' }, (course_threshold > 0 ? { label: 'Threshold', data: [course_threshold], type: 'line', borderColor: '#a16207', borderDash: [6,4], borderWidth: 2, pointRadius: 4, pointHoverRadius: 6, pointBackgroundColor: '#a16207', pointBorderColor: '#a16207', tension: 0, fill: false } : null) ].filter(Boolean) },
+                    data: { labels: [courseEntry.course_name || courseEntry.course_id], datasets: [ { label: 'Used', data: [course_used], backgroundColor: '#ef4444', borderRadius: 6, stack: 'stack1', order: 1 }, { label: 'Remaining', data: [course_remaining], backgroundColor: '#06b6d4', borderRadius: 6, stack: 'stack1', order: 1 }, (course_threshold > 0 ? { label: 'Threshold', data: [course_threshold], type: 'line', borderColor: '#000000', borderDash: [6,4], borderWidth: 2, pointRadius: 4, pointHoverRadius: 6, pointBackgroundColor: '#000000', pointBorderColor: '#000000', tension: 0, fill: false, order: 0 } : null) ].filter(Boolean) },
                     options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { beginAtZero: true, stacked: true } }, plugins: { legend: { position: 'top' } } }
                   });
                 } catch (e) {}
@@ -522,7 +661,7 @@ $username = $_SESSION['username'] ?? 'Guest';
             try {
               createChart({
                 type: 'bar',
-                data: { labels: labels, datasets: [ { label: 'Used', data: used, backgroundColor: '#ef4444', borderRadius: 6, stack: 'stack1' }, { label: 'Remaining', data: remaining, backgroundColor: '#06b6d4', borderRadius: 6, stack: 'stack1' }, (thresholds.some(t=>t>0) ? { label: 'Threshold', data: thresholds, type: 'line', borderColor: '#a16207', borderDash: [6,4], borderWidth: 2, pointRadius: 4, pointHoverRadius: 6, pointBackgroundColor: '#a16207', pointBorderColor: '#a16207', tension: 0, fill: false } : null) ].filter(Boolean) },
+                data: { labels: labels, datasets: [ { label: 'Used', data: used, backgroundColor: '#ef4444', borderRadius: 6, stack: 'stack1', order: 1 }, { label: 'Remaining', data: remaining, backgroundColor: '#06b6d4', borderRadius: 6, stack: 'stack1', order: 1 }, (thresholds.some(t=>t>0) ? { label: 'Threshold', data: thresholds, type: 'line', borderColor: '#000000', borderDash: [6,4], borderWidth: 2, pointRadius: 4, pointHoverRadius: 6, pointBackgroundColor: '#000000', pointBorderColor: '#000000', tension: 0, fill: false, order: 0 } : null) ].filter(Boolean) },
                 options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { beginAtZero: true, stacked: true } }, plugins: { legend: { position: 'top' } } }
               });
             } catch (e) {

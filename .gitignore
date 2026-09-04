@@ -78,13 +78,27 @@ ZZZ_OLD*.json
 Yehezkiel_2479011.docx
 
 # =========================
-# Large local model artifacts
+# Large local model artifacts & dumps (>100MB)
 # =========================
 pretrained_model/
 **/models--*/
 **/*.safetensors
 **/*.bin
 **/*.spm
+*.sql
+*.zip
+!*.sql.gz
+
+# =========================
+# E-STRANGE Student Submissions & Upload Cache
+# =========================
+estrange/v2/v2/uploads/
+estrange/v2/v2/uploads_2025/
+estrange/v2/v2/internal_rep_submissions/
+estrange/v2/v2/internal_rep_submissions_2025/
+estrange/v2/v2/simreports/
+estrange/v2/v2/simreports_2025/
+estrange/v2/v2/karina/uploads/
 
 # =========================
 # VS Code temp runner files
