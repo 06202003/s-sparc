@@ -141,6 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <style>
     :root { color-scheme: light; }
     body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
@@ -314,6 +315,22 @@ select.select2-hidden-accessible {
           </div>
         <?php endif; ?>
 
+        <!-- API Key Status Notice Banner -->
+        <div id="apiKeyNotice" class="hidden rounded-xl border p-4 text-xs space-y-2 shadow-xs transition-all">
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex items-start gap-2.5">
+              <span id="apiKeyNoticeIcon" class="text-xl shrink-0 mt-0.5">⚠️</span>
+              <div>
+                <strong id="apiKeyNoticeTitle" class="font-bold block text-sm">Google Gemini API Key Required</strong>
+                <span id="apiKeyNoticeDesc" class="block text-xs mt-0.5 text-slate-700">You have not registered your personal API Key. Please accept the Terms &amp; Conditions and register your API key before launching the S-SPARC AI Assistant.</span>
+              </div>
+            </div>
+            <button type="button" id="apiKeyActionBtn" onclick="openApiKeyFlow(true)" class="shrink-0 bg-[#00A0A5] hover:bg-[#008488] text-white font-bold px-3 py-1.5 rounded-lg transition text-xs shadow-xs">
+              Set API Key Now
+            </button>
+          </div>
+        </div>
+
         <?php if (empty($courses)): ?>
           <div class="rounded-xl border border-amber-200 bg-amber-50 text-amber-900 p-4 text-xs space-y-2">
             <p class="font-bold">You are not enrolled in any active courses in E-STRANGE.</p>
@@ -377,8 +394,312 @@ select.select2-hidden-accessible {
   <script>
     const assessmentsByCourse = <?= json_encode($assessmentsByCourse) ?>;
     const defaultAssessmentId = "<?= htmlspecialchars($_SESSION['assessment_id'] ?? '') ?>";
+    const FASTAPI_URL = "http://127.0.0.1:5000";
+    const SSO_USER_ID = "<?= htmlspecialchars($sso_user_id) ?>";
+    let userHasApiKey = false;
+
+    async function checkUserApiKey() {
+      try {
+        const res = await fetch(`${FASTAPI_URL}/api/user/api-key`, {
+          headers: { 'X-User-ID': SSO_USER_ID }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          userHasApiKey = !!data.has_key;
+          updateApiKeyBanner(data);
+        }
+      } catch (e) {
+        console.debug('Error checking user API key:', e);
+      }
+    }
+
+    function updateApiKeyBanner(data) {
+      const banner = $('#apiKeyNotice');
+      const icon = $('#apiKeyNoticeIcon');
+      const title = $('#apiKeyNoticeTitle');
+      const desc = $('#apiKeyNoticeDesc');
+      const btn = $('#apiKeyActionBtn');
+
+      banner.removeClass('hidden border-amber-200 bg-amber-50 border-emerald-200 bg-emerald-50/80 text-amber-900 text-emerald-900');
+
+      if (data && data.has_key) {
+        banner.addClass('border-emerald-200 bg-emerald-50/80 text-emerald-900');
+        icon.text('✅');
+        title.text('Google Gemini API Key Active');
+        desc.html(`Active Key: <strong class="font-mono text-teal-800">${data.masked_key || 'Saved'}</strong>. You are ready to launch S-SPARC AI Assistant.`);
+        btn.text('Manage API Key').removeClass('hidden bg-amber-600 hover:bg-amber-700').addClass('bg-teal-700 hover:bg-teal-800 text-white');
+        btn.attr('onclick', 'openApiKeyFlow(false)');
+      } else {
+        banner.addClass('border-amber-200 bg-amber-50 text-amber-900');
+        icon.text('⚠️');
+        title.text('Google Gemini API Key Required');
+        desc.text('You have not registered your personal API Key. Please accept the Terms & Conditions and register your API key before launching the S-SPARC AI Assistant.');
+        btn.text('Set API Key Now').removeClass('hidden bg-teal-700 hover:bg-teal-800').addClass('bg-amber-600 hover:bg-amber-700 text-white');
+        btn.attr('onclick', 'openApiKeyFlow(true)');
+      }
+    }
+
+    function showTermsAndConditionsModal(onAcceptCallback) {
+      Swal.fire({
+        title: '📜 Terms & Conditions — Personal API Key Usage',
+        html: `
+          <div class="text-left text-xs leading-relaxed space-y-3.5 text-slate-700 max-h-[220px] overflow-y-auto pr-2 border border-slate-200 rounded-xl p-3.5 bg-slate-50/50" id="termsScrollBox">
+            <div class="p-3 bg-teal-50/90 border border-teal-200 rounded-xl text-[11px] text-teal-900 font-medium">
+              S-SPARC AI operates on a <em>Bring Your Own Key (BYOK)</em> model using Google Gemini Flash Lite to grant full coding exploration freedom with 0 gamification point deductions.
+            </div>
+
+            <div class="space-y-3">
+              <div class="p-2.5 rounded-xl border border-slate-200 bg-white">
+                <div class="font-bold text-slate-900 flex items-center gap-1.5 mb-1 text-xs">
+                  <span class="text-teal-600">1.</span> Data Privacy & Confidentiality
+                </div>
+                <p class="text-[11px] text-slate-600">
+                  Your Google Gemini API Key is stored securely with encryption in our database. It is exclusively used to process AI coding assistance requests for your account and is never shared with third parties.
+                </p>
+              </div>
+
+              <div class="p-2.5 rounded-xl border border-slate-200 bg-white">
+                <div class="font-bold text-slate-900 flex items-center gap-1.5 mb-1 text-xs">
+                  <span class="text-teal-600">2.</span> Ownership & Responsibility
+                </div>
+                <p class="text-[11px] text-slate-600">
+                  You are solely responsible for the personal API key registered from Google AI Studio. Misuse of API keys, sharing keys, or executing prompts violating Google Cloud policies is strictly prohibited.
+                </p>
+              </div>
+
+              <div class="p-2.5 rounded-xl border border-slate-200 bg-white">
+                <div class="font-bold text-slate-900 flex items-center gap-1.5 mb-1 text-xs">
+                  <span class="text-teal-600">3.</span> Free Tier Allocation & Rate Limits
+                </div>
+                <p class="text-[11px] text-slate-600">
+                  Google Gemini 3.5 Flash Lite Free Tier provides up to <strong>1,500 Requests Per Day (RPD)</strong> and <strong>15 Requests Per Minute (RPM)</strong>. S-SPARC enforces a 1-minute (60s) cooldown per prompt to maintain system stability and foster independent problem-solving skills.
+                </p>
+              </div>
+
+              <div class="p-2.5 rounded-xl border border-slate-200 bg-white">
+                <div class="font-bold text-slate-900 flex items-center gap-1.5 mb-1 text-xs">
+                  <span class="text-teal-600">4.</span> Multi-Tier Failover Guarantee
+                </div>
+                <p class="text-[11px] text-slate-600">
+                  If your personal key reaches rate limits or encounters connectivity issues, S-SPARC transparently routes execution to System Backup Pool Keys or Local LLM Ollama to ensure uninterrupted learning.
+                </p>
+              </div>
+
+              <div class="p-2.5 rounded-xl border border-slate-200 bg-white">
+                <div class="font-bold text-slate-900 flex items-center gap-1.5 mb-1 text-xs">
+                  <span class="text-teal-600">5.</span> Academic Integrity & AI Ethics
+                </div>
+                <p class="text-[11px] text-slate-600">
+                  S-SPARC AI acts as an interactive tutor (helping diagnose error tracebacks, understand algorithm logic, and optimize code). Students remain fully responsible for understanding and explaining every line of code submitted in E-STRANGE assessments.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div id="readingProgressNotice" class="mt-3 p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-900 flex items-center gap-2 font-medium">
+            <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <span>📜 <strong>Scroll Required:</strong> Please scroll down to the bottom of the Terms box to read all terms and enable agreement.</span>
+          </div>
+
+          <div class="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-left">
+            <label class="flex items-start gap-2 cursor-pointer text-[11px] text-slate-800 select-none font-medium">
+              <input type="checkbox" id="swal-terms-read-checkbox" disabled class="mt-0.5 rounded border-slate-300 text-teal-600 focus:ring-teal-500 shrink-0 disabled:opacity-40 disabled:cursor-not-allowed">
+              <span>I have read, understood, and <strong>agree to all Terms & Conditions</strong> for using a personal Google Gemini API key in S-SPARC.</span>
+            </label>
+          </div>
+        `,
+        width: '580px',
+        showCancelButton: true,
+        confirmButtonText: 'I Agree & Proceed to API Key &rarr;',
+        confirmButtonColor: '#00A0A5',
+        cancelButtonText: 'Cancel',
+        focusConfirm: false,
+        didOpen: (modal) => {
+          const scrollBox = modal.querySelector('#termsScrollBox');
+          const checkbox = modal.querySelector('#swal-terms-read-checkbox');
+          const notice = modal.querySelector('#readingProgressNotice');
+          const confirmBtn = Swal.getConfirmButton();
+
+          if (confirmBtn) {
+            confirmBtn.disabled = true;
+            confirmBtn.classList.add('opacity-50', 'cursor-not-allowed');
+          }
+
+          let hasScrolledBottom = false;
+
+          function evaluateScroll() {
+            if (!scrollBox) return;
+            if (scrollBox.scrollTop + scrollBox.clientHeight >= scrollBox.scrollHeight - 25) {
+              if (!hasScrolledBottom) {
+                hasScrolledBottom = true;
+                if (checkbox) {
+                  checkbox.disabled = false;
+                  checkbox.classList.remove('disabled:opacity-40', 'disabled:cursor-not-allowed');
+                }
+                if (notice) {
+                  notice.className = 'mt-3 p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-[11px] text-emerald-900 flex items-center gap-2 font-medium';
+                  notice.innerHTML = '<svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span>✅ Terms & Conditions read! Check the box below to accept.</span>';
+                }
+              }
+            }
+          }
+
+          if (scrollBox) {
+            scrollBox.addEventListener('scroll', evaluateScroll);
+            if (scrollBox.scrollHeight <= scrollBox.clientHeight + 25) {
+              evaluateScroll();
+            }
+          }
+
+          if (checkbox) {
+            checkbox.addEventListener('change', function() {
+              if (confirmBtn) {
+                if (this.checked && hasScrolledBottom) {
+                  confirmBtn.disabled = false;
+                  confirmBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                } else {
+                  confirmBtn.disabled = true;
+                  confirmBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+              }
+            });
+          }
+        },
+        preConfirm: () => {
+          const scrollBox = document.getElementById('termsScrollBox');
+          const hasScrolled = scrollBox ? (scrollBox.scrollTop + scrollBox.clientHeight >= scrollBox.scrollHeight - 25) : true;
+          const checked = document.getElementById('swal-terms-read-checkbox')?.checked;
+
+          if (!hasScrolled) {
+            Swal.showValidationMessage('📜 Please scroll down to the bottom of the Terms & Conditions before agreeing.');
+            return false;
+          }
+          if (!checked) {
+            Swal.showValidationMessage('⚠️ You must check the agreement box to accept the Terms & Conditions before proceeding.');
+            return false;
+          }
+          return true;
+        }
+      }).then((result) => {
+        if (result.isConfirmed && typeof onAcceptCallback === 'function') {
+          onAcceptCallback();
+        }
+      });
+    }
+
+    async function openApiKeyInputModal(isFirstTime = true) {
+      let currentMasked = '';
+      try {
+        const res = await fetch(`${FASTAPI_URL}/api/user/api-key`, {
+          headers: { 'X-User-ID': SSO_USER_ID }
+        });
+        if (res.ok) {
+          const info = await res.json();
+          if (info.has_key && info.masked_key) {
+            currentMasked = info.masked_key;
+            userHasApiKey = true;
+          }
+        }
+      } catch (e) {}
+
+      const titleText = isFirstTime ? '🔑 Register Google Gemini API Key' : '⚙️ Manage Google Gemini API Key';
+      const introText = isFirstTime 
+        ? 'Please enter your personal Google Gemini API Key below. This key will be securely saved for all your coding sessions in S-SPARC AI.'
+        : 'Your active Google Gemini API Key: <strong class="font-mono text-teal-700">' + (currentMasked || 'Not set') + '</strong>.';
+
+      const { value: formValues } = await Swal.fire({
+        title: titleText,
+        html: `
+          <div class="text-left text-xs text-slate-600 space-y-3">
+            <p>${introText}</p>
+            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+              <label class="block font-bold text-slate-800 mb-1">Google Gemini API Key:</label>
+              <input id="swal-api-key-input" type="password" placeholder="AIzaSy..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-mono focus:outline-none focus:ring-2 focus:ring-[#00A0A5] bg-white text-slate-900" autocomplete="off">
+              <div class="flex items-center justify-between mt-1.5 text-[11px] text-slate-500">
+                <span>Minimum 10 characters</span>
+                <button type="button" onclick="const inp = document.getElementById('swal-api-key-input'); inp.type = (inp.type === 'password' ? 'text' : 'password');" class="text-teal-600 hover:underline font-semibold">Show / Hide Key</button>
+              </div>
+            </div>
+
+            <div class="p-2.5 bg-teal-50 border border-teal-200 rounded-xl text-[11px] text-teal-900 flex items-center gap-2">
+              <svg class="w-4 h-4 text-teal-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <span>Don't have an API key yet? Get one for free at <a href="https://aistudio.google.com/app/apikey" target="_blank" class="font-bold underline text-teal-800">Google AI Studio</a>.</span>
+            </div>
+          </div>
+        `,
+        focusConfirm: false,
+        showCancelButton: !isFirstTime,
+        confirmButtonText: 'Save & Activate API Key',
+        confirmButtonColor: '#00A0A5',
+        cancelButtonText: 'Cancel',
+        preConfirm: () => {
+          const keyVal = document.getElementById('swal-api-key-input')?.value.trim();
+          if (!keyVal || keyVal.length < 10) {
+            Swal.showValidationMessage('Please enter a valid API key (minimum 10 characters)');
+            return false;
+          }
+          return { apiKey: keyVal };
+        }
+      });
+
+      if (formValues && formValues.apiKey) {
+        try {
+          Swal.fire({
+            title: 'Saving API Key...',
+            text: 'Encrypting and activating key in S-SPARC database...',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+          });
+
+          const postRes = await fetch(`${FASTAPI_URL}/api/user/api-key`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-User-ID': SSO_USER_ID
+            },
+            body: JSON.stringify({ 
+              api_key: formValues.apiKey, 
+              provider: 'gemini',
+              terms_accepted: true
+            })
+          });
+
+          if (!postRes.ok) {
+            const errData = await postRes.json().catch(() => ({}));
+            throw new Error(errData.detail || 'Failed to save API key.');
+          }
+
+          const saveRes = await postRes.json();
+          userHasApiKey = true;
+          checkUserApiKey();
+
+          Swal.fire({
+            icon: 'success',
+            title: 'API Key Saved & Activated!',
+            text: `Active key: ${saveRes.masked_key || 'Saved'}. You are now ready to launch S-SPARC AI Assistant.`,
+            confirmButtonColor: '#00A0A5'
+          });
+        } catch (saveErr) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Failed to Save API Key',
+            text: saveErr.message,
+            confirmButtonColor: '#0f172a'
+          });
+        }
+      }
+    }
+
+    function openApiKeyFlow(isFirstTime = true) {
+      showTermsAndConditionsModal(() => {
+        openApiKeyInputModal(isFirstTime);
+      });
+    }
 
     $(document).ready(function() {
+      // Check API Key status
+      checkUserApiKey();
+
       // Initialize Select2 on both dropdowns
       $('#course_id').select2({
         width: '100%',
@@ -440,6 +761,27 @@ select.select2-hidden-accessible {
 
       $('#assessment_id').on('change', function() {
         updatePreview();
+      });
+
+      // Intercept form submit if API key is not configured
+      $('form').on('submit', function(e) {
+        if (!userHasApiKey) {
+          e.preventDefault();
+          Swal.fire({
+            icon: 'warning',
+            title: 'Google Gemini API Key Diperlukan',
+            text: 'Anda belum memasukkan Google Gemini API Key pribadi. Anda tidak dapat meluncurkan S-SPARC AI Assistant sebelum memasukkan API Key yang valid.',
+            confirmButtonText: 'Atur API Key Sekarang',
+            confirmButtonColor: '#00A0A5',
+            showCancelButton: true,
+            cancelButtonText: 'Batal'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              openApiKeyModal(true);
+            }
+          });
+          return false;
+        }
       });
 
       // Trigger initial load if course is selected

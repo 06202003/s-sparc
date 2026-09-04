@@ -1,4 +1,5 @@
 import os
+import time
 import json
 import logging
 import litellm
@@ -30,6 +31,121 @@ class AIGateway:
 
 
 
+_CORPUS_CACHE = None
+_EMB_MAP_CACHE = {}
+_BM25_CACHE = None
+_CACHE_TIMESTAMP = 0
+_CACHE_TTL = 300
+
+def invalidate_corpus_cache():
+    global _CORPUS_CACHE, _EMB_MAP_CACHE, _BM25_CACHE, _CACHE_TIMESTAMP
+    _CORPUS_CACHE = None
+    _EMB_MAP_CACHE = {}
+    _BM25_CACHE = None
+    _CACHE_TIMESTAMP = 0
+
+def fetch_code_by_id(doc_id: str) -> str:
+    conn = get_db_connection()
+    if conn is None:
+        return ""
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT code FROM code_embeddings WHERE id=%s LIMIT 1", (doc_id,))
+            r = cur.fetchone()
+            return r['code'] if r else ""
+    except Exception:
+        return ""
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+def fetch_codes_by_ids(doc_ids: list) -> dict:
+    if not doc_ids:
+        return {}
+    conn = get_db_connection()
+    if conn is None:
+        return {}
+    try:
+        with conn.cursor() as cur:
+            format_strings = ','.join(['%s'] * len(doc_ids))
+            cur.execute(f"SELECT id, code FROM code_embeddings WHERE id IN ({format_strings})", tuple(doc_ids))
+            rows = cur.fetchall() or []
+            return {r['id']: r['code'] for r in rows}
+    except Exception:
+        return {}
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+def get_cached_corpus_and_embeddings():
+    global _CORPUS_CACHE, _EMB_MAP_CACHE, _BM25_CACHE, _CACHE_TIMESTAMP
+    now = time.time()
+    if _CORPUS_CACHE is not None and (now - _CACHE_TIMESTAMP) < _CACHE_TTL:
+        return _CORPUS_CACHE, _EMB_MAP_CACHE, _BM25_CACHE
+
+    conn = get_db_connection()
+    if conn is None:
+        return [], {}, None
+
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT id, prompt, embedding FROM code_embeddings")
+            rows = cur.fetchall() or []
+
+        all_docs = []
+        dim_map_docs = {}
+        dim_map_embs = {}
+
+        for r in rows:
+            if r.get('embedding'):
+                try:
+                    emb = json.loads(r['embedding'])
+                    if isinstance(emb, list) and len(emb) > 0:
+                        doc = {
+                            'id': r['id'],
+                            'prompt': r['prompt'],
+                            'embedding': emb
+                        }
+                        all_docs.append(doc)
+                        dim = len(emb)
+                        if dim not in dim_map_docs:
+                            dim_map_docs[dim] = []
+                            dim_map_embs[dim] = []
+                        dim_map_docs[dim].append(doc)
+                        dim_map_embs[dim].append(emb)
+                except Exception:
+                    pass
+
+        emb_map = {}
+        for dim, embs in dim_map_embs.items():
+            docs = dim_map_docs[dim]
+            matrix = np.array(embs, dtype=np.float32)
+            norms = np.linalg.norm(matrix, axis=1)
+            norms[norms == 0] = 1.0
+            emb_map[dim] = (docs, matrix, norms)
+
+        # Pre-build BM25 index once
+        tokenized_corpus = [doc['prompt'].lower().split() for doc in all_docs]
+        bm25 = BM25Okapi(tokenized_corpus) if all_docs else None
+
+        _CORPUS_CACHE = all_docs
+        _EMB_MAP_CACHE = emb_map
+        _BM25_CACHE = bm25
+        _CACHE_TIMESTAMP = now
+        return _CORPUS_CACHE, _EMB_MAP_CACHE, _BM25_CACHE
+    except Exception as e:
+        logging.error(f"Error loading corpus cache: {e}")
+        return _CORPUS_CACHE or [], _EMB_MAP_CACHE or {}, _BM25_CACHE
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            pass
+
 _HYBRID_MODEL = None
 
 def get_hybrid_model():
@@ -44,117 +160,108 @@ def get_hybrid_model():
 class HybridSearcher:
     """
     Combines Dense (Sentence Transformers/FAISS) and Sparse (BM25) search with Reciprocal Rank Fusion (RRF).
+    Uses vectorized NumPy matrix dot-product search with dimension-matched caching and on-demand code fetching.
     """
     def __init__(self):
         self.model = get_hybrid_model()
         self.k = 60 # RRF constant
-        
-    def _fetch_corpus(self):
-        conn = get_db_connection()
-        if conn is None:
-            return []
-        try:
-            with conn.cursor() as cur:
-                cur.execute("SELECT id, prompt, code, embedding FROM code_embeddings")
-                rows = cur.fetchall() or []
-                
-            docs = []
-            for r in rows:
-                if r.get('embedding'):
-                    try:
-                        emb = json.loads(r['embedding'])
-                        docs.append({
-                            'id': r['id'],
-                            'prompt': r['prompt'],
-                            'code': r['code'],
-                            'embedding': emb
-                        })
-                    except:
-                        pass
-            return docs
-        except Exception:
-            return []
-        finally:
-            try:
-                conn.close()
-            except Exception:
-                pass
-            
-    def _cosine_similarity(self, a, b):
-        try:
-            a_arr = np.asarray(a, dtype=np.float32)
-            b_arr = np.asarray(b, dtype=np.float32)
-            if a_arr.shape != b_arr.shape:
-                return 0.0
-            norm_a = np.linalg.norm(a_arr)
-            norm_b = np.linalg.norm(b_arr)
-            if norm_a == 0 or norm_b == 0:
-                return 0.0
-            return float(np.dot(a_arr, b_arr) / (norm_a * norm_b))
-        except Exception:
-            return 0.0
         
     def check_fast_path(self, query: str, threshold: float = 0.88):
         """
         Checks if query has a direct high-similarity match (>= threshold) in code_embeddings
         for 0-token immediate response.
         """
-        docs = self._fetch_corpus()
-        if not docs:
+        all_docs, emb_map, _ = get_cached_corpus_and_embeddings()
+        if not all_docs:
             return False, None, 0.0
-            
+
         try:
-            query_embedding = self.model.encode(query).tolist()
-            dense_scores = [self._cosine_similarity(query_embedding, doc['embedding']) for doc in docs]
-            if not dense_scores:
+            query_embedding = self.model.encode(query)
+            query_arr = np.asarray(query_embedding, dtype=np.float32)
+            q_dim = len(query_arr)
+            query_norm = np.linalg.norm(query_arr)
+            if query_norm == 0:
+                query_norm = 1.0
+
+            if q_dim not in emb_map:
                 return False, None, 0.0
+
+            docs, emb_matrix, emb_norms = emb_map[q_dim]
+            dot_products = np.dot(emb_matrix, query_arr)
+            dense_scores = dot_products / (emb_norms * query_norm)
+
+            if len(dense_scores) == 0:
+                return False, None, 0.0
+
             best_idx = int(np.argmax(dense_scores))
             best_score = float(dense_scores[best_idx])
-            
+            best_doc = dict(docs[best_idx])
+
             if best_score >= threshold:
-                return True, docs[best_idx], best_score
-            return False, docs[best_idx], best_score
+                best_doc['code'] = fetch_code_by_id(best_doc['id'])
+                return True, best_doc, best_score
+            return False, best_doc, best_score
         except Exception as e:
             logging.error(f"check_fast_path error: {e}")
             return False, None, 0.0
 
     def search(self, query: str, top_k: int = 3) -> str:
-        docs = self._fetch_corpus()
-        if not docs:
+        all_docs, emb_map, bm25 = get_cached_corpus_and_embeddings()
+        if not all_docs:
             return ""
-            
-        # Sparse Search (BM25)
-        tokenized_corpus = [doc['prompt'].lower().split() for doc in docs]
-        bm25 = BM25Okapi(tokenized_corpus)
-        tokenized_query = query.lower().split()
-        sparse_scores = bm25.get_scores(tokenized_query)
-        
-        # Dense Search (if model is available)
+
+        # Sparse Search (BM25) over cached pre-built index
+        if bm25:
+            tokenized_query = query.lower().split()
+            sparse_scores = bm25.get_scores(tokenized_query)
+        else:
+            sparse_scores = [0.0] * len(all_docs)
+
+        # Dense Search (Vectorized)
+        dense_scores_map = {} # doc_id -> score
         try:
-            query_embedding = self.model.encode(query).tolist()
-            dense_scores = [self._cosine_similarity(query_embedding, doc['embedding']) for doc in docs]
+            query_embedding = self.model.encode(query)
+            query_arr = np.asarray(query_embedding, dtype=np.float32)
+            q_dim = len(query_arr)
+            query_norm = np.linalg.norm(query_arr)
+            if query_norm == 0:
+                query_norm = 1.0
+
+            if q_dim in emb_map:
+                docs, emb_matrix, emb_norms = emb_map[q_dim]
+                dot_products = np.dot(emb_matrix, query_arr)
+                scores = dot_products / (emb_norms * query_norm)
+                for d, s in zip(docs, scores):
+                    dense_scores_map[d['id']] = float(s)
         except Exception as e:
-            dense_scores = [0.0] * len(docs)
-        
+            logging.error(f"Dense search error: {e}")
+
         # RRF (Reciprocal Rank Fusion)
-        sparse_ranks = {i: rank for rank, i in enumerate(np.argsort(sparse_scores)[::-1])}
-        dense_ranks = {i: rank for rank, i in enumerate(np.argsort(dense_scores)[::-1])}
-        
+        sparse_ranks = {all_docs[i]['id']: rank for rank, i in enumerate(np.argsort(sparse_scores)[::-1])}
+        dense_scores_list = [dense_scores_map.get(d['id'], 0.0) for d in all_docs]
+        dense_ranks = {all_docs[i]['id']: rank for rank, i in enumerate(np.argsort(dense_scores_list)[::-1])}
+
         rrf_scores = []
-        for i in range(len(docs)):
-            rrf_score = 1.0 / (self.k + sparse_ranks[i]) + 1.0 / (self.k + dense_ranks[i])
-            rrf_scores.append((rrf_score, docs[i]))
-            
+        for doc in all_docs:
+            doc_id = doc['id']
+            rrf_score = 1.0 / (self.k + sparse_ranks[doc_id]) + 1.0 / (self.k + dense_ranks[doc_id])
+            rrf_scores.append((rrf_score, doc))
+
         rrf_scores.sort(key=lambda x: x[0], reverse=True)
         top_docs = [doc for score, doc in rrf_scores[:top_k]]
-        
+
         if not top_docs:
             return ""
-            
+
+        # Fetch code for the top_k docs
+        doc_ids = [d['id'] for d in top_docs]
+        code_map = fetch_codes_by_ids(doc_ids)
+
         context_parts = []
         for doc in top_docs:
-            context_parts.append(f"Q: {doc['prompt']}\nA:\n{doc['code']}")
-            
+            c_text = code_map.get(doc['id'], '')
+            context_parts.append(f"Q: {doc['prompt']}\nA:\n{c_text}")
+
         return "\n\n---\n\n".join(context_parts)
 
 def process_chat_job(job_id: str, gpt_prompt_marked: str):
@@ -225,12 +332,27 @@ def process_chat_job(job_id: str, gpt_prompt_marked: str):
                     retrieved_context = searcher.search(clean_prompt)
             except Exception as e:
                 logging.error(f"Search error: {e}")
+        else:
+            sim_score = 0.0
                 
         if is_fast_path and matched_doc:
             logging.info(f"[SEMANTIC CACHE HIT] Fast-path triggered with similarity {sim_score:.3f}. 0 Tokens consumed.")
             response_text = matched_doc['code']
             raw_response = response_text
             
+            try:
+                from backend.api.ai_chat import _in_memory_jobs
+                _in_memory_jobs[job_id] = {
+                    "job_id": job_id,
+                    "status": "done",
+                    "code": response_text,
+                    "raw_response": raw_response,
+                    "similarity": sim_score,
+                    "tokens_used": 0
+                }
+            except Exception as e_mem:
+                logging.warning(f"Failed to update in-memory job state: {e_mem}")
+
             conn = get_db_connection()
             if conn is not None:
                 try:
@@ -286,28 +408,28 @@ def process_chat_job(job_id: str, gpt_prompt_marked: str):
             output_tokens = max(10, len(raw_response) // 4)
             total_tokens = input_tokens + output_tokens
 
-        # Update in-memory job state if present
+        # Update in-memory job state
         try:
             from backend.api.ai_chat import _in_memory_jobs
-            if job_id in _in_memory_jobs:
-                _in_memory_jobs[job_id].update({
-                    "status": "done",
-                    "code": response_text,
-                    "raw_response": raw_response,
-                    "similarity": sim_score,
-                    "tokens_used": total_tokens
-                })
+            _in_memory_jobs[job_id] = {
+                "job_id": job_id,
+                "status": "done",
+                "code": response_text,
+                "raw_response": raw_response,
+                "similarity": sim_score,
+                "tokens_used": total_tokens
+            }
         except Exception:
             pass
 
-        # Update Job in database with exact tokens_used
+        # Update Job in database with exact status
         conn = get_db_connection()
         if conn is not None:
             try:
                 with conn.cursor() as cur:
                     cur.execute(
-                        "UPDATE gpt_jobs SET status='done', code=%s, raw_response=%s, similarity=%s, tokens_used=%s, updated_at=NOW() WHERE job_id=%s",
-                        (response_text, raw_response, sim_score, total_tokens, job_id)
+                        "UPDATE gpt_jobs SET status='done', code=%s, raw_response=%s, similarity=%s, updated_at=NOW() WHERE job_id=%s",
+                        (response_text, raw_response, sim_score, job_id)
                     )
                 conn.commit()
             except Exception as e:
@@ -344,9 +466,6 @@ def process_chat_job(job_id: str, gpt_prompt_marked: str):
                 user_id=user_id,
                 session_id=session_id,
                 tokens_used=total_tokens,
-                cost_points=0.0, # Zero point deduction, free personal API key access
-                tokens_in=input_tokens,
-                tokens_out=output_tokens,
                 assessment_id=assessment_id,
                 course_id=course_id
             )
@@ -358,12 +477,10 @@ def process_chat_job(job_id: str, gpt_prompt_marked: str):
             from backend.services.sustainability import log_environmental_impact
             log_environmental_impact(
                 user_id=user_id,
-                session_id=session_id,
-                tokens_in=input_tokens,
-                tokens_out=output_tokens,
-                provider="gemini_user_key" if router_res.get("provider") == "gemini_user_key" else "gemini_pool",
-                course_id=course_id,
-                assessment_id=assessment_id
+                job_id=job_id,
+                total_tokens=total_tokens,
+                assessment_id=assessment_id,
+                course_id=course_id
             )
         except Exception as e_sust:
             logging.error(f"Failed to log sustainability: {e_sust}")
@@ -453,6 +570,7 @@ def auto_ingest_knowledge(user_id: str, prompt: str, code: str):
                 (entry_id, resolved_uid, prompt.strip(), code.strip(), emb_json)
             )
         conn.commit()
+        invalidate_corpus_cache()
         logging.info(f"[SELF-GROWING] Auto-ingested new knowledge into code_embeddings (id: {entry_id})")
     except Exception as e:
         logging.warning(f"auto_ingest_knowledge DB write failed: {e}")
@@ -461,3 +579,17 @@ def auto_ingest_knowledge(user_id: str, prompt: str, code: str):
             conn.close()
         except Exception:
             pass
+
+def _warmup_cache_async():
+    import threading
+    def _warmup():
+        try:
+            get_cached_corpus_and_embeddings()
+            get_hybrid_model()
+            logging.info("[WARMUP] Corpus cache & embedding model successfully warmed up!")
+        except Exception as e:
+            logging.warning(f"[WARMUP] Cache warmup skipped: {e}")
+    t = threading.Thread(target=_warmup, daemon=True)
+    t.start()
+
+_warmup_cache_async()

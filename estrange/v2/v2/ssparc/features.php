@@ -18,7 +18,7 @@ $sso_role = $_SESSION['role'] ?? 'student';
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <style>
       :root {
         --brand-teal: #00A0A5;
@@ -185,16 +185,16 @@ $sso_role = $_SESSION['role'] ?? 'student';
     <!-- Header Intro Section -->
     <section class="py-5">
       <div class="container">
-        <div class="flex flex-wrap align-items-center justify-content-between g-5 py-3">
-          <div class="w-full lg:w-1/2">
+        <div class="row align-items-center justify-content-between g-4 py-3">
+          <div class="col-12 col-lg-7 mb-4 mb-lg-0">
             <div class="mb-3">
               <div class="hero-pill font-mono">
                 <span class="w-2 h-2 rounded-circle" style="background-color: var(--brand-teal);"></span>
                 Platform Capabilities
               </div>
             </div>
-            <h1 class="display-5 fw-extrabold text-slate-900 mb-3" style="letter-spacing: -0.03em; line-height: 1.2;">
-              Discover What S-SPARC Can Do
+            <h1 class="display-5 fw-extrabold text-slate-900 mb-3" style="letter-spacing: -0.03em; line-height: 1.25;">
+              Discover What S-SPARC <span class="text-nowrap">Can Do</span>
             </h1>
             <p class="lead text-slate-600 mb-4" style="font-size: 1.05rem; line-height: 1.7;">
               S-SPARC combines generative code synthesis with vector semantic search to repurpose verified solutions, minimize redundant GPU compute, and deliver sub-second assistance.
@@ -209,7 +209,7 @@ $sso_role = $_SESSION['role'] ?? 'student';
             </div>
           </div>
 
-          <div class="w-full lg:w-1/2">
+          <div class="col-12 col-lg-5">
             <div class="bg-white border rounded-4 p-4 p-md-5 shadow-sm">
               <span class="text-xs font-mono text-slate-500 uppercase tracking-wider font-semibold d-block mb-3">Adaptive Architecture</span>
               <p class="text-slate-600 mb-3" style="font-size: 0.95rem; line-height: 1.75; text-align: justify;">
@@ -233,9 +233,9 @@ $sso_role = $_SESSION['role'] ?? 'student';
           <p class="text-slate-500">Comprehensive tools for efficient code development and sustainable computing.</p>
         </div>
 
-        <div class="flex flex-wrap g-4">
+        <div class="row g-4">
           
-          <div class="w-full md:w-1/3">
+          <div class="col-12 col-md-4 mb-2">
             <div class="feature-card-2026 h-100">
               <div class="d-inline-flex p-3 rounded-3 mb-3" style="background-color: #f0fdfa; color: #00A0A5;">
                 <i class="fa-solid fa-code fa-xl"></i>
@@ -247,7 +247,7 @@ $sso_role = $_SESSION['role'] ?? 'student';
             </div>
           </div>
 
-          <div class="w-full md:w-1/3">
+          <div class="col-12 col-md-4 mb-2">
             <div class="feature-card-2026 h-100">
               <div class="d-inline-flex p-3 rounded-3 mb-3" style="background-color: #fff7ed; color: #ea580c;">
                 <i class="fa-solid fa-recycle fa-xl"></i>
@@ -259,7 +259,7 @@ $sso_role = $_SESSION['role'] ?? 'student';
             </div>
           </div>
 
-          <div class="w-full md:w-1/3">
+          <div class="col-12 col-md-4 mb-2">
             <div class="feature-card-2026 h-100">
               <div class="d-inline-flex p-3 rounded-3 mb-3" style="background-color: #eff6ff; color: #2563eb;">
                 <i class="fa-solid fa-database fa-xl"></i>
@@ -271,7 +271,7 @@ $sso_role = $_SESSION['role'] ?? 'student';
             </div>
           </div>
 
-          <div class="w-full md:w-1/3">
+          <div class="col-12 col-md-4 mb-2">
             <div class="feature-card-2026 h-100">
               <div class="d-inline-flex p-3 rounded-3 mb-3" style="background-color: #f0fdf4; color: #16a34a;">
                 <i class="fa-solid fa-leaf fa-xl"></i>
@@ -283,7 +283,7 @@ $sso_role = $_SESSION['role'] ?? 'student';
             </div>
           </div>
 
-          <div class="w-full md:w-1/3">
+          <div class="col-12 col-md-4 mb-2">
             <div class="feature-card-2026 h-100">
               <div class="d-inline-flex p-3 rounded-3 mb-3" style="background-color: #faf5ff; color: #9333ea;">
                 <i class="fa-solid fa-language fa-xl"></i>
@@ -295,7 +295,7 @@ $sso_role = $_SESSION['role'] ?? 'student';
             </div>
           </div>
 
-          <div class="w-full md:w-1/3">
+          <div class="col-12 col-md-4 mb-2">
             <div class="feature-card-2026 h-100">
               <div class="d-inline-flex p-3 rounded-3 mb-3" style="background-color: #fff1f2; color: #e11d48;">
                 <i class="fa-solid fa-gamepad fa-xl"></i>
@@ -320,9 +320,9 @@ $sso_role = $_SESSION['role'] ?? 'student';
           <p class="text-slate-600">Encouraging sustainable platform usage and rigorous programming practice.</p>
         </div>
 
-        <div class="flex flex-wrap g-4">
+        <div class="row g-4">
           
-          <div class="w-full md:w-1/3">
+          <div class="col-12 col-md-4 mb-2">
             <div class="bg-white border rounded-4 p-4 h-100 shadow-sm d-flex flex-column justify-content-between">
               <div>
                 <span class="text-xs font-mono text-slate-400 font-bold uppercase">Dimension 01</span>
@@ -337,7 +337,7 @@ $sso_role = $_SESSION['role'] ?? 'student';
             </div>
           </div>
 
-          <div class="w-full md:w-1/3">
+          <div class="col-12 col-md-4 mb-2">
             <div class="bg-white border rounded-4 p-4 h-100 shadow-sm d-flex flex-column justify-content-between">
               <div>
                 <span class="text-xs font-mono text-slate-400 font-bold uppercase">Dimension 02</span>
@@ -352,7 +352,7 @@ $sso_role = $_SESSION['role'] ?? 'student';
             </div>
           </div>
 
-          <div class="w-full md:w-1/3">
+          <div class="col-12 col-md-4 mb-2">
             <div class="bg-white border rounded-4 p-4 h-100 shadow-sm d-flex flex-column justify-content-between">
               <div>
                 <span class="text-xs font-mono text-slate-400 font-bold uppercase">Dimension 03</span>
@@ -379,7 +379,7 @@ $sso_role = $_SESSION['role'] ?? 'student';
     </footer>
 
     <!-- Bootstrap 5 Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Particles.js -->
     <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
     <script>

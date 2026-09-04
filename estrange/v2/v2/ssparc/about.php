@@ -18,7 +18,7 @@ $sso_role = $_SESSION['role'] ?? 'student';
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <style>
       :root {
         --brand-teal: #00A0A5;
@@ -181,10 +181,10 @@ $sso_role = $_SESSION['role'] ?? 'student';
     <main class="container py-5">
       
       <!-- Top Overview Section -->
-      <div class="flex flex-wrap align-items-center justify-content-between g-5 mb-5 pb-3">
+      <div class="row align-items-center justify-content-between g-4 mb-5 pb-3">
         
         <!-- Left: About Narrative -->
-        <div class="w-full lg:w-1/2">
+        <div class="col-12 col-lg-7 mb-4 mb-lg-0">
           <div class="pe-lg-3">
             <div class="mb-3">
               <div class="hero-pill font-mono">
@@ -192,8 +192,8 @@ $sso_role = $_SESSION['role'] ?? 'student';
                 Academic Research
               </div>
             </div>
-            <h1 class="display-5 fw-extrabold text-slate-900 mb-3" style="letter-spacing: -0.03em; line-height: 1.2;">
-              About S-SPARC Academic Research
+            <h1 class="display-5 fw-extrabold text-slate-900 mb-3" style="letter-spacing: -0.03em; line-height: 1.25;">
+              About S-SPARC <span class="text-nowrap">Academic Research</span>
             </h1>
             <p class="lead text-slate-600 mb-4" style="font-size: 1.05rem; line-height: 1.7;">
               An applied AI research initiative developed at the Faculty of Smart Technology &amp; Engineering, Maranatha Christian University. Focuses on eliminating compute redundancy through vector semantic code reuse.
@@ -210,7 +210,7 @@ $sso_role = $_SESSION['role'] ?? 'student';
         </div>
 
         <!-- Right: Institutional Context & Mission Card -->
-        <div class="w-full lg:w-1/2">
+        <div class="col-12 col-lg-5">
           <div class="bg-white border rounded-4 p-4 p-md-5 shadow-sm">
             <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-3">
               <span class="text-xs font-mono text-slate-500 uppercase tracking-wider font-semibold">Institutional Mission</span>
@@ -237,14 +237,14 @@ $sso_role = $_SESSION['role'] ?? 'student';
           <p class="text-slate-500">The academic researchers, advisors, and engineers behind the S-SPARC architecture.</p>
         </div>
 
-        <div class="flex flex-wrap g-4">
+        <div class="row g-4">
           
-          <!-- 1. Yehezkiel David Setiawan (Lead) -->
-          <div class="col-12">
+          <!-- 1. Yehezkiel David Setiawan, S.Kom., M.Kom. (Lead) -->
+          <div class="col-12 mb-2">
             <div class="feature-card-2026 border-2 p-4 p-md-5" style="border-color: rgba(0, 160, 165, 0.35); background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);">
               <div>
                 <div class="d-flex align-items-center gap-3 flex-wrap mb-2">
-                  <h3 class="h4 fw-bold text-slate-900 mb-0">Yehezkiel David Setiawan</h3>
+                  <h3 class="h4 fw-bold text-slate-900 mb-0">Yehezkiel David Setiawan, S.Kom., M.Kom.</h3>
                   <span class="badge bg-teal-100 text-teal-800 border font-mono px-3 py-1.5 text-[11px]" style="background-color: #ccfbf1; color: #0f766e; border-color: #99f6e4;">
                     Primary Creator &amp; Project Lead
                   </span>
@@ -256,11 +256,11 @@ $sso_role = $_SESSION['role'] ?? 'student';
             </div>
           </div>
 
-          <!-- 2. Oscar Karnalim -->
-          <div class="w-full md:w-1/2">
+          <!-- 2. Oscar Karnalim, S.T., M.T., Ph.D. -->
+          <div class="col-12 col-md-6 mb-2">
             <div class="feature-card-2026 h-100 p-4">
               <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
-                <h4 class="h5 fw-bold text-slate-900 mb-0">Oscar Karnalim</h4>
+                <h4 class="h5 fw-bold text-slate-900 mb-0">Oscar Karnalim, S.T., M.T., Ph.D.</h4>
                 <span class="badge bg-blue-50 text-blue-700 border font-mono px-2.5 py-1 text-[11px]" style="background-color: #eff6ff; color: #1d4ed8; border-color: #bfdbfe;">
                   Academic &amp; Research Advisory
                 </span>
@@ -271,11 +271,11 @@ $sso_role = $_SESSION['role'] ?? 'student';
             </div>
           </div>
 
-          <!-- 3. Andreas Widjaja -->
-          <div class="w-full md:w-1/2">
+          <!-- 3. Andreas Widjaja, S.Si., M.Sc., Ph.D. -->
+          <div class="col-12 col-md-6 mb-2">
             <div class="feature-card-2026 h-100 p-4">
               <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
-                <h4 class="h5 fw-bold text-slate-900 mb-0">Andreas Widjaja</h4>
+                <h4 class="h5 fw-bold text-slate-900 mb-0">Andreas Widjaja, S.Si., M.Sc., Ph.D.</h4>
                 <span class="badge bg-blue-50 text-blue-700 border font-mono px-2.5 py-1 text-[11px]" style="background-color: #eff6ff; color: #1d4ed8; border-color: #bfdbfe;">
                   Academic &amp; Research Advisory
                 </span>
@@ -286,11 +286,11 @@ $sso_role = $_SESSION['role'] ?? 'student';
             </div>
           </div>
 
-          <!-- 4. Johanes Mario -->
-          <div class="w-full md:w-1/2">
+          <!-- 4. Johanes Mario Pranata Listianto, S.Kom. -->
+          <div class="col-12 col-md-6 mb-2">
             <div class="feature-card-2026 h-100 p-4">
               <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
-                <h4 class="h5 fw-bold text-slate-900 mb-0">Johanes Mario</h4>
+                <h4 class="h5 fw-bold text-slate-900 mb-0">Johanes Mario Pranata Listianto, S.Kom.</h4>
                 <span class="badge bg-green-50 text-green-700 border font-mono px-2.5 py-1 text-[11px]" style="background-color: #f0fdf4; color: #15803d; border-color: #bbf7d0;">
                   Infrastructure &amp; Deployment Operations
                 </span>
@@ -301,11 +301,11 @@ $sso_role = $_SESSION['role'] ?? 'student';
             </div>
           </div>
 
-          <!-- 5. Archangela Sheilla Haryanto -->
-          <div class="w-full md:w-1/2">
+          <!-- 5. Archangela Sheilla Haryanto Sundjaya -->
+          <div class="col-12 col-md-6 mb-2">
             <div class="feature-card-2026 h-100 p-4">
               <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
-                <h4 class="h5 fw-bold text-slate-900 mb-0">Archangela Sheilla Haryanto</h4>
+                <h4 class="h5 fw-bold text-slate-900 mb-0">Archangela Sheilla Haryanto Sundjaya</h4>
                 <span class="badge bg-purple-50 text-purple-700 border font-mono px-2.5 py-1 text-[11px]" style="background-color: #faf5ff; color: #7e22ce; border-color: #e9d5ff;">
                   Design &amp; Visual Identity
                 </span>
@@ -329,7 +329,7 @@ $sso_role = $_SESSION['role'] ?? 'student';
     </footer>
 
     <!-- Bootstrap 5 Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Particles.js -->
     <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
     <script>

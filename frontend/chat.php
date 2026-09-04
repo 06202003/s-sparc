@@ -51,7 +51,7 @@ if (!$assessmentId) {
   display: none !important;
 }
 
-select:not(.select2-hidden-accessible):not(.swal2-select), .form-select, .custom-select {
+select:not(.select2-hidden-accessible):not(.swal2-select):not(.gemini-pill-select), .form-select, .custom-select {
   appearance: none !important;
   -webkit-appearance: none !important;
   -moz-appearance: none !important;
@@ -80,14 +80,58 @@ select:not(.select2-hidden-accessible):not(.swal2-select), .form-select, .custom
   box-sizing: border-box !important;
 }
 
-select:not(.select2-hidden-accessible):not(.swal2-select):hover, .form-select:hover {
+select:not(.select2-hidden-accessible):not(.swal2-select):not(.gemini-pill-select):hover, .form-select:hover {
   border-color: #00A0A5 !important;
   background-color: #f8fafc !important;
   box-shadow: 0 4px 12px rgba(0, 160, 165, 0.08) !important;
 }
 
-select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:focus {
+select:not(.select2-hidden-accessible):not(.swal2-select):not(.gemini-pill-select):focus, .form-select:focus {
   outline: none !important;
+  border-color: #00A0A5 !important;
+  box-shadow: 0 0 0 3px rgba(0, 160, 165, 0.2) !important;
+  background-color: #ffffff !important;
+}
+
+/* Gemini-Style Subtle Pill Dropdown Controls */
+.gemini-pill-select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 0.65rem center !important;
+  background-size: 0.75rem 0.75rem !important;
+  padding: 0.35rem 1.75rem 0.35rem 0.8rem !important;
+  margin-right: 0 !important;
+  background-color: #f1f5f9 !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 9999px !important;
+  color: #334155 !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  outline: none !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  box-shadow: none !important;
+}
+
+.gemini-pill-select:hover {
+  background-color: #e2e8f0 !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+.gemini-pill-select:focus {
+  border-color: #00A0A5 !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 0 0 2px rgba(0, 160, 165, 0.25) !important;
+  color: #0f172a !important;
+}
   border-color: #00A0A5 !important;
   box-shadow: 0 0 0 3px rgba(0, 160, 165, 0.2) !important;
   background-color: #ffffff !important;
@@ -185,39 +229,57 @@ select.select2-hidden-accessible {
             </span>
             <span>Assistant is typing…</span>
           </div>
-          <form id="chat-form" class="mt-4 flex items-stretch gap-3" onsubmit="sendMessage(event)">
-            <div class="flex-1 flex flex-col gap-2">
-              <div class="flex gap-2 items-center">
-                <label for="language-select" class="text-xs text-slate-600">Language</label>
-                <select id="language-select" class="min-w-[200px] shrink-0 text-sm rounded-md border border-slate-200 px-2 py-1">
-                  <option value="">Auto-detect</option>
-                  <option value="Python">Python</option>
-                  <option value="JavaScript">JavaScript</option>
-                  <option value="Java">Java</option>
-                  <option value="C">C</option>
-                  <option value="C++">C++</option>
-                  <option value="Go">Go</option>
-                  <option value="PHP">PHP</option>
-                </select>
-                <label for="response-mode" class="text-xs text-slate-600 ml-3">Mode</label>
-                <select id="response-mode" class="min-w-[200px] shrink-0 text-sm rounded-md border border-slate-200 px-2 py-1">
-                  <option value="code">Code (only)</option>
-                  <option value="summary">Summary (short)</option>
-                  <option value="summary_code_explanation">Summary + Code + Explanation</option>
-                </select>
+          <form id="chat-form" class="mt-4" onsubmit="sendMessage(event)">
+            <div class="rounded-3xl border border-slate-300/90 bg-white p-4 shadow-sm focus-within:border-[#00A0A5] focus-within:ring-2 focus-within:ring-[#00A0A5]/20 transition flex flex-col justify-between">
+              
+              <!-- Textarea Area -->
+              <label for="chat-input" class="sr-only">Write a message</label>
+              <textarea id="chat-input" rows="3" class="w-full min-h-[5.5rem] max-h-56 resize-none overflow-y-auto bg-transparent px-3 pt-1.5 pb-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 leading-relaxed font-sans" placeholder="Tuliskan pertanyaan pemrograman Anda (min. 200 karakter, maks. 2000)..." required></textarea>
+
+              <!-- Bottom Toolbar inside Gemini Box -->
+              <div class="mt-3 pt-3 px-1 border-t border-slate-100 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2.5">
+                
+                <!-- Left Controls: Language & Mode Selector in 1 Single Line -->
+                <div class="flex items-center gap-1.5 flex-nowrap shrink-0 overflow-x-auto">
+                  <select id="language-select" class="gemini-pill-select shrink-0" title="Pilih Bahasa Pemrograman">
+                    <option value="">Auto-detect</option>
+                    <option value="Python" selected>Python</option>
+                    <option value="JavaScript">JavaScript</option>
+                    <option value="Java">Java</option>
+                    <option value="C">C</option>
+                    <option value="C++">C++</option>
+                    <option value="Go">Go</option>
+                    <option value="PHP">PHP</option>
+                    <option value="SQL">SQL</option>
+                  </select>
+
+                  <select id="response-mode" class="gemini-pill-select shrink-0" title="Pilih Format Respon & Taksonomi Bloom">
+                    <option value="code" selected>Code (only)</option>
+                    <option value="summary">Summary (short)</option>
+                    <option value="summary_code_explanation">Summary + Code + Explanation</option>
+                  </select>
+                </div>
+
+                <!-- Right Controls: Dynamic Query Badge, Character Counter & Circular Send Button (Gemini-style) -->
+                <div class="flex items-center gap-2 flex-nowrap shrink-0 justify-end ml-auto">
+                  <div id="query-quota-badge" onclick="showTermsModal()" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-teal-50/90 border border-teal-200/80 text-[11px] font-semibold text-teal-800 shadow-2xs cursor-pointer hover:bg-teal-100 transition whitespace-nowrap" title="Klik untuk rincian kuota & syarat ketentuan">
+                    <span class="text-teal-600">⚡</span>
+                    <span>Sisa Query: <strong id="query-remaining-count" class="font-mono font-bold text-teal-900">1,500</strong> / <span id="query-limit-count" class="font-mono text-slate-500">1,500</span></span>
+                  </div>
+                  <div id="char-counter" class="text-[11px] font-mono text-slate-400 whitespace-nowrap">
+                    0 / 2000 chars (min. 200)
+                  </div>
+                  <button id="send-btn" type="submit" class="w-10 h-10 flex items-center justify-center rounded-full bg-[#00A0A5] text-white hover:bg-[#008589] transition shadow-sm hover:scale-105 active:scale-95 disabled:opacity-50 shrink-0" title="Kirim Prompt Pemrograman (min. 200 karakter)">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
+                    </svg>
+                  </button>
+                </div>
+
               </div>
-              <div class="flex items-center gap-3">
-                <label for="chat-input" class="sr-only">Write a message</label>
-                <div class="rounded-2xl border border-slate-200 bg-white shadow-sm focus-within:border-[#00A0A5] flex-1 flex flex-col p-2">
-                  <textarea id="chat-input" rows="3" class="w-full min-h-[4.5rem] resize-none overflow-y-auto bg-transparent px-2 py-1 outline-none text-sm" placeholder="Write your code question here (min. 10, max. 2000 chars)…" required></textarea>
-                  <div class="flex flex-wrap justify-between items-center px-2 pt-1 border-t border-slate-100 gap-2">
-                    <span id="char-counter" class="text-[11px] font-mono text-slate-400">0 / 2000 chars (min. 10)</span>
-                    <div class="flex items-center gap-3">
-                      <div id="query-quota-badge" onclick="showTermsModal()" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-teal-50/90 border border-teal-200/80 text-[11px] font-semibold text-teal-800 shadow-2xs cursor-pointer hover:bg-teal-100 transition" title="Klik untuk rincian kuota & syarat ketentuan">
-                        <span class="text-teal-600">⚡</span>
-                        <span>Sisa Query: <strong id="query-remaining-count" class="font-mono font-bold text-teal-900">1,500</strong> / <span id="query-limit-count" class="font-mono text-slate-500">1,500</span></span>
-                      </div>
-                      <span class="text-[10px] text-slate-400 hidden sm:inline">Shift+Enter for newline</span>
+
+            </div>
+          </form>
                     </div>
                   </div>
                 </div>
@@ -348,18 +410,41 @@ select.select2-hidden-accessible {
     const state = { messages: [] };
     const tokenState = { total: null, points: null };
 
+    function getDefaultGreeting() {
+      const userName = '<?= htmlspecialchars($name ?? $username ?? "Student", ENT_QUOTES) ?>';
+      const asmtName = '<?= htmlspecialchars($assessment["name"] ?? "Active Assessment", ENT_QUOTES) ?>';
+      const courseName = '<?= htmlspecialchars($course["name"] ?? "Active Course", ENT_QUOTES) ?>';
+      
+      return {
+        sender: 'bot',
+        text: `Hello **${userName}**! Welcome to **S-SPARC AI Assistant** 👋\n\nYou are currently working on assessment **${asmtName}** in **${courseName}**.\n\nFeel free to ask programming questions, request error traceback debugging, or get step-by-step algorithmic guidance!`,
+        meta: 'S-SPARC AI Context Verified'
+      };
+    }
+
     function loadMessages() {
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
-        if (!saved) return;
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          state.messages = parsed.slice(-200); // keep last 200
-          renderMessages();
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            state.messages = parsed.slice(-200);
+          } else {
+            state.messages = [getDefaultGreeting()];
+          }
+        } else {
+          state.messages = [getDefaultGreeting()];
         }
       } catch (e) {
         console.warn('Failed to load messages', e);
+        state.messages = [getDefaultGreeting()];
       }
+
+      if (!state.messages || state.messages.length === 0) {
+        state.messages = [getDefaultGreeting()];
+      }
+
+      renderMessages();
     }
 
     function persistMessages() {
@@ -371,7 +456,16 @@ select.select2-hidden-accessible {
     }
 
     function renderMessages() {
-      chatWindow.innerHTML = '';
+      const targetWindow = document.getElementById('chat-window');
+      if (!targetWindow) {
+        console.warn('Target #chat-window element not found in DOM');
+        return;
+      }
+
+      if (!state.messages || state.messages.length === 0) {
+        state.messages = [getDefaultGreeting()];
+      }
+      targetWindow.innerHTML = '';
       state.messages.forEach(msg => {
         const row = document.createElement('div');
         row.className = msg.sender === 'user' ? 'flex justify-end items-start gap-2' : 'flex justify-start items-start gap-2';
@@ -726,7 +820,7 @@ select.select2-hidden-accessible {
     }
 
     function clearChat() {
-      state.messages = [];
+      state.messages = [getDefaultGreeting()];
       persistMessages();
       renderMessages();
       chatInput.focus();
@@ -776,68 +870,157 @@ select.select2-hidden-accessible {
     // initial validation
     validateInputState();
 
-    // Terms and Conditions Modal Dialog
-    function showTermsModal() {
+    // Terms and Conditions Modal Dialog with Scroll Enforcement
+    function showTermsAndConditionsModal(onAcceptCallback) {
       Swal.fire({
-        title: '📜 Syarat & Ketentuan Penggunaan API Key Pribadi',
+        title: '📜 Terms & Conditions — Personal API Key Usage',
         html: `
-          <div class="text-left text-xs leading-relaxed space-y-3.5 text-slate-700 max-h-[60vh] overflow-y-auto pr-1">
+          <div class="text-left text-xs leading-relaxed space-y-3.5 text-slate-700 max-h-[220px] overflow-y-auto pr-2 border border-slate-200 rounded-xl p-3.5 bg-slate-50/50" id="termsScrollBox">
             <div class="p-3 bg-teal-50/90 border border-teal-200 rounded-xl text-[11px] text-teal-900 font-medium">
-              S-SPARC AI mengadopsi model <em>Bring Your Own Key (BYOK)</em> Google Gemini Flash untuk menjamin kebebasan eksplorasi coding mahasiswa secara mandiri tanpa pemotongan poin gamifikasi.
+              S-SPARC AI operates on a <em>Bring Your Own Key (BYOK)</em> model using Google Gemini Flash Lite to grant full coding exploration freedom with 0 gamification point deductions.
             </div>
 
             <div class="space-y-3">
-              <div class="p-2.5 rounded-xl border border-slate-200 bg-slate-50">
+              <div class="p-2.5 rounded-xl border border-slate-200 bg-white">
                 <div class="font-bold text-slate-900 flex items-center gap-1.5 mb-1 text-xs">
-                  <span class="text-teal-600">1.</span> Kerahasiaan & Keamanan Data (Data Privacy)
+                  <span class="text-teal-600">1.</span> Data Privacy & Confidentiality
                 </div>
                 <p class="text-[11px] text-slate-600">
-                  Google Gemini API Key Anda disimpan secara terenkripsi dan terisolasi di database. Kunci ini semata-mata digunakan untuk memproses permintaan inferensi asisten coding pada akun Anda dan tidak pernah dibagikan kepada pihak ketiga manapun.
+                  Your Google Gemini API Key is stored securely with encryption in our database. It is exclusively used to process AI coding assistance requests for your account and is never shared with third parties.
                 </p>
               </div>
 
-              <div class="p-2.5 rounded-xl border border-slate-200 bg-slate-50">
+              <div class="p-2.5 rounded-xl border border-slate-200 bg-white">
                 <div class="font-bold text-slate-900 flex items-center gap-1.5 mb-1 text-xs">
-                  <span class="text-teal-600">2.</span> Tanggung Jawab Kepemilikan Kunci
+                  <span class="text-teal-600">2.</span> Ownership & Responsibility
                 </div>
                 <p class="text-[11px] text-slate-600">
-                  Pengguna bertanggung jawab penuh atas API key pribadi yang didaftarkan melalui Google AI Studio. Dilarang memasukkan kunci milik orang lain, menyalahgunakan kuota untuk aktivitas non-akademik, atau mengeksekusi prompt yang melanggar hukum/kebijakan Google Cloud.
+                  You are solely responsible for the personal API key registered from Google AI Studio. Misuse of API keys, sharing keys, or executing prompts violating Google Cloud policies is strictly prohibited.
                 </p>
               </div>
 
-              <div class="p-2.5 rounded-xl border border-slate-200 bg-slate-50">
+              <div class="p-2.5 rounded-xl border border-slate-200 bg-white">
                 <div class="font-bold text-slate-900 flex items-center gap-1.5 mb-1 text-xs">
-                  <span class="text-teal-600">3.</span> Alokasi Kuota & Batasan Bebas Biaya (Free Tier Limits)
+                  <span class="text-teal-600">3.</span> Free Tier Allocation & Rate Limits
                 </div>
                 <p class="text-[11px] text-slate-600">
-                  Paket gratis Google Gemini 2.0/2.5 Flash Free Tier mengalokasikan hingga <strong>1.500 requests per hari (RPD)</strong> dan <strong>15 requests per menit (RPM)</strong>. S-SPARC memberlakukan aturan jeda rate limit 1 menit (60 detik) per prompt untuk menjaga stabilitas akun dan melatih kebiasaan berpikir komputasional mandiri.
+                  Google Gemini 3.5 Flash Lite Free Tier provides up to <strong>1,500 Requests Per Day (RPD)</strong> and <strong>15 Requests Per Minute (RPM)</strong>. S-SPARC enforces a 1-minute (60s) cooldown per prompt to maintain system stability and foster independent problem-solving skills.
                 </p>
               </div>
 
-              <div class="p-2.5 rounded-xl border border-slate-200 bg-slate-50">
+              <div class="p-2.5 rounded-xl border border-slate-200 bg-white">
                 <div class="font-bold text-slate-900 flex items-center gap-1.5 mb-1 text-xs">
-                  <span class="text-teal-600">4.</span> Jaminan Multi-Tier Failover
+                  <span class="text-teal-600">4.</span> Multi-Tier Failover Guarantee
                 </div>
                 <p class="text-[11px] text-slate-600">
-                  Jika kuota API key pribadi Anda mengalami limit atau gangguan koneksi cloud, sistem S-SPARC secara transparan mengalihkan eksekusi ke <em>System Pool Key</em> cadangan atau <em>Local LLM Ollama</em> agar proses belajar Anda tidak terputus.
+                  If your personal key reaches rate limits or encounters connectivity issues, S-SPARC transparently routes execution to System Backup Pool Keys or Local LLM Ollama to ensure uninterrupted learning.
                 </p>
               </div>
 
-              <div class="p-2.5 rounded-xl border border-slate-200 bg-slate-50">
+              <div class="p-2.5 rounded-xl border border-slate-200 bg-white">
                 <div class="font-bold text-slate-900 flex items-center gap-1.5 mb-1 text-xs">
-                  <span class="text-teal-600">5.</span> Integritas Akademik & Etika Penggunaan AI
+                  <span class="text-teal-600">5.</span> Academic Integrity & AI Ethics
                 </div>
                 <p class="text-[11px] text-slate-600">
-                  Asisten AI ini difungsikan sebagai tutor interaktif (membantu diagnosis pesan error, memahami alur algoritma, dan mengoptimalkan efisiensi kode). Mahasiswa tetap wajib memahami dan mampu mempertanggungjawabkan setiap baris kode solusi yang diserahkan dalam tugas E-STRANGE.
+                  S-SPARC AI acts as an interactive tutor (helping diagnose error tracebacks, understand algorithm logic, and optimize code). Students remain fully responsible for understanding and explaining every line of code submitted in E-STRANGE assessments.
                 </p>
               </div>
             </div>
           </div>
+
+          <div id="readingProgressNotice" class="mt-3 p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-900 flex items-center gap-2 font-medium">
+            <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <span>📜 <strong>Scroll Required:</strong> Please scroll down to the bottom of the Terms box to read all terms and enable agreement.</span>
+          </div>
+
+          <div class="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-left">
+            <label class="flex items-start gap-2 cursor-pointer text-[11px] text-slate-800 select-none font-medium">
+              <input type="checkbox" id="swal-terms-read-checkbox" disabled class="mt-0.5 rounded border-slate-300 text-teal-600 focus:ring-teal-500 shrink-0 disabled:opacity-40 disabled:cursor-not-allowed">
+              <span>I have read, understood, and <strong>agree to all Terms & Conditions</strong> for using a personal Google Gemini API key in S-SPARC.</span>
+            </label>
+          </div>
         `,
-        confirmButtonText: 'Saya Mengerti & Setuju',
+        width: '580px',
+        showCancelButton: true,
+        confirmButtonText: 'I Agree & Proceed to API Key &rarr;',
         confirmButtonColor: '#00A0A5',
-        width: '580px'
+        cancelButtonText: 'Cancel',
+        focusConfirm: false,
+        didOpen: (modal) => {
+          const scrollBox = modal.querySelector('#termsScrollBox');
+          const checkbox = modal.querySelector('#swal-terms-read-checkbox');
+          const notice = modal.querySelector('#readingProgressNotice');
+          const confirmBtn = Swal.getConfirmButton();
+
+          if (confirmBtn) {
+            confirmBtn.disabled = true;
+            confirmBtn.classList.add('opacity-50', 'cursor-not-allowed');
+          }
+
+          let hasScrolledBottom = false;
+
+          function evaluateScroll() {
+            if (!scrollBox) return;
+            if (scrollBox.scrollTop + scrollBox.clientHeight >= scrollBox.scrollHeight - 25) {
+              if (!hasScrolledBottom) {
+                hasScrolledBottom = true;
+                if (checkbox) {
+                  checkbox.disabled = false;
+                  checkbox.classList.remove('disabled:opacity-40', 'disabled:cursor-not-allowed');
+                }
+                if (notice) {
+                  notice.className = 'mt-3 p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-[11px] text-emerald-900 flex items-center gap-2 font-medium';
+                  notice.innerHTML = '<svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span>✅ Terms & Conditions read! Check the box below to accept.</span>';
+                }
+              }
+            }
+          }
+
+          if (scrollBox) {
+            scrollBox.addEventListener('scroll', evaluateScroll);
+            if (scrollBox.scrollHeight <= scrollBox.clientHeight + 25) {
+              evaluateScroll();
+            }
+          }
+
+          if (checkbox) {
+            checkbox.addEventListener('change', function() {
+              if (confirmBtn) {
+                if (this.checked && hasScrolledBottom) {
+                  confirmBtn.disabled = false;
+                  confirmBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                } else {
+                  confirmBtn.disabled = true;
+                  confirmBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+              }
+            });
+          }
+        },
+        preConfirm: () => {
+          const scrollBox = document.getElementById('termsScrollBox');
+          const hasScrolled = scrollBox ? (scrollBox.scrollTop + scrollBox.clientHeight >= scrollBox.scrollHeight - 25) : true;
+          const checked = document.getElementById('swal-terms-read-checkbox')?.checked;
+
+          if (!hasScrolled) {
+            Swal.showValidationMessage('📜 Please scroll down to the bottom of the Terms & Conditions before agreeing.');
+            return false;
+          }
+          if (!checked) {
+            Swal.showValidationMessage('⚠️ You must check the agreement box to accept the Terms & Conditions before proceeding.');
+            return false;
+          }
+          return true;
+        }
+      }).then((result) => {
+        if (result.isConfirmed && typeof onAcceptCallback === 'function') {
+          onAcceptCallback();
+        }
       });
+    }
+
+    function showTermsModal() {
+      showTermsAndConditionsModal(null);
     }
 
     // Fetch and Update Real-time Query Quota
@@ -873,7 +1056,7 @@ select.select2-hidden-accessible {
         if (!quota.has_key) {
           badgeEl.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-rose-50 border border-rose-200 text-[11px] font-semibold text-rose-800 shadow-2xs cursor-pointer hover:bg-rose-100 transition";
           badgeEl.innerHTML = `<span class="text-rose-600">⚠️</span><span>Set Gemini API Key</span>`;
-          badgeEl.onclick = () => openApiKeyModal(true);
+          badgeEl.onclick = () => openApiKeyFlow(true);
         } else if (remaining < 50) {
           badgeEl.className = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-rose-50 border border-rose-200 text-[11px] font-semibold text-rose-800 shadow-2xs cursor-pointer hover:bg-rose-100 transition";
           badgeEl.onclick = showTermsModal;
@@ -887,8 +1070,8 @@ select.select2-hidden-accessible {
       }
     }
 
-    // API Key Management Modal (SweetAlert2)
-    async function openApiKeyModal(isFirstTime = false) {
+    // API Key Input Modal (Step 2)
+    async function openApiKeyInputModal(isFirstTime = true) {
       let currentMasked = '';
       try {
         const res = await fetch(`http://127.0.0.1:5000/api/user/api-key`, {
@@ -898,16 +1081,17 @@ select.select2-hidden-accessible {
           const info = await res.json();
           if (info.has_key && info.masked_key) {
             currentMasked = info.masked_key;
+            state.hasApiKey = true;
           }
         }
       } catch (e) {
         console.debug('Failed to fetch API key info:', e);
       }
 
-      const titleText = isFirstTime ? 'Masukkan Google Gemini API Key Anda' : 'Kelola Google Gemini API Key';
+      const titleText = isFirstTime ? '🔑 Register Google Gemini API Key' : '⚙️ Manage Google Gemini API Key';
       const introText = isFirstTime 
-        ? 'Untuk menggunakan asisten coding <strong>S-SPARC AI</strong>, Anda wajib memasukkan Google Gemini API Key pribadi Anda. Kunci ini tersimpan aman dan digunakan untuk setiap pertanyaan pemrograman Anda.'
-        : 'Google Gemini API Key pribadi Anda saat ini: <strong class="font-mono text-teal-700">' + (currentMasked || 'Belum diatur') + '</strong>.';
+        ? 'Please enter your personal Google Gemini API Key below. This key will be securely saved for all your coding sessions in S-SPARC AI.'
+        : 'Your active Google Gemini API Key: <strong class="font-mono text-teal-700">' + (currentMasked || 'Not set') + '</strong>.';
 
       const { value: formValues } = await Swal.fire({
         title: titleText,
@@ -918,48 +1102,37 @@ select.select2-hidden-accessible {
               <label class="block font-bold text-slate-800 mb-1">Google Gemini API Key:</label>
               <input id="swal-api-key-input" type="password" placeholder="AIzaSy..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-mono focus:outline-none focus:ring-2 focus:ring-[#00A0A5] bg-white text-slate-900" autocomplete="off">
               <div class="flex items-center justify-between mt-1.5 text-[11px] text-slate-500">
-                <span>Panjang minimal 10 karakter</span>
-                <button type="button" onclick="const inp = document.getElementById('swal-api-key-input'); inp.type = (inp.type === 'password' ? 'text' : 'password');" class="text-teal-600 hover:underline font-semibold">Tampilkan / Sembunyikan</button>
+                <span>Minimum 10 characters</span>
+                <button type="button" onclick="const inp = document.getElementById('swal-api-key-input'); inp.type = (inp.type === 'password' ? 'text' : 'password');" class="text-teal-600 hover:underline font-semibold">Show / Hide Key</button>
               </div>
-            </div>
-            
-            <div class="p-2.5 bg-slate-100/90 rounded-xl border border-slate-200 text-left">
-              <label class="flex items-start gap-2 cursor-pointer text-[11px] text-slate-700 select-none">
-                <input type="checkbox" id="swal-terms-checkbox" checked class="mt-0.5 rounded border-slate-300 text-teal-600 focus:ring-teal-500">
-                <span>Saya menyetujui <a href="javascript:void(0)" onclick="showTermsModal()" class="font-bold text-teal-700 underline hover:text-teal-900">Syarat & Ketentuan Penggunaan API Key Pribadi</a> di S-SPARC / E-STRANGE.</span>
-              </label>
             </div>
 
             <div class="p-2.5 bg-teal-50 border border-teal-200 rounded-xl text-[11px] text-teal-900 flex items-center gap-2">
               <svg class="w-4 h-4 text-teal-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-              <span>Belum punya key? Dapatkan gratis di <a href="https://aistudio.google.com/app/apikey" target="_blank" class="font-bold underline text-teal-800">Google AI Studio</a>.</span>
+              <span>Don't have an API key yet? Get one for free at <a href="https://aistudio.google.com/app/apikey" target="_blank" class="font-bold underline text-teal-800">Google AI Studio</a>.</span>
             </div>
           </div>
         `,
         focusConfirm: false,
         showCancelButton: !isFirstTime,
-        confirmButtonText: 'Simpan API Key',
+        confirmButtonText: 'Save & Activate API Key',
         confirmButtonColor: '#00A0A5',
-        cancelButtonText: 'Batal',
+        cancelButtonText: 'Cancel',
         preConfirm: () => {
           const keyVal = document.getElementById('swal-api-key-input')?.value.trim();
-          const termsChecked = document.getElementById('swal-terms-checkbox')?.checked;
           if (!keyVal || keyVal.length < 10) {
-            Swal.showValidationMessage('Silakan masukkan API key yang valid (minimal 10 karakter)');
+            Swal.showValidationMessage('Please enter a valid API key (minimum 10 characters)');
             return false;
           }
-          if (!termsChecked) {
-            Swal.showValidationMessage('Anda wajib menyetujui Syarat & Ketentuan Penggunaan API Key Pribadi.');
-            return false;
-          }
-          return { apiKey: keyVal, termsAccepted: termsChecked };
+          return { apiKey: keyVal };
         }
       });
 
       if (formValues && formValues.apiKey) {
         try {
           Swal.fire({
-            title: 'Menyimpan API Key...',
+            title: 'Saving API Key...',
+            text: 'Encrypting and activating key in S-SPARC database...',
             allowOutsideClick: false,
             didOpen: () => { Swal.showLoading(); }
           });
@@ -973,37 +1146,49 @@ select.select2-hidden-accessible {
             body: JSON.stringify({ 
               api_key: formValues.apiKey, 
               provider: 'gemini',
-              terms_accepted: formValues.termsAccepted
+              terms_accepted: true
             })
           });
 
           if (!postRes.ok) {
             const errData = await postRes.json().catch(() => ({}));
-            throw new Error(errData.detail || 'Gagal menyimpan API key.');
+            throw new Error(errData.detail || 'Failed to save API key.');
           }
 
           const saveRes = await postRes.json();
+          state.hasApiKey = true;
           const apiKeyBtnText = document.getElementById('api-key-btn-text');
-          if (apiKeyBtnText) apiKeyBtnText.textContent = 'API Key (Aktif)';
+          if (apiKeyBtnText) apiKeyBtnText.textContent = 'API Key (Active)';
+          if (chatInput) {
+            chatInput.disabled = false;
+            chatInput.placeholder = "Type your programming query (min. 200 characters)...";
+          }
+          if (sendBtn) sendBtn.disabled = false;
 
           // Refresh query quota UI
           fetchQueryQuota();
 
           Swal.fire({
             icon: 'success',
-            title: 'API Key Berhasil Disimpan!',
-            text: `Kunci aktif: ${saveRes.masked_key || 'Tersimpan'}. Anda sekarang siap menggunakan S-SPARC AI.`,
+            title: 'API Key Saved & Activated!',
+            text: `Active key: ${saveRes.masked_key || 'Saved'}. You are now ready to launch S-SPARC AI Assistant.`,
             confirmButtonColor: '#00A0A5'
           });
         } catch (saveErr) {
           Swal.fire({
             icon: 'error',
-            title: 'Gagal Menyimpan API Key',
+            title: 'Failed to Save API Key',
             text: saveErr.message,
             confirmButtonColor: '#0f172a'
           });
         }
       }
+    }
+
+    function openApiKeyFlow(isFirstTime = true) {
+      showTermsAndConditionsModal(() => {
+        openApiKeyInputModal(isFirstTime);
+      });
     }
 
     async function checkUserApiKey() {
@@ -1014,11 +1199,34 @@ select.select2-hidden-accessible {
         if (res.ok) {
           const data = await res.json();
           const apiKeyBtnText = document.getElementById('api-key-btn-text');
+          state.hasApiKey = data.has_key;
           if (data.has_key) {
-            if (apiKeyBtnText) apiKeyBtnText.textContent = 'API Key (Aktif)';
+            if (apiKeyBtnText) apiKeyBtnText.textContent = 'API Key (Active)';
+            if (chatInput) {
+              chatInput.disabled = false;
+              chatInput.placeholder = "Type your programming query (min. 200 characters)...";
+            }
           } else {
             if (apiKeyBtnText) apiKeyBtnText.textContent = 'Set API Key';
-            setTimeout(() => { openApiKeyModal(true); }, 500);
+            if (chatInput) {
+              chatInput.disabled = true;
+              chatInput.placeholder = "⚠️ AI Feature Locked: Please accept Terms & Conditions and register your personal Google Gemini API Key first...";
+            }
+            if (sendBtn) sendBtn.disabled = true;
+
+            // Alert user that API Key is required to use AI
+            Swal.fire({
+              icon: 'warning',
+              title: 'Google Gemini API Key Required',
+              text: 'You have not registered your personal Google Gemini API Key. Please accept the Terms & Conditions and register your API key to access S-SPARC AI Assistant.',
+              confirmButtonText: 'Set API Key Now',
+              confirmButtonColor: '#00A0A5',
+              allowOutsideClick: false
+            }).then((result) => {
+              if (result.isConfirmed) {
+                openApiKeyFlow(true);
+              }
+            });
           }
         }
       } catch (e) {

@@ -260,21 +260,21 @@ select:not(.select2-hidden-accessible):not(.swal2-select):not(.gemini-pill-selec
   -moz-appearance: none !important;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
   background-repeat: no-repeat !important;
-  background-position: right 0.75rem center !important;
+  background-position: right 0.65rem center !important;
   background-size: 0.75rem 0.75rem !important;
-  padding: 0.45rem 2rem 0.45rem 0.95rem !important;
-  margin-right: 0.5rem !important;
+  padding: 0.35rem 1.75rem 0.35rem 0.8rem !important;
+  margin-right: 0 !important;
   background-color: #f1f5f9 !important;
-  border: 1px solid #e2e8f0 !important;
+  border: 1px solid #cbd5e1 !important;
   border-radius: 9999px !important;
   color: #334155 !important;
-  font-size: 0.775rem !important;
+  font-size: 0.75rem !important;
   font-weight: 600 !important;
   cursor: pointer !important;
   transition: all 0.15s ease !important;
   outline: none !important;
-  min-width: auto !important;
-  min-height: auto !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
   display: inline-flex !important;
   align-items: center !important;
   box-shadow: none !important;
@@ -406,7 +406,7 @@ select.select2-hidden-accessible {
 
         <!-- Chat Form Input (Gemini-Style Unified Box with C-I-O-E Pedagogical Scaffold) -->
         <form id="chat-form" class="mt-4" onsubmit="sendMessage(event)">
-          <div class="rounded-3xl border border-slate-300/90 bg-white p-4 shadow-sm focus-within:border-[#00A0A5] focus-within:ring-2 focus-within:ring-[#00A0A5]/20 transition flex flex-col justify-between">
+          <div class="rounded-3xl border border-slate-300/90 bg-white p-3.5 sm:p-4 shadow-sm focus-within:border-[#00A0A5] focus-within:ring-2 focus-within:ring-[#00A0A5]/20 transition flex flex-col justify-between overflow-hidden">
             
             <!-- C-I-O-E Metacognitive Protocol Live Indicator Bar -->
             <div class="mb-2 pb-2 border-b border-slate-100 flex items-center justify-between gap-2 text-[11px]">
@@ -420,7 +420,7 @@ select.select2-hidden-accessible {
                 <span id="cioe-badge-e" class="px-2 py-0.5 rounded-md font-mono font-semibold bg-slate-100 text-slate-400 border border-slate-200 transition" title="Error (Traceback / Expected vs Actual)">[E] Error/Trace</span>
               </div>
               <div class="flex items-center gap-2">
-                <button type="button" onclick="insertCIOETemplate()" class="text-[#00A0A5] hover:underline font-semibold text-[11px] flex items-center gap-1">
+                <button type="button" onclick="insertCIOETemplate()" class="text-[#00A0A5] hover:underline font-semibold text-[11px] flex items-center gap-1 shrink-0">
                   <span>+ Template C-I-O-E</span>
                 </button>
               </div>
@@ -428,14 +428,14 @@ select.select2-hidden-accessible {
 
             <!-- Textarea Area -->
             <label for="chat-input" class="sr-only">Write a message</label>
-            <textarea id="chat-input" rows="3" class="w-full min-h-[5.5rem] max-h-56 resize-none overflow-y-auto bg-transparent px-3 pt-1.5 pb-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 leading-relaxed font-sans" placeholder="Tuliskan pertanyaan pemrograman sesuai protokol C-I-O-E: [Context] + [Input Data] + [Output yang Diharapkan] + [Error Trace / Bug] (min. 200 karakter, maks. 2000)..." required></textarea>
+            <textarea id="chat-input" rows="2" class="w-full min-h-[4rem] max-h-48 resize-none overflow-y-auto bg-transparent px-2.5 pt-1.5 pb-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 leading-relaxed font-sans" placeholder="Tuliskan pertanyaan pemrograman sesuai protokol C-I-O-E: [Context] + [Input Data] + [Output yang Diharapkan] + [Error Trace / Bug] (min. 200 karakter, maks. 2000)..." required></textarea>
 
             <!-- Bottom Toolbar inside Gemini Box -->
-            <div class="mt-3 pt-3 px-1 border-t border-slate-100 flex items-center justify-between gap-3">
+            <div class="mt-2.5 pt-2.5 px-0.5 border-t border-slate-100 flex flex-wrap lg:flex-nowrap items-center justify-between gap-2.5">
               
-              <!-- Left Controls: Language & Mode Selector -->
-              <div class="flex items-center gap-2 flex-wrap">
-                <select id="language-select" class="gemini-pill-select" title="Pilih Bahasa Pemrograman">
+              <!-- Left Controls: Language & Mode Selector in 1 Single Line -->
+              <div class="flex items-center gap-1.5 flex-wrap sm:flex-nowrap shrink-0">
+                <select id="language-select" class="gemini-pill-select shrink-0" title="Pilih Bahasa Pemrograman">
                   <option value="">Auto-detect</option>
                   <option value="Python" selected>Python</option>
                   <option value="JavaScript">JavaScript</option>
@@ -447,23 +447,19 @@ select.select2-hidden-accessible {
                   <option value="SQL">SQL</option>
                 </select>
 
-                <select id="response-mode" class="gemini-pill-select" title="Pilih Format Respon & Taksonomi Bloom">
+                <select id="response-mode" class="gemini-pill-select shrink-0" title="Select Response Format & Bloom Taxonomy">
                   <option value="code" selected>Code (Apply C3-C4)</option>
                   <option value="summary">Concept (Understand C1-C2)</option>
                   <option value="summary_code_explanation">Scaffolding (Evaluate C5-C6)</option>
                 </select>
               </div>
 
-              <!-- Right Controls: Dynamic Query Badge, Character Counter & Circular Send Button (Gemini-style) -->
-              <div class="flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
-                <div id="query-quota-badge" onclick="showTermsModal()" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-teal-50/90 border border-teal-200/80 text-[11px] font-semibold text-teal-800 shadow-2xs cursor-pointer hover:bg-teal-100 transition" title="Klik untuk rincian kuota & syarat ketentuan">
-                  <span class="text-teal-600">⚡</span>
-                  <span>Sisa Query: <strong id="query-remaining-count" class="font-mono font-bold text-teal-900">1,500</strong> / <span id="query-limit-count" class="font-mono text-slate-500">1,500</span></span>
-                </div>
-                <div id="char-counter" class="text-[11px] font-mono text-slate-400">
+              <!-- Right Controls: Character Counter & Circular Send Button (Gemini-style) -->
+              <div class="flex items-center gap-2 flex-nowrap shrink-0 justify-end ml-auto">
+                <div id="char-counter" class="text-[11px] font-mono text-slate-400 whitespace-nowrap">
                   0 / 2000 chars (min. 200)
                 </div>
-                <button id="send-btn" type="submit" class="w-10 h-10 flex items-center justify-center rounded-full bg-[#00A0A5] text-white hover:bg-[#008589] transition shadow-sm hover:scale-105 active:scale-95 disabled:opacity-50" title="Kirim Prompt C-I-O-E (min. 200 karakter)">
+                <button id="send-btn" type="submit" class="w-10 h-10 flex items-center justify-center rounded-full bg-[#00A0A5] text-white hover:bg-[#008589] transition shadow-sm hover:scale-105 active:scale-95 disabled:opacity-50 shrink-0" title="Send C-I-O-E Prompt (min. 200 chars)">
                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
                   </svg>
@@ -488,39 +484,39 @@ select.select2-hidden-accessible {
             </span>
             <span class="text-[10px] font-bold text-teal-700 bg-teal-50 border border-teal-200 px-2 py-0.5 rounded-full uppercase">Contextual</span>
           </div>
-          <p class="text-xs text-slate-500 mb-3">Format prompt terstruktur sesuai konteks tugas <strong class="text-slate-700 font-semibold"><?= htmlspecialchars($currentAssessment) ?></strong> untuk hasil presisi & hemat kuota token:</p>
+          <p class="text-xs text-slate-500 mb-3">Structured prompt formats aligned with <strong class="text-slate-700 font-semibold"><?= htmlspecialchars($currentAssessment) ?></strong> for precise AI responses:</p>
           <div class="space-y-2 text-xs" id="quick-prompt-templates">
             
-            <button type="button" class="w-full text-left p-2.5 rounded-xl border border-slate-100 bg-slate-50 hover:bg-slate-100/80 hover:border-slate-300 transition text-slate-700 flex flex-col gap-0.5 group" data-fill="Saya sedang mengerjakan tugas <?= htmlspecialchars($currentAssessment) ?> pada mata kuliah <?= htmlspecialchars($currentCourse) ?>. Saya mengalami error berikut:&#10;&#10;[Tuliskan pesan error / masalah di sini]&#10;&#10;Berikut potongan kode saya:&#10;```python&#10;# Paste kode Anda di sini&#10;```&#10;&#10;Tolong jelaskan letak kesalahan dan berikan solusi perbaikannya.">
+            <button type="button" class="w-full text-left p-2.5 rounded-xl border border-slate-100 bg-slate-50 hover:bg-slate-100/80 hover:border-slate-300 transition text-slate-700 flex flex-col gap-0.5 group" data-fill="I am working on assignment <?= htmlspecialchars($currentAssessment) ?> for course <?= htmlspecialchars($currentCourse) ?>. I encountered the following error:&#10;&#10;[Paste error message / traceback here]&#10;&#10;Here is my code snippet:&#10;```python&#10;# Paste your code here&#10;```&#10;&#10;Please explain the root cause and provide the recommended fix.">
               <div class="flex items-center justify-between">
-                <span class="font-bold text-slate-800 group-hover:text-teal-700">Debug & Fix Error Tugas</span>
+                <span class="font-bold text-slate-800 group-hover:text-teal-700">Debug &amp; Fix Assignment Error</span>
                 <span class="text-[10px] font-mono text-slate-400 bg-slate-200/60 px-1.5 py-0.2 rounded">Diagnosis</span>
               </div>
-              <span class="text-[11px] text-slate-500">Lacak bug, root-cause error, dan perbaikan sintaksis</span>
+              <span class="text-[11px] text-slate-500">Trace bugs, root-cause errors, and syntax fixes</span>
             </button>
 
-            <button type="button" class="w-full text-left p-2.5 rounded-xl border border-slate-100 bg-slate-50 hover:bg-slate-100/80 hover:border-slate-300 transition text-slate-700 flex flex-col gap-0.5 group" data-fill="Tolong analisis efisiensi komputasi dari kode saya untuk tugas <?= htmlspecialchars($currentAssessment) ?> agar lebih hemat waktu eksekusi dan memori:&#10;&#10;```python&#10;# Paste kode Anda di sini&#10;```&#10;&#10;Jelaskan analisis Time & Space Complexity (Big-O) serta berikan versi kode yang lebih optimal.">
+            <button type="button" class="w-full text-left p-2.5 rounded-xl border border-slate-100 bg-slate-50 hover:bg-slate-100/80 hover:border-slate-300 transition text-slate-700 flex flex-col gap-0.5 group" data-fill="Please analyze the computational efficiency of my code for assignment <?= htmlspecialchars($currentAssessment) ?> to optimize execution time and memory:&#10;&#10;```python&#10;# Paste your code here&#10;```&#10;&#10;Explain the Time &amp; Space Complexity (Big-O) analysis and suggest an optimized solution version.">
               <div class="flex items-center justify-between">
-                <span class="font-bold text-slate-800 group-hover:text-teal-700">Optimasi Efisiensi & Big-O</span>
+                <span class="font-bold text-slate-800 group-hover:text-teal-700">Optimize Efficiency &amp; Big-O</span>
                 <span class="text-[10px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-1.5 py-0.2 rounded">Green Code</span>
               </div>
-              <span class="text-[11px] text-slate-500">Optimalkan runtime, kompleksitas waktu, dan konsumsi memori</span>
+              <span class="text-[11px] text-slate-500">Optimize runtime, time complexity, and memory usage</span>
             </button>
 
-            <button type="button" class="w-full text-left p-2.5 rounded-xl border border-slate-100 bg-slate-50 hover:bg-slate-100/80 hover:border-slate-300 transition text-slate-700 flex flex-col gap-0.5 group" data-fill="Buatkan skenario pengujian (test cases) lengkap untuk memvalidasi solusi tugas <?= htmlspecialchars($currentAssessment) ?> (Mata Kuliah: <?= htmlspecialchars($currentCourse) ?>).&#10;&#10;Sertakan contoh kasus normal, boundary/edge cases (nilai 0, negatif, data kosong), dan penanganan error.">
+            <button type="button" class="w-full text-left p-2.5 rounded-xl border border-slate-100 bg-slate-50 hover:bg-slate-100/80 hover:border-slate-300 transition text-slate-700 flex flex-col gap-0.5 group" data-fill="Generate comprehensive test cases to validate my solution for assignment <?= htmlspecialchars($currentAssessment) ?> (Course: <?= htmlspecialchars($currentCourse) ?>).&#10;&#10;Include normal inputs, boundary/edge cases (e.g. 0, negative values, empty data), and error handling scenarios.">
               <div class="flex items-center justify-between">
-                <span class="font-bold text-slate-800 group-hover:text-teal-700">Uji Edge Cases & Validasi</span>
+                <span class="font-bold text-slate-800 group-hover:text-teal-700">Test Edge Cases &amp; Validation</span>
                 <span class="text-[10px] font-mono text-teal-700 bg-teal-50 border border-teal-200/60 px-1.5 py-0.2 rounded">Testing</span>
               </div>
-              <span class="text-[11px] text-slate-500">Generate automated test case, batas nilai, dan edge cases</span>
+              <span class="text-[11px] text-slate-500">Generate automated test cases, boundary limits, and edge cases</span>
             </button>
 
-            <button type="button" class="w-full text-left p-2.5 rounded-xl border border-slate-100 bg-slate-50 hover:bg-slate-100/80 hover:border-slate-300 transition text-slate-700 flex flex-col gap-0.5 group" data-fill="Saya butuh panduan alur logika / pseudocode langkah demi langkah untuk menyelesaikan tugas <?= htmlspecialchars($currentAssessment) ?> pada mata kuliah <?= htmlspecialchars($currentCourse) ?>. Tolong jelaskan konsep algoritmanya tanpa memberikan full source code secara langsung agar saya bisa belajar mengimplementasikannya sendiri.">
+            <button type="button" class="w-full text-left p-2.5 rounded-xl border border-slate-100 bg-slate-50 hover:bg-slate-100/80 hover:border-slate-300 transition text-slate-700 flex flex-col gap-0.5 group" data-fill="I need step-by-step Socratic logic guidance / pseudocode to solve assignment <?= htmlspecialchars($currentAssessment) ?> for course <?= htmlspecialchars($currentCourse) ?>. Please explain the algorithmic concept without providing full solution code directly so I can implement it myself.">
               <div class="flex items-center justify-between">
-                <span class="font-bold text-slate-800 group-hover:text-teal-700">Petunjuk Algoritma (Socratic)</span>
+                <span class="font-bold text-slate-800 group-hover:text-teal-700">Algorithm Guidance (Socratic)</span>
                 <span class="text-[10px] font-mono text-amber-700 bg-amber-50 border border-amber-200/60 px-1.5 py-0.2 rounded">Guidance</span>
               </div>
-              <span class="text-[11px] text-slate-500">Bimbingan konsep pseudocode terstruktur tanpa spoiler kode</span>
+              <span class="text-[11px] text-slate-500">Structured pseudocode guidance without code spoilers</span>
             </button>
 
           </div>
@@ -530,9 +526,9 @@ select.select2-hidden-accessible {
               <span class="text-slate-600 font-medium">Token Saving Tip:</span>
               <span class="text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded">Mode: Code (only)</span>
             </div>
-            <p class="leading-relaxed">Gunakan <strong>Code (only)</strong> untuk memotong konsumsi token hingga 60% dan mempercepat respon.</p>
+            <p class="leading-relaxed">Use <strong>Code (only)</strong> mode to reduce token usage by up to 60% and speed up AI responses.</p>
             <button type="button" onclick="showPromptingTipsModal()" class="w-full py-1.5 px-3 rounded-xl border border-teal-200 bg-teal-50/80 hover:bg-teal-100/80 text-teal-800 text-sm font-semibold flex items-center justify-center gap-1.5 transition shadow-xs">
-              Buka Panduan Prompting
+              Open Prompting Guide
             </button>
           </div>
         </div>
@@ -558,7 +554,7 @@ select.select2-hidden-accessible {
               <span class="font-bold text-teal-700">Personal Gemini Key</span>
             </div>
             <div class="flex items-center justify-between">
-              <span class="text-slate-500 font-medium">Sisa Kuota Hari Ini</span>
+              <span class="text-slate-500 font-medium">Daily Quota Remaining</span>
               <span id="sidebar-query-remaining" class="font-bold text-teal-800 font-mono">1,500 req</span>
             </div>
             <div class="flex items-center justify-between">
@@ -567,7 +563,7 @@ select.select2-hidden-accessible {
             </div>
             <div class="flex items-center justify-between">
               <span class="text-slate-500 font-medium">Prompt Limits</span>
-              <span class="font-bold text-slate-900 font-mono">10 &ndash; 2,000 chars</span>
+              <span class="font-bold text-slate-900 font-mono">200 &ndash; 2,000 chars</span>
             </div>
             <div class="flex items-center justify-between">
               <span class="text-slate-500 font-medium">Gamification Impact</span>
@@ -584,22 +580,18 @@ select.select2-hidden-accessible {
               Multi-Tier Failover Guarantee
             </div>
             <p class="text-[11px] text-slate-600 leading-relaxed">
-              Jika kuota API key pribadi Anda habis atau rate limit, sistem otomatis mengalihkan permintaan ke <strong>System Key Pool</strong> atau <strong>Local Ollama (Qwen2.5-Coder 14B)</strong> tanpa henti.
+              If your personal API key reaches rate limits or encounters connectivity issues, the system automatically routes requests to <strong>System Backup Pool Keys</strong> or <strong>Local LLM Ollama (Qwen2.5-Coder 14B)</strong> without interruption.
             </p>
           </div>
 
           <div class="pt-1 space-y-2">
-            <button type="button" onclick="openApiKeyModal()" class="w-full py-2 px-3 rounded-xl border border-teal-300 bg-white hover:bg-teal-50 text-teal-800 text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-2xs">
+            <button type="button" onclick="openApiKeyFlow(false)" class="w-full py-2 px-3 rounded-xl border border-teal-300 bg-white hover:bg-teal-50 text-teal-800 text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-2xs">
               <span>🔑</span>
-              <span>Kelola Google Gemini API Key</span>
+              <span>Manage Google Gemini API Key</span>
             </button>
             <button type="button" onclick="showTermsModal()" class="w-full py-1.5 px-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-900 text-[11px] font-semibold flex items-center justify-center gap-1.5 transition">
               <span>📜</span>
-              <span>Syarat &amp; Ketentuan API Pribadi</span>
-            </button>
-          </div>
-              <span>🔑</span>
-              <span>Kelola Google Gemini API Key</span>
+              <span>API Key Terms &amp; Conditions</span>
             </button>
           </div>
         </div>
@@ -639,24 +631,41 @@ select.select2-hidden-accessible {
       });
     }
 
+    function getDefaultGreeting() {
+      const userName = '<?= htmlspecialchars($sso_name, ENT_QUOTES) ?>' || 'Student';
+      const asmtName = '<?= htmlspecialchars($currentAssessment, ENT_QUOTES) ?>' || 'Active Assessment';
+      const courseName = '<?= htmlspecialchars($currentCourse, ENT_QUOTES) ?>' || 'Active Course';
+      
+      return {
+        sender: 'bot',
+        text: `Hello **${userName}**! Welcome to **S-SPARC AI Assistant**.\n\nYou are currently working on assessment **${asmtName}** in **${courseName}**.\n\nFeel free to ask programming questions, request error traceback debugging, or get step-by-step algorithmic guidance!`,
+        meta: 'S-SPARC AI Context Verified'
+      };
+    }
+
     function loadMessages() {
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
-        if (!saved) {
-          state.messages = [
-            {
-              sender: 'bot',
-              text: 'Hello **<?= htmlspecialchars($sso_name) ?>**! You are working on assessment: **<?= htmlspecialchars($currentAssessment) ?>** in course **<?= htmlspecialchars($currentCourse) ?>**.\n\nFeel free to ask programming questions, request error debugging, or get algorithmic guidance.',
-              meta: 'S-SPARC AI context verified'
-            }
-          ];
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            state.messages = parsed.slice(-200);
+          } else {
+            state.messages = [getDefaultGreeting()];
+          }
         } else {
-          state.messages = JSON.parse(saved).slice(-200);
+          state.messages = [getDefaultGreeting()];
         }
-        renderMessages();
       } catch (e) {
         console.warn('Failed to load messages', e);
+        state.messages = [getDefaultGreeting()];
       }
+
+      if (!state.messages || state.messages.length === 0) {
+        state.messages = [getDefaultGreeting()];
+      }
+
+      renderMessages();
     }
 
     function persistMessages() {
@@ -672,8 +681,18 @@ select.select2-hidden-accessible {
     }
 
     function renderMessages() {
-      chatWindow.innerHTML = '';
-      state.messages.forEach(msg => {
+      const targetWindow = document.getElementById('chat-window');
+      if (!targetWindow) {
+        console.warn('Target #chat-window element not found in DOM');
+        return;
+      }
+
+      if (!state.messages || state.messages.length === 0) {
+        state.messages = [getDefaultGreeting()];
+      }
+
+      targetWindow.innerHTML = '';
+      state.messages.forEach((msg, idx) => {
         const isUser = msg.sender === 'user';
         const row = document.createElement('div');
         row.className = isUser ? 'flex justify-end items-start gap-2 user-bubble' : 'flex justify-start items-start gap-2';
@@ -683,22 +702,44 @@ select.select2-hidden-accessible {
           (isUser ? 'bg-slate-800 text-white' : 'bg-white text-slate-700 border border-slate-200');
         avatar.textContent = isUser ? 'You' : 'AI';
 
-        const bubble = document.createElement('div');
-        bubble.className = isUser
-          ? 'max-w-2xl rounded-2xl bg-[#00A0A5] text-white px-4 py-3 shadow-xs text-sm leading-relaxed'
-          : 'max-w-2xl rounded-2xl bg-white text-slate-900 px-4 py-3 shadow-xs border border-slate-200 text-sm leading-relaxed';
+        const isDb = !isUser && msg.meta && (msg.meta.toLowerCase().includes('cache') || msg.meta.toLowerCase().includes('vector') || msg.meta.toLowerCase().includes('database') || msg.meta.toLowerCase().includes('retrieved'));
 
-        if (!isUser && msg.meta) {
-          const meta = document.createElement('div');
-          meta.className = 'text-[11px] text-slate-500 mb-1.5 flex items-center gap-2 font-medium';
-          meta.textContent = msg.meta;
-          bubble.appendChild(meta);
+        const bubble = document.createElement('div');
+        if (isUser) {
+          bubble.className = 'max-w-2xl rounded-2xl bg-teal-100/75 text-slate-900 px-4 py-3 shadow-xs border border-teal-300/80 text-sm leading-relaxed';
+        } else {
+          bubble.className = 'max-w-2xl rounded-2xl bg-white text-slate-900 px-4 py-3 shadow-xs border border-slate-200/90 text-sm leading-relaxed';
+        }
+
+        if (isDb) {
+          const dbHeader = document.createElement('div');
+          dbHeader.className = 'text-[11px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg mb-2 inline-flex items-center gap-1.5';
+          dbHeader.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Zero-Token Vector Semantic Cache (Retrieved from DB)';
+          bubble.appendChild(dbHeader);
         }
 
         const textContent = document.createElement('div');
         textContent.className = 'chat-bubble-content';
         textContent.innerHTML = formatMessageContent(msg.text, isUser);
         bubble.appendChild(textContent);
+
+        if (isDb) {
+          const promptText = msg.prompt || (state.messages[idx - 1] && state.messages[idx - 1].sender === 'user' ? state.messages[idx - 1].text : '');
+          if (promptText) {
+            const dbFooter = document.createElement('div');
+            dbFooter.className = 'mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-end';
+            
+            const forceBtn = document.createElement('button');
+            forceBtn.type = 'button';
+            forceBtn.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-teal-600 hover:bg-teal-700 text-white transition text-xs font-medium shadow-2xs cursor-pointer active:scale-95';
+            forceBtn.innerHTML = '<span>Re-generate with Gemini Cloud</span>';
+            forceBtn.onclick = function() {
+              regenerateFromCloud(promptText);
+            };
+            dbFooter.appendChild(forceBtn);
+            bubble.appendChild(dbFooter);
+          }
+        }
 
         if (isUser) {
           row.appendChild(bubble);
@@ -708,21 +749,21 @@ select.select2-hidden-accessible {
           row.appendChild(bubble);
         }
 
-        chatWindow.appendChild(row);
+        targetWindow.appendChild(row);
       });
 
-      chatWindow.scrollTop = chatWindow.scrollHeight;
+      targetWindow.scrollTop = targetWindow.scrollHeight;
     }
 
     function formatMessageContent(rawText, isUser = false) {
       if (!rawText) return '';
-      let textToParse = rawText.trim();
+      let textToParse = String(rawText).trim();
       
       if (isUser) {
         if (!textToParse.includes('```')) {
           return escapeHtml(textToParse)
             .replace(/\n/g, '<br/>')
-            .replace(/`([^`]+)`/g, '<code class="bg-black/20 px-1.5 py-0.5 rounded text-xs font-mono text-white">$1</code>');
+            .replace(/`([^`]+)`/g, '<code class="bg-slate-800 text-teal-300 px-2 py-0.5 rounded text-xs font-mono font-bold border border-slate-700 shadow-2xs">$1</code>');
         }
       }
 
@@ -734,17 +775,58 @@ select.select2-hidden-accessible {
       }
 
       let html = '';
-      if (typeof marked !== 'undefined' && marked.parse) {
+      if (typeof marked !== 'undefined') {
         try {
-          const renderer = new marked.Renderer();
-          renderer.code = function(arg1, arg2) {
-            let codeText = (typeof arg1 === 'object' && arg1 !== null) ? (arg1.text || '') : (typeof arg1 === 'string' ? arg1 : '');
-            let langName = (typeof arg1 === 'object' && arg1 !== null) ? (arg1.lang || 'python') : (typeof arg2 === 'string' && arg2 ? arg2 : 'python');
+          if (typeof marked.parse === 'function') {
+            html = marked.parse(textToParse, { breaks: true, gfm: true });
+          } else if (typeof marked === 'function') {
+            html = marked(textToParse);
+          } else {
+            html = escapeHtml(textToParse).replace(/\n/g, '<br/>');
+          }
+        } catch (eMarked) {
+          console.warn('Marked parsing error:', eMarked);
+          html = escapeHtml(textToParse).replace(/\n/g, '<br/>');
+        }
+      } else {
+        html = escapeHtml(textToParse).replace(/\n/g, '<br/>');
+      }
 
+      if (typeof html !== 'string') {
+        html = escapeHtml(textToParse).replace(/\n/g, '<br/>');
+      }
+
+      if (typeof DOMPurify !== 'undefined' && typeof DOMPurify.sanitize === 'function') {
+        try {
+          html = DOMPurify.sanitize(html, {
+            ADD_TAGS: ['button', 'code', 'pre', 'svg', 'path', 'strong', 'em', 'h1', 'h2', 'h3', 'h4', 'ul', 'ol', 'li', 'blockquote', 'p', 'br', 'hr', 'div', 'span', 'mark'],
+            ADD_ATTR: ['class', 'style', 'viewBox', 'fill', 'stroke', 'd', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', 'data-lang']
+          });
+        } catch (ePurify) {
+          console.warn('DOMPurify sanitize error:', ePurify);
+        }
+      }
+
+      if (html.includes('<pre><code')) {
+        try {
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = html;
+          const codeBlocks = tempDiv.querySelectorAll('pre code');
+          codeBlocks.forEach(codeEl => {
+            const pre = codeEl.parentElement;
+            if (!pre || (pre.parentElement && pre.parentElement.classList.contains('code-block-container'))) return;
+
+            let langName = 'code';
+            const matchClass = (codeEl.className || '').match(/language-(\w+)/);
+            if (matchClass) {
+              langName = matchClass[1];
+            }
+
+            let codeText = codeEl.textContent || codeEl.innerText || '';
             let highlightedCode = '';
             if (typeof hljs !== 'undefined') {
               try {
-                if (langName && hljs.getLanguage(langName)) {
+                if (langName !== 'code' && hljs.getLanguage(langName)) {
                   highlightedCode = hljs.highlight(codeText.trim(), { language: langName }).value;
                 } else {
                   highlightedCode = hljs.highlightAuto(codeText.trim()).value;
@@ -756,41 +838,36 @@ select.select2-hidden-accessible {
               highlightedCode = escapeHtml(codeText.trim());
             }
 
-            return `
-              <div class="code-block-container not-prose">
-                <div class="code-block-header">
-                  <div class="flex items-center gap-2">
-                    <div class="flex items-center gap-1.5">
-                      <span class="w-2.5 h-2.5 rounded-full bg-rose-500/80 inline-block"></span>
-                      <span class="w-2.5 h-2.5 rounded-full bg-amber-500/80 inline-block"></span>
-                      <span class="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block"></span>
-                    </div>
-                    <span class="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider bg-teal-500/10 text-teal-400 border border-teal-500/20 uppercase font-mono">${escapeHtml(langName)}</span>
+            const container = document.createElement('div');
+            container.className = 'code-block-container not-prose my-3 rounded-xl overflow-hidden border border-slate-800 bg-[#0f172a] shadow-md';
+            container.innerHTML = `
+              <div class="code-block-header flex items-center justify-between px-3.5 py-2 bg-[#1e293b] border-b border-slate-700 select-none">
+                <div class="flex items-center gap-2">
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-2.5 h-2.5 rounded-full bg-rose-500/80 inline-block"></span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500/80 inline-block"></span>
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block"></span>
                   </div>
-                  <button type="button" class="copy-code-btn">
-                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                    </svg>
-                    <span>Copy</span>
-                  </button>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold tracking-wider bg-teal-500/10 text-teal-400 border border-teal-500/20 uppercase font-mono">${escapeHtml(langName)}</span>
                 </div>
-                <pre class="code-block-body"><code class="hljs language-${escapeHtml(langName)}">${highlightedCode}</code></pre>
+                <button type="button" class="copy-code-btn inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-700 text-slate-200 hover:bg-slate-600 hover:text-white text-xs font-semibold transition border border-slate-600">
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                  </svg>
+                  <span>Copy</span>
+                </button>
               </div>
+              <pre class="code-block-body p-3.5 font-mono text-xs leading-relaxed bg-[#0b0f19] text-slate-200 overflow-x-auto m-0"><code class="hljs language-${escapeHtml(langName)}">${highlightedCode}</code></pre>
             `;
-          };
-          html = marked.parse(textToParse, { renderer: renderer, breaks: true, gfm: true });
-        } catch (eMarked) {
-          html = escapeHtml(textToParse).replace(/\n/g, '<br/>');
-        }
-      } else {
-        html = escapeHtml(textToParse).replace(/\n/g, '<br/>');
-      }
 
-      if (typeof DOMPurify !== 'undefined' && DOMPurify.sanitize) {
-        html = DOMPurify.sanitize(html, {
-          ADD_TAGS: ['button', 'code', 'pre', 'svg', 'path', 'strong', 'em', 'h1', 'h2', 'h3', 'h4', 'ul', 'ol', 'li', 'blockquote', 'p', 'br', 'hr', 'div', 'span'],
-          ADD_ATTR: ['class', 'style', 'viewbox', 'fill', 'stroke', 'd', 'stroke-width', 'stroke-linecap', 'stroke-linejoin']
-        });
+            if (pre.parentNode) {
+              pre.parentNode.replaceChild(container, pre);
+            }
+          });
+          html = tempDiv.innerHTML;
+        } catch (ePostProcess) {
+          console.warn('Post process code blocks error:', ePostProcess);
+        }
       }
 
       return html;
@@ -839,8 +916,16 @@ Kode saya mengalami infinite loop saat 'left == right'. Mohon jelaskan logika pe
       chatInput.focus();
     }
 
+    function autoResizeTextarea() {
+      if (!chatInput) return;
+      chatInput.style.height = 'auto';
+      const newHeight = Math.min(chatInput.scrollHeight, 180);
+      chatInput.style.height = newHeight + 'px';
+    }
+
     function validatePromptInput() {
       if (!chatInput || !sendBtn) return;
+      autoResizeTextarea();
       const text = chatInput.value.trim();
       const len = text.length;
 
@@ -869,8 +954,8 @@ Kode saya mengalami infinite loop saat 'left == right'. Mohon jelaskan logika pe
       chatInput.addEventListener('keyup', validatePromptInput);
     }
 
-    // Cooldown Rate-Limit Timer (60s)
-    function startCooldown(seconds = 60) {
+    // Cooldown Rate-Limit Timer (15s)
+    function startCooldown(seconds = 15) {
       state.inCooldown = true;
       let remaining = Math.max(1, Math.floor(seconds));
 
@@ -905,68 +990,155 @@ Kode saya mengalami infinite loop saat 'left == right'. Mohon jelaskan logika pe
       }, 1000);
     }
 
-    // Terms and Conditions Modal Dialog
-    function showTermsModal() {
+    // Terms and Conditions Modal Dialog (Step 1)
+    function showTermsAndConditionsModal(onAcceptCallback) {
       Swal.fire({
-        title: '📜 Syarat & Ketentuan Penggunaan API Key Pribadi',
+        title: '📜 Terms & Conditions — Personal API Key Usage',
         html: `
-          <div class="text-left text-xs leading-relaxed space-y-3.5 text-slate-700 max-h-[60vh] overflow-y-auto pr-1">
+          <div class="text-left text-xs leading-relaxed space-y-3.5 text-slate-700 max-h-[55vh] overflow-y-auto pr-2 border border-slate-200 rounded-xl p-3.5 bg-slate-50/50" id="termsScrollBox">
             <div class="p-3 bg-teal-50/90 border border-teal-200 rounded-xl text-[11px] text-teal-900 font-medium">
-              S-SPARC AI mengadopsi model <em>Bring Your Own Key (BYOK)</em> Google Gemini Flash untuk menjamin kebebasan eksplorasi coding mahasiswa secara mandiri tanpa pemotongan poin gamifikasi.
+              S-SPARC AI operates on a <em>Bring Your Own Key (BYOK)</em> model using Google Gemini Flash Lite to grant full coding exploration freedom with 0 gamification point deductions.
             </div>
 
             <div class="space-y-3">
-              <div class="p-2.5 rounded-xl border border-slate-200 bg-slate-50">
+              <div class="p-2.5 rounded-xl border border-slate-200 bg-white">
                 <div class="font-bold text-slate-900 flex items-center gap-1.5 mb-1 text-xs">
-                  <span class="text-teal-600">1.</span> Kerahasiaan & Keamanan Data (Data Privacy)
+                  <span class="text-teal-600">1.</span> Data Privacy & Confidentiality
                 </div>
                 <p class="text-[11px] text-slate-600">
-                  Google Gemini API Key Anda disimpan secara terenkripsi dan terisolasi di database. Kunci ini semata-mata digunakan untuk memproses permintaan inferensi asisten coding pada akun Anda dan tidak pernah dibagikan kepada pihak ketiga manapun.
+                  Your Google Gemini API Key is stored securely with encryption in our database. It is exclusively used to process AI coding assistance requests for your account and is never shared with third parties.
                 </p>
               </div>
 
-              <div class="p-2.5 rounded-xl border border-slate-200 bg-slate-50">
+              <div class="p-2.5 rounded-xl border border-slate-200 bg-white">
                 <div class="font-bold text-slate-900 flex items-center gap-1.5 mb-1 text-xs">
-                  <span class="text-teal-600">2.</span> Tanggung Jawab Kepemilikan Kunci
+                  <span class="text-teal-600">2.</span> Ownership & Responsibility
                 </div>
                 <p class="text-[11px] text-slate-600">
-                  Pengguna bertanggung jawab penuh atas API key pribadi yang didaftarkan melalui Google AI Studio. Dilarang memasukkan kunci milik orang lain, menyalahgunakan kuota untuk aktivitas non-akademik, atau mengeksekusi prompt yang melanggar hukum/kebijakan Google Cloud.
+                  You are solely responsible for the personal API key registered from Google AI Studio. Misuse of API keys, sharing keys, or executing prompts violating Google Cloud policies is strictly prohibited.
                 </p>
               </div>
 
-              <div class="p-2.5 rounded-xl border border-slate-200 bg-slate-50">
+              <div class="p-2.5 rounded-xl border border-slate-200 bg-white">
                 <div class="font-bold text-slate-900 flex items-center gap-1.5 mb-1 text-xs">
-                  <span class="text-teal-600">3.</span> Alokasi Kuota & Batasan Bebas Biaya (Free Tier Limits)
+                  <span class="text-teal-600">3.</span> Free Tier Allocation & Rate Limits
                 </div>
                 <p class="text-[11px] text-slate-600">
-                  Paket gratis Google Gemini 2.0/2.5 Flash Free Tier mengalokasikan hingga <strong>1.500 requests per hari (RPD)</strong> dan <strong>15 requests per menit (RPM)</strong>. S-SPARC memberlakukan aturan jeda rate limit 1 menit (60 detik) per prompt untuk menjaga stabilitas akun dan melatih kebiasaan berpikir komputasional mandiri.
+                  Google Gemini 3.5 Flash Lite Free Tier provides up to <strong>1,500 Requests Per Day (RPD)</strong> and <strong>15 Requests Per Minute (RPM)</strong>. S-SPARC enforces a 1-minute (60s) cooldown per prompt to maintain system stability and foster independent problem-solving skills.
                 </p>
               </div>
 
-              <div class="p-2.5 rounded-xl border border-slate-200 bg-slate-50">
+              <div class="p-2.5 rounded-xl border border-slate-200 bg-white">
                 <div class="font-bold text-slate-900 flex items-center gap-1.5 mb-1 text-xs">
-                  <span class="text-teal-600">4.</span> Jaminan Multi-Tier Failover
+                  <span class="text-teal-600">4.</span> Multi-Tier Failover Guarantee
                 </div>
                 <p class="text-[11px] text-slate-600">
-                  Jika kuota API key pribadi Anda mengalami limit atau gangguan koneksi cloud, sistem S-SPARC secara transparan mengalihkan eksekusi ke <em>System Pool Key</em> cadangan atau <em>Local LLM Ollama</em> agar proses belajar Anda tidak terputus.
+                  If your personal key reaches rate limits or encounters connectivity issues, S-SPARC transparently routes execution to System Backup Pool Keys or Local LLM Ollama to ensure uninterrupted learning.
                 </p>
               </div>
 
-              <div class="p-2.5 rounded-xl border border-slate-200 bg-slate-50">
+              <div class="p-2.5 rounded-xl border border-slate-200 bg-white">
                 <div class="font-bold text-slate-900 flex items-center gap-1.5 mb-1 text-xs">
-                  <span class="text-teal-600">5.</span> Integritas Akademik & Etika Penggunaan AI
+                  <span class="text-teal-600">5.</span> Academic Integrity & AI Ethics
                 </div>
                 <p class="text-[11px] text-slate-600">
-                  Asisten AI ini difungsikan sebagai tutor interaktif (membantu diagnosis pesan error, memahami alur algoritma, dan mengoptimalkan efisiensi kode). Mahasiswa tetap wajib memahami dan mampu mempertanggungjawabkan setiap baris kode solusi yang diserahkan dalam tugas E-STRANGE.
+                  S-SPARC AI acts as an interactive tutor (helping diagnose error tracebacks, understand algorithm logic, and optimize code). Students remain fully responsible for understanding and explaining every line of code submitted in E-STRANGE assessments.
                 </p>
               </div>
             </div>
+          <div id="readingProgressNotice" class="mt-3 p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-900 flex items-center gap-2 font-medium">
+            <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <span>📜 <strong>Scroll Required:</strong> Please scroll down to the bottom of the Terms box to read all terms and enable agreement.</span>
+          </div>
+
+          <div class="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-left">
+            <label class="flex items-start gap-2 cursor-pointer text-[11px] text-slate-800 select-none font-medium">
+              <input type="checkbox" id="swal-terms-read-checkbox" disabled class="mt-0.5 rounded border-slate-300 text-teal-600 focus:ring-teal-500 shrink-0 disabled:opacity-40 disabled:cursor-not-allowed">
+              <span>I have read, understood, and <strong>agree to all Terms & Conditions</strong> for using a personal Google Gemini API key in S-SPARC.</span>
+            </label>
           </div>
         `,
-        confirmButtonText: 'Saya Mengerti & Setuju',
+        width: '580px',
+        showCancelButton: true,
+        confirmButtonText: 'I Agree & Proceed to API Key &rarr;',
         confirmButtonColor: '#00A0A5',
-        width: '580px'
+        cancelButtonText: 'Cancel',
+        focusConfirm: false,
+        didOpen: (modal) => {
+          const scrollBox = modal.querySelector('#termsScrollBox');
+          const checkbox = modal.querySelector('#swal-terms-read-checkbox');
+          const notice = modal.querySelector('#readingProgressNotice');
+          const confirmBtn = Swal.getConfirmButton();
+
+          if (confirmBtn) {
+            confirmBtn.disabled = true;
+            confirmBtn.classList.add('opacity-50', 'cursor-not-allowed');
+          }
+
+          let hasScrolledBottom = false;
+
+          function evaluateScroll() {
+            if (!scrollBox) return;
+            if (scrollBox.scrollTop + scrollBox.clientHeight >= scrollBox.scrollHeight - 25) {
+              if (!hasScrolledBottom) {
+                hasScrolledBottom = true;
+                if (checkbox) {
+                  checkbox.disabled = false;
+                  checkbox.classList.remove('disabled:opacity-40', 'disabled:cursor-not-allowed');
+                }
+                if (notice) {
+                  notice.className = 'mt-3 p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-[11px] text-emerald-900 flex items-center gap-2 font-medium';
+                  notice.innerHTML = '<svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span>✅ Terms & Conditions read! Check the box below to accept.</span>';
+                }
+              }
+            }
+          }
+
+          if (scrollBox) {
+            scrollBox.addEventListener('scroll', evaluateScroll);
+            if (scrollBox.scrollHeight <= scrollBox.clientHeight + 25) {
+              evaluateScroll();
+            }
+          }
+
+          if (checkbox) {
+            checkbox.addEventListener('change', function() {
+              if (confirmBtn) {
+                if (this.checked && hasScrolledBottom) {
+                  confirmBtn.disabled = false;
+                  confirmBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                } else {
+                  confirmBtn.disabled = true;
+                  confirmBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+              }
+            });
+          }
+        },
+        preConfirm: () => {
+          const scrollBox = document.getElementById('termsScrollBox');
+          const hasScrolled = scrollBox ? (scrollBox.scrollTop + scrollBox.clientHeight >= scrollBox.scrollHeight - 25) : true;
+          const checked = document.getElementById('swal-terms-read-checkbox')?.checked;
+
+          if (!hasScrolled) {
+            Swal.showValidationMessage('📜 Please scroll down to the bottom of the Terms & Conditions before agreeing.');
+            return false;
+          }
+          if (!checked) {
+            Swal.showValidationMessage('⚠️ You must check the agreement box to accept the Terms & Conditions before proceeding.');
+            return false;
+          }
+          return true;
+        }
+      }).then((result) => {
+        if (result.isConfirmed && typeof onAcceptCallback === 'function') {
+          onAcceptCallback();
+        }
       });
+    }
+
+    function showTermsModal() {
+      showTermsAndConditionsModal(null);
     }
 
     // Fetch and Update Real-time Query Quota
@@ -1002,7 +1174,7 @@ Kode saya mengalami infinite loop saat 'left == right'. Mohon jelaskan logika pe
         if (!quota.has_key) {
           badgeEl.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-50 border border-rose-200 text-[11px] font-semibold text-rose-800 shadow-2xs cursor-pointer hover:bg-rose-100 transition";
           badgeEl.innerHTML = `<span class="text-rose-600">⚠️</span><span>Set Gemini API Key</span>`;
-          badgeEl.onclick = () => openApiKeyModal(true);
+          badgeEl.onclick = () => openApiKeyFlow(true);
         } else if (remaining < 50) {
           badgeEl.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-50 border border-rose-200 text-[11px] font-semibold text-rose-800 shadow-2xs cursor-pointer hover:bg-rose-100 transition";
           badgeEl.onclick = showTermsModal;
@@ -1016,8 +1188,8 @@ Kode saya mengalami infinite loop saat 'left == right'. Mohon jelaskan logika pe
       }
     }
 
-    // API Key Management Modal (SweetAlert2)
-    async function openApiKeyModal(isFirstTime = false) {
+    // API Key Input Modal (Step 2)
+    async function openApiKeyInputModal(isFirstTime = true) {
       let currentMasked = '';
       try {
         const res = await fetch(`${FASTAPI_URL}/api/user/api-key`, {
@@ -1034,10 +1206,10 @@ Kode saya mengalami infinite loop saat 'left == right'. Mohon jelaskan logika pe
         console.debug('Failed to fetch API key info:', e);
       }
 
-      const titleText = isFirstTime ? 'Masukkan Google Gemini API Key Anda' : 'Kelola Google Gemini API Key';
+      const titleText = isFirstTime ? '🔑 Register Google Gemini API Key' : '⚙️ Manage Google Gemini API Key';
       const introText = isFirstTime 
-        ? 'Untuk menggunakan asisten coding <strong>S-SPARC AI</strong>, Anda wajib memasukkan Google Gemini API Key pribadi Anda. Kunci ini tersimpan aman dan digunakan untuk setiap pertanyaan pemrograman Anda.'
-        : 'Google Gemini API Key pribadi Anda saat ini: <strong class="font-mono text-teal-700">' + (currentMasked || 'Belum diatur') + '</strong>.';
+        ? 'Please enter your personal Google Gemini API Key below. This key will be securely saved for all your coding sessions in S-SPARC AI.'
+        : 'Your active Google Gemini API Key: <strong class="font-mono text-teal-700">' + (currentMasked || 'Not set') + '</strong>.';
 
       const { value: formValues } = await Swal.fire({
         title: titleText,
@@ -1048,48 +1220,37 @@ Kode saya mengalami infinite loop saat 'left == right'. Mohon jelaskan logika pe
               <label class="block font-bold text-slate-800 mb-1">Google Gemini API Key:</label>
               <input id="swal-api-key-input" type="password" placeholder="AIzaSy..." class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-mono focus:outline-none focus:ring-2 focus:ring-[#00A0A5] bg-white text-slate-900" autocomplete="off">
               <div class="flex items-center justify-between mt-1.5 text-[11px] text-slate-500">
-                <span>Panjang minimal 10 karakter</span>
-                <button type="button" onclick="const inp = document.getElementById('swal-api-key-input'); inp.type = (inp.type === 'password' ? 'text' : 'password');" class="text-teal-600 hover:underline font-semibold">Tampilkan / Sembunyikan</button>
+                <span>Minimum 10 characters</span>
+                <button type="button" onclick="const inp = document.getElementById('swal-api-key-input'); inp.type = (inp.type === 'password' ? 'text' : 'password');" class="text-teal-600 hover:underline font-semibold">Show / Hide Key</button>
               </div>
-            </div>
-            
-            <div class="p-2.5 bg-slate-100/90 rounded-xl border border-slate-200 text-left">
-              <label class="flex items-start gap-2 cursor-pointer text-[11px] text-slate-700 select-none">
-                <input type="checkbox" id="swal-terms-checkbox" checked class="mt-0.5 rounded border-slate-300 text-teal-600 focus:ring-teal-500">
-                <span>Saya menyetujui <a href="javascript:void(0)" onclick="showTermsModal()" class="font-bold text-teal-700 underline hover:text-teal-900">Syarat & Ketentuan Penggunaan API Key Pribadi</a> di S-SPARC / E-STRANGE.</span>
-              </label>
             </div>
 
             <div class="p-2.5 bg-teal-50 border border-teal-200 rounded-xl text-[11px] text-teal-900 flex items-center gap-2">
               <svg class="w-4 h-4 text-teal-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-              <span>Belum punya key? Dapatkan gratis di <a href="https://aistudio.google.com/app/apikey" target="_blank" class="font-bold underline text-teal-800">Google AI Studio</a>.</span>
+              <span>Don't have an API key yet? Get one for free at <a href="https://aistudio.google.com/app/apikey" target="_blank" class="font-bold underline text-teal-800">Google AI Studio</a>.</span>
             </div>
           </div>
         `,
         focusConfirm: false,
         showCancelButton: !isFirstTime,
-        confirmButtonText: 'Simpan API Key',
+        confirmButtonText: 'Save & Activate API Key',
         confirmButtonColor: '#00A0A5',
-        cancelButtonText: 'Batal',
+        cancelButtonText: 'Cancel',
         preConfirm: () => {
           const keyVal = document.getElementById('swal-api-key-input')?.value.trim();
-          const termsChecked = document.getElementById('swal-terms-checkbox')?.checked;
           if (!keyVal || keyVal.length < 10) {
-            Swal.showValidationMessage('Silakan masukkan API key yang valid (minimal 10 karakter)');
+            Swal.showValidationMessage('Please enter a valid API key (minimum 10 characters)');
             return false;
           }
-          if (!termsChecked) {
-            Swal.showValidationMessage('Anda wajib menyetujui Syarat & Ketentuan Penggunaan API Key Pribadi.');
-            return false;
-          }
-          return { apiKey: keyVal, termsAccepted: termsChecked };
+          return { apiKey: keyVal };
         }
       });
 
       if (formValues && formValues.apiKey) {
         try {
           Swal.fire({
-            title: 'Menyimpan API Key...',
+            title: 'Saving API Key...',
+            text: 'Encrypting and activating key in S-SPARC database...',
             allowOutsideClick: false,
             didOpen: () => { Swal.showLoading(); }
           });
@@ -1103,37 +1264,48 @@ Kode saya mengalami infinite loop saat 'left == right'. Mohon jelaskan logika pe
             body: JSON.stringify({ 
               api_key: formValues.apiKey, 
               provider: 'gemini',
-              terms_accepted: formValues.termsAccepted
+              terms_accepted: true
             })
           });
 
           if (!postRes.ok) {
             const errData = await postRes.json().catch(() => ({}));
-            throw new Error(errData.detail || 'Gagal menyimpan API key.');
+            throw new Error(errData.detail || 'Failed to save API key.');
           }
 
           const saveRes = await postRes.json();
           state.hasApiKey = true;
-          if (apiKeyBtnText) apiKeyBtnText.textContent = 'API Key (Aktif)';
+          if (apiKeyBtnText) apiKeyBtnText.textContent = 'API Key (Active)';
+          if (chatInput) {
+            chatInput.disabled = false;
+            chatInput.placeholder = "Type your programming query (min. 200 characters)...";
+          }
+          if (sendBtn) sendBtn.disabled = false;
 
           // Refresh query quota UI
           fetchQueryQuota();
 
           Swal.fire({
             icon: 'success',
-            title: 'API Key Berhasil Disimpan!',
-            text: `Kunci aktif: ${saveRes.masked_key || 'Tersimpan'}. Anda sekarang siap menggunakan S-SPARC AI.`,
+            title: 'API Key Saved & Activated!',
+            text: `Active key: ${saveRes.masked_key || 'Saved'}. You are now ready to launch S-SPARC AI Assistant.`,
             confirmButtonColor: '#00A0A5'
           });
         } catch (saveErr) {
           Swal.fire({
             icon: 'error',
-            title: 'Gagal Menyimpan API Key',
+            title: 'Failed to Save API Key',
             text: saveErr.message,
             confirmButtonColor: '#0f172a'
           });
         }
       }
+    }
+
+    function openApiKeyFlow(isFirstTime = true) {
+      showTermsAndConditionsModal(() => {
+        openApiKeyInputModal(isFirstTime);
+      });
     }
 
     async function checkUserApiKey() {
@@ -1145,11 +1317,32 @@ Kode saya mengalami infinite loop saat 'left == right'. Mohon jelaskan logika pe
           const data = await res.json();
           state.hasApiKey = data.has_key;
           if (data.has_key) {
-            if (apiKeyBtnText) apiKeyBtnText.textContent = 'API Key (Aktif)';
+            if (apiKeyBtnText) apiKeyBtnText.textContent = 'API Key (Active)';
+            if (chatInput) {
+              chatInput.disabled = false;
+              chatInput.placeholder = "Type your programming query (min. 200 characters)...";
+            }
           } else {
             if (apiKeyBtnText) apiKeyBtnText.textContent = 'Set API Key';
-            // Prompt user on first use
-            setTimeout(() => { openApiKeyModal(true); }, 500);
+            if (chatInput) {
+              chatInput.disabled = true;
+              chatInput.placeholder = "⚠️ AI Feature Locked: Please accept Terms & Conditions and register your personal Google Gemini API Key first...";
+            }
+            if (sendBtn) sendBtn.disabled = true;
+
+            // Alert user that API Key is required to use AI
+            Swal.fire({
+              icon: 'warning',
+              title: 'Google Gemini API Key Required',
+              text: 'You have not registered your personal Google Gemini API Key. Please accept the Terms & Conditions and register your API key to access S-SPARC AI Assistant.',
+              confirmButtonText: 'Set API Key Now',
+              confirmButtonColor: '#00A0A5',
+              allowOutsideClick: false
+            }).then((result) => {
+              if (result.isConfirmed) {
+                openApiKeyFlow(true);
+              }
+            });
           }
         }
       } catch (e) {
@@ -1159,13 +1352,27 @@ Kode saya mengalami infinite loop saat 'left == right'. Mohon jelaskan logika pe
 
     async function sendMessage(e) {
       if (e) e.preventDefault();
+
+      if (!state.hasApiKey) {
+        Swal.fire({
+          icon: 'error',
+          title: 'AI Access Denied',
+          text: 'You have not registered your personal Google Gemini API Key. Please accept the Terms & Conditions and register your API key first to use S-SPARC AI Assistant.',
+          confirmButtonText: 'Set API Key Now',
+          confirmButtonColor: '#00A0A5'
+        }).then(() => {
+          openApiKeyFlow(true);
+        });
+        return;
+      }
+
       const prompt = chatInput.value.trim();
       
       if (!prompt || prompt.length < 200) {
         Swal.fire({
           icon: 'warning',
-          title: 'Prompt Terlalu Pendek',
-          text: 'Harap masukkan pertanyaan pemrograman minimal 200 karakter dengan menyertakan konteks masalah, batasan input/output, atau kode/error terkait.',
+          title: 'Prompt Too Short',
+          text: 'Please enter a programming prompt with at least 200 characters including problem context, input/output parameters, or error traceback.',
           confirmButtonColor: '#00A0A5'
         });
         return;
@@ -1173,8 +1380,8 @@ Kode saya mengalami infinite loop saat 'left == right'. Mohon jelaskan logika pe
       if (prompt.length > 2000) {
         Swal.fire({
           icon: 'warning',
-          title: 'Prompt Terlalu Panjang',
-          text: `Panjang prompt saat ini ${prompt.length} karakter. Maksimal yang diizinkan adalah 2000 karakter.`,
+          title: 'Prompt Too Long',
+          text: `Current prompt length is ${prompt.length} characters. The maximum allowed limit is 2000 characters.`,
           confirmButtonColor: '#00A0A5'
         });
         return;
@@ -1216,15 +1423,15 @@ Kode saya mengalami infinite loop saat 'left == right'. Mohon jelaskan logika pe
           const errJson = await response.json().catch(() => ({}));
           const retryAfter = Number(response.headers.get('Retry-After') || 60);
           startCooldown(retryAfter);
-          throw new Error(errJson.detail || `Rate limit tercapai. Silakan tunggu ${retryAfter} detik.`);
+          throw new Error(errJson.detail || `Rate limit active. Please wait ${retryAfter} seconds.`);
         }
 
         if (response.status === 400) {
           const errJson = await response.json().catch(() => ({}));
           if (errJson.detail && errJson.detail.includes('API Key')) {
-            openApiKeyModal(true);
+            openApiKeyFlow(true);
           }
-          throw new Error(errJson.detail || 'Permintaan tidak valid.');
+          throw new Error(errJson.detail || 'Invalid request.');
         }
 
         if (!response.ok) {
@@ -1232,14 +1439,14 @@ Kode saya mengalami infinite loop saat 'left == right'. Mohon jelaskan logika pe
         }
 
         const data = await response.json();
-        let replyText = data.code || data.text || data.message || 'Solusi berhasil diproses.';
+        let replyText = data.code || data.text || data.message || 'Solution processing completed.';
         
         const isRetrieval = data.is_retrieval || Number(data.request_tokens_used || 0) === 0;
         let metaInfo = isRetrieval 
           ? 'Vector Semantic Cache Hit (0 Tokens / Free Tier)' 
           : `Adaptive Router Gemini (Personal Key)`;
 
-        state.messages.push({ sender: 'bot', text: replyText, meta: metaInfo });
+        state.messages.push({ sender: 'bot', text: replyText, meta: metaInfo, prompt: prompt });
         persistMessages();
 
         // Dynamically update query quota badge if returned
@@ -1249,13 +1456,13 @@ Kode saya mengalami infinite loop saat 'left == right'. Mohon jelaskan logika pe
           fetchQueryQuota();
         }
 
-        // Start 60-second cooldown rate limit after successful generation
-        startCooldown(data.cooldown_seconds || 60);
+        // Start cooldown rate limit after successful generation
+        startCooldown(data.cooldown_seconds || 15);
 
       } catch (err) {
         state.messages.push({
           sender: 'bot',
-          text: `Gagal memproses respon: ${err.message}`,
+          text: `Failed to process AI response: ${err.message}`,
           meta: 'Error'
         });
         persistMessages();
@@ -1265,8 +1472,131 @@ Kode saya mengalami infinite loop saat 'left == right'. Mohon jelaskan logika pe
       }
     }
 
-    // Suggestions & Quick Prompt Templates handler
+    async function regenerateFromCloud(promptText) {
+      if (!promptText) return;
+      
+      if (state.inCooldown) {
+        Swal.fire({
+          icon: 'info',
+          title: 'Rate Limit Cooldown Active',
+          text: 'Harap tunggu beberapa detik hingga cooldown selesai.',
+          confirmButtonColor: '#00A0A5'
+        });
+        return;
+      }
+
+      if (!state.hasApiKey) {
+        openApiKeyFlow(true);
+        return;
+      }
+
+      typing.classList.remove('hidden');
+
+      const lang = languageSelect.value;
+      const mode = responseModeSelect.value;
+
+      try {
+        const response = await fetch(`${FASTAPI_URL}/api/generate-code`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-User-ID': SSO_USER_ID
+          },
+          body: JSON.stringify({
+            prompt: promptText,
+            course_id: CURRENT_COURSE_ID || null,
+            assessment_id: CURRENT_ASSESSMENT_ID || null,
+            response_mode: mode === 'code' ? 'Code (only)' : (mode === 'summary' ? 'Explanation (only)' : 'Standard'),
+            language: lang || null,
+            force_cloud: true
+          })
+        });
+
+        if (response.status === 429) {
+          const errJson = await response.json().catch(() => ({}));
+          const retryAfter = Number(response.headers.get('Retry-After') || 15);
+          startCooldown(retryAfter);
+          throw new Error(errJson.detail || `Rate limit active. Please wait ${retryAfter} seconds.`);
+        }
+
+        if (!response.ok) {
+          throw new Error(`HTTP Error ${response.status}`);
+        }
+
+        const data = await response.json();
+        let replyText = data.code || data.text || data.message || 'Solution processing completed.';
+        let metaInfo = `Adaptive Router Gemini (Personal Key - Live Generation)`;
+
+        state.messages.push({ sender: 'bot', text: replyText, meta: metaInfo, prompt: promptText });
+        persistMessages();
+
+        if (data.query_quota) {
+          updateQueryQuotaUI(data.query_quota);
+        } else {
+          fetchQueryQuota();
+        }
+
+        startCooldown(data.cooldown_seconds || 15);
+
+      } catch (err) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Live Gemini Request Failed',
+          text: err.message,
+          confirmButtonColor: '#00A0A5'
+        });
+      } finally {
+        typing.classList.add('hidden');
+        renderMessages();
+      }
+    }
+
+    // Suggestions & Quick Prompt Templates & Copy Code handler
     document.addEventListener('click', function(e) {
+      // Copy code block button handler
+      const copyBtn = e.target.closest('.copy-code-btn');
+      if (copyBtn) {
+        const container = copyBtn.closest('.code-block-container');
+        const codeEl = container ? container.querySelector('code') : null;
+        if (codeEl) {
+          const codeToCopy = codeEl.innerText || codeEl.textContent;
+          const spanEl = copyBtn.querySelector('span');
+          const originalText = spanEl ? spanEl.textContent : 'Copy';
+
+          function setCopiedUI() {
+            copyBtn.classList.add('copied', 'bg-emerald-500/20', 'text-emerald-400');
+            if (spanEl) spanEl.textContent = 'Copied!';
+            setTimeout(() => {
+              copyBtn.classList.remove('copied', 'bg-emerald-500/20', 'text-emerald-400');
+              if (spanEl) spanEl.textContent = originalText;
+            }, 2000);
+          }
+
+          if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(codeToCopy).then(setCopiedUI).catch(fallbackCopy);
+          } else {
+            fallbackCopy();
+          }
+
+          function fallbackCopy() {
+            try {
+              const textArea = document.createElement('textarea');
+              textArea.value = codeToCopy;
+              textArea.style.position = 'fixed';
+              textArea.style.left = '-9999px';
+              document.body.appendChild(textArea);
+              textArea.select();
+              document.execCommand('copy');
+              document.body.removeChild(textArea);
+              setCopiedUI();
+            } catch (err) {
+              console.error('Copy failed:', err);
+            }
+          }
+        }
+        return;
+      }
+
       const suggestBtn = e.target.closest('[data-suggest]');
       if (suggestBtn) {
         chatInput.value = suggestBtn.getAttribute('data-suggest');
@@ -1295,13 +1625,7 @@ Kode saya mengalami infinite loop saat 'left == right'. Mohon jelaskan logika pe
     // Action Buttons
     if (newChatBtn) {
       newChatBtn.addEventListener('click', function() {
-        state.messages = [
-          {
-            sender: 'bot',
-            text: 'Sesi chat baru telah dimulai. Silakan ajukan pertanyaan pemrograman atau diskusikan algoritma Anda.',
-            meta: 'New session'
-          }
-        ];
+        state.messages = [getDefaultGreeting()];
         persistMessages();
         renderMessages();
       });
@@ -1310,26 +1634,27 @@ Kode saya mengalami infinite loop saat 'left == right'. Mohon jelaskan logika pe
     if (clearChatBtn) {
       clearChatBtn.addEventListener('click', function() {
         localStorage.removeItem(STORAGE_KEY);
-        state.messages = [];
+        state.messages = [getDefaultGreeting()];
+        persistMessages();
         renderMessages();
       });
     }
 
     function showPromptingTipsModal() {
       Swal.fire({
-        title: 'Panduan Prompting S-SPARC AI',
+        title: 'S-SPARC AI Prompting Guide',
         html: `
           <div class="text-left text-xs leading-relaxed space-y-3 text-slate-700">
-            <p>Ikuti panduan berikut agar asisten memberikan kode yang presisi, efisien, dan hemat waktu:</p>
+            <p>Follow these guidelines to ensure the assistant returns precise, efficient code:</p>
             <ol class="list-decimal pl-4 space-y-2">
-              <li><strong>Gunakan Mode Code (only):</strong> Output langsung berupa kode tanpa teks pembuka, menghemat token hingga 60%.</li>
-              <li><strong>Sertakan Detail Parameter & Tipe Data:</strong> Tuliskan nama fungsi, tipe input/output, dan batas waktu eksekusi yang diharapkan.</li>
-              <li><strong>Patuhi Batas Karakter:</strong> Minimal 200 karakter dan maksimal 2000 karakter per prompt untuk memastikan spesifikasi masalah yang terstruktur.</li>
-              <li><strong>Rate Limit 1 Menit:</strong> Terdapat jeda 60 detik antar pengiriman pesan untuk menjaga kestabilan sistem dan mendorong pembelajaran mandiri.</li>
+              <li><strong>Use Code (only) Mode:</strong> Generates code directly without introductory text, saving up to 60% token overhead.</li>
+              <li><strong>Include Parameter & Type Details:</strong> Specify function names, input/output data types, and expected time complexity limits.</li>
+              <li><strong>Adhere to Character Limits:</strong> Minimum 200 and maximum 2000 characters per prompt for structured problem specifications.</li>
+              <li><strong>1-Minute Rate Limit Cooldown:</strong> 60-second delay between prompts to ensure system stability and encourage self-reliant coding habits.</li>
             </ol>
           </div>
         `,
-        confirmButtonText: 'Tutup Panduan',
+        confirmButtonText: 'Close Guide',
         confirmButtonColor: '#00A0A5',
         width: '520px'
       });
@@ -1343,10 +1668,8 @@ Kode saya mengalami infinite loop saat 'left == right'. Mohon jelaskan logika pe
       checkUserApiKey();
       fetchQueryQuota();
       validatePromptInput();
+      loadMessages();
     });
-
-    // Load messages on init
-    loadMessages();
   </script>
 </body>
 </html>

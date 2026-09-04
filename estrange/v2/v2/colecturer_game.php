@@ -316,15 +316,22 @@ select.select2-hidden-accessible {
 											}
 										}
 
-										$sqlQuizPenalty = "SELECT COALESCE(SUM(generated_quizzes.penalty_points), 0) AS penalty_points
-											FROM generated_quizzes
-											INNER JOIN submission ON submission.submission_id = generated_quizzes.submission_id
-											INNER JOIN assessment ON assessment.assessment_id = submission.assessment_id
-											WHERE generated_quizzes.student_id = '".$row['student_id']."'
-											AND assessment.course_id = '".$courseID."'
-											AND generated_quizzes.answered_at IS NOT NULL";
-										$resQuizPenalty = mysqli_query($db, $sqlQuizPenalty);
-										$quizPenalty = ($resQuizPenalty && ($rowQuizPenalty = $resQuizPenalty->fetch_assoc())) ? floatval($rowQuizPenalty['penalty_points']) : 0;
+										$quizPenalty = 0;
+										try {
+											$sqlQuizPenalty = "SELECT COALESCE(SUM(generated_quizzes.penalty_points), 0) AS penalty_points
+												FROM generated_quizzes
+												INNER JOIN submission ON submission.submission_id = generated_quizzes.submission_id
+												INNER JOIN assessment ON assessment.assessment_id = submission.assessment_id
+												WHERE generated_quizzes.student_id = '".$row['student_id']."'
+												AND assessment.course_id = '".$courseID."'
+												AND generated_quizzes.answered_at IS NOT NULL";
+											$resQuizPenalty = @mysqli_query($db, $sqlQuizPenalty);
+											if ($resQuizPenalty && ($rowQuizPenalty = $resQuizPenalty->fetch_assoc())) {
+												$quizPenalty = floatval($rowQuizPenalty['penalty_points']);
+											}
+										} catch (Throwable $e) {
+											$quizPenalty = 0;
+										}
 										$mySubmissionPoints = max(0, $mySubmissionPoints - $quizPenalty);
 										$totalPoints = $mySubmissionPoints + $myQualityPoints + $myEfficiencyPoints;
 										

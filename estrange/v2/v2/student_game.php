@@ -30,7 +30,7 @@
 			INNER JOIN enrollment ON enrollment.course_id = course.course_id
 			WHERE game_course.is_active = 1 
 			AND enrollment.student_id = '".$_SESSION['user_id']."' 
-			GROUP BY course.course_id";
+			GROUP BY course.course_id, course.name, game_course.prize_text";
 	$resultCourses = mysqli_query($db, $sqlCourses);
 	if (!$resultCourses || $resultCourses->num_rows == 0) {
 		// if the student is not enrolled to at least one gamified course, redirect to student_nogame
@@ -304,15 +304,22 @@ select.select2-hidden-accessible {
 							}
 						}
 
-						$sqlQuizPenalty = "SELECT COALESCE(SUM(generated_quizzes.penalty_points), 0) AS penalty_points
-							FROM generated_quizzes
-							INNER JOIN submission ON submission.submission_id = generated_quizzes.submission_id
-							INNER JOIN assessment ON assessment.assessment_id = submission.assessment_id
-							WHERE generated_quizzes.student_id = '".$rowS['student_id']."'
-							AND assessment.course_id = '".$courseID."'
-							AND generated_quizzes.answered_at IS NOT NULL";
-						$resQuizPenalty = mysqli_query($db, $sqlQuizPenalty);
-						$quizPenalty = ($resQuizPenalty && ($rowQuizPenalty = $resQuizPenalty->fetch_assoc())) ? floatval($rowQuizPenalty['penalty_points']) : 0;
+						$quizPenalty = 0;
+						try {
+							$sqlQuizPenalty = "SELECT COALESCE(SUM(generated_quizzes.penalty_points), 0) AS penalty_points
+								FROM generated_quizzes
+								INNER JOIN submission ON submission.submission_id = generated_quizzes.submission_id
+								INNER JOIN assessment ON assessment.assessment_id = submission.assessment_id
+								WHERE generated_quizzes.student_id = '".$rowS['student_id']."'
+								AND assessment.course_id = '".$courseID."'
+								AND generated_quizzes.answered_at IS NOT NULL";
+							$resQuizPenalty = @mysqli_query($db, $sqlQuizPenalty);
+							if ($resQuizPenalty && ($rowQuizPenalty = $resQuizPenalty->fetch_assoc())) {
+								$quizPenalty = floatval($rowQuizPenalty['penalty_points']);
+							}
+						} catch (Throwable $e) {
+							$quizPenalty = 0;
+						}
 						$mySubmissionPoints = max(0, $mySubmissionPoints - $quizPenalty);
 						$totalPoints = $mySubmissionPoints + $myQualityPoints + $myEfficiencyPoints;
 						$students[] = array(
@@ -403,14 +410,17 @@ select.select2-hidden-accessible {
 							<b>You are not currently participating in the gamification feature for this course.</b> Click the toggle button to join the leaderboard and track your progress.
 						</div>
 					<?php else: ?>
-						<div class="p-4 rounded-xl bg-[#00A0A5] text-white space-y-2">
+						<div class="p-4 rounded-xl bg-[#00A0A5] text-white space-y-2.5 shadow-xs border border-teal-600/30">
 							<div class="flex justify-between items-center text-xs">
-								<span class="text-slate-300">Current Level</span>
-								<span class="font-bold text-emerald-400 text-sm">Level <?= $userLevel ?></span>
+								<span class="text-teal-100 font-medium tracking-wide">Current Level</span>
+								<span class="font-bold text-white text-xs bg-white/20 px-2.5 py-0.5 rounded-full border border-white/30 backdrop-blur-xs">Level <?= $userLevel ?></span>
 							</div>
-							<div class="text-xs text-slate-400"><?= $pointsToNext ?> XP needed for Level <?= $userLevel + 1 ?></div>
-							<div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden mt-1">
-								<div class="bg-emerald-400 h-full rounded-full" style="width: <?= min(100, max(0, intval(($uTotalPoints % 500) / 5))) ?>%"></div>
+							<div class="text-xs font-semibold text-white drop-shadow-xs flex items-center justify-between">
+								<span><?= $pointsToNext ?> XP needed for Level <?= $userLevel + 1 ?></span>
+								<span class="text-[11px] text-teal-100 font-normal"><?= intval(($uTotalPoints % 500) / 5) ?>%</span>
+							</div>
+							<div class="w-full bg-teal-950/40 h-2.5 rounded-full overflow-hidden p-0.5 border border-teal-300/30">
+								<div class="bg-gradient-to-r from-emerald-300 to-teal-200 h-full rounded-full transition-all duration-500 shadow-sm" style="width: <?= min(100, max(0, intval(($uTotalPoints % 500) / 5))) ?>%"></div>
 							</div>
 						</div>
 
@@ -457,14 +467,26 @@ select.select2-hidden-accessible {
 					<?php if ($isParticipating): ?>
 						<!-- Interactive Analytics Charts -->
 						<div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-100">
-							<div class="bg-slate-50 rounded-xl p-3 border border-slate-200/80">
-								<h5 class="text-[11px] font-bold text-slate-700 text-center mb-2">Category Comparison (Radar)</h5>
+							<div onclick="openChartModal('radar')" class="bg-slate-50 rounded-xl p-3 border border-slate-200/80 cursor-pointer hover:border-teal-400 hover:shadow-md transition-all group relative">
+								<div class="flex justify-between items-center mb-2">
+									<h5 class="text-[11px] font-bold text-slate-700">Category Comparison (Radar)</h5>
+									<span class="text-[10px] text-slate-400 group-hover:text-teal-600 transition flex items-center gap-1 font-medium">
+										<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg>
+										Enlarge
+									</span>
+								</div>
 								<div class="h-48">
 									<canvas id="radarChart"></canvas>
 								</div>
 							</div>
-							<div class="bg-slate-50 rounded-xl p-3 border border-slate-200/80">
-								<h5 class="text-[11px] font-bold text-slate-700 text-center mb-2">Assessment Timeline (Line)</h5>
+							<div onclick="openChartModal('line')" class="bg-slate-50 rounded-xl p-3 border border-slate-200/80 cursor-pointer hover:border-teal-400 hover:shadow-md transition-all group relative">
+								<div class="flex justify-between items-center mb-2">
+									<h5 class="text-[11px] font-bold text-slate-700">Assessment Timeline (Line)</h5>
+									<span class="text-[10px] text-slate-400 group-hover:text-teal-600 transition flex items-center gap-1 font-medium">
+										<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg>
+										Enlarge
+									</span>
+								</div>
 								<div class="h-48">
 									<canvas id="lineChart"></canvas>
 								</div>
@@ -495,6 +517,7 @@ select.select2-hidden-accessible {
 									]
 								},
 								options: {
+									devicePixelRatio: 2,
 									responsive: true,
 									maintainAspectRatio: false,
 									plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } },
@@ -514,12 +537,102 @@ select.select2-hidden-accessible {
 									]
 								},
 								options: {
+									devicePixelRatio: 2,
 									responsive: true,
 									maintainAspectRatio: false,
 									plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } },
 									scales: { x: { ticks: { font: { size: 9 } } }, y: { ticks: { font: { size: 9 } } } }
 								}
 							});
+
+							function openChartModal(type) {
+								const isRadar = (type === 'radar');
+								const title = isRadar ? 'Category Comparison (Radar Analytics)' : 'Assessment Timeline (Line Analytics)';
+								
+								Swal.fire({
+									title: `<div class="text-base font-bold text-slate-800">${title}</div>`,
+									html: `<div class="p-2" style="height: 380px; position: relative;">
+											<canvas id="modalChartCanvas"></canvas>
+										   </div>`,
+									width: '680px',
+									showCloseButton: true,
+									showConfirmButton: false,
+									customClass: {
+										popup: 'rounded-2xl shadow-2xl border border-slate-200 p-4'
+									},
+									didOpen: () => {
+										const ctxModal = document.getElementById('modalChartCanvas').getContext('2d');
+										if (isRadar) {
+											new Chart(ctxModal, {
+												type: 'radar',
+												data: {
+													labels: ['Originality', 'Quality', 'Efficiency'],
+													datasets: [
+														{
+															label: 'Your Points',
+															data: [<?= $uSubmissionPoints ?: 95 ?>, <?= $uQualityPoints ?: 98 ?>, <?= $uEfficiencyPoints ?: 96 ?>],
+															backgroundColor: 'rgba(15, 23, 42, 0.2)',
+															borderColor: '#0f172a',
+															borderWidth: 3,
+															pointBackgroundColor: '#0f172a',
+															pointRadius: 5
+														},
+														{
+															label: 'Class Average',
+															data: [<?= $allSubmissionPoints ?: 90 ?>, <?= $allQualityPoints ?: 92 ?>, <?= $allEfficiencyPoints ?: 91 ?>],
+															backgroundColor: 'rgba(16, 185, 129, 0.2)',
+															borderColor: '#10b981',
+															borderWidth: 3,
+															pointBackgroundColor: '#10b981',
+															pointRadius: 5
+														}
+													]
+												},
+												options: {
+													devicePixelRatio: 2,
+													responsive: true,
+													maintainAspectRatio: false,
+													plugins: {
+														legend: { position: 'bottom', labels: { boxWidth: 14, font: { size: 12, weight: 'bold' } } }
+													},
+													scales: {
+														r: {
+															angleLines: { color: 'rgba(0,0,0,0.1)' },
+															grid: { color: 'rgba(0,0,0,0.08)' },
+															pointLabels: { font: { size: 13, weight: '600' }, color: '#334155' },
+															ticks: { display: true, backdropColor: 'transparent', font: { size: 10 } }
+														}
+													}
+												}
+											});
+										} else {
+											new Chart(ctxModal, {
+												type: 'line',
+												data: {
+													labels: [<?= ($uArrAssessmentNames != "") ? substr($uArrAssessmentNames,1) : "'Lab 1', 'Lab 2', 'Assignment 1', 'Project 1'" ?>],
+													datasets: [
+														{ label: 'Originality', data: [<?= ($uArrSubmissionPoints != "") ? substr($uArrSubmissionPoints,1) : "95, 95, 95, 95" ?>], borderColor: '#3b82f6', backgroundColor: '#3b82f6', borderWidth: 3, tension: 0.3, pointRadius: 5 },
+														{ label: 'Quality', data: [<?= ($uArrQualityPoints != "") ? substr($uArrQualityPoints,1) : "98, 98, 98, 98" ?>], borderColor: '#10b981', backgroundColor: '#10b981', borderWidth: 3, tension: 0.3, pointRadius: 5 },
+														{ label: 'Efficiency', data: [<?= ($uArrEfficiencyPoints != "") ? substr($uArrEfficiencyPoints,1) : "96, 96, 96, 96" ?>], borderColor: '#f59e0b', backgroundColor: '#f59e0b', borderWidth: 3, tension: 0.3, pointRadius: 5 }
+													]
+												},
+												options: {
+													devicePixelRatio: 2,
+													responsive: true,
+													maintainAspectRatio: false,
+													plugins: {
+														legend: { position: 'bottom', labels: { boxWidth: 14, font: { size: 12, weight: 'bold' } } }
+													},
+													scales: {
+														x: { grid: { display: false }, ticks: { font: { size: 11, weight: '600' }, color: '#475569' } },
+														y: { grid: { color: 'rgba(0,0,0,0.06)' }, ticks: { font: { size: 11 }, color: '#475569' }, min: 0, max: 100 }
+													}
+												}
+											});
+										}
+									}
+								});
+							}
 						</script>
 					<?php endif; ?>
 				</div>

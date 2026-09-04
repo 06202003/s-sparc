@@ -27,7 +27,8 @@ router = APIRouter()
 
 # Rate limit cooldown store: user_id -> timestamp (in seconds)
 _USER_LAST_REQUEST_TIME = {}
-RATE_LIMIT_COOLDOWN_SECONDS = 60
+LIVE_AI_COOLDOWN_SECONDS = 60
+CACHE_COOLDOWN_SECONDS = 15
 MIN_PROMPT_LENGTH = 200
 MAX_PROMPT_LENGTH = 2000
 
@@ -37,6 +38,7 @@ class GenerateRequest(BaseModel):
     course_id: Optional[str] = None
     language: Optional[str] = None
     response_mode: Optional[str] = "code"
+    force_cloud: Optional[bool] = False
 
 class LintPromptRequest(BaseModel):
     prompt: str
@@ -60,60 +62,27 @@ def insert_gpt_job(user_id: str, prompt: str, gpt_prompt: str, status="pending",
         "created_at": time.time()
     }
 
-    full_hash = hashlib.sha256(norm_prompt.encode("utf-8")).hexdigest()
-    lock_name = "gpt:" + full_hash[:60]
-
     conn = get_db_connection()
     if conn is None:
         return job_id
         
     try:
         with conn.cursor() as cur:
-            try:
-                cur.execute("SELECT GET_LOCK(%s, %s)", (lock_name, lock_timeout))
-                row = cur.fetchone() or {}
-                got_lock = list(row.values())[0] if row else 0
-            except Exception as e:
-                logging.warning(f"GET_LOCK failed: {e}")
-                got_lock = 0
-
-            if got_lock != 1:
-                cur.execute(
-                    "INSERT INTO gpt_jobs (job_id, user_id, prompt, status, created_at, updated_at) "
-                    "VALUES (%s, %s, %s, %s, NOW(), NOW())",
-                    (job_id, user_id, norm_prompt, status)
-                )
-                conn.commit()
-                return job_id
-
             cur.execute(
-                "SELECT job_id FROM gpt_jobs WHERE prompt=%s AND status='pending' "
-                "ORDER BY created_at ASC LIMIT 1",
-                (norm_prompt,)
+                "INSERT INTO gpt_jobs (job_id, user_id, prompt, status, created_at, updated_at) "
+                "VALUES (%s, %s, %s, %s, NOW(), NOW())",
+                (job_id, user_id, norm_prompt, status)
             )
-            existing = cur.fetchone()
-            if existing and existing.get("job_id"):
-                job_id = existing["job_id"]
-            else:
-                cur.execute(
-                    "INSERT INTO gpt_jobs (job_id, user_id, prompt, status, created_at, updated_at) "
-                    "VALUES (%s, %s, %s, %s, NOW(), NOW())",
-                    (job_id, user_id, norm_prompt, status)
-                )
             conn.commit()
     except Exception as e:
         logging.warning(f"insert_gpt_job DB write warning: {e}")
     finally:
         try:
-            with conn.cursor() as cur:
-                cur.execute("SELECT RELEASE_LOCK(%s)", (lock_name,))
-        except Exception:
-            pass
-        try:
             conn.close()
         except Exception:
             pass
     return job_id
+
 
 def get_gpt_job(job_id: str):
     if job_id in _in_memory_jobs:
@@ -158,12 +127,22 @@ async def generate_code(request: Request, data: GenerateRequest, background_task
             detail=f"Prompt terlalu panjang. Maksimal {MAX_PROMPT_LENGTH} karakter (saat ini: {len(raw_prompt)})."
         )
 
-    # 2. Check 1-Minute Cooldown Rate Limit (60 seconds per user)
+    # 2. Check Cooldown Rate Limit (60s for Live AI, 15s for DB Cache)
     now = time.time()
-    last_req_time = _USER_LAST_REQUEST_TIME.get(user_id, 0)
-    elapsed = now - last_req_time
-    if elapsed < RATE_LIMIT_COOLDOWN_SECONDS:
-        remaining_seconds = int(RATE_LIMIT_COOLDOWN_SECONDS - elapsed)
+    last_req = _USER_LAST_REQUEST_TIME.get(user_id)
+    if isinstance(last_req, dict):
+        last_time = last_req.get("time", 0)
+        last_cooldown = last_req.get("cooldown", LIVE_AI_COOLDOWN_SECONDS)
+    elif isinstance(last_req, (int, float)):
+        last_time = last_req
+        last_cooldown = LIVE_AI_COOLDOWN_SECONDS
+    else:
+        last_time = 0
+        last_cooldown = LIVE_AI_COOLDOWN_SECONDS
+
+    elapsed = now - last_time
+    if elapsed < last_cooldown:
+        remaining_seconds = int(last_cooldown - elapsed)
         raise HTTPException(
             status_code=429,
             detail=f"Rate limit aktif. Harap tunggu {remaining_seconds} detik sebelum mengirim prompt berikutnya.",
@@ -175,13 +154,12 @@ async def generate_code(request: Request, data: GenerateRequest, background_task
     if not user_api_key:
         raise HTTPException(
             status_code=400,
-            detail="API Key Google Gemini belum dimasukkan. Silakan daftarkan API key Anda terlebih dahulu."
+            detail="Google Gemini API Key is required. Please register your personal API Key first."
         )
 
-    # Register request timestamp for rate limiting
-    _USER_LAST_REQUEST_TIME[user_id] = now
-        
     markers = []
+    if data.force_cloud:
+        markers.append("[FORCE_GPT:true]")
     if data.language:
         markers.append(f"[LANG:{data.language}]")
     if data.response_mode:
@@ -201,8 +179,11 @@ async def generate_code(request: Request, data: GenerateRequest, background_task
 
     job_data = get_gpt_job(job_id) or {}
     ai_response = job_data.get("code") or job_data.get("raw_response") or "Solution processing completed."
-    sim_score = float(job_data.get("similarity") or 0.0)
-    is_retrieval = bool(sim_score >= 0.88)
+    sim_score = 0.0 if data.force_cloud else float(job_data.get("similarity") or 0.0)
+    is_retrieval = False if data.force_cloud else bool(sim_score >= 0.88)
+
+    cooldown_secs = CACHE_COOLDOWN_SECONDS if is_retrieval else LIVE_AI_COOLDOWN_SECONDS
+    _USER_LAST_REQUEST_TIME[user_id] = {"time": now, "cooldown": cooldown_secs}
     
     session_id = "127.0.0.1"
     assessment_id_from_session = data.assessment_id
@@ -252,7 +233,7 @@ async def generate_code(request: Request, data: GenerateRequest, background_task
         "is_retrieval": is_retrieval,
         "similarity": sim_score,
         "gamification": gamification,
-        "cooldown_seconds": RATE_LIMIT_COOLDOWN_SECONDS,
+        "cooldown_seconds": cooldown_secs,
         "query_quota": query_quota,
         "prompt_analytics": prompt_analytics
     }
@@ -283,7 +264,7 @@ async def enqueue_gpt(request: Request, data: GenerateRequest, background_tasks:
         remaining_seconds = int(RATE_LIMIT_COOLDOWN_SECONDS - elapsed)
         raise HTTPException(
             status_code=429,
-            detail=f"Rate limit aktif. Harap tunggu {remaining_seconds} detik sebelum mengirim prompt berikutnya.",
+            detail=f"Rate limit active. Please wait {remaining_seconds} seconds before sending the next prompt.",
             headers={"Retry-After": str(remaining_seconds)}
         )
 
@@ -291,7 +272,7 @@ async def enqueue_gpt(request: Request, data: GenerateRequest, background_tasks:
     if not user_api_key:
         raise HTTPException(
             status_code=400,
-            detail="API Key Google Gemini belum dimasukkan. Silakan daftarkan API key Anda terlebih dahulu."
+            detail="Google Gemini API Key is required. Please register your personal API Key first."
         )
 
     _USER_LAST_REQUEST_TIME[user_id] = now

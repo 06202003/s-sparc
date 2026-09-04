@@ -18,7 +18,7 @@ $sso_role = $_SESSION['role'] ?? 'student';
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <style>
       :root {
         --brand-teal: #00A0A5;
@@ -226,10 +226,10 @@ $sso_role = $_SESSION['role'] ?? 'student';
     <!-- Hero Section -->
     <section class="py-5">
       <div class="container">
-        <div class="flex flex-wrap align-items-center justify-content-between g-5 py-4">
+        <div class="row align-items-center justify-content-between g-4 py-4">
           
           <!-- Left Hero Column -->
-          <div class="w-full lg:w-1/2">
+          <div class="col-12 col-lg-7 mb-4 mb-lg-0">
             <div class="mb-3">
               <div class="hero-pill font-mono">
                 <span class="w-2 h-2 rounded-circle bg-teal-500" style="background-color: var(--brand-teal);"></span>
@@ -238,7 +238,7 @@ $sso_role = $_SESSION['role'] ?? 'student';
             </div>
 
             <h1 class="display-4 fw-extrabold text-slate-900 mb-3" style="letter-spacing: -0.03em; line-height: 1.15;">
-              Intelligent Code Reuse &amp; Sustainable AI
+              Intelligent Code Reuse &amp; <span class="text-nowrap">Sustainable AI</span>
             </h1>
 
             <p class="lead text-slate-600 mb-4" style="font-size: 1.1rem; line-height: 1.65;">
@@ -256,7 +256,7 @@ $sso_role = $_SESSION['role'] ?? 'student';
           </div>
 
           <!-- Right Research Narrative Card -->
-          <div class="w-full lg:w-1/2">
+          <div class="col-12 col-lg-5">
             <div class="bg-white border rounded-4 p-4 p-md-5 shadow-sm">
               <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-3">
                 <span class="text-xs font-mono text-slate-500 uppercase tracking-wider font-semibold">Semantic Architecture</span>
@@ -286,9 +286,6 @@ $sso_role = $_SESSION['role'] ?? 'student';
           </video>
           
           <div class="position-absolute top-50 start-50 translate-middle w-100 px-3" style="z-index: 2">
-            <div class="hero-pill mb-3 bg-black/40 text-white border-white/20 font-mono" style="background: rgba(0,0,0,0.5); color: #ffffff; border: 1px solid rgba(255,255,255,0.2);">
-              Platform Demonstration
-            </div>
             <h2 id="video-message" class="display-6 fw-bold text-white mb-0" style="text-shadow: 0 4px 20px rgba(0, 0, 0, 0.85); transition: opacity 0.6s ease;">
               Efficiency Through Intelligence
             </h2>
@@ -309,10 +306,10 @@ $sso_role = $_SESSION['role'] ?? 'student';
           </p>
         </div>
 
-        <div class="flex flex-wrap g-4">
+        <div class="row g-4">
           
           <!-- Pillar 1 -->
-          <div class="w-full md:w-1/3">
+          <div class="col-12 col-md-4">
             <div class="feature-card-2026 h-100 d-flex flex-column justify-content-between">
               <div>
                 <div class="d-inline-flex p-3 rounded-3 mb-3" style="background-color: #f0fdfa; color: #00A0A5;">
@@ -330,7 +327,7 @@ $sso_role = $_SESSION['role'] ?? 'student';
           </div>
 
           <!-- Pillar 2 -->
-          <div class="w-full md:w-1/3">
+          <div class="col-12 col-md-4">
             <div class="feature-card-2026 h-100 d-flex flex-column justify-content-between">
               <div>
                 <div class="d-inline-flex p-3 rounded-3 mb-3" style="background-color: #fff7ed; color: #ea580c;">
@@ -348,7 +345,7 @@ $sso_role = $_SESSION['role'] ?? 'student';
           </div>
 
           <!-- Pillar 3 -->
-          <div class="w-full md:w-1/3">
+          <div class="col-12 col-md-4">
             <div class="feature-card-2026 h-100 d-flex flex-column justify-content-between">
               <div>
                 <div class="d-inline-flex p-3 rounded-3 mb-3" style="background-color: #f0fdf4; color: #16a34a;">
@@ -378,8 +375,8 @@ $sso_role = $_SESSION['role'] ?? 'student';
           <p class="text-slate-500">Pertanyaan umum seputar arsitektur semantik, kebijakan kuota token, dan integrasi LMS.</p>
         </div>
 
-        <div class="flex flex-wrap justify-content-center">
-          <div class="w-full lg:w-5/6">
+        <div class="row justify-content-center">
+          <div class="col-12 col-lg-10">
             <div class="accordion accordion-flush" id="faqAccordion">
 
               <!-- FAQ 1 -->
@@ -452,7 +449,7 @@ $sso_role = $_SESSION['role'] ?? 'student';
     </footer>
 
     <!-- Bootstrap 5 Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     
     <!-- Particles.js -->
     <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>

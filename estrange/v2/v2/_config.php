@@ -2,7 +2,7 @@
 // just a configuration for the database access
 $servername = "localhost";
 $username = "root";
-$password = "";
+$password = getenv('MYSQL_PASSWORD') ?: "root123";
 $dbname = "estrange_v7";
 $baseDomainLink = 'http://127.0.0.1:8088/';
 

@@ -172,51 +172,46 @@ def get_user_api_key(user_identifier: str, provider: str = "gemini") -> str:
     if not user_identifier:
         return None
     
-    # 1. Check memory fallback first
     key_tuple = (str(user_identifier), provider)
-    if key_tuple in _in_memory_user_keys:
-        return _in_memory_user_keys[key_tuple]
-    
-    ensure_user_api_keys_table()
     user_id = resolve_user_uuid(user_identifier)
     
-    if (user_id, provider) in _in_memory_user_keys:
-        return _in_memory_user_keys[(user_id, provider)]
-        
     conn = get_db_connection()
-    if conn is None:
-        return _in_memory_user_keys.get(key_tuple) or _in_memory_user_keys.get((user_id, provider))
-        
-    try:
-        with conn.cursor() as cur:
-            # Check by resolved user_id
-            cur.execute(
-                "SELECT api_key FROM user_api_keys WHERE user_id=%s AND provider=%s AND is_active=1 LIMIT 1",
-                (user_id, provider)
-            )
-            row = cur.fetchone()
-            if row and row.get('api_key'):
-                return str(row['api_key']).strip()
-            
-            # Also check by raw user_identifier (in case identifier itself was stored)
-            if str(user_identifier) != user_id:
+    if conn is not None:
+        try:
+            with conn.cursor() as cur:
                 cur.execute(
                     "SELECT api_key FROM user_api_keys WHERE user_id=%s AND provider=%s AND is_active=1 LIMIT 1",
-                    (str(user_identifier), provider)
+                    (user_id, provider)
                 )
-                row2 = cur.fetchone()
-                if row2 and row2.get('api_key'):
-                    return str(row2['api_key']).strip()
-            return None
-    except Exception as e:
-        import logging
-        logging.error(f"get_user_api_key error: {e}")
-        return _in_memory_user_keys.get(key_tuple) or _in_memory_user_keys.get((user_id, provider))
-    finally:
-        try:
-            conn.close()
-        except Exception:
-            pass
+                row = cur.fetchone()
+                if row and row.get('api_key'):
+                    k = str(row['api_key']).strip()
+                    _in_memory_user_keys[key_tuple] = k
+                    _in_memory_user_keys[(user_id, provider)] = k
+                    return k
+                
+                if str(user_identifier) != user_id:
+                    cur.execute(
+                        "SELECT api_key FROM user_api_keys WHERE user_id=%s AND provider=%s AND is_active=1 LIMIT 1",
+                        (str(user_identifier), provider)
+                    )
+                    row2 = cur.fetchone()
+                    if row2 and row2.get('api_key'):
+                        k2 = str(row2['api_key']).strip()
+                        _in_memory_user_keys[key_tuple] = k2
+                        _in_memory_user_keys[(user_id, provider)] = k2
+                        return k2
+                
+                # If DB has no active key, clear in-memory cache for this user
+                _in_memory_user_keys.pop(key_tuple, None)
+                _in_memory_user_keys.pop((user_id, provider), None)
+                return None
+        except Exception as e:
+            import logging
+            logging.error(f"get_user_api_key DB query error: {e}")
+    
+    # Fallback to in-memory dict if DB is unreachable
+    return _in_memory_user_keys.get(key_tuple) or _in_memory_user_keys.get((user_id, provider))
 
 def set_user_api_key(user_identifier: str, api_key: str, provider: str = "gemini", terms_accepted: bool = True) -> bool:
     """Save or update user API key with terms acceptance."""
