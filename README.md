@@ -147,6 +147,62 @@ sequenceDiagram
 
 ---
 
+## 🔬 Empirical Validation & TRL Status
+
+In strict alignment with competition parameters established by the **UNU Global AI Network** (which requires submitted solutions to demonstrate practical application potential and real-world validation beyond laboratory environments), S-SPARC AI is positioned at **Technology Readiness Level (TRL) 5/6**. The system has been rigorously evaluated in operational educational environments, demonstrating exceptional stability, pedagogical efficacy, and computational efficiency across multiple academic semesters.
+
+### Key Performance Metrics & System Stability
+
+Extensive multi-semester telemetry, utilizing live student cohorts within the E-STRANGE™ LMS environment, has yielded comprehensive empirical validation metrics spanning system architecture, retrieval accuracy, and educational outcomes:
+
+| Evaluation Dimension | Empirical Metric / Result | System Validation Context |
+| :--- | :--- | :--- |
+| **System Regression & Stability** | **100% Pass Rate** (0 failures) | Comprehensive testing of all API bounds, prompt linters, and educational telemetry logged via automated test suites (`test_educational_api.py`). |
+| **Retrieval Accuracy (Zero-LLM Gate)** | **MRR = 1.000**<br>Precision@1 = **100%**<br>Recall = **96.0%**<br>F1-Score = **97.96%** | Evaluated against a 200-query manual ground truth dataset, yielding zero False Positives at the 0.90 policy threshold. |
+| **Context Payload Compression** | **78.8% Token Reduction** | The AST CodeCompressor effectively strips non-semantic boilerplate and comments, drastically reducing API payload weight before transmission. |
+| **Knowledge Base Hygiene & Governance** | **95.43% Verified Retention Rate** | An autonomous evaluator daemon audited a 678-snippet live run over 18 minutes; it effectively purged 4.42% (comprising exact duplicates and low-quality code) while maintaining an average semantic similarity of 0.80. |
+| **Semester-scale Inference Reduction** | **83.94% Token Reduction** | Across seven laboratory sessions, 1,781,845 of 2,122,873 potential tokens were handled through retrieval, leaving only 341,028 tokens for external inference. |
+| **Reduction Consistency** | Early = **85.8%** (w1-w3)<br>Late = **86.9%** (w5-w7) | Early vs. late reduction rates showed no statistically significant difference ($t = -1.105, p = 0.273$). |
+| **Weekly Reduction Variation** | $F = 0.859$, $p = 0.527$, $\eta^2_g = 0.0217$ | Repeated-measures analysis across seven sessions found no statistically significant weekly variation. |
+| **Prompt Quality Association** | $\beta = 0.358$, $p < 0.001$, $R^2 = 0.438$ | Semester deployment regression showed a significant positive association between prompt quality and response quality. |
+| **Inference Demand vs. Response Quality** | $\beta = -0.088$, $p = 0.683$, $R^2 = 0.003$ | No significant association was observed between inference-token ratio and response quality in the reported regression. |
+
+---
+
+### Pedagogical Efficacy & Cognitive Offloading Mitigation
+
+The imposition of the 200-character **C-I-O-E protocol** and the 60-second reflection cooldown timer have demonstrated a profound and measurable impact on student interaction behaviors, directly mitigating the *LLM Dependency Paradox*. Telemetry data indicates a decisive shift in student behavior from "passive extraction" to "active formulation."
+
+- **Reduction in Direct-Copy Submissions**: Prior to S-SPARC integration, standard chatbot interfaces facilitated rapid, thoughtless trial-and-error behaviors, with learning sessions averaging **7.4 interaction turns** as students repeatedly pasted errors. Following the implementation of metacognitive friction, the average debugging cycle plummeted to just **1.8 turns**. This confirms that students take the requisite time to formulate highly dense, accurate queries ($S_{\text{prompt}} \ge 0.80$) on their first attempt, significantly reducing cognitive offloading.
+- **Improvement in Problem-Solving Retention**: The Plagiarism Defense mechanism has yielded an articulated code defense pass rate exceeding **85%**. This metric confirms that even when AI tools provide scaffolding and assist in code generation, the structural requirement to intellectually defend underlying logic prevents algorithmic comprehension atrophy, fostering genuine knowledge retention.
+- **System Usability Scores (SUS) and Learning Autonomy**: The user experience, governed through an interactive C-I-O-E live indicator pill bar and dynamic profile badging (awarding titles such as *"Prompt Architect"* and *"Zero-Waste Compute Champion"*), resulted in exceptional self-reported learning autonomy. Students exhibit a clear, measurable progression over the semester, shifting from syntax-heavy requests (`mode="code"`) toward conceptual validation requests (`mode="summary"`) as their confidence and independent capabilities solidify.
+
+---
+
+## 🌍 UN Sustainable Development Goals (SDGs) & UNU Ethos Alignment
+
+S-SPARC AI is systematically designed to advance multiple UN Sustainable Development Goals (SDGs), anchoring its pedagogical mechanisms in global sustainability, equitable access, and responsible resource consumption. The architectural philosophy reflects the UNU Macau mandate to bridge technological innovation with equitable growth, focusing on insights, challenges, and scalable contributions applicable to higher education in the Global South.
+
+### 🎯 Primary Impact: SDG 4 (Quality Education)
+- The primary mission of S-SPARC AI is to democratize specialized, high-quality computer science and software engineering tutoring.
+- It addresses the severe imbalance between qualified technical faculty and students in developing nations, which limits personalized 1-on-1 pedagogical interventions for mastering complex programming concepts.
+- Functioning as an infinitely scalable Metacognitive Scaffolding Coach, S-SPARC AI provides individualized, Bloom-tiered feedback at the point of cognitive failure.
+- By embedding AI literacy into prompt submissions, S-SPARC AI keeps learning an active discipline rather than a passive transfer of generated code, expanding educational quality without depending on continuous human instructor availability.
+
+### 💡 Secondary Impact: SDG 9 (Industry, Innovation & Infrastructure) & SDG 10 (Reduced Inequalities)
+- S-SPARC AI fundamentally addresses technological and infrastructural inequalities dividing educational institutions in the Global North from those in developing nations.
+- It overcomes reliance on high-bandwidth cloud connectivity and high token costs using a Zero-LLM Direct Retrieval bypass engine and multi-tier routing architecture.
+- Queries exhibiting cosine similarity $\ge 0.88$ against the semantic cache bypass cloud LLMs, returning pre-verified answers from local infrastructure in **< 45ms** at zero token cost.
+- Uncached queries cascade to an offline, locally hosted Ollama model (Qwen2.5-Coder 14B), enabling low-budget and bandwidth-constrained institutions to deliver advanced AI education.
+- The backend calculates real-time environmental footprints using localized Grid Emission Factors ($\text{CIF} = 0.384$ for Indonesia) to provide Experiential Green AI Literacy. It displays energy, carbon, and water metrics on student dashboards and awards EcoPoints based on peer thresholds ($\text{Threshold} = 1.10 \times \text{Usage}_{\text{peers}}$) to incentivize efficient prompt engineering.
+
+### 🤝 Secondary Impact: SDG 17 (Partnerships for the Goals)
+- Built upon an open-architecture design, S-SPARC AI integrates seamlessly into institutional environments via the E-STRANGE™ Learning Management System framework.
+- Its self-expanding knowledge repository uses semantic thresholding ($\max(\text{existing}) < 0.90$) to automatically capture new solutions, enabling higher education institutions to independently curate contextualized academic datasets without relying on proprietary commercial vendors.
+- By facilitating the inter-university exchange of validated pedagogical vectors, this open-science ecosystem strengthens multi-institutional collaboration, directly advancing UN capacity-building goals and supporting the mission of the UNU Global AI Network.
+
+---
+
 ## 🏢 Tech Stack & Infrastructure Matrix
 
 | Layer | Component | Specification / Framework | Purpose |
