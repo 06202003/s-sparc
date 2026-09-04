@@ -1,4 +1,4 @@
-# S-SPARC AI: Smart Software Engineering & Pedagogical Adaptive Retrieval Assistant
+# E-STRANGE X S-SPARC AI: Smart Software Engineering & Pedagogical Adaptive Retrieval Assistant
 
 > **An Adaptive, Pedagogically Scaffolded AI Learning Engine & High-Performance Retrieval Platform Designed for Software Engineering Education in Higher Education.**
 
