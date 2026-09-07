@@ -35,424 +35,371 @@
 			OR colecturer.user_id = '".$_SESSION['user_id']."')	";
 	$result = mysqli_query($db,$sql);
 	if ($result->num_rows == 0) {
-		// if the lecturer is not in charge in at least one gamified course, redirect to lecturer_nogame
+		// if the lecturer is not in charge in at least one gamified course, redirect to colecturer_no_game
 		header('Location: colecturer_no_game.php');
 		exit;
 	}
 ?>
-<html>
-	<head>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-		<title> E-STRANGE: Course game</title>
-    <link rel="icon" href="strange_html_layout_additional_files/icon.png">
-	<link href="bootstrap-5.3.3-dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Untuk Icon -->
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-	
+	<title>E-STRANGE: Co-Lecturer Course Game</title>
+	<link rel="icon" href="strange_html_layout_additional_files/icon.png">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+	<script src="https://cdn.tailwindcss.com"></script>
 
-<!-- jQuery -->
-<script src="https://code.jquery.com/jquery-3.7.1.slim.min.js" integrity="sha256-kmHvs0B+OpCW5GVHUNjv9rOmY0IvSIRcf7zGUDTDQM8=" crossorigin="anonymous"></script>
+	<!-- jQuery -->
+	<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-<!-- DataTables JS -->
-<link rel="stylesheet" type="text/css" href="datatables/jquery.dataTables.min.css">
-<script type="text/javascript" src="datatables/jquery.dataTables.min.js"></script>
-<link rel="stylesheet" type="text/css" href="datatables/responsive.bootstrap5.min.css">
-<script type="text/javascript" src="datatables/dataTables.responsive.min.js"></script>
-<script type="text/javascript" src="datatables/responsive.bootstrap5.min.js"></script>
+	<!-- DataTables -->
+	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
+	<script type="text/javascript" src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+	<script type="text/javascript" src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
 
-  
-    <script>
-			function recolorTableContent(tableId){
-				table = document.getElementById(tableId);
-				rows = table.rows;
-				/* Loop through all table rows */
-				for (i = 0; i < rows.length; i++) {
-					if(i%2 == 0){
-						rows[i].style.backgroundColor = "rgba(255,255,255,1)";
-					}else {
-						rows[i].style.backgroundColor = "#eeeeee";
-					}
-				}
-			}
-
-			var previousRowId = null;
-			function selectRow(id, tableId){
-				if(previousRowId != null){
-					// for header table, recolor the contents
-					recolorTableContent(tableId);
-				}
-				// for header table, recolor the row
-				recolorCodeFragment(id,"rgba(60,200,246,1)");
-				previousRowId= id;
-			}
-
-			// recolor a code fragment with its following rows
-			function recolorCodeFragment(id, defaultColour){
-				document.getElementById(id).style.backgroundColor = defaultColour;
-			}
-			
-			// to update the whole page when the course is changed
-			function updateDisplayedGameDataBasedOnCourse(){
-				var selectedValue = document.getElementById("course").value;
-				window.location.href = window.location.href.substring(0, window.location.href.indexOf("?")) + "?id=" + selectedValue;
-			}
-			
-			// for sorting table 
-			// sort table content. Copied and modified from https://www.w3schools.com/howto/howto_js_sort_table.asp
-			function sortTable(n, tableId, isNumber) {
-				var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
-				table = document.getElementById(tableId);
-				
-				switching = true;
-				// Set the sorting direction to ascending:
-				dir = "desc";
-				/* Make a loop that will continue until
-				no switching has been done: */
-				while (switching) {
-					// Start by saying: no switching is done:
-					switching = false;
-					rows = table.rows;
-					/* Loop through all table rows */
-					for (i = 0; i < (rows.length - 1); i++) {
-						// Start by saying there should be no switching:
-						shouldSwitch = false;
-						/* Get the two elements you want to compare,
-						one from current row and one from the next: */
-						x = rows[i].getElementsByTagName("TD")[n];
-						y = rows[i + 1].getElementsByTagName("TD")[n];
-						if(n==0){
-							/*
-							* the column content is encapsulated with a link and can provide confusing result
-							* as the <A> tag is considered in comparison
-							*/
-							x = x.getElementsByTagName("A")[0];
-							y = y.getElementsByTagName("A")[0];
-						}
-						/* Check if the two rows should switch place,
-						based on the direction, asc or desc: */
-						if (dir == "asc") {
-							if(isNumber == true){
-								numx = Number(x.innerHTML.split(" ")[0]);
-								numy = Number(y.innerHTML.split(" ")[0]);
-								if (numx > numy ){
-									// If so, mark as a switch and break the loop:
-									shouldSwitch = true;
-									break;
-								}
-							}else{
-								if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
-									// If so, mark as a switch and break the loop:
-									shouldSwitch = true;
-									break;
-								}
-							}
-						} else if (dir == "desc") {
-							if(isNumber == true){
-								numx = Number(x.innerHTML.split(" ")[0]);
-								numy = Number(y.innerHTML.split(" ")[0]);
-								if (numx < numy ){
-									// If so, mark as a switch and break the loop:
-									shouldSwitch = true;
-									break;
-								}
-							}else{
-								if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
-									// If so, mark as a switch and break the loop:
-									shouldSwitch = true;
-									break;
-								}
-							}
-						}
-					}
-					if (shouldSwitch) {
-						/* If a switch has been marked, make the switch
-						and mark that a switch has been done: */
-						rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-						switching = true;
-						// Each time a switch is done, increase this count by 1:
-						switchcount ++;
-					} else {
-						/* If no switching has been done AND the direction is "asc",
-						set the direction to "desc" and run the while loop again. */
-						if (switchcount == 0 && dir == "asc") {
-							dir = "desc";
-							switching = true;
-						}
-					}
-				}
-				recolorTableContent(tableId);
-				
-				// set the ranks for the first top N
-				rows = table.rows;
-				threshold = <?php echo $num_students_shown_leaderboard;?>;
-				if(threshold > rows.length)
-					threshold = rows.length;
-				for (i = 0; i < threshold; i++) {
-					if(rows[i].getElementsByTagName("TD").length == 1)
-						// if it is only one <td>, it means the table has no entries, skip the process
-						break;
-					else
-						// set the first <td>
-						rows[i].getElementsByTagName("TD")[0].innerHTML = (i+1);
-				}
-				
-				// remove remaining elements
-				while(rows.length > <?php echo $num_students_shown_leaderboard;?>){
-					rows[rows.length-1].remove();
-				}
-				
-			}
+	<style>
+		:root { color-scheme: light; }
+		body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+		.dataTables_wrapper .dataTables_length select,
+		.dataTables_wrapper .dataTables_filter input {
+			border: 1px solid #cbd5e1;
+			border-radius: 0.5rem;
+			padding: 0.35rem 0.6rem;
+			font-size: 0.8rem;
+			outline: none;
+		}
+		.dataTables_wrapper .dataTables_filter input:focus {
+			border-color: #00A0A5;
+			box-shadow: 0 0 0 2px rgba(0, 160, 165, 0.2);
+		}
 		
-			
-			window.addEventListener('load', function () {
-			  sortTable(2,'sumtablecontent',true);
-			});
-			
-			
-    </script>
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300&display=swap');
-    body {
-      /* font-family: "Times New Roman", Times, serif; */
-      font-family: 'Montserrat', sans-serif;
-    }
-	.btn-primary{
-			background: #a8c6e7 !important ;
-			color: black  !important ;
+		@media (max-width: 640px) {
+			.dataTables_wrapper .dataTables_length,
+			.dataTables_wrapper .dataTables_filter {
+				float: none !important;
+				text-align: left !important;
+				margin-bottom: 0.75rem;
+				width: 100%;
+			}
+			.dataTables_wrapper .dataTables_filter input {
+				width: 100% !important;
+				margin-left: 0 !important;
+				margin-top: 0.25rem;
+			}
+			.dataTables_wrapper .dataTables_info,
+			.dataTables_wrapper .dataTables_paginate {
+				float: none !important;
+				text-align: center !important;
+				margin-top: 0.5rem;
+				width: 100%;
+			}
+			.dataTables_wrapper .dataTables_paginate .paginate_button {
+				padding: 0.25rem 0.5rem !important;
+				font-size: 0.75rem !important;
+			}
 		}
-	.btn-danger{
-			background: #f56976 !important ;
+		.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+			background: #00A0A5 !important;
+			color: #ffffff !important;
+			border-radius: 0.5rem;
+			border: 1px solid #00A0A5 !important;
 		}
-	.buttontambah{
-		text-align: right;
-	}
-	@media (max-width: 425px) {
-		.buttontambah{
-			text-align: left;
-			margin: 1rem 0 1rem 0;
-		}
-	}
 	</style>
-  </head>
-  <body>
-		<?php
-		  if($_SESSION['role'] == 'lecturer')
-			  setHeaderLecturer("colecturer courses", "Co-lecturer course game");
-		  else setHeaderStudent("colecturer courses", "Co-lecturer course game");
-		?>
 
-		<div class="container bodycontent mt-4">
-			<div class="coursetitle">
-				<?php 
-					// this section uses result from the top of this code
-					// it lists all gamified courses where the lecturer is in charge
-					echo 'Course: <select name="course" id="course" class="form-control courseselect" onchange="updateDisplayedGameDataBasedOnCourse()">';
-					while($row = $result->fetch_assoc()) {
-						// set the courseID if it has not been set
-						if($courseID == null)
-							$courseID = $row['course_id'];
-						
-						// echo all of the options
-						echo "<option value=\"".$row['course_id']."\" ";
-						// for selected entry, get also the prize text data
-						if($courseID == $row['course_id']){
-							echo "selected ";
-							$prizeText = $row['prize_text'];
-						}
-						echo ">";
-						echo $row['name']." </option>";
-						
-						
-						
-					}
-					echo "</select>";
-				?>
-			</div>
+	<script>
+		function updateDisplayedGameDataBasedOnCourse() {
+			var selectedValue = document.getElementById("course").value;
+			var currentUrl = window.location.href;
+			var baseUrl = currentUrl.indexOf("?") !== -1 ? currentUrl.substring(0, currentUrl.indexOf("?")) : currentUrl;
+			window.location.href = baseUrl + "?id=" + selectedValue;
+		}
+	</script>
+	<style>
+/* Premium Teal Dropdown Styling for E-STRANGE & S-SPARC */
+select:not(.select2-hidden-accessible):not(.swal2-select), .form-select, .custom-select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2300A0A5' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 0.85rem center !important;
+  background-size: 1.15rem 1.15rem !important;
+  padding-left: 1rem !important;
+  padding-right: 2.5rem !important;
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+  min-width: 140px !important;
+  min-height: 40px !important;
+  border-radius: 0.75rem !important;
+  border: 1.5px solid #cbd5e1 !important;
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+  transition: all 0.2s ease-in-out !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+  cursor: pointer !important;
+}
+
+select:not(.select2-hidden-accessible):not(.swal2-select):hover, .form-select:hover {
+  border-color: #00A0A5 !important;
+  background-color: #f8fafc !important;
+  box-shadow: 0 4px 12px rgba(0, 160, 165, 0.08) !important;
+}
+
+select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:focus {
+  outline: none !important;
+  border-color: #00A0A5 !important;
+  box-shadow: 0 0 0 3px rgba(0, 160, 165, 0.2) !important;
+  background-color: #ffffff !important;
+}
+	</style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 text-slate-900 flex flex-col">
+	<?php
+		if ($_SESSION['role'] == 'lecturer') {
+			setHeaderLecturer("colecturer courses", "Co-lecturer course game");
+		} else {
+			setHeaderStudent("colecturer courses", "Co-lecturer course game");
+		}
+	?>
+
+	<main class="flex-1 py-8">
+		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
 			
-			<div class="row d-flex justify-content-center mt-4" style="min-height:10vh">
-				<div class="col-md-12 mb-3">
-					<div class="row d-flex justify-content-center">
-						<div class="col-md-12 fs-2 fw-bold mb-2 text-center"> 
-							Leaderboard 
-						</div>
-						<div class="col-md-12">
-							<div class="tablecontainer">
-								<table id="leaderboard" class="table table-bordered table-striped responsive nowrap"  style="width:100%">
-									<thead>
-										<tr>
-											<th style='width:5%'>Rank</th>
-											<th>Student</th>
-											<th>General</th>
-											<th>Timeliness</th>
-											<th>Decisiveness</th>
-											<th>Quality</th>
-											<th>Efficiency</th>
-										</tr>
-									</thead>
-									<tbody>
-										<?php
-											$counter = 1;
-											$students = array();
-											$arr = array();
-											
-											// get all students participating in the game
-											$sql = "SELECT user.username, user.name, game_student_course.gs_id, game_student_course.student_id 
-											FROM game_student_course 
-											INNER JOIN user ON user.user_id = game_student_course.student_id 
-											WHERE game_student_course.course_id = '".$courseID."' 
-											AND game_student_course.is_participating = 1";
-											
-											$result = mysqli_query($db,$sql);
-											if ($result->num_rows > 0) {
-												while($row = $result->fetch_assoc()){
-													
-													if(in_array($row['username'],$arr)){
-														continue;
-													}else{
-														array_push($arr,$row['username']);
-													}
-													
-													// assessment submission points
-													$myTimelinessPoints = 0;
-                                                    $myEfficiencyPoints = 0;
-                                                    $myQualityPoints = 0;
-                                                    $myDecisivePoints = 0;
-													$sqlt = "SELECT user.user_id AS id, 
-													        MAX(submission.attempt) as maxattempt, 
-                                                            ROUND(MAX((assessment.submission_close_time - submission.submission_time)/(assessment.submission_close_time - assessment.submission_open_time)*100),0) as mintime,
-                                                            ROUND(AVG(suspicion.efficiency_point),0) as eff, 
-                                                            ROUND(AVG(code_clarity_suggestion.quality_point),0) as qual 
-															FROM suspicion  
-															INNER JOIN submission ON submission.submission_id = suspicion.submission_id 
-															INNER JOIN user ON user.user_id = submission.submitter_id 
-															INNER JOIN assessment ON assessment.assessment_id = submission.assessment_id 
-															INNER JOIN course ON course.course_id = assessment.course_id 
-															LEFT JOIN code_clarity_suggestion ON code_clarity_suggestion.submission_id = submission.submission_id 
-															WHERE user.user_id = '".$row['student_id']."' 
-															AND course.course_id = '".$courseID."' 
-															GROUP BY assessment.assessment_id";
-													$resultt = mysqli_query($db,$sqlt);
-													if ($resultt->num_rows > 0) {
-														while($rowt = $resultt->fetch_assoc()){
-															if($rowt['qual'] == NULL)
-                                                                $rowt['qual'] = 100;
-                                                            if($rowt['mintime'] < 0){
-                                                                $rowt['mintime'] = 0;
-                                                            }
-                                                            $myDecisivePoints += round(100/$rowt['maxattempt']);
-                                                            $myTimelinessPoints += $rowt['mintime'];
-                                                            $myEfficiencyPoints += $rowt['eff'];
-                                                            $myQualityPoints += $rowt['qual'];
-														}
-													}
-													
-												// 	// get number of correct attempts
-												// 	$sqlt = "SELECT COUNT(question_id)  AS tot FROM instant_quiz_response_history
-												// 		WHERE student_id = '".$row['student_id']."' AND is_correct = 1 AND response_time > DATE_SUB(now(), INTERVAL 6 MONTH)";
-												// 	$resultt = mysqli_query($db,$sqlt);
-												// 	$rowt = $resultt->fetch_assoc();
-												// 	$myQuizPoints = $rowt['tot'] * 100;
-													
-													$totalPoints = $myTimelinessPoints + $myEfficiencyPoints + $myQualityPoints + $myDecisivePoints;
-													
-													if($totalPoints != 0){
-													    $students[] = [
-                                                            'student_id' => $row['student_id'],
-                                                            'username' => $row['username'],
-                                                            'name' => $row['name'],
-                                                            'totalPoints' => $totalPoints,
-                                                            'submissionPoints' => $myTimelinessPoints,
-                                                            'qualityPoints' => $myQualityPoints,
-                                                            'efficiencyPoints' => $myEfficiencyPoints,
-                                                            'decisivePoints' => $myDecisivePoints
-                                                        ];
-												// 		// only shows if the total point is not zero
-												// 		echo "<tr class=\"content\" id=\"".$row['student_id']."\" onclick=\"selectRow('".$row['student_id']."','sumtablecontent')\">
-												// 					<td style='width:5%'>$counter</td>
-												// 					<td>".$row['username']." / ".$row['name']."</td>
-												// 					<td>".$totalPoints."</td>
-												// 					<td>".$myTimelinessPoints."</td>
-												// 					<td>".$myDecisivePoints."</td>
-												// 					<td>".$myQualityPoints."</td>
-												// 					<td>".$myEfficiencyPoints."</td>
-																	
-												// 				</tr>
-												// 			";
-												// 		$counter++;
-													}
-												}
-												
-												// Urutkan array berdasarkan totalPoints secara descending
-                                                usort($students, function ($a, $b) {
-                                                    return $b['totalPoints'] <=> $a['totalPoints'];
-                                                });
-                                                
-                                                // Tampilkan hasil yang telah diurutkan
-                                                $counter = 1;
-                                                foreach ($students as $student) {
-                                                    echo "<tr class=\"content\" id=\"".$student['student_id']."\" onclick=\"selectRow('".$student['student_id']."','sumtablecontent')\">
-                                                            <td style='width:5%'>".$counter."</td>
-                                                            <td>".$student['username']." / ".$student['name']."</td>
-                                                            <td>".$student['totalPoints']."</td>
-                                                            <td>".$student['submissionPoints']."</td>
-                                                            <td>".$student['decisivePoints']."</td>
-                                                            <td>".$student['qualityPoints']."</td>
-                                                            <td>".$student['efficiencyPoints']."</td>
-                                                          </tr>";
-                                                    $counter++;
-                                                }
-											} else {
-													// if no submissions
-													echo "
-													";
-											}
-										?>
-									</tbody>
-								</table>
-							</div>
-						</div>
+			<!-- Header Card with Course Select -->
+			<div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 flex flex-wrap items-center justify-between gap-4">
+				<div>
+					<div class="flex items-center gap-2 mb-1">
+						<span class="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-[#00A0A5] text-white">
+							Co-Lecturer Governance
+						</span>
+						<span class="text-xs font-semibold text-slate-500">
+							Gamification Standings
+						</span>
 					</div>
+					<h1 class="text-xl font-bold text-slate-900 tracking-tight">Co-Lecturer Course Game Leaderboard</h1>
+					<p class="text-xs text-slate-500 mt-1">Cross-sectional standings based on timeliness, decisiveness, code quality, and efficiency metrics.</p>
 				</div>
-			</div>
-
-			<div class="row d-flex justify-content-center mt-4">
-				<div class="col-md-12 fs-2 mb-2 fw-bold text-center"> 
-					Game Description 
-				</div>
-				<div class="col-md-12">
-					<div class="gameexplanation" style="font-size:0.9em"> 
+				
+				<div class="flex items-center gap-3">
+					<label for="course" class="text-xs font-bold uppercase tracking-wider text-slate-700 whitespace-nowrap">Active Course:</label>
+					<select name="course" id="course" onchange="updateDisplayedGameDataBasedOnCourse()" class="form-select">
 						<?php 
-							
-							echo "<p><b>Prize</b>: ".$prizeText."</p>";
-							
-							// showing general rules how to obtain points in preferred language
-							if($human_language == 'en'){
-								echo "<p>Students will obtain more game points by submitting high-quality and efficient programs as early as possible (timeliness) with fewer submission attempts (decisiveness). Submitting programs early means the students have good time management. 
-								Fewer submission attempts means students only submit their work when it is ready.
-								Having high-quality programs means the students know how to write maintainable programs. Having efficient programs means students know how to write environment-friendly programs. 
-								The points will be averaged if students do multiple submissions for a particular assessment. </p>
-								<p>Students can also get more points by giving peer reviews or receiving good reviews about their programs if asked by the instructors.</p>";
-								echo '<p>Students can turn off the game feature. Their points will be hidden from anyone (but still recorded so the students can rejoin at any time without losing any points). </p>';
-							}else{
-								echo "<p>Siswa akan mendapatkan poin permainan lebih dengan mengumpulkan program yang berkualitas tinggi dan efisien sedini mungkin (timeliness) dengan pengumpulan sesedikit mungkin (decisiveness). Mengumpulkan program sedini mungkin berarti siswa terkait memiliki manajemen waktu yang baik. 
-								Jumlah pengumpulan tugas yang sedikit berarti siswa hanya mengumpulkan tugas jika memang sudah siap.
-								Memiliki program berkualitas tinggi berarti siswa terkait mengerti cara menulis program yang dapat dipelihara. Memiliki program efisien berarti siswa terkait mengerti cara menulis program yang ramah lingkungan. 
-								Poin-poin tersebut akan direrata jika siswanya memiliki beberapa program untuk sebuah tugas. </p>
-								<p>Siswa juga dapat memperoleh poin lebih dengan memberikan review pada program rekan atau menerima review baik terkait programnya jika diminta oleh pengajar.</p>";
-								echo '<p>Siswa dapat mematikan fitur permainan. Poin nya akan disembunyikan dari siswa lain (namun tetap disimpan sehingga siswa dapat ikut kembali tanpa kehilangan poin). </p>';
+							while($row = $result->fetch_assoc()) {
+								if($courseID == null)
+									$courseID = $row['course_id'];
+								
+								$selected = "";
+								if($courseID == $row['course_id']){
+									$selected = "selected";
+									$prizeText = $row['prize_text'];
+								}
+								echo "<option value=\"".$row['course_id']."\" ".$selected.">";
+								echo htmlspecialchars($row['name'])."</option>";
 							}
 						?>
-					</div>
+					</select>
 				</div>
 			</div>
 
-	<script src="bootstrap-5.3.3-dist/js/bootstrap.bundle.min.js"></script>
+			<!-- Leaderboard Table Card -->
+			<div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 space-y-4">
+				<div class="flex items-center justify-between border-b border-slate-100 pb-3">
+					<h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
+						<svg class="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+						<span>Leaderboard Rankings</span>
+					</h2>
+					<span class="text-xs text-slate-500 font-medium">Rankings updated automatically</span>
+				</div>
+				
+				<div class="overflow-x-auto">
+					<table id="leaderboard" class="w-full text-left text-xs" style="width:100%">
+						<thead>
+							<tr class="border-b border-slate-200 text-slate-500 uppercase tracking-wider font-bold text-[11px]">
+								<th class="py-3 px-3 text-center" style="width: 7%;">Rank</th>
+								<th class="py-3 px-3" style="width: 33%;">Student Identity</th>
+								<th class="py-3 px-3 text-center font-bold text-slate-900" style="width: 14%;">General Points</th>
+								<th class="py-3 px-3 text-center" style="width: 11.5%;">Timeliness</th>
+								<th class="py-3 px-3 text-center" style="width: 11.5%;">Decisiveness</th>
+								<th class="py-3 px-3 text-center" style="width: 11.5%;">Quality</th>
+								<th class="py-3 px-3 text-center" style="width: 11.5%;">Efficiency</th>
+							</tr>
+						</thead>
+						<tbody class="divide-y divide-slate-100">
+							<?php
+								$students = array();
+								$arr = array();
+								
+								// Ambil semua siswa yang ikut serta dalam game
+								$sql = "SELECT user.username, user.name, game_student_course.gs_id, game_student_course.student_id 
+										FROM game_student_course 
+										INNER JOIN user ON user.user_id = game_student_course.student_id 
+										WHERE game_student_course.course_id = '".$courseID."' 
+										AND game_student_course.is_participating = 1";
+								
+								$result = mysqli_query($db, $sql);
+								if ($result && $result->num_rows > 0) {
+									while ($row = $result->fetch_assoc()) {
+										if (in_array($row['username'], $arr)) {
+											continue;
+										} else {
+											array_push($arr, $row['username']);
+										}
+
+										$myTimelinessPoints = 0;
+										$myEfficiencyPoints = 0;
+										$myQualityPoints = 0;
+										$myDecisivePoints = 0;
+
+										$sqlt = "SELECT user.user_id AS id, 
+														MAX(submission.attempt) as maxattempt, 
+														ROUND(MAX((assessment.submission_close_time - submission.submission_time)/(assessment.submission_close_time - assessment.submission_open_time)*100),0) as mintime,
+														ROUND(AVG(suspicion.efficiency_point),0) as eff, 
+														ROUND(AVG(code_clarity_suggestion.quality_point),0) as qual 
+												 FROM suspicion  
+												 INNER JOIN submission ON submission.submission_id = suspicion.submission_id 
+												 INNER JOIN user ON user.user_id = submission.submitter_id 
+												 INNER JOIN assessment ON assessment.assessment_id = submission.assessment_id 
+												 INNER JOIN course ON course.course_id = assessment.course_id 
+												 LEFT JOIN code_clarity_suggestion ON code_clarity_suggestion.submission_id = submission.submission_id 
+												 WHERE user.user_id = '".$row['student_id']."' 
+												 AND course.course_id = '".$courseID."' 
+												 GROUP BY assessment.assessment_id";
+
+										$resultt = mysqli_query($db, $sqlt);
+										if ($resultt && $resultt->num_rows > 0) {
+											while ($rowt = $resultt->fetch_assoc()) {
+												if ($rowt['qual'] == NULL)
+													$rowt['qual'] = 100;
+												if ($rowt['mintime'] < 0){
+													$rowt['mintime'] = 0;
+												}
+												$myDecisivePoints += round(100 / $rowt['maxattempt']);
+												$myTimelinessPoints += $rowt['mintime'];
+												$myEfficiencyPoints += $rowt['eff'];
+												$myQualityPoints += $rowt['qual'];
+											}
+										}
+
+										$totalPoints = $myTimelinessPoints + $myEfficiencyPoints + $myQualityPoints + $myDecisivePoints;
+
+										if ($totalPoints != 0) {
+											$students[] = [
+												'student_id' => $row['student_id'],
+												'username' => $row['username'],
+												'name' => $row['name'],
+												'totalPoints' => $totalPoints,
+												'submissionPoints' => $myTimelinessPoints,
+												'qualityPoints' => $myQualityPoints,
+												'efficiencyPoints' => $myEfficiencyPoints,
+												'decisivePoints' => $myDecisivePoints
+											];
+										}
+									}
+
+									// Urutkan array berdasarkan totalPoints secara descending
+									usort($students, function ($a, $b) {
+										return $b['totalPoints'] <=> $a['totalPoints'];
+									});
+
+									foreach ($students as $key => $student) {
+										$rank = $key + 1;
+										$rankBadge = $rank === 1 ? 'bg-amber-100 text-amber-800 font-extrabold' : ($rank === 2 ? 'bg-slate-200 text-slate-800 font-bold' : ($rank === 3 ? 'bg-orange-100 text-orange-800 font-bold' : 'bg-slate-100 text-slate-700 font-medium'));
+							?>
+								<tr class="hover:bg-slate-50/80 transition-colors" id="<?= htmlspecialchars($student['student_id']); ?>">
+									<td class="py-3 px-3 text-center">
+										<span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs <?= $rankBadge; ?>">
+											<?= $rank; ?>
+										</span>
+									</td>
+									<td class="py-3 px-3">
+										<span class="font-mono font-bold text-slate-900"><?= htmlspecialchars($student['username']); ?></span>
+										<span class="text-slate-500 text-[11px] block"><?= htmlspecialchars($student['name']); ?></span>
+									</td>
+									<td class="py-3 px-3 text-center font-extrabold text-[#00A0A5] font-mono text-xs">
+										<?= htmlspecialchars($student['totalPoints']); ?>
+									</td>
+									<td class="py-3 px-3 text-center text-slate-700 font-mono">
+										<?= htmlspecialchars($student['submissionPoints']); ?>
+									</td>
+									<td class="py-3 px-3 text-center text-slate-700 font-mono">
+										<?= htmlspecialchars($student['decisivePoints']); ?>
+									</td>
+									<td class="py-3 px-3 text-center text-slate-700 font-mono">
+										<?= htmlspecialchars($student['qualityPoints']); ?>
+									</td>
+									<td class="py-3 px-3 text-center text-slate-700 font-mono">
+										<?= htmlspecialchars($student['efficiencyPoints']); ?>
+									</td>
+								</tr>
+							<?php 
+									}
+								} 
+							?>
+						</tbody>
+					</table>
+				</div>
+			</div>
+
+			<!-- Game Description & Prize Card -->
+			<div class="bg-white rounded-2xl border border-slate-200/80 shadow-xs p-6 space-y-4">
+				<div class="flex items-center gap-2 border-b border-slate-100 pb-3">
+					<span class="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-slate-100 text-slate-700">
+						Rules &amp; Incentives
+					</span>
+					<h3 class="text-sm font-bold text-slate-900">Game Description &amp; Scoring Mechanics</h3>
+				</div>
+				
+				<?php if (!empty($prizeText)): ?>
+					<div class="p-4 bg-emerald-50/90 border border-emerald-200 rounded-xl text-xs text-emerald-900 flex items-start gap-2.5">
+						<svg class="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+						<div>
+							<strong class="font-bold block text-sm text-emerald-950">Prize Award Announcement</strong>
+							<span class="text-xs text-emerald-800 leading-relaxed block mt-0.5"><?= htmlspecialchars($prizeText); ?></span>
+						</div>
+					</div>
+				<?php endif; ?>
+
+				<div class="text-xs text-slate-600 leading-relaxed space-y-3 p-4 bg-slate-50 border border-slate-200/80 rounded-xl">
+					<?php 
+						// showing general rules how to obtain points in preferred language
+						if($human_language == 'en'){
+							echo "<p>Students will obtain more game points by submitting high-quality and efficient programs as early as possible (timeliness) with fewer submission attempts (decisiveness). Submitting programs early means the students have good time management. 
+							Fewer submission attempts means students only submit their work when it is ready.
+							Having high-quality programs means the students know how to write maintainable programs. Having efficient programs means students know how to write environment-friendly programs. 
+							The points will be averaged if students do multiple submissions for a particular assessment. </p>
+							<p>Students can also get more points by giving peer reviews or receiving good reviews about their programs if asked by the instructors.</p>";
+							echo '<p class="text-slate-500 font-medium pt-1 border-t border-slate-200">Students can turn off the game feature. Their points will be hidden from anyone (but still recorded so the students can rejoin at any time without losing any points).</p>';
+						}else{
+							echo "<p>Siswa akan mendapatkan poin permainan lebih dengan mengumpulkan program yang berkualitas tinggi dan efisien sedini mungkin (timeliness) dengan pengumpulan sesedikit mungkin (decisiveness). Mengumpulkan program sedini mungkin berarti siswa terkait memiliki manajemen waktu yang baik. 
+							Jumlah pengumpulan tugas yang sedikit berarti siswa hanya mengumpulkan tugas jika memang sudah siap.
+							Memiliki program berkualitas tinggi berarti siswa terkait mengerti cara menulis program yang dapat dipelihara. Memiliki program efisien berarti siswa terkait mengerti cara menulis program yang ramah lingkungan. 
+							Poin-poin tersebut akan direrata jika siswanya memiliki beberapa program untuk sebuah tugas. </p>
+							<p>Siswa juga dapat memperoleh poin lebih dengan memberikan review pada program rekan atau menerima review baik terkait programnya jika diminta oleh pengajar.</p>";
+							echo '<p class="text-slate-500 font-medium pt-1 border-t border-slate-200">Siswa dapat mematikan fitur permainan. Poin nya akan disembunyikan dari siswa lain (namun tetap disimpan sehingga siswa dapat ikut kembali tanpa kehilangan poin).</p>';
+						}
+					?>
+				</div>
+			</div>
+
+		</div>
+	</main>
+
 	<script>
-		new DataTable('#leaderboard', {
-			responsive: true,
-			pageLength: 5,
-   			lengthMenu: [5, 10, 15, 25, 50],
+		$(document).ready(function() {
+			new DataTable('#leaderboard', {
+				responsive: true,
+				pageLength: 10,
+				lengthMenu: [5, 10, 25, 50],
+				language: { search: "_INPUT_", searchPlaceholder: "Search leaderboard..." }
+			});
 		});
 	</script>
-  </body>
+</body>
 </html>
