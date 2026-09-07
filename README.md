@@ -16,7 +16,7 @@
 
 ## 📌 Executive Summary & Foundational Platform
 
-**S-SPARC AI** (*Smart Software Engineering & Pedagogical Adaptive Retrieval Assistant*) is an advanced AI-powered educational engine specifically built to enhance programming and software engineering instruction in higher education institutions.
+**S-SPARC AI** is an advanced AI-powered educational engine specifically built to enhance programming and software engineering instruction in higher education institutions.
 
 ```
 +---------------------------------------------------------------------------------------------------+
