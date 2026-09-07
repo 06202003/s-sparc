@@ -9,7 +9,7 @@
 	if(isset($_GET['id']) == true && $_GET['id'] != ''){
 		$courseID = mysqli_real_escape_string($db,$_GET['id']);
 		
-		// check if the lecturer is the creator of the course and game feature is on for that course
+		// check if the game feature is on for that course
 		$sql = "SELECT course.creator_id FROM course
 			INNER JOIN game_course ON game_course.course_id = course.course_id 
 			WHERE game_course.is_active = 1 
@@ -40,7 +40,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>E-STRANGE: Course Gamification Leaderboard</title>
+	<title>E-STRANGE: Course Game Leaderboard</title>
 	<link rel="icon" href="strange_html_layout_additional_files/icon.png">
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -222,7 +222,7 @@ select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:fo
 						</thead>
 						<tbody class="divide-y divide-slate-100">
 							<?php
-								$arr = array();
+								$students = array();
 								
 								// Ambil semua siswa yang ikut serta dalam game
 								$sql = "SELECT user.username, user.name, game_student_course.gs_id, game_student_course.student_id 
@@ -234,7 +234,8 @@ select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:fo
 								$result = mysqli_query($db, $sql);
 								if ($result && $result->num_rows > 0) {
 									while ($row = $result->fetch_assoc()) {
-										if (in_array($row['username'], array_column($arr, 'username'))) {
+										// Hindari duplikasi username
+										if (in_array($row['username'], array_column($students, 'username'))) {
 											continue;
 										}
 
@@ -243,7 +244,7 @@ select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:fo
 										$myQualityPoints = 0;
 										$myDecisivePoints = 0;
 
-										// Ambil nilai dari submission
+										// Ambil nilai submission
 										$sqlt = "SELECT MAX(submission.attempt) as maxattempt,
 														ROUND(MAX((assessment.submission_close_time - submission.submission_time)/(assessment.submission_close_time - assessment.submission_open_time)*100),0) as mintime,
 														ROUND(AVG(suspicion.efficiency_point),0) as eff, 
@@ -260,12 +261,12 @@ select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:fo
 										$resultt = mysqli_query($db, $sqlt);
 										if ($resultt && $resultt->num_rows > 0) {
 											while ($rowt = $resultt->fetch_assoc()) {
-												if($rowt['qual'] == NULL)
+												if ($rowt['qual'] == NULL)
 													$rowt['qual'] = 100;
-												if($rowt['mintime'] < 0){
+												if ($rowt['mintime'] < 0){
 													$rowt['mintime'] = 0;
 												}
-												$myDecisivePoints += round(100/$rowt['maxattempt']);
+												$myDecisivePoints += round(100 / $rowt['maxattempt']);
 												$myTimelinessPoints += $rowt['mintime'];
 												$myEfficiencyPoints += $rowt['eff'];
 												$myQualityPoints += $rowt['qual'];
@@ -277,7 +278,7 @@ select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:fo
 
 										// Masukkan data ke array jika total poin tidak nol
 										if ($totalPoints != 0) {
-											$arr[] = [
+											$students[] = [
 												'student_id' => $row['student_id'],
 												'username' => $row['username'],
 												'name' => $row['name'],
@@ -292,11 +293,11 @@ select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:fo
 								}
 
 								// Urutkan array berdasarkan totalPoints secara descending
-								usort($arr, function ($a, $b) {
+								usort($students, function ($a, $b) {
 									return $b['totalPoints'] <=> $a['totalPoints'];
 								});
 
-								foreach ($arr as $key => $student) {
+								foreach ($students as $key => $student) {
 									$rank = $key + 1;
 									$rankBadge = $rank === 1 ? 'bg-amber-100 text-amber-800 font-extrabold' : ($rank === 2 ? 'bg-slate-200 text-slate-800 font-bold' : ($rank === 3 ? 'bg-orange-100 text-orange-800 font-bold' : 'bg-slate-100 text-slate-700 font-medium'));
 							?>
@@ -362,11 +363,11 @@ select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:fo
 							<p>Students can also get more points by giving peer reviews or receiving good reviews about their programs if asked by the instructors.</p>";
 							echo '<p class="text-slate-500 font-medium pt-1 border-t border-slate-200">Students can turn off the game feature. Their points will be hidden from anyone (but still recorded so the students can rejoin at any time without losing any points).</p>';
 						}else{
-							echo "<p>Siswa akan mendapatkan poin permainan lebih dengan mengumpulkan program yang berkualitas tinggi dan efisien sedini mungkin (timeliness) dengan pengumpulan sesedikit mungkin (decisiveness). Mengumpulkan program sedini mungkin berarti siswa terkait memiliki manajemen waktu yang baik. 
-							Jumlah pengumpulan tugas yang sedikit berarti siswa hanya mengumpulkan tugas jika memang sudah siap.
+							echo "<p>Siswa akan mendapatkan poin permainan lebih dengan mengumpulkan program yang berkualitas tinggi dan efisien sedini mungkin (timeliness) dengan pengumpulkan sesedikit mungkin (decisiveness). Mengumpulkan program sedini mungkin berarti siswa terkait memiliki manajemen waktu yang baik. 
+							Jumlah pengumpulkan tugas yang sedikit berarti siswa hanya mengumpulkan tugas jika memang sudah siap.
 							Memiliki program berkualitas tinggi berarti siswa terkait mengerti cara menulis program yang dapat dipelihara. Memiliki program efisien berarti siswa terkait mengerti cara menulis program yang ramah lingkungan. 
 							Poin-poin tersebut akan direrata jika siswanya memiliki beberapa program untuk sebuah tugas. </p>
-							<p>Siswa juga dapat memperoleh poin lebih dengan memberikan review pada program rekan atau menerima review baik terkait programnya jika diminta oleh pengajar.</p>";
+							<p>Siswa juga dapat memperoleh poin lebih dengan memberikan review pada program rekan atau receiving review baik terkait programnya jika diminta oleh pengajar.</p>";
 							echo '<p class="text-slate-500 font-medium pt-1 border-t border-slate-200">Siswa dapat mematikan fitur permainan. Poin nya akan disembunyikan dari siswa lain (namun tetap disimpan sehingga siswa dapat ikut kembali tanpa kehilangan poin).</p>';
 						}
 					?>
