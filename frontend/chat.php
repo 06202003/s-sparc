@@ -404,6 +404,7 @@ select.select2-hidden-accessible {
     let scrollBtn = null;
     const userId = '<?= htmlspecialchars($_SESSION['user_id'] ?? $_SESSION['chat_user_id']) ?>';
     const assessmentId = '<?= htmlspecialchars($assessmentId, ENT_QUOTES, 'UTF-8') ?>';
+    const FASTAPI_URL = "https://estrangeinternal.itmaranatha.org";
     const sendBtn = document.getElementById('send-btn');
 
     const STORAGE_KEY = 'chat_messages_v1_' + (assessmentId || 'default');
@@ -1026,7 +1027,7 @@ select.select2-hidden-accessible {
     // Fetch and Update Real-time Query Quota
     async function fetchQueryQuota() {
       try {
-        const res = await fetch(`http://127.0.0.1:5000/api/user/query-quota`, {
+        const res = await fetch(`${FASTAPI_URL}/api/user/query-quota`, {
           headers: { 'X-User-ID': userId }
         });
         if (res.ok) {
@@ -1074,7 +1075,7 @@ select.select2-hidden-accessible {
     async function openApiKeyInputModal(isFirstTime = true) {
       let currentMasked = '';
       try {
-        const res = await fetch(`http://127.0.0.1:5000/api/user/api-key`, {
+        const res = await fetch(`${FASTAPI_URL}/api/user/api-key`, {
           headers: { 'X-User-ID': userId }
         });
         if (res.ok) {
@@ -1137,7 +1138,7 @@ select.select2-hidden-accessible {
             didOpen: () => { Swal.showLoading(); }
           });
 
-          const postRes = await fetch(`http://127.0.0.1:5000/api/user/api-key`, {
+          const postRes = await fetch(`${FASTAPI_URL}/api/user/api-key`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -1193,7 +1194,7 @@ select.select2-hidden-accessible {
 
     async function checkUserApiKey() {
       try {
-        const res = await fetch(`http://127.0.0.1:5000/api/user/api-key`, {
+        const res = await fetch(`${FASTAPI_URL}/api/user/api-key`, {
           headers: { 'X-User-ID': userId }
         });
         if (res.ok) {

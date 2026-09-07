@@ -298,7 +298,7 @@ select.select2-hidden-accessible {
     <?php endif; ?>
 
     <!-- API Key Status Notice Banner -->
-    <div id="apiKeyNotice" class="hidden mb-4 rounded-xl border p-4 text-xs space-y-2 shadow-xs transition-all bg-white/80 backdrop-blur">
+    <div id="apiKeyNotice" class="mb-4 rounded-xl border border-amber-200 bg-amber-50 text-amber-900 p-4 text-xs space-y-2 shadow-xs transition-all backdrop-blur">
       <div class="flex items-start justify-between gap-3">
         <div class="flex items-start gap-2.5">
           <span id="apiKeyNoticeIcon" class="text-xl shrink-0 mt-0.5">⚠️</span>
@@ -483,7 +483,7 @@ select.select2-hidden-accessible {
     </main>
   </div>
   <script>
-    const FASTAPI_URL = "http://127.0.0.1:5000";
+    const FASTAPI_URL = "https://estrangeinternal.itmaranatha.org";
     const SSO_USER_ID = "<?= htmlspecialchars($_SESSION['user_id'] ?? '') ?>";
     let userHasApiKey = false;
 
@@ -497,9 +497,14 @@ select.select2-hidden-accessible {
           const data = await res.json();
           userHasApiKey = !!data.has_key;
           updateApiKeyBanner(data);
+        } else {
+          userHasApiKey = false;
+          updateApiKeyBanner({ has_key: false });
         }
       } catch (e) {
         console.debug('Error checking user API key:', e);
+        userHasApiKey = false;
+        updateApiKeyBanner({ has_key: false });
       }
     }
 
@@ -785,6 +790,7 @@ select.select2-hidden-accessible {
         openApiKeyInputModal(isFirstTime);
       });
     }
+    const openApiKeyModal = openApiKeyFlow;
 
     jQuery(function($) {
       checkUserApiKey();

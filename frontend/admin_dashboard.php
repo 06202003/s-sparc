@@ -7,10 +7,10 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-$httpClient = new \GuzzleHttp\Client(['base_uri' => getenv('API_BASE') ?: 'http://localhost:5000/']);
+$httpClient = new \GuzzleHttp\Client(['base_uri' => getenv('API_BASE') ?: 'https://estrangeinternal.itmaranatha.org/']);
 $flaskCookie = $_SESSION['flask_cookie'] ?? null;
 if ($flaskCookie) {
-    $cookieJar = \GuzzleHttp\Cookie\CookieJar::fromArray(['flask_cookie' => $flaskCookie], parse_url(getenv('API_BASE') ?: 'http://localhost:5000/', PHP_URL_HOST));
+    $cookieJar = \GuzzleHttp\Cookie\CookieJar::fromArray(['flask_cookie' => $flaskCookie], parse_url(getenv('API_BASE') ?: 'https://estrangeinternal.itmaranatha.org/', PHP_URL_HOST));
 }
 
 try {

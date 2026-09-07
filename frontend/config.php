@@ -28,7 +28,7 @@ if (session_status() === PHP_SESSION_NONE) {
 function backend_base(): string {
     $base = getenv('FLASK_BASE_URL');
     if (!$base) {
-        $base = 'http://localhost:5000';
+        $base = 'https://estrangeinternal.itmaranatha.org';
     }
     return rtrim($base, '/');
 }
