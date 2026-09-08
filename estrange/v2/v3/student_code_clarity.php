@@ -17,9 +17,11 @@
 		INNER JOIN submission ON submission.submission_id = code_clarity_suggestion.submission_id
 		INNER JOIN assessment ON assessment.assessment_id = submission.assessment_id
 		INNER JOIN course ON course.course_id = assessment.course_id
-		WHERE code_clarity_suggestion.public_suggestion_id = '".$_GET['id']."'";
+		WHERE code_clarity_suggestion.public_suggestion_id = '".$_GET['id']."'
+		OR code_clarity_suggestion.submission_id = '".$_GET['id']."'
+		OR code_clarity_suggestion.suggestion_id = '".$_GET['id']."'";
 	$resultt = mysqli_query($db,$sqlt);
-	$rowt = $resultt->fetch_assoc();
+	$rowt = $resultt ? $resultt->fetch_assoc() : null;
 
 	// if the public suggestion id is invalid, redirect to login
 	if(is_null($rowt)){

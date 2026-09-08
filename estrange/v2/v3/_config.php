@@ -147,7 +147,7 @@ if (!function_exists('setHeaderReport')) {
         }
 
         echo '<div class="flex items-center gap-2">';
-        $sqlt = "SELECT suspicion.originality_point, suspicion.suspicion_id, suspicion.suspicion_type, assessment.name AS assessment_name, course.name AS course_name      
+        $sqlt = "SELECT suspicion.originality_point, suspicion.suspicion_id, suspicion.public_suspicion_id, suspicion.suspicion_type, assessment.name AS assessment_name, course.name AS course_name      
         FROM submission
         INNER JOIN assessment ON submission.assessment_id = assessment.assessment_id 
         INNER JOIN course ON assessment.course_id = course.course_id 
@@ -159,11 +159,12 @@ if (!function_exists('setHeaderReport')) {
             $orig = max(0, (float)$rowt["originality_point"]);
             $badgeClass = ($orig >= 70) ? "bg-emerald-50 text-emerald-700 border-emerald-200" : (($orig >= 30) ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-rose-50 text-rose-700 border-rose-200");
             $activeClass = ($selectedMenu == 'originality') ? 'ring-2 ring-[#00A0A5] font-bold' : '';
-            $linkTarget = ($_SESSION['role'] == 'student') ? 'student_suspicion_sub.php?id=' : 'lecturer_suspicion_sub.php?id=';
-            echo '<button class="inline-flex items-center rounded-lg border px-3 py-1.5 text-sm font-medium ' . $badgeClass . ' ' . $activeClass . ' transition shadow-xs" onclick="window.open(\'' . $linkTarget . $rowt["suspicion_id"] . '\', \'_self\');">Originality: '.$orig.'%</button>';
+            $linkTarget = ($_SESSION['role'] == 'student') ? 'student_suspicion_sub_without_login.php?id=' : 'lecturer_suspicion_sub.php?id=';
+            $targetId = !empty($rowt["public_suspicion_id"]) ? $rowt["public_suspicion_id"] : $rowt["suspicion_id"];
+            echo '<button class="inline-flex items-center rounded-lg border px-3 py-1.5 text-sm font-medium ' . $badgeClass . ' ' . $activeClass . ' transition shadow-xs" onclick="window.open(\'' . $linkTarget . $targetId . '\', \'_self\');">Originality: '.$orig.'%</button>';
         }
 
-        $sqlt = "SELECT code_clarity_suggestion.quality_point, code_clarity_suggestion.suggestion_id, assessment.name AS assessment_name, course.name AS course_name      
+        $sqlt = "SELECT code_clarity_suggestion.quality_point, code_clarity_suggestion.suggestion_id, code_clarity_suggestion.public_suggestion_id, assessment.name AS assessment_name, course.name AS course_name      
         FROM submission
         INNER JOIN assessment ON submission.assessment_id = assessment.assessment_id 
         INNER JOIN course ON assessment.course_id = course.course_id 
@@ -176,7 +177,8 @@ if (!function_exists('setHeaderReport')) {
             $badgeClass = ($qual >= 70) ? "bg-emerald-50 text-emerald-700 border-emerald-200" : (($qual >= 30) ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-rose-50 text-rose-700 border-rose-200");
             $activeClass = ($selectedMenu == 'quality') ? 'ring-2 ring-[#00A0A5] font-bold' : '';
             $linkTarget = ($_SESSION['role'] == 'student') ? 'student_code_clarity.php?id=' : 'lecturer_code_clarity.php?id=';
-            echo '<button class="inline-flex items-center rounded-lg border px-3 py-1.5 text-sm font-medium ' . $badgeClass . ' ' . $activeClass . ' transition shadow-xs" onclick="window.open(\'' . $linkTarget . $submissionID . '\', \'_self\');">Quality: '.$qual.'%</button>';
+            $targetId = !empty($rowt["public_suggestion_id"]) ? $rowt["public_suggestion_id"] : $submissionID;
+            echo '<button class="inline-flex items-center rounded-lg border px-3 py-1.5 text-sm font-medium ' . $badgeClass . ' ' . $activeClass . ' transition shadow-xs" onclick="window.open(\'' . $linkTarget . $targetId . '\', \'_self\');">Quality: '.$qual.'%</button>';
         }
 
         $dashLink = ($_SESSION['role'] == 'student') ? 'student_dashboard.php' : (($_SESSION['role'] == 'lecturer') ? 'lecturer_dashboard.php' : 'admin_dashboard.php');
