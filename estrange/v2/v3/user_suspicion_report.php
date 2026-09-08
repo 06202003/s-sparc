@@ -604,6 +604,7 @@ select.select2-hidden-accessible {
 
 	<script>
 		$(document).ready(function () {
+			$.fn.dataTable.ext.errMode = 'none';
 			var table = new DataTable('#lecturerDashboardTable', {
 				responsive: true,
 				pageLength: 5,

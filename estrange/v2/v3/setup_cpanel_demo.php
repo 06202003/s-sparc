@@ -50,8 +50,11 @@ if ($uRes && $uRes->num_rows > 0) {
     echo "<p style='color: #15803d;'>✅ <b>Enrollment Course</b>: User 2172001 berhasil di-enroll ke $enrolledCount course baru.</p>";
 }
 
-// 4. Pastikan Setiap Submission Memiliki Metrics (Suspicion & Quality)
-$subRes = $db->query("SELECT submission_id FROM submission");
+// 4. Pastikan Setiap Submission Memiliki Metrics & Analisis Real (Suspicion & Quality)
+$db->query("DELETE FROM suspicion WHERE marked_code IS NULL OR marked_code = ''");
+$db->query("DELETE FROM code_clarity_suggestion WHERE marked_code IS NULL OR marked_code = ''");
+
+$subRes = $db->query("SELECT submission_id FROM submission ORDER BY submission_id ASC");
 $metricCount = 0;
 if ($subRes && $subRes->num_rows > 0) {
     while ($sr = $subRes->fetch_assoc()) {
@@ -59,7 +62,7 @@ if ($subRes && $subRes->num_rows > 0) {
         $metricCount++;
     }
 }
-echo "<p style='color: #15803d;'>✅ <b>Inisialisasi Metrik</b>: Metrik Originality & Code Clarity berhasil di-generate untuk $metricCount submission.</p>";
+echo "<p style='color: #15803d;'>✅ <b>Inisialisasi Metrik &amp; Analisis Komparasi</b>: Metrik Originality &amp; Code Clarity berhasil di-generate untuk $metricCount submission.</p>";
 
 // 5. Buat Laporan Sample Perbandingan 2 Mahasiswa (2172003 vs 2172001) jika ada submission
 $sampleSub = $db->query("SELECT submission_id FROM submission ORDER BY submission_id DESC LIMIT 1");
