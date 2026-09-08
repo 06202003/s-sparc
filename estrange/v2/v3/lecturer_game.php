@@ -212,13 +212,14 @@ select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:fo
 					<table id="leaderboard" class="w-full text-left text-xs" style="width:100%">
 						<thead>
 							<tr class="border-b border-slate-200 text-slate-500 uppercase tracking-wider font-bold text-[11px]">
-								<th class="py-3 px-3 text-center" style="width: 7%;">Rank</th>
-								<th class="py-3 px-3" style="width: 33%;">Student Identity</th>
+								<th class="py-3 px-3 text-center" style="width: 6%;">Rank</th>
+								<th class="py-3 px-3" style="width: 26%;">Student Identity</th>
 								<th class="py-3 px-3 text-center font-bold text-slate-900" style="width: 14%;">General Points</th>
-								<th class="py-3 px-3 text-center" style="width: 11.5%;">Timeliness</th>
-								<th class="py-3 px-3 text-center" style="width: 11.5%;">Decisiveness</th>
-								<th class="py-3 px-3 text-center" style="width: 11.5%;">Quality</th>
-								<th class="py-3 px-3 text-center" style="width: 11.5%;">Efficiency</th>
+								<th class="py-3 px-3 text-center" style="width: 10.8%;">Timeliness</th>
+								<th class="py-3 px-3 text-center" style="width: 10.8%;">Decisiveness</th>
+								<th class="py-3 px-3 text-center" style="width: 10.8%;">Quality</th>
+								<th class="py-3 px-3 text-center" style="width: 10.8%;">Efficiency</th>
+								<th class="py-3 px-3 text-center" style="width: 10.8%;">Authenticity</th>
 							</tr>
 						</thead>
 						<tbody class="divide-y divide-slate-100">
@@ -244,18 +245,21 @@ select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:fo
 										$myEfficiencyPoints = 0;
 										$myQualityPoints = 0;
 										$myDecisivePoints = 0;
+										$myAuthenticityPoints = 0;
 
 										// Ambil nilai submission
 										$sqlt = "SELECT MAX(submission.attempt) as maxattempt,
 														ROUND(MAX((assessment.submission_close_time - submission.submission_time)/(assessment.submission_close_time - assessment.submission_open_time)*100),0) as mintime,
 														ROUND(AVG(suspicion.efficiency_point),0) as eff, 
-														ROUND(AVG(code_clarity_suggestion.quality_point),0) as qual
+														ROUND(AVG(code_clarity_suggestion.quality_point),0) as qual,
+														ROUND(AVG(CASE WHEN generated_quizzes.score_points IS NOT NULL THEN (generated_quizzes.score_points / 3 * 100) ELSE 0 END),0) as auth
 												 FROM suspicion  
 												 INNER JOIN submission ON submission.submission_id = suspicion.submission_id 
 												 INNER JOIN user ON user.user_id = submission.submitter_id 
 												 INNER JOIN assessment ON assessment.assessment_id = submission.assessment_id 
 												 INNER JOIN course ON course.course_id = assessment.course_id 
 												 LEFT JOIN code_clarity_suggestion ON code_clarity_suggestion.submission_id = submission.submission_id 
+												 LEFT JOIN generated_quizzes ON generated_quizzes.submission_id = submission.submission_id
 												 WHERE submission.submitter_id = '".$row['student_id']."' 
 												 AND course.course_id = '".$courseID."'
 												 GROUP BY assessment.assessment_id";
@@ -272,11 +276,12 @@ select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:fo
 												$myTimelinessPoints += $rowt['mintime'];
 												$myEfficiencyPoints += $rowt['eff'];
 												$myQualityPoints += $rowt['qual'];
+												$myAuthenticityPoints += (int)$rowt['auth'];
 											}
 										}
 
 										// Hitung total poin
-										$totalPoints = $myTimelinessPoints + $myEfficiencyPoints + $myQualityPoints + $myDecisivePoints;
+										$totalPoints = $myTimelinessPoints + $myEfficiencyPoints + $myQualityPoints + $myDecisivePoints + $myAuthenticityPoints;
 
 										// Masukkan data ke array jika total poin tidak nol
 										if ($totalPoints != 0) {
@@ -288,7 +293,8 @@ select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:fo
 												'submissionPoints' => $myTimelinessPoints,
 												'qualityPoints' => $myQualityPoints,
 												'efficiencyPoints' => $myEfficiencyPoints,
-												'decisivePoints' => $myDecisivePoints
+												'decisivePoints' => $myDecisivePoints,
+												'authenticityPoints' => $myAuthenticityPoints
 											];
 										}
 									}
@@ -328,6 +334,9 @@ select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:fo
 									<td class="py-3 px-3 text-center text-slate-700 font-mono">
 										<?= htmlspecialchars($student['efficiencyPoints']); ?>
 									</td>
+									<td class="py-3 px-3 text-center text-slate-700 font-mono">
+										<?= htmlspecialchars($student['authenticityPoints']); ?>
+									</td>
 								</tr>
 							<?php } ?>
 						</tbody>
@@ -358,18 +367,16 @@ select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:fo
 					<?php 
 						// showing general rules how to obtain points in preferred language
 						if($human_language == 'en'){
-							echo "<p>Students will obtain more game points by submitting high-quality and efficient programs as early as possible (timeliness) with fewer submission attempts (decisiveness). Submitting programs early means the students have good time management. 
+							echo "<p>Students will obtain more game points by submitting high-quality and efficient programs as early as possible (timeliness) with fewer submission attempts (decisiveness) and high code comprehension scores on the 3-question AI verification quiz (authenticity). Submitting programs early means good time management. 
 							Fewer submission attempts means students only submit their work when it is ready.
-							Having high-quality programs means the students know how to write maintainable programs. Having efficient programs means students know how to write environment-friendly programs. 
-							The points will be averaged if students do multiple submissions for a particular assessment. </p>
-							<p>Students can also get more points by giving peer reviews or receiving good reviews about their programs if asked by the instructors.</p>";
+							Having high-quality programs means maintainable code. Having efficient programs means environment-friendly execution. High authenticity proves independent work and true code understanding. 
+							The points will be averaged if students do multiple submissions for a particular assessment.</p>";
 							echo '<p class="text-slate-500 font-medium pt-1 border-t border-slate-200">Students can turn off the game feature. Their points will be hidden from anyone (but still recorded so the students can rejoin at any time without losing any points).</p>';
 						}else{
-							echo "<p>Siswa akan mendapatkan poin permainan lebih dengan mengumpulkan program yang berkualitas tinggi dan efisien sedini mungkin (timeliness) dengan pengumpulkan sesedikit mungkin (decisiveness). Mengumpulkan program sedini mungkin berarti siswa terkait memiliki manajemen waktu yang baik. 
+							echo "<p>Siswa akan mendapatkan poin permainan lebih dengan mengumpulkan program yang berkualitas tinggi dan efisien sedini mungkin (timeliness), pengumpulan sesedikit mungkin (decisiveness), serta nilai pemahaman kode yang tinggi pada Kuis Verifikasi AI 3 Soal (authenticity). Mengumpulkan program sedini mungkin berarti siswa memiliki manajemen waktu yang baik. 
 							Jumlah pengumpulan tugas yang sedikit berarti siswa hanya mengumpulkan tugas jika memang sudah siap.
-							Memiliki program berkualitas tinggi berarti siswa terkait mengerti cara menulis program yang dapat dipelihara. Memiliki program efisien berarti siswa terkait mengerti cara menulis program yang ramah lingkungan. 
-							Poin-poin tersebut akan direrata jika siswanya memiliki beberapa program untuk sebuah tugas. </p>
-							<p>Siswa juga dapat memperoleh poin lebih dengan memberikan review pada program rekan atau menerima review baik terkait programnya jika diminta oleh pengajar.</p>";
+							Memiliki program berkualitas tinggi berarti siswa mengerti cara menulis program yang dapat dipelihara. Memiliki program efisien berarti siswa mengerti cara menulis program yang ramah lingkungan. Orisinalitas (authenticity) tinggi membuktikan pengerjaan mandiri dan pemahaman penuh atas kode yang dibuat. 
+							Poin-poin tersebut akan direrata jika siswanya memiliki beberapa program untuk sebuah tugas.</p>";
 							echo '<p class="text-slate-500 font-medium pt-1 border-t border-slate-200">Siswa dapat mematikan fitur permainan. Poin nya akan disembunyikan dari siswa lain (namun tetap disimpan sehingga siswa dapat ikut kembali tanpa kehilangan poin).</p>';
 						}
 					?>

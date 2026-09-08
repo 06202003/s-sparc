@@ -228,15 +228,18 @@ select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:fo
 				$uQualityPoints = 0;
 				$uEfficiencyPoints = 0;
 				$uDecisivePoints = 0;
+				$uAuthenticityPoints = 0;
 				$uArrAssessmentNames = "";
 				$uArrTimelinessPoints = "";
 				$uArrQualityPoints = "";
 				$uArrEfficiencyPoints = "";
 				$uArrDecisivePoints = "";
+				$uArrAuthenticityPoints = "";
 				$allTimelinessPoints = 0;
 				$allQualityPoints = 0;
 				$allEfficiencyPoints = 0;
 				$allDecisivePoints = 0;
+				$allAuthenticityPoints = 0;
 
 				$students = array();
 				
@@ -255,6 +258,7 @@ select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:fo
 						$myEfficiencyPoints = 0;
 						$myQualityPoints = 0;
 						$myDecisivePoints = 0;
+						$myAuthenticityPoints = 0;
 
 						// Submission points query
 						$sqlt = "SELECT user.user_id AS id, 
@@ -262,6 +266,7 @@ select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:fo
 								ROUND(MAX((assessment.submission_close_time - submission.submission_time)/(assessment.submission_close_time - assessment.submission_open_time)*100),0) as mintime,
 								ROUND(AVG(suspicion.efficiency_point),0) as eff, 
 								ROUND(AVG(code_clarity_suggestion.quality_point),0) as qual, 
+								ROUND(AVG(CASE WHEN generated_quizzes.score_points IS NOT NULL THEN (generated_quizzes.score_points / 3 * 100) ELSE 0 END),0) as auth,
 								assessment.assessment_id as asmt_id, assessment.name as asmt_name 
 								FROM suspicion  
 								INNER JOIN submission ON submission.submission_id = suspicion.submission_id 
@@ -269,6 +274,7 @@ select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:fo
 								INNER JOIN assessment ON assessment.assessment_id = submission.assessment_id 
 								INNER JOIN course ON course.course_id = assessment.course_id 
 								LEFT JOIN code_clarity_suggestion ON code_clarity_suggestion.submission_id = submission.submission_id 
+								LEFT JOIN generated_quizzes ON generated_quizzes.submission_id = submission.submission_id
 								WHERE user.user_id = '".$row['student_id']."' 
 								AND course.course_id = '".$courseID."' 
 								GROUP BY assessment.assessment_id";
@@ -282,32 +288,37 @@ select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:fo
 									$rowt['mintime'] = 0;
 								}
 								$decisivePoint = round(100 / $rowt['maxattempt']);
+								$authPoint = (int)$rowt['auth'];
 
 								$myTimelinessPoints += $rowt['mintime'];
 								$myEfficiencyPoints += $rowt['eff'];
 								$myQualityPoints += $rowt['qual'];
 								$myDecisivePoints += $decisivePoint;
+								$myAuthenticityPoints += $authPoint;
 									
 								$allTimelinessPoints += $rowt['mintime'];
 								$allEfficiencyPoints += $rowt['eff'];
 								$allQualityPoints += $rowt['qual'];
 								$allDecisivePoints += $decisivePoint;
+								$allAuthenticityPoints += $authPoint;
 
 								if ($rowt['id'] == $_SESSION['user_id']) {
 									$uTimelinessPoints += $rowt['mintime'];
 									$uEfficiencyPoints += $rowt['eff'];
 									$uQualityPoints += $rowt['qual'];
 									$uDecisivePoints += $decisivePoint;
+									$uAuthenticityPoints += $authPoint;
 									$uArrAssessmentNames .= ",'".addslashes($rowt['asmt_name'])."'";
 									$uArrTimelinessPoints .= ",".$rowt['mintime'];
 									$uArrEfficiencyPoints .= ",".$rowt['eff'];
 									$uArrQualityPoints .= ",".$rowt['qual'];
 									$uArrDecisivePoints .= ",".$decisivePoint;
+									$uArrAuthenticityPoints .= ",".$authPoint;
 								}
 							}
 						}
 
-						$totalPoints = $myTimelinessPoints + $myQualityPoints + $myEfficiencyPoints + $myDecisivePoints;
+						$totalPoints = $myTimelinessPoints + $myQualityPoints + $myEfficiencyPoints + $myDecisivePoints + $myAuthenticityPoints;
 
 						$students[] = array(
 							'student_id' => $row['student_id'],
@@ -317,7 +328,8 @@ select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:fo
 							'mySubmissionPoints' => $myTimelinessPoints,
 							'myDecisivePoints' => $myDecisivePoints,
 							'myQualityPoints' => $myQualityPoints,
-							'myEfficiencyPoints' => $myEfficiencyPoints
+							'myEfficiencyPoints' => $myEfficiencyPoints,
+							'myAuthenticityPoints' => $myAuthenticityPoints
 						);
 					}
 
@@ -330,10 +342,11 @@ select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:fo
 						$allEfficiencyPoints = round($allEfficiencyPoints / $totalStudentsCount);
 						$allQualityPoints = round($allQualityPoints / $totalStudentsCount);
 						$allDecisivePoints = round($allDecisivePoints / $totalStudentsCount);
+						$allAuthenticityPoints = round($allAuthenticityPoints / $totalStudentsCount);
 					}
 				}
 
-				$uTotalPoints = $uTimelinessPoints + $uQualityPoints + $uEfficiencyPoints + $uDecisivePoints;
+				$uTotalPoints = $uTimelinessPoints + $uQualityPoints + $uEfficiencyPoints + $uDecisivePoints + $uAuthenticityPoints;
 				$userLevel = 1 + intval($uTotalPoints / 500);
 				$pointsToNextLevel = 500 - intval($uTotalPoints % 500);
 				$levelProgressPercent = intval(($uTotalPoints % 500) / 500 * 100);
@@ -384,33 +397,40 @@ select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:fo
 							<span class="text-xs text-slate-500 font-medium">Accumulated Points</span>
 						</div>
 
-						<div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+						<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
 							<!-- Timeliness -->
-							<div class="p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl space-y-1">
+							<div class="p-3 bg-slate-50 border border-slate-200/80 rounded-xl space-y-1">
 								<span class="text-[11px] font-semibold text-slate-500 block">Timeliness</span>
-								<span class="text-lg font-black text-slate-900 font-mono block"><?= $uTimelinessPoints; ?></span>
-								<span class="text-[10px] text-slate-400">Submission speed</span>
+								<span class="text-base font-black text-slate-900 font-mono block"><?= $uTimelinessPoints; ?></span>
+								<span class="text-[10px] text-slate-400 block">Submission speed</span>
 							</div>
 
 							<!-- Decisiveness -->
-							<div class="p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl space-y-1">
+							<div class="p-3 bg-slate-50 border border-slate-200/80 rounded-xl space-y-1">
 								<span class="text-[11px] font-semibold text-slate-500 block">Decisiveness</span>
-								<span class="text-lg font-black text-slate-900 font-mono block"><?= $uDecisivePoints; ?></span>
-								<span class="text-[10px] text-slate-400">Fewer attempts</span>
+								<span class="text-base font-black text-slate-900 font-mono block"><?= $uDecisivePoints; ?></span>
+								<span class="text-[10px] text-slate-400 block">Fewer attempts</span>
 							</div>
 
 							<!-- Quality -->
-							<div class="p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl space-y-1">
+							<div class="p-3 bg-slate-50 border border-slate-200/80 rounded-xl space-y-1">
 								<span class="text-[11px] font-semibold text-slate-500 block">Quality</span>
-								<span class="text-lg font-black text-slate-900 font-mono block"><?= $uQualityPoints; ?></span>
-								<span class="text-[10px] text-slate-400">Code clarity</span>
+								<span class="text-base font-black text-slate-900 font-mono block"><?= $uQualityPoints; ?></span>
+								<span class="text-[10px] text-slate-400 block">Code clarity</span>
 							</div>
 
 							<!-- Efficiency -->
-							<div class="p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl space-y-1">
+							<div class="p-3 bg-slate-50 border border-slate-200/80 rounded-xl space-y-1">
 								<span class="text-[11px] font-semibold text-slate-500 block">Efficiency</span>
-								<span class="text-lg font-black text-[#00A0A5] font-mono block"><?= $uEfficiencyPoints; ?></span>
-								<span class="text-[10px] text-slate-400">Resource usage</span>
+								<span class="text-base font-black text-slate-900 font-mono block"><?= $uEfficiencyPoints; ?></span>
+								<span class="text-[10px] text-slate-400 block">Resource usage</span>
+							</div>
+
+							<!-- Authenticity -->
+							<div class="p-3 bg-slate-50 border border-slate-200/80 rounded-xl space-y-1">
+								<span class="text-[11px] font-semibold text-slate-500 block">Authenticity</span>
+								<span class="text-base font-black text-[#00A0A5] font-mono block"><?= $uAuthenticityPoints; ?></span>
+								<span class="text-[10px] text-slate-400 block">AI Verification Quiz</span>
 							</div>
 						</div>
 					</div>
@@ -430,13 +450,14 @@ select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:fo
 						<table id="leaderboard" class="w-full text-left text-xs" style="width:100%">
 							<thead>
 								<tr class="border-b border-slate-200 text-slate-500 uppercase tracking-wider font-bold text-[11px]">
-									<th class="py-3 px-3 text-center" style="width: 7%;">Rank</th>
-									<th class="py-3 px-3" style="width: 33%;">Student Identity</th>
+									<th class="py-3 px-3 text-center" style="width: 6%;">Rank</th>
+									<th class="py-3 px-3" style="width: 26%;">Student Identity</th>
 									<th class="py-3 px-3 text-center font-bold text-slate-900" style="width: 14%;">General Points</th>
-									<th class="py-3 px-3 text-center" style="width: 11.5%;">Timeliness</th>
-									<th class="py-3 px-3 text-center" style="width: 11.5%;">Decisiveness</th>
-									<th class="py-3 px-3 text-center" style="width: 11.5%;">Quality</th>
-									<th class="py-3 px-3 text-center" style="width: 11.5%;">Efficiency</th>
+									<th class="py-3 px-3 text-center" style="width: 10.8%;">Timeliness</th>
+									<th class="py-3 px-3 text-center" style="width: 10.8%;">Decisiveness</th>
+									<th class="py-3 px-3 text-center" style="width: 10.8%;">Quality</th>
+									<th class="py-3 px-3 text-center" style="width: 10.8%;">Efficiency</th>
+									<th class="py-3 px-3 text-center" style="width: 10.8%;">Authenticity</th>
 								</tr>
 							</thead>
 							<tbody class="divide-y divide-slate-100">
@@ -479,6 +500,9 @@ select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:fo
 										</td>
 										<td class="py-3 px-3 text-center text-slate-700 font-mono">
 											<?= htmlspecialchars($student['myEfficiencyPoints']); ?>
+										</td>
+										<td class="py-3 px-3 text-center text-slate-700 font-mono">
+											<?= htmlspecialchars($student['myAuthenticityPoints']); ?>
 										</td>
 									</tr>
 								<?php 
@@ -559,15 +583,15 @@ select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:fo
 				<div class="text-xs text-slate-600 leading-relaxed space-y-3 p-4 bg-slate-50 border border-slate-200/80 rounded-xl">
 					<?php 
 						if($human_language == 'en'){
-							echo "<p>Students will obtain more game points by submitting high-quality and efficient programs as early as possible (timeliness) with fewer submission attempts (decisiveness). Submitting programs early means the students have good time management. 
+							echo "<p>Students will obtain more game points by submitting high-quality and efficient programs as early as possible (timeliness) with fewer submission attempts (decisiveness) and high code comprehension scores on the 3-question AI verification quiz (authenticity). Submitting programs early means good time management. 
 							Fewer submission attempts means students only submit their work when it is ready.
-							Having high-quality programs means the students know how to write maintainable programs. Having efficient programs means students know how to write environment-friendly programs. 
+							Having high-quality programs means maintainable code. Having efficient programs means environment-friendly execution. High authenticity proves independent work and true code understanding. 
 							The points will be averaged if students do multiple submissions for a particular assessment.</p>";
 							echo '<p class="text-slate-500 font-medium pt-1 border-t border-slate-200">Students can turn off the game feature. Their points will be hidden from anyone (but still recorded so the students can rejoin at any time without losing any points).</p>';
 						}else{
-							echo "<p>Siswa akan mendapatkan poin permainan lebih dengan mengumpulkan program yang berkualitas tinggi dan efisien sedini mungkin (timeliness) dengan pengumpulan sesedikit mungkin (decisiveness). Mengumpulkan program sedini mungkin berarti siswa terkait memiliki manajemen waktu yang baik. 
-							Jumlah pengumpulan tugas yang sedikit berarti siswa hanya mengumpulkan tugas jika memang sudah siap.
-							Memiliki program berkualitas tinggi berarti siswa terkait mengerti cara menulis program yang dapat dipelihara. Memiliki program efisien berarti siswa terkait mengerti cara menulis program yang ramah lingkungan. 
+							echo "<p>Siswa akan mendapatkan poin permainan lebih dengan mengumpulkan program yang berkualitas tinggi dan efisien sedini mungkin (timeliness), pengumpulan sesedikit mungkin (decisiveness), serta nilai pemahaman kode yang tinggi pada Kuis Verifikasi AI 3 Soal (authenticity). Mengumpulkan program sedini mungkin berarti siswa memiliki manajemen waktu yang baik. 
+							Pengumpulan sedikit berarti siswa hanya mengumpulkan tugas jika sudah siap.
+							Kualitas tinggi berarti kode yang rapi dan mudah dipelihara. Efisiensi tinggi berarti kode yang ramah lingkungan. Orisinalitas (authenticity) tinggi membuktikan pengerjaan mandiri dan pemahaman penuh atas kode yang dibuat. 
 							Poin-poin tersebut akan direrata jika siswanya memiliki beberapa program untuk sebuah tugas.</p>";
 							echo '<p class="text-slate-500 font-medium pt-1 border-t border-slate-200">Siswa dapat mematikan fitur permainan. Poin nya akan disembunyikan dari siswa lain (namun tetap disimpan sehingga siswa dapat ikut kembali tanpa kehilangan poin).</p>';
 						}
@@ -633,16 +657,16 @@ select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:fo
 				new Chart(ctxRadar, {
 					type: 'radar',
 					data: {
-						labels: ['Timeliness', 'Decisiveness', 'Quality', 'Efficiency'],
+						labels: ['Timeliness', 'Decisiveness', 'Quality', 'Efficiency', 'Authenticity'],
 						datasets: [{
 							label: 'Yours',
-							data: [<?= $uTimelinessPoints; ?>, <?= $uDecisivePoints; ?>, <?= $uQualityPoints; ?>, <?= $uEfficiencyPoints; ?>],
+							data: [<?= $uTimelinessPoints; ?>, <?= $uDecisivePoints; ?>, <?= $uQualityPoints; ?>, <?= $uEfficiencyPoints; ?>, <?= $uAuthenticityPoints; ?>],
 							backgroundColor: 'rgba(0, 160, 165, 0.2)',
 							borderColor: 'rgba(0, 160, 165, 1)',
 							borderWidth: 2
 						}, {
 							label: 'Average users',
-							data: [<?= $allTimelinessPoints; ?>, <?= $allDecisivePoints; ?>, <?= $allQualityPoints; ?>, <?= $allEfficiencyPoints; ?>],
+							data: [<?= $allTimelinessPoints; ?>, <?= $allDecisivePoints; ?>, <?= $allQualityPoints; ?>, <?= $allEfficiencyPoints; ?>, <?= $allAuthenticityPoints; ?>],
 							backgroundColor: 'rgba(239, 68, 68, 0.2)',
 							borderColor: 'rgba(239, 68, 68, 1)',
 							borderWidth: 2
@@ -680,6 +704,11 @@ select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:fo
 							label: 'Efficiency',
 							data: [<?= strlen($uArrEfficiencyPoints) > 0 ? substr($uArrEfficiencyPoints, 1) : ''; ?>],
 							borderColor: '#f43f5e',
+							tension: 0.2
+						}, { 
+							label: 'Authenticity',
+							data: [<?= strlen($uArrAuthenticityPoints) > 0 ? substr($uArrAuthenticityPoints, 1) : ''; ?>],
+							borderColor: '#f59e0b',
 							tension: 0.2
 						}]
 					},
