@@ -85,11 +85,11 @@ if ($sampleSub && $sampleSub->num_rows > 0) {
 
     $sampleExplanationInfo = '<div class="explanationcontent" id="he1">
 	<span class="font-bold text-slate-900 block mb-1">Block S001: Structural Loop Clone</span>
-	<p>Blok perulangan `for` dan traversal pohon pencarian biner pada `insertNode()` memiliki struktur AST dan urutan instruksi yang 94% identik dengan berkas milik Bryan Matthews Justandi (2172001).</p>
+	<p>The `for` loop block and tree traversal in `insertNode()` have an AST structure and instruction sequence 94% identical to a file belonging to a student in your class.</p>
 </div>
 <div class="explanationcontent" id="he2">
 	<span class="font-bold text-slate-900 block mb-1">Block S002: Helper Function Equivalence</span>
-	<p>Fungsi `findMin()` dan pembongkaran memori rekursif terdeteksi menggunakan pola logika dan penanganan pointer yang identik dengan variasi pemetaan variabel lokal saja.</p>
+	<p>The `findMin()` function and recursive memory operations use identical logic flow and pointer handling with local variable renaming variations.</p>
 </div>';
 
     $sampleMarkedCode = '#include &lt;iostream&gt;
@@ -107,7 +107,7 @@ using namespace std;
     $sampleArtificialCode = '#include &lt;iostream&gt;
 using namespace std;
 
-// Matched Peer Code (Bryan Matthews - 2172001)
+// Matched Peer Code (A student in your class)
 <span id="s1g" class="bg-amber-100 text-amber-900 font-bold px-1 rounded">int calculateTotal(int count) {
     int total = 0;
     for (int idx = 0; idx < count; idx++) {

@@ -51,13 +51,13 @@
 	// Fallback if explanation/table is empty
 	if (empty(trim(strip_tags($explanationInfo)))) {
 		$explanationInfo = '<div class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-xl text-xs space-y-1">
-			<span class="font-bold block">Status Quality / Code Clarity: Optimal</span>
-			<p>Kode Anda telah berhasil diunggah. Evaluasi kualitas dan struktur keterbacaan kode berada dalam kondisi bersih dan optimal.</p>
+			<span class="font-bold block">Code Quality / Clarity Status: Optimal</span>
+			<p>Your code submission has been uploaded successfully. Code quality and readability structure are clean and optimal.</p>
 		</div>';
 	}
 
 	if (empty(trim(strip_tags($tableInfo)))) {
-		$tableInfo = '<tr><td colspan="5" class="py-4 text-center text-slate-500 font-medium">Tidak ada perbaikan kebersihan kode yang diperlukan. Kode Anda bersih dan terstruktur baik.</td></tr>';
+		$tableInfo = '<tr><td colspan="5" class="py-4 text-center text-slate-500 font-medium">No code clarity improvements needed. Your code is clean and well-structured.</td></tr>';
 	}
 	
 	// for access statistics of suggestion page

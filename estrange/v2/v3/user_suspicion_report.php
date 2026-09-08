@@ -52,6 +52,11 @@
 	$artificialCode = $rowt['artificial_code'] ?? '';
 	$tableInfo = $rowt['table_info'] ?? '';
 	$explanationInfo = $rowt['explanation_info'] ?? '';
+
+	// Data Privacy & Governance: Anonymize peer student references into English
+	$explanationInfo = preg_replace('/(berkas milik|identik dengan|file belonging to|identical to)\s+[^<\.\)]+(\(\d+\))?/i', 'a file belonging to a student in your class', $explanationInfo);
+	$artificialCode = preg_replace('/\/\/\s*(Matched Peer Code \(|Peer submission code from\s*)[^\r\n]+/i', '// Matched Peer Code (A student in your class)', $artificialCode);
+
 	$suspicion_type = $rowt['suspicion_type'] ?? 'simulation';
 	$courseId = $rowt['course_id'] ?? '';
 	$submission_id = $rowt['submission_id'] ?? '';
@@ -70,14 +75,14 @@
 	// Fallback if explanation/table is empty (e.g. single submitter or unanalyzed)
 	if (empty(trim(strip_tags($explanationInfo)))) {
 		$explanationInfo = '<div class="p-3 bg-teal-50 border border-teal-200 text-teal-900 rounded-xl text-xs space-y-1">
-			<span class="font-bold block">Status Orisinalitas: 100% Unique</span>
-			<p>Kode Anda saat ini terdeteksi unik dan tidak memiliki indikasi kemiripan/plagiarisme dengan mahasiswa lain.</p>
-			<p class="text-slate-500 text-[11px] mt-1">*Catatan: Jika Anda satu-satunya mahasiswa yang mengumpulkan tugas ini, belum ada berkas pembanding dari rekan sejawat.</p>
+			<span class="font-bold block">Originality Status: 100% Unique</span>
+			<p>Your code is currently unique with no similarity or plagiarism indications detected against other submissions.</p>
+			<p class="text-slate-500 text-[11px] mt-1">*Note: If you are the first student to submit this assessment, peer comparison files will appear once more submissions are submitted.</p>
 		</div>';
 	}
 
 	if (empty(trim(strip_tags($tableInfo)))) {
-		$tableInfo = '<tr><td colspan="4" class="py-4 text-center text-slate-500 font-medium">Tidak ditemukan blok kemiripan dengan kode lain. Kode Anda 100% orisinal.</td></tr>';
+		$tableInfo = '<tr><td colspan="4" class="py-4 text-center text-slate-500 font-medium">No code similarity blocks found. Your submission is 100% original.</td></tr>';
 	}
 	
 	// record access only if done by student

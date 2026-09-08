@@ -81,7 +81,7 @@ if (!function_exists('ensure_submission_metrics')) {
                     $simScore = max(25, min(75, round($percent)));
                 }
                 $origPoint = max(25, 100 - $simScore);
-                $peerName = htmlspecialchars($peerData['name'] . " (" . $peerData['username'] . ")");
+                $peerName = "a student in your class";
 
                 $tableInfo = '<tr id="s1hr" class="hover:bg-slate-50/80 transition-colors" onclick="markSelectedWithoutChangingTableFocus(\'s1\',\'origtablecontent\')">
 	<td class="py-2.5 px-3 font-mono font-bold text-amber-600"><a href="#s1a" id="s1hl">S001</a></td>
@@ -98,17 +98,17 @@ if (!function_exists('ensure_submission_metrics')) {
 
                 $explanationInfo = '<div class="explanationcontent" id="he1">
 	<span class="font-bold text-slate-900 block mb-1">Block S001: Functional Similarity</span>
-	<p>Fungsi pencarian/perhitungan utama terdeteksi memiliki struktur logika perulangan/rekursi yang sebanding dengan berkas milik ' . $peerName . '.</p>
+	<p>The primary search/computation function was detected to have a loop/recursion structure comparable to a file belonging to a student in your class.</p>
 </div>
 <div class="explanationcontent" id="he2">
 	<span class="font-bold text-slate-900 block mb-1">Block S002: Control Flow &amp; Return Pattern</span>
-	<p>Pola pemanggilan variabel dan pengembalian nilai akhir menunjukkan kesamaan urutan eksekusi dengan variasi penamaan identifier.</p>
+	<p>Variable invocation patterns and return statement structures show execution flow sequence similarity with identifier variations.</p>
 </div>';
 
                 $markedCode = !empty($currentCode) ? htmlspecialchars($currentCode) : "def solution():\n    return 0";
                 $markedCode = preg_replace('/(def\s+\w+.*?:)/s', '<span id="s1a" class="bg-amber-100 text-amber-900 font-bold px-1 rounded">$1</span>', $markedCode, 1);
 
-                $artificialCode = !empty($peerCode) ? htmlspecialchars($peerCode) : "// Peer submission code from " . $peerName;
+                $artificialCode = !empty($peerCode) ? htmlspecialchars($peerCode) : "// Matched Peer Code (A student in your class)";
                 $artificialCode = preg_replace('/(def\s+\w+.*?:)/s', '<span id="s1g" class="bg-amber-100 text-amber-900 font-bold px-1 rounded">$1</span>', $artificialCode, 1);
 
                 if ($existingSusp) {
@@ -150,8 +150,8 @@ if (!function_exists('ensure_submission_metrics')) {
                             $issues[] = [
                                 'line' => $lineNum + 1,
                                 'issue' => 'Non-Descriptive Parameter Name',
-                                'hint' => "Gunakan nama parameter yang lebih deskriptif daripada '$p'",
-                                'explanation' => "Nama parameter tunggal seperti '$p' mengurangi keterbacaan kode saat dibaca kembali oleh tim pengembang."
+                                'hint' => "Use a more descriptive parameter name instead of '$p'",
+                                'explanation' => "Single-letter parameter names such as '$p' reduce code readability when reviewed by team members."
                             ];
                         }
                     }
@@ -162,8 +162,8 @@ if (!function_exists('ensure_submission_metrics')) {
                 $issues[] = [
                     'line' => 1,
                     'issue' => 'Missing Function Documentation (Docstring)',
-                    'hint' => 'Tambahkan dokumentasi docstring pada bagian atas fungsi utama',
-                    'explanation' => 'Menambahkan komentar docstring membantu menjelaskan parameter masukan, kondisi batas rekursi, dan nilai kembalian fungsi.'
+                    'hint' => 'Add function documentation (docstring) at top of main function',
+                    'explanation' => 'Adding docstring comments helps clarify input parameters, recursion boundary conditions, and return values.'
                 ];
             }
 
