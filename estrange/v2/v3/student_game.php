@@ -261,21 +261,21 @@ select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:fo
 						$myAuthenticityPoints = 0;
 
 						// Submission points query
-						$sqlt = "SELECT user.user_id AS id, 
+						$sqlt = "SELECT submission.submitter_id AS id, 
 								MAX(submission.attempt) as maxattempt, 
 								ROUND(MAX((assessment.submission_close_time - submission.submission_time)/(assessment.submission_close_time - assessment.submission_open_time)*100),0) as mintime,
-								ROUND(AVG(suspicion.efficiency_point),0) as eff, 
-								ROUND(AVG(code_clarity_suggestion.quality_point),0) as qual, 
+								ROUND(AVG(CASE WHEN suspicion.efficiency_point IS NOT NULL THEN suspicion.efficiency_point ELSE 100 END),0) as eff, 
+								ROUND(AVG(CASE WHEN code_clarity_suggestion.quality_point IS NOT NULL THEN code_clarity_suggestion.quality_point ELSE 100 END),0) as qual, 
 								ROUND(AVG(CASE WHEN generated_quizzes.score_points IS NOT NULL THEN (generated_quizzes.score_points / 3 * 100) ELSE 0 END),0) as auth,
 								assessment.assessment_id as asmt_id, assessment.name as asmt_name 
-								FROM suspicion  
-								INNER JOIN submission ON submission.submission_id = suspicion.submission_id 
+								FROM submission 
 								INNER JOIN user ON user.user_id = submission.submitter_id 
 								INNER JOIN assessment ON assessment.assessment_id = submission.assessment_id 
 								INNER JOIN course ON course.course_id = assessment.course_id 
+								LEFT JOIN suspicion ON suspicion.submission_id = submission.submission_id 
 								LEFT JOIN code_clarity_suggestion ON code_clarity_suggestion.submission_id = submission.submission_id 
 								LEFT JOIN generated_quizzes ON generated_quizzes.submission_id = submission.submission_id
-								WHERE user.user_id = '".$row['student_id']."' 
+								WHERE submission.submitter_id = '".$row['student_id']."' 
 								AND course.course_id = '".$courseID."' 
 								GROUP BY assessment.assessment_id";
 
