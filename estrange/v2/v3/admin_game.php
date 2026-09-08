@@ -218,7 +218,7 @@ select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:fo
 								<th class="py-3 px-3 text-center" style="width: 10.8%;">Decisiveness</th>
 								<th class="py-3 px-3 text-center" style="width: 10.8%;">Quality</th>
 								<th class="py-3 px-3 text-center" style="width: 10.8%;">Efficiency</th>
-								<th class="py-3 px-3 text-center font-extrabold text-[#00A0A5]" style="width: 10.8%;">Authenticity</th>
+								<th class="py-3 px-3 text-center" style="width: 10.8%;">Authenticity</th>
 							</tr>
 						</thead>
 						<tbody class="divide-y divide-slate-100">
@@ -332,7 +332,7 @@ select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:fo
 									<td class="py-3 px-3 text-center text-slate-700 font-mono">
 										<?= htmlspecialchars($student['efficiencyPoints']); ?>
 									</td>
-									<td class="py-3 px-3 text-center font-bold text-[#00A0A5] font-mono text-xs">
+									<td class="py-3 px-3 text-center text-slate-700 font-mono">
 										<?= htmlspecialchars($student['authenticityPoints']); ?>
 									</td>
 								</tr>
