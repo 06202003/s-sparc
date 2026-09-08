@@ -31,9 +31,8 @@
 	$tableInfo = $rowt['table_info'];
 	$explanationInfo = $rowt['explanation_info'];
 
-	// Data Privacy & Governance: Anonymize peer student references into English
-	$explanationInfo = preg_replace('/(berkas milik|identik dengan|file belonging to|identical to)\s+[^<\.\)]+(\(\d+\))?/i', 'a file belonging to a student in your class', $explanationInfo);
-	$explanationInfo = preg_replace('/(YEHEZKIEL|Bryan)[^<\.]*/i', 'a student in your class', $explanationInfo);
+	// Data Privacy & Governance: Anonymize & convert explanation text to 100% English
+	$explanationInfo = format_report_explanation_english($explanationInfo);
 	$artificialCode = preg_replace('/\/\/\s*(Matched Peer Code \(|Peer submission code from\s*)[^\r\n]+/i', '// Matched Peer Code (A student in your class)', $artificialCode);
 	$artificialCode = preg_replace('/(YEHEZKIEL|Bryan)[^\r\n]*/i', 'A student in your class', $artificialCode);
 	$studentresponse = $rowt['student_response'];

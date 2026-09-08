@@ -202,6 +202,24 @@ if (!function_exists('ensure_submission_metrics')) {
     }
 }
 
+if (!function_exists('format_report_explanation_english')) {
+    function format_report_explanation_english($explanationInfo) {
+        if (empty($explanationInfo)) return $explanationInfo;
+
+        // Convert old Indonesian phrases to 100% pure English
+        $explanationInfo = preg_replace('/Fungsi pencarian\/perhitungan utama terdeteksi memiliki struktur logika perulangan\/rekursi yang sebanding dengan berkas milik[^<]*/i', 'The primary search/computation function was detected to have a loop/recursion structure comparable to a file belonging to a student in your class.', $explanationInfo);
+        $explanationInfo = preg_replace('/Pola pemanggilan variabel dan pengembalian nilai akhir menunjukkan kesamaan urutan eksekusi dengan variasi penamaan identifier\./i', 'Variable invocation patterns and return statement structures show execution flow sequence similarity with identifier variations.', $explanationInfo);
+        $explanationInfo = preg_replace('/Blok perulangan `for` dan traversal pohon pencarian biner pada `insertNode\(\)` memiliki struktur AST dan urutan instruksi yang \d+%\s*identik dengan berkas milik[^<]*/i', 'The `for` loop block and tree traversal in `insertNode()` have an AST structure and instruction sequence 94% identical to a file belonging to a student in your class.', $explanationInfo);
+        $explanationInfo = preg_replace('/Fungsi `findMin\(\)` dan pembongkaran memori rekursif terdeteksi menggunakan pola logika dan penanganan pointer yang identik dengan variasi pemetaan variabel lokal saja\./i', 'The `findMin()` function and recursive memory operations use identical logic flow and pointer handling with local variable renaming variations.', $explanationInfo);
+
+        // Fallback for any remaining student name references
+        $explanationInfo = preg_replace('/(berkas milik|file belonging to|identik dengan)\s+[^<\.]+(\(\d+\))?\.?/i', 'a file belonging to a student in your class.', $explanationInfo);
+        $explanationInfo = preg_replace('/(YEHEZKIEL|Bryan)[^<\.]*\)?\.?/i', 'a student in your class.', $explanationInfo);
+        $explanationInfo = str_replace(['a student in your class).', 'a student in your class)'], 'a student in your class.', $explanationInfo);
+
+        return $explanationInfo;
+    }
+}
 
 // set header for similarity and quality reports
 if (!function_exists('setHeaderReport')) {

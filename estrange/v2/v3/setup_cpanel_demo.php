@@ -54,10 +54,12 @@ if ($uRes && $uRes->num_rows > 0) {
 $db->query("DELETE FROM suspicion WHERE marked_code IS NULL OR marked_code = ''");
 $db->query("DELETE FROM code_clarity_suggestion WHERE marked_code IS NULL OR marked_code = ''");
 
-// Data Privacy & Governance: Wipe existing student names from DB explanation_info & artificial_code
-$db->query("UPDATE suspicion SET explanation_info = REPLACE(explanation_info, 'YEHEZKIEL DAVID SETIAWAN (2172003)', 'a student in your class') WHERE explanation_info LIKE '%YEHEZKIEL%'");
-$db->query("UPDATE suspicion SET explanation_info = REPLACE(explanation_info, 'Bryan Matthews Justandi (2172001)', 'a student in your class') WHERE explanation_info LIKE '%Bryan%'");
+// Data Privacy & Governance: Wipe old Indonesian text and student names from DB, converting to 100% English
+$pureEnglishExplanation = '<div class="explanationcontent" id="he1"><span class="font-bold text-slate-900 block mb-1">Block S001: Functional Similarity</span><p>The primary search/computation function was detected to have a loop/recursion structure comparable to a file belonging to a student in your class.</p></div><div class="explanationcontent" id="he2"><span class="font-bold text-slate-900 block mb-1">Block S002: Control Flow &amp; Return Pattern</span><p>Variable invocation patterns and return statement structures show execution flow sequence similarity with identifier variations.</p></div>';
+
+$db->query("UPDATE suspicion SET explanation_info = '" . mysqli_real_escape_string($db, $pureEnglishExplanation) . "' WHERE explanation_info LIKE '%Fungsi pencarian%' OR explanation_info LIKE '%YEHEZKIEL%' OR explanation_info LIKE '%Bryan%'");
 $db->query("UPDATE suspicion SET artificial_code = REPLACE(artificial_code, 'Bryan Matthews - 2172001', 'A student in your class') WHERE artificial_code LIKE '%Bryan%'");
+$db->query("UPDATE suspicion SET artificial_code = REPLACE(artificial_code, 'YEHEZKIEL DAVID SETIAWAN (2172003)', 'A student in your class') WHERE artificial_code LIKE '%YEHEZKIEL%'");
 
 $subRes = $db->query("SELECT submission_id FROM submission ORDER BY submission_id ASC");
 $metricCount = 0;
