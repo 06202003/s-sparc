@@ -57,22 +57,22 @@ if (!function_exists('ensure_submission_metrics')) {
         }
 
         // 1. ENSURE SUSPICION RECORD (ORIGINALITY)
-        $checkSusp = mysqli_query($mydb, "SELECT suspicion_id, marked_code FROM suspicion WHERE submission_id = '$subId'");
+        $checkSusp = mysqli_query($mydb, "SELECT suspicion_id, suspicion_type, marked_code FROM suspicion WHERE submission_id = '$subId'");
         $existingSusp = ($checkSusp && $checkSusp->num_rows > 0) ? $checkSusp->fetch_assoc() : null;
 
-        if (!$existingSusp || empty(trim(strip_tags($existingSusp['marked_code'] ?? '')))) {
-            // Find peer submission from another student for the same assessment
-            $peerQuery = mysqli_query($mydb, "SELECT s.submission_id, s.file_path, u.username, u.name 
-                                              FROM submission s 
-                                              JOIN user u ON s.submitter_id = u.user_id 
-                                              WHERE s.assessment_id = '$assessmentId' 
-                                              AND s.submitter_id != '$submitterId' 
-                                              ORDER BY s.submission_id DESC LIMIT 1");
-            
-            if ($peerQuery && $peerQuery->num_rows > 0) {
-                $peerData = $peerQuery->fetch_assoc();
-                $peerFilePath = __DIR__ . DIRECTORY_SEPARATOR . $peerData['file_path'];
-                $peerCode = file_exists($peerFilePath) ? file_get_contents($peerFilePath) : "";
+        // Check if there are other student submissions for this assessment
+        $peerQuery = mysqli_query($mydb, "SELECT s.submission_id, s.file_path, u.username, u.name 
+                                          FROM submission s 
+                                          JOIN user u ON s.submitter_id = u.user_id 
+                                          WHERE s.assessment_id = '$assessmentId' 
+                                          AND s.submitter_id != '$submitterId' 
+                                          ORDER BY s.submission_id DESC LIMIT 1");
+        $hasPeers = ($peerQuery && $peerQuery->num_rows > 0);
+
+        if ($hasPeers && ($existingSusp == null || ($existingSusp['suspicion_type'] ?? '') === 'simulation' || empty(trim(strip_tags($existingSusp['marked_code'] ?? ''))))) {
+            $peerData = $peerQuery->fetch_assoc();
+            $peerFilePath = __DIR__ . DIRECTORY_SEPARATOR . $peerData['file_path'];
+            $peerCode = file_exists($peerFilePath) ? file_get_contents($peerFilePath) : "";
 
                 // Compute similarity score
                 $simScore = 35; // Default moderate overlap
@@ -131,7 +131,6 @@ if (!function_exists('ensure_submission_metrics')) {
                     mysqli_query($mydb, $sqlSusp);
                 }
             }
-        }
 
         // 2. ENSURE CODE CLARITY / QUALITY RECORD
         $checkQual = mysqli_query($mydb, "SELECT suggestion_id, marked_code FROM code_clarity_suggestion WHERE submission_id = '$subId'");
