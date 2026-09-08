@@ -55,7 +55,7 @@
 	}
 
 	if (empty(trim(strip_tags($tableInfo)))) {
-		$tableInfo = '<tr><td colspan="4" class="py-4 text-center text-slate-500 font-medium">Tidak ada perbaikan kebersihan kode yang diperlukan. Kode Anda bersih dan terstruktur baik.</td></tr>';
+		$tableInfo = '<tr><td colspan="5" class="py-4 text-center text-slate-500 font-medium">Tidak ada perbaikan kebersihan kode yang diperlukan. Kode Anda bersih dan terstruktur baik.</td></tr>';
 	}
 	
 	// for access statistics of suggestion page
