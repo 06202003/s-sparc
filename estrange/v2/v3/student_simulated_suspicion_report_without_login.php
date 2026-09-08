@@ -1,121 +1,61 @@
 <?php
-	 // all below code copied from student_assessment_submit_suspicious.php
-	session_start();
-
-	// if the SUSPICION id does not exist
+	// if the assessment id does not exist, redirect to login
 	if(isset($_GET['id']) == false || $_GET['id'] == ''){
-		header('Location: student_dashboard.php');
+		header('Location: index.php?invalidreport=true');
 		exit;
-	}
-
-	// part of sessionchecker pasted here due to unique behaviour of this page
-	// redirect if it is not logged in
-	if(isset($_SESSION['name']) == false){
-		header('Location: student_suspicion_sub_without_login.php?id='.$_GET['id']);
-		exit;
-	}else{
-		// check whether the role is similar to the opened pages
-
-		// get the page role
-		$pagerole = htmlentities($_SERVER['PHP_SELF']);
-		$pagerole = substr($pagerole, strrpos($pagerole,'/')+1);
-		$pagerole = substr($pagerole, 0, strpos($pagerole,'_'));
-
-		// check whether the page is user specific
-		if($pagerole != 'user'){
-			// if it is in different role
-			if($pagerole != $_SESSION['role']){
-				// redirect to its dashboard
-				if ($_SESSION['role'] == 'admin'){
-					header('Location: admin_dashboard.php');
-					exit;
-				} else if ($_SESSION['role'] == 'lecturer'){
-					header('Location: lecturer_dashboard.php');
-					exit;
-				} else if ($_SESSION['role'] == 'student'){
-					header('Location: student_dashboard.php');
-					exit;
-				}
-				
-			}
-		}
 	}
 
 	include("_config.php");
 
-	// check whether the suspicion id is actually exist
-	$sql = "SELECT suspicion.suspicion_id, suspicion.student_response, suspicion.marked_code,
-		 suspicion.artificial_code, suspicion.table_info, suspicion.explanation_info,
-		 suspicion.did_you_know FROM suspicion
-		 INNER JOIN submission ON submission.submission_id = suspicion.submission_id
-		 WHERE suspicion.public_suspicion_id = '".$_GET['id']."'
-		 AND suspicion.suspicion_type = 'real'
-		 AND submission.submitter_id = '".$_SESSION['user_id']."'";
-	$result = mysqli_query($db,$sql);
-	// if the result is zero, redirect to dashboard
-	if($result->num_rows == 0){
-		header('Location: student_dashboard.php');
+	// get all data required for this page
+	$sqlt = "SELECT suspicion.suspicion_id, suspicion.marked_code,
+		suspicion.artificial_code, suspicion.table_info, suspicion.explanation_info,
+		suspicion.student_response, submission.submitter_id, assessment.name AS assessment_name,
+		course.name AS course_name, course.course_id FROM suspicion
+		INNER JOIN submission ON submission.submission_id = suspicion.submission_id
+		INNER JOIN assessment ON assessment.assessment_id = submission.assessment_id
+		INNER JOIN course ON course.course_id = assessment.course_id
+		WHERE suspicion.public_suspicion_id = '".$_GET['id']."'
+		AND suspicion.suspicion_type = 'simulation'";
+	$resultt = mysqli_query($db,$sqlt);
+	$rowt = $resultt->fetch_assoc();
+
+	// if the public suspicion id is invalid OR it is not simulation, redirect to login
+	if(is_null($rowt)){
+		header('Location: index.php?invalidreport=true');
 		exit;
-	}else{
-		$row = $result->fetch_assoc();
-
-		$markedCode = $row['marked_code'];
-		$artificialCode = $row['artificial_code'];
-		$tableInfo = $row['table_info'];
-		$explanationInfo = $row['explanation_info'];
-		$didyouknow = $row['did_you_know'];
-
-		// Data Privacy & Governance: Anonymize peer student references into English
-		$explanationInfo = preg_replace('/(berkas milik|identik dengan|file belonging to|identical to)\s+[^<\.\)]+(\(\d+\))?/i', 'a file belonging to a student in your class', $explanationInfo);
-		$explanationInfo = preg_replace('/(YEHEZKIEL|Bryan)[^<\.]*/i', 'a student in your class', $explanationInfo);
-		$artificialCode = preg_replace('/\/\/\s*(Matched Peer Code \(|Peer submission code from\s*)[^\r\n]+/i', '// Matched Peer Code (A student in your class)', $artificialCode);
-		$artificialCode = preg_replace('/(YEHEZKIEL|Bryan)[^\r\n]*/i', 'A student in your class', $artificialCode);
 	}
 
-	// check whether the suspicion id is listed to a course which the submitter enrolled to,
-	// and the submission is still open
-	$sql = "SELECT assessment.name AS assessment_name, assessment.assessment_id, course.name AS course_name,
-		 assessment.submission_close_time AS close_time, CURRENT_TIMESTAMP AS now_time, assessment.suspicion_response AS suspicion_response, assessment.allow_late_submission, course.course_id  
-		 FROM assessment INNER JOIN course ON course.course_id = assessment.course_id
-		 INNER JOIN submission ON submission.assessment_id = assessment.assessment_id
-		 INNER JOIN suspicion ON suspicion.submission_id = submission.submission_id
-		 WHERE suspicion.suspicion_id = '".$_GET['id']."'";
-	$result = mysqli_query($db,$sql);
-	$row = $result->fetch_assoc();
+	$markedCode = $rowt['marked_code'];
+	$artificialCode = $rowt['artificial_code'];
+	$tableInfo = $rowt['table_info'];
+	$explanationInfo = $rowt['explanation_info'];
 
-	// if the given assessment id is not listed, redirect to dashboard
-	if(is_null($row)){
-		header('Location: student_dashboard.php');
-		exit;
-	}else{
-		// set all temporary variables
-		$myassessmentid = $row['assessment_id'];
-		$myassessmentname = $row['assessment_name'];
-		$mycoursename = $row['course_name'];
-		$closetime = new DateTime($row['close_time']);
-		$nowtime = new DateTime($row['now_time']);
-		$mysuspicionresponse = $row['suspicion_response'];
-		$allowLateSubmission = $row['allow_late_submission'];
-		$courseId = $row['course_id'];
-	}
+	// Data Privacy & Governance: Anonymize peer student references into English
+	$explanationInfo = preg_replace('/(berkas milik|identik dengan|file belonging to|identical to)\s+[^<\.\)]+(\(\d+\))?/i', 'a file belonging to a student in your class', $explanationInfo);
+	$explanationInfo = preg_replace('/(YEHEZKIEL|Bryan)[^<\.]*/i', 'a student in your class', $explanationInfo);
+	$artificialCode = preg_replace('/\/\/\s*(Matched Peer Code \(|Peer submission code from\s*)[^\r\n]+/i', '// Matched Peer Code (A student in your class)', $artificialCode);
+	$artificialCode = preg_replace('/(YEHEZKIEL|Bryan)[^\r\n]*/i', 'A student in your class', $artificialCode);
+	$studentresponse = $rowt['student_response'];
+	$submitter_id = $rowt['submitter_id'];
+	$assessment_name =  $rowt['assessment_name'];
+	$course_name =  $rowt['course_name'];
+	$courseId = $rowt['course_id'];
 
-	recordAccess($db, $_GET['id'], $_SESSION['user_id']);
-
+	recordAccess($db,  $rowt['suspicion_id']);
 ?>
 <html>
 	<head>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 
-		<title> E-Strange: <?php echo ($human_language == 'en'? "Similarity alert": "Laporan kesamaan"); ?></title>
+		<title> E-Strange: <?php echo ($human_language == 'en'? "Similarity simulation": "Simulasi kesamaan"); ?> </title>
     <link rel="icon" href="strange_html_layout_additional_files/icon.png">
-	<!-- Untuk Icon -->
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 	<link href="bootstrap-5.3.3-dist/css/bootstrap.min.css" rel="stylesheet">
 
 
     <!-- Google Prettify to generate highlight https://github.com/google/code-prettify -->
 	<script src="strange_html_layout_additional_files/run_prettify.js"></script>
-	<!-- The use of Notyf library https://github.com/caroso1222/notyf -->
+<!-- The use of Notyf library https://github.com/caroso1222/notyf -->
 	<link rel="stylesheet" href="strange_html_layout_additional_files/notyf.min.css">
 	<script src="strange_html_layout_additional_files/notyf.min.js"></script>
 	<script type="text/javascript">
@@ -137,7 +77,7 @@
 					FROM game_unobserved_notif 
 					INNER JOIN game_student_course ON game_student_course.gs_id = game_unobserved_notif.gs_id 
 					INNER JOIN game_course ON game_course.course_id = game_student_course.course_id 
-					WHERE game_student_course.student_id = '".$_SESSION['user_id']."' 
+					WHERE game_student_course.student_id = '".$submitter_id."' 
 					AND game_student_course.course_id = '".$courseId."' 
 					AND game_course.is_active = '1' 
 					AND game_student_course.is_participating = '1' 
@@ -149,8 +89,8 @@
 			 $i =0;
 			 while($row = $rt->fetch_assoc()) {
 				 // print the notification
-				 echo "const notification".$i." = notyf.success(\"".$row['message']."<br />Click me for details!\");
-					   notification".$i.".on('click', ({target, event}) => {window.location.href = 'student_game_statistics.php?id=".$courseId."';});";
+				 echo "const notification".$i." = notyf.success(\"".$row['message']."<br />Log in for details!\");
+					   notification".$i.".on('click', ({target, event}) => {window.location.href = 'index.php';});";
 					   
 					   
 				 // remove the notification
@@ -295,7 +235,7 @@
 				// set the CSS of currently selected fragment
 				var defaultColour = "";
 				if(id.startsWith("c")){
-					defaultColour = "rgba(244,161,164,1)";
+					defaultColour = "rgba(244,224,104,1)";
 				}else if(id.startsWith("s")){
 					defaultColour = "rgba(101,244,104,1)";
 				}
@@ -325,7 +265,7 @@
 				// reset the CSS of previously selected fragment
 				var defaultColour = "";
 				if(selectedCodeFragmentId.startsWith("c")){
-					defaultColour = "rgba(244,211,214,1)";
+					defaultColour = "rgba(244,224,174,1)";
 				}else if(selectedCodeFragmentId.startsWith("s")){
 					defaultColour = "rgba(171,244,174,1)";
 				}
@@ -403,7 +343,7 @@
 		div.messagepanel{
 			width:98%;
 			height:25%;
-			border: 1px solid #dddddd;
+			border: 1px solid #b1b1b1;
 			padding:1%;
 			overflow:auto;
 		}
@@ -463,10 +403,10 @@
 			width: 100%;
 			height:100%;
 			float:left;
-			border-color: #dddddd;
+			border-color: #b1b1b1;
 		}
 		.commentsim{
-			background-color:rgba(244,211,214,1);
+			background-color:rgba(244,224,174,1);
 		}
 		.syntaxsim{
 			background-color:rgba(171,244,174,1);
@@ -490,7 +430,7 @@
 			height:80%;
 			overflow-y:scroll;
 			overflow-x: hidden;
-			border: 1px solid #dddddd;
+			border: 1px solid #b1b1b1;
 		}
 		table {
 			width:100%;
@@ -502,7 +442,7 @@
 			width:97.5%;
 		}
 		td, th {
-			border: 1px solid #dddddd;
+			border: 1px solid #b1b1b1;
 			text-align: center;
 		}
 		td{
@@ -541,7 +481,7 @@
 		div.explanationpanel{
 			width:98%;
 			height:20%;
-			border: 1px solid #dddddd;
+			border: 1px solid #b1b1b1;
 			padding:1%;
 			overflow-y:auto;
 			overflow-x:hidden;
@@ -585,27 +525,14 @@
 			height:20%;
 			margin-bottom:3.5%;
 		}
-		div.didyouknowpanel{
+		div.responsepanel{
 			width:98%;
 			height:10%;
-			border: 1px solid #dddddd;
+			border: 1px solid #b1b1b1;
 			padding:1%;
 			overflow:auto;
 		}
-		div.othernav{
-			width:98%;
-			margin-top:2%;
-			text-align:center;
-		}
-
-		form.invisform{
-			float:left;
-			width:23%;
-			margin-left:20%;
-		}
-
-		button.tablink{
-			float:left;
+		button.action{
 			width:100%;
 			border:none;
 			outline: none;
@@ -615,14 +542,20 @@
 			background-color: rgba(0,112,149,1);
 			text-align: center;
 			color: white;
+			text-decoration: none;
+			margin-top:2%;
+			margin-left:1px;
 		}
-
+		/* to display div in simulation mode */
+		div.longsubcontentwrapperdisplay{
+			display: block;
+		}
 		div.generatedfragment{
 			width:100%;
 			height:100%;
 			display: none;
 		}
-		div.didyouknowpanel, div.explanationpanel{
+		div.responsepanel, div.explanationpanel{
 			font-size:14px;
 		}
     </style>
@@ -723,89 +656,70 @@ select.select2-hidden-accessible {
     <div class="leftpanel">
       <div class="titlepanel">
         <div class="image"><img src="strange_html_layout_additional_files/logo.png" alt="logo"></div>
-        <div class="titlewrapper"><?php echo ($human_language == 'en'? "Similarity report": "Laporan kesamaan"); ?></div>
+				<div class="titlewrapper"><?php echo ($human_language == 'en'? "Similarity simulation": "Simulasi kesamaan"); ?></div>
+
       </div>
 			<div class="messagepanel">
 				<div class="subtitlewrapper"><?php echo ($human_language == 'en'? "Student ID": "ID mahasiswa"); ?></div>
 				<?php
-					// get username and name for given user_id
+					// get the username and name of the victim
 					$sqlt = "SELECT username, name FROM user
-						WHERE user_id = '".$_SESSION['user_id']."'";
+						WHERE user_id = '".$submitter_id."'";
 					$resultt = mysqli_query($db,$sqlt);
 					$rowt = $resultt->fetch_assoc();
 				?>
 				<div class="subcontentwrapper"><b>:</b> <?php echo $rowt['username'].' / ' . $rowt['name']; ?></div>
 				<div class="subtitlewrapper"><?php echo ($human_language == 'en'? "Course": "Mata kuliah"); ?></div>
-				<div class="subcontentwrapper"><b>:</b> <?php echo $mycoursename; ?> </div>
+				<div class="subcontentwrapper"><b>:</b> <?php echo $course_name; ?> </div>
 				<div class="subtitlewrapper"><?php echo ($human_language == 'en'? "Assessment": "Tugas"); ?></div>
-				<div class="subcontentwrapper"><b>:</b> <?php echo $myassessmentname; ?></div>
+				<div class="subcontentwrapper"><b>:</b> <?php echo $assessment_name; ?></div>
 				<?php
 					if($human_language == 'en'){
-						echo '
-							<div class="longsubtitlewrapper">Why the code is alerted? <button class="collapsible" onclick="toggleCollapsible(\'message1\')">details</button></div>
-							<div class="longsubcontentwrapper" id="message1">
-								The alert is raised since the code shares obvious similarity to other students\' code that has been previously submitted.
-							</div>
-							<div class="longsubtitlewrapper">What actions did the student possibly do that lead to this similarity? <button class="collapsible" onclick="toggleCollapsible(\'message2\')">details</button></div>
-							<div class="longsubcontentwrapper" id="message2">
-								<ol>
-									<!-- sorted from positive to negative accusation -->
-									<li>Discussing with another student how to approach a task and what resources to use, then developing the solution independently.</li>
-									<li>Discussing the detail of your code with another student while working on it.</li>
-									<li>Showing troublesome code to another student and asking them for advice on how to fix it.</li>
-									<li>Asking another student to take troublesome code and get it working.</li>
-									<li>Copying an early draft of another student\'s work and developing it into your own.</li>
-									<li>Copying another student\'s code and changing it so that it looks quite different.</li>
-									<li>After completing an assessment, adding features that you noticed when looking at another student\'s work. </li>
-									<li>Incorporating the work of another student without their permission.</li>
-									<li>Incorporating purchased code written by other students into your own work</li>
-									<li>Submitting purchased code written by another student as your own work</li>
-									<li>Writing the code by yourself but this unexpectedly happens.</li>
-									<!-- Basing an assessment largely on work that you wrote and submitted for a previous course, without acknowledging this.-->
-								</ol>
-							</div>';
-							if($mysuspicionresponse == 1){
-								echo '<div class="longsubtitlewrapper">What actions should the student do next? <button class="collapsible" onclick="toggleCollapsible(\'message3\')">details</button></div>
-								<div class="longsubcontentwrapper" id="message3">
-									The student is expected to resubmit the code and provide the reasons why such similarity occurs.
-								</div>';
-							}
-						
+							echo '
+								<div class="longsubtitlewrapper">Actions that may lead alerted similarity:</div>
+								<div class="longsubcontentwrapper longsubcontentwrapperdisplay">
+									<ol>
+										<!-- sorted from positive to negative accusation -->
+										<li>Discussing with another student how to approach a task and what resources to use, then developing the solution independently.</li>
+										<li>Discussing the detail of your code with another student while working on it.</li>
+										<li>Showing troublesome code to another student and asking them for advice on how to fix it.</li>
+										<li>Asking another student to take troublesome code and get it working.</li>
+										<li>Copying an early draft of another student\'s work and developing it into your own.</li>
+										<li>Copying another student\'s code and changing it so that it looks quite different.</li>
+										<li>After completing an assessment, adding features that you noticed when looking at another student\'s work. </li>
+										<li>Incorporating the work of another student without their permission.</li>
+										<li>Incorporating purchased code written by other students into your own work</li>
+										<li>Submitting purchased code written by another student as your own work</li>
+										<li>Writing the code by yourself but this unexpectedly happens.</li>
+										<!-- Basing an assessment largely on work that you wrote and submitted for a previous course, without acknowledging this.-->
+									</ol>
+								</div>
+							';
 					}else{
-						echo '
-							<div class="longsubtitlewrapper">Mengapa kode ini ditandai? <button class="collapsible" onclick="toggleCollapsible(\'message1\')">detil</button></div>
-							<div class="longsubcontentwrapper" id="message1">
-								Alert didasarkan dari kesamaan kentara dengan sebagian kode program dari mahasiswa-mahasiswa lain yang telah dikumpulkan sebelumnya.
-							</div>
-							<div class="longsubtitlewrapper">Apa saja kemungkinan tindakan yang dapat menghasilkan kesamaan ini? <button class="collapsible" onclick="toggleCollapsible(\'message2\')">detil</button></div>
-							<div class="longsubcontentwrapper" id="message2">
-								<ol>
-									<!-- sorted from positive to negative accusation -->
-									<li>Berdiskusi dengan siswa lain tentang cara mengerjakan tugas dan sumber-sumber apa yang sebaiknya digunakan, kemudian mengembangkan solusinya secara mandiri.</li>
-									<li>Mendiskusikan kode anda secara detil dengan siswa lain pada saat mengerjakannya.</li>
-									<li>Memperlihatkan kode yang bermasalah kepada siswa lain dan meminta saran tentang cara memperbaikinya.</li>
-									<li>Meminta siswa lain untuk memperbaiki kode yang bermasalah.</li>
-									<li>Menyalin draf awal hasil karya siswa lain dan mengembangkannya menjadi milik anda.</li>
-									<li>Menyalin kode hasil karya siswa lain dan mengubahnya sehingga terlihat agak berbeda.</li>
-									<li>Setelah menyelesaikan suatu tugas, anda menambahkan fitur-fitur yang terinspirasi setelah anda  melihat hasil karya siswa lain. </li>
-									<li>Memasukkan pekerjaan siswa lain tanpa meminta izin yang kepada bersangkutan.</li>
-									<li>Membeli kode yang ditulis oleh siswa lain untuk dimasukkan ke dalam pekerjaan anda sendiri.</li>
-									<li>Membayar siswa lain untuk menulis kode dan mengirimkan sebagai karya anda sendiri.</li>
-									<li>Menulis kode secara individu namun kecurigaan ini secara tidak diduga muncul.</li>
-									<!-- Basing an assessment largely on work that you wrote and submitted for a previous course, without acknowledging this.-->
-								</ol>
-							</div>';
-							if($mysuspicionresponse == 1){
-								echo '<div class="longsubtitlewrapper">Tindakan apa yang harus dilakukan oleh siswa terkait? <button class="collapsible" onclick="toggleCollapsible(\'message3\')">detil</button></div>
-								<div class="longsubcontentwrapper" id="message3">
-									Siswa terkait diharapkan untuk mengumpulkan ulang kode dan memberikan alasan mengapa kesamaan tak wajar tersebut muncul.
-								</div>';
-							}
-						
+							echo '
+								<div class="longsubtitlewrapper">Tindakan-tindakan yang dapat menghasilkan kesamaan:</div>
+								<div class="longsubcontentwrapper longsubcontentwrapperdisplay">
+									<ol>
+										<!-- sorted from positive to negative accusation -->
+										<li>Berdiskusi dengan siswa lain tentang cara mengerjakan tugas dan sumber-sumber apa yang sebaiknya digunakan, kemudian mengembangkan solusinya secara mandiri.</li>
+										<li>Mendiskusikan kode anda secara detil dengan siswa lain pada saat mengerjakannya.</li>
+										<li>Memperlihatkan kode yang bermasalah kepada siswa lain dan meminta saran tentang cara memperbaikinya.</li>
+										<li>Meminta siswa lain untuk memperbaiki kode yang bermasalah.</li>
+										<li>Menyalin draf awal hasil karya siswa lain dan mengembangkannya menjadi milik anda.</li>
+										<li>Menyalin kode hasil karya siswa lain dan mengubahnya sehingga terlihat agak berbeda.</li>
+										<li>Setelah menyelesaikan suatu tugas, anda menambahkan fitur-fitur yang terinspirasi setelah anda  melihat hasil karya siswa lain. </li>
+										<li>Memasukkan pekerjaan siswa lain tanpa meminta izin yang kepada bersangkutan.</li>
+										<li>Membeli kode yang ditulis oleh siswa lain untuk dimasukkan ke dalam pekerjaan anda sendiri.</li>
+										<li>Membayar siswa lain untuk menulis kode dan mengirimkan sebagai karya anda sendiri.</li>
+										<li>Menulis kode secara individu namun kecurigaan ini secara tidak diduga muncul.</li>
+										<!-- Basing an assessment largely on work that you wrote and submitted for a previous course, without acknowledging this.-->
+									</ol>
+								</div>
+							';
 					}
-				?>
+				 ?>
 			</div>
-			<div class="codetitle" style="width:60%;"><?php echo ($human_language == 'en'? "The code with similar contents highlighted: ": "Kode dengan konten sama ditandai: "); ?></div>
+			<div class="codetitle"><?php echo ($human_language == 'en'? "Submitted code: ": "Kode yang dikumpulkan: "); ?></div>
 			<div class="codeview">
 				<pre class="prettyprint linenums">
 <?php echo $markedCode; ?>
@@ -813,7 +727,7 @@ select.select2-hidden-accessible {
 			</div>
     </div>
     <div class="rightpanel">
-			<div class="subtitlewrapper" style="width:60%;"><?php echo ($human_language == 'en'? "Similar contents: ": "Konten yang sama: "); ?> </div>
+			<div class="subtitlewrapper"><?php echo ($human_language == 'en'? "Similar content: ": "Konten yang sama: "); ?> </div>';
 			<div class="subcontentwrapper"></div>
 			<div class="tablecontainer">
 				<div class="tableheader">
@@ -841,63 +755,21 @@ select.select2-hidden-accessible {
 				<div class="generatedfragment" id='dg' style="display:block"> <pre class="prettyprint linenums"></pre></div>
 <?php echo $artificialCode; ?>
 			</div>
-			<div class="longsubtitlewrapper"><?php echo ($human_language == 'en'? "Did you know?": "Apakah kamu tahu?"); ?></div>
-      <div class="didyouknowpanel">
-<?php echo $didyouknow; ?>
-			</div>
-			<div class="othernav">
-				<?php
-						// resubmit button
-						if($closetime > $nowtime || $allowLateSubmission == '1'){
-							// opening form
-							echo "
-								<form class=\"invisform\" action=\"student_assessment_submit_suspicious.php\" method=\"post\">
-									";
-							// if a mode is given, pass it to the form
-							if(isset($_POST['mode'])){
-								echo"
-									<input type=\"hidden\" name=\"mode\" value=\"".$_POST['mode']."\">
-									";
-							}
-							// closing form
-							echo "
-								<input type=\"hidden\" name=\"id\" value=\"".$_GET['id']."\">
-								<button class=\"tablink\" type=\"submit\">Resubmit</button>
-							</form>
-							";
-						}else{
-							echo "<form class=\"invisform\" >"; 
-							echo ($human_language == 'en'? "Cannot resubmit code": "Tidak dapat mengirimkan ulang kode");
-							echo "</form>";
-						}
-
-					// back or home button
-					if(isset($_POST['mode'])){
-						// if mode is set, change the direction of back buttons based on given mode
- 						if($_POST['mode'] == '1'){
-							echo '
-								<form class="invisform"  action="student_dashboard.php" method="post">
-									<button class="tablink" type="submit">Back</button>
-								</form>
-								';
-						}else if($_POST['mode'] == '2'){
-							echo '
-								<form class="invisform"  action="student_submission.php" method="post">
-									<button class="tablink" type="submit">Back</button>
-								</form>
-								';
-						}
-
-					}else{
-						// otherwise, set to student dashboard
+			<?php
+				if($human_language == 'en'){
 						echo '
-							<form class="invisform"  action="student_dashboard.php" method="post">
-								<button class="tablink" type="submit">Home</button>
-							</form>
-							';
-					}
+	<div class="longsubtitlewrapper">Notice:</div>
+	<div class="responsepanel">
+The submission is NOT similar to those of other colleagues and this is entirely artificial.
+	</div>';
+				}else{
+						echo '
+	<div class="longsubtitlewrapper">Pernyataan:</div>
+	<div class="responsepanel">
+Kode yang dikumpulkan TIDAK sama dengan siswa lainnya dan segala hal pada laman ini hanya simulasi.
+	</div>';
+				}
 				?>
-			</div>
     </div>
 	
 <script src="bootstrap-5.3.3-dist/js/bootstrap.bundle.min.js"></script>

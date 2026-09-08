@@ -55,7 +55,9 @@
 
 	// Data Privacy & Governance: Anonymize peer student references into English
 	$explanationInfo = preg_replace('/(berkas milik|identik dengan|file belonging to|identical to)\s+[^<\.\)]+(\(\d+\))?/i', 'a file belonging to a student in your class', $explanationInfo);
+	$explanationInfo = preg_replace('/(YEHEZKIEL|Bryan)[^<\.]*/i', 'a student in your class', $explanationInfo);
 	$artificialCode = preg_replace('/\/\/\s*(Matched Peer Code \(|Peer submission code from\s*)[^\r\n]+/i', '// Matched Peer Code (A student in your class)', $artificialCode);
+	$artificialCode = preg_replace('/(YEHEZKIEL|Bryan)[^\r\n]*/i', 'A student in your class', $artificialCode);
 
 	$suspicion_type = $rowt['suspicion_type'] ?? 'simulation';
 	$courseId = $rowt['course_id'] ?? '';

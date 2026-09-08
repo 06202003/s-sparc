@@ -54,6 +54,11 @@ if ($uRes && $uRes->num_rows > 0) {
 $db->query("DELETE FROM suspicion WHERE marked_code IS NULL OR marked_code = ''");
 $db->query("DELETE FROM code_clarity_suggestion WHERE marked_code IS NULL OR marked_code = ''");
 
+// Data Privacy & Governance: Wipe existing student names from DB explanation_info & artificial_code
+$db->query("UPDATE suspicion SET explanation_info = REPLACE(explanation_info, 'YEHEZKIEL DAVID SETIAWAN (2172003)', 'a student in your class') WHERE explanation_info LIKE '%YEHEZKIEL%'");
+$db->query("UPDATE suspicion SET explanation_info = REPLACE(explanation_info, 'Bryan Matthews Justandi (2172001)', 'a student in your class') WHERE explanation_info LIKE '%Bryan%'");
+$db->query("UPDATE suspicion SET artificial_code = REPLACE(artificial_code, 'Bryan Matthews - 2172001', 'A student in your class') WHERE artificial_code LIKE '%Bryan%'");
+
 $subRes = $db->query("SELECT submission_id FROM submission ORDER BY submission_id ASC");
 $metricCount = 0;
 if ($subRes && $subRes->num_rows > 0) {
