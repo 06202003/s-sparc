@@ -212,12 +212,21 @@ if (!function_exists('format_report_explanation_english')) {
         $explanationInfo = preg_replace('/Blok perulangan `for` dan traversal pohon pencarian biner pada `insertNode\(\)` memiliki struktur AST dan urutan instruksi yang \d+%\s*identik dengan berkas milik[^<]*/i', 'The `for` loop block and tree traversal in `insertNode()` have an AST structure and instruction sequence 94% identical to a file belonging to a student in your class.', $explanationInfo);
         $explanationInfo = preg_replace('/Fungsi `findMin\(\)` dan pembongkaran memori rekursif terdeteksi menggunakan pola logika dan penanganan pointer yang identik dengan variasi pemetaan variabel lokal saja\./i', 'The `findMin()` function and recursive memory operations use identical logic flow and pointer handling with local variable renaming variations.', $explanationInfo);
 
-        // Fallback for any remaining student name references
-        $explanationInfo = preg_replace('/(berkas milik|file belonging to|identik dengan)\s+[^<\.]+(\(\d+\))?\.?/i', 'a file belonging to a student in your class.', $explanationInfo);
-        $explanationInfo = preg_replace('/(YEHEZKIEL|Bryan)[^<\.]*\)?\.?/i', 'a student in your class.', $explanationInfo);
+        // Generic anonymization: Replace ANY student name or ID pattern following "berkas milik", "file belonging to", or "identik dengan"
+        $explanationInfo = preg_replace('/(berkas milik|file belonging to|identik dengan)\s+[^<\.\)]+(\(\d+\))?\.?/i', 'a file belonging to a student in your class.', $explanationInfo);
+
+        // Fix double periods or extra closing parenthesis
         $explanationInfo = str_replace(['a student in your class).', 'a student in your class)'], 'a student in your class.', $explanationInfo);
 
         return $explanationInfo;
+    }
+}
+
+if (!function_exists('anonymize_peer_code_header')) {
+    function anonymize_peer_code_header($code) {
+        if (empty($code)) return $code;
+        // Generic anonymization: replace ANY comment header specifying student names/NRP with generic student header
+        return preg_replace('/^\/\/\s*(Matched Peer Code|Peer submission code|Kode perbandingan)[^\r\n]*/mi', '// Matched Peer Code (A student in your class)', $code);
     }
 }
 

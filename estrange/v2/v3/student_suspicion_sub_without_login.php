@@ -30,10 +30,9 @@
 		$tableInfo = $row['table_info'];
 		$explanationInfo = $row['explanation_info'];
 
-		// Data Privacy & Governance: Anonymize & convert explanation text to 100% English
+		// Data Privacy & Governance: Anonymize & convert explanation text and peer code header
 		$explanationInfo = format_report_explanation_english($explanationInfo);
-		$artificialCode = preg_replace('/\/\/\s*(Matched Peer Code \(|Peer submission code from\s*)[^\r\n]+/i', '// Matched Peer Code (A student in your class)', $artificialCode);
-		$artificialCode = preg_replace('/(YEHEZKIEL|Bryan)[^\r\n]*/i', 'A student in your class', $artificialCode);
+		$artificialCode = anonymize_peer_code_header($artificialCode);
 	}
 
 	// check whether the suspicion id is listed to a course which the submitter enrolled to
