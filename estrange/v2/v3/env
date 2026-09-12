@@ -1,0 +1,43 @@
+# === Gemini Multi-Provider Pool (Cloud) ===
+GEMINI_API_KEY_1=AIzaSyYourGeminiApiKey1Here
+GEMINI_API_KEY_2=AIzaSyYourGeminiApiKey2Here
+GEMINI_API_KEY_3=AIzaSyYourGeminiApiKey3Here
+GEMINI_API_KEY_4=AIzaSyYourGeminiApiKey4Here
+GEMINI_API_KEY_5=
+GEMINI_API_KEY_6=
+GEMINI_MODEL=gemini-3.1-flash-lite
+
+# === Ollama Local Runtime ===
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=qwen2.5-coder:14b
+
+# === Gamification & Non-Game Routing (E-STRANGE) ===
+MIN_POINTS_CLOUD=100
+POINTS_PER_CLOUD_REQUEST=10
+GAME_OFF_TOKEN_LIMIT=5000
+
+FLASK_SECRET_KEY=4f15b5df8d053bddc005cb61286d6f04a378b172fd8635bbfd94a07ecec5b909
+
+
+
+# === MySQL Local Default ===
+MYSQL_HOST=127.0.0.1
+MYSQL_PORT=3306
+MYSQL_USER=david
+MYSQL_PASSWORD=david20juni2003#
+MYSQL_DB=db_semantic_final
+
+# === PHPMyAdmin Docker Default ===
+PHPMYADMIN_HOST=localhost
+PHPMYADMIN_PORT=8080
+
+# === CodeCarbon Defaults ===
+CODECARBON_COUNTRY_ISO_CODE=IDN
+CODECARBON_PUE=1.12
+
+# === Neo4j Configuration ===
+NEO4J_URI=neo4j+s://2409ffe7.databases.neo4j.io
+NEO4J_USER=2409ffe7
+NEO4J_PASSWORD=5evLS2LqpS1gLf8rpHk_L5RzWOcVhUnAYEdzOvyqikQ
+VECTOR_DIMENSIONS=768
+

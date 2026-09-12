@@ -27,7 +27,9 @@ def get_db_connection():
     port = int(os.getenv("MYSQL_PORT", 3306))
     user = os.getenv("MYSQL_USER", "root")
     password = os.getenv("MYSQL_PASSWORD", "")
-    db = os.getenv("MYSQL_DB", "s_sparc_db")
+    db = os.getenv("MYSQL_DB", "estrange_v7")
+    if db == "db_semantic_final":
+        db = "estrange_v7"
     
     try:
         connection = pymysql.connect(
@@ -142,6 +144,15 @@ def ensure_user_api_keys_table():
         return
     try:
         with conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS users (
+                    user_id VARCHAR(64) PRIMARY KEY,
+                    username VARCHAR(255) NOT NULL UNIQUE,
+                    email VARCHAR(255),
+                    password_hash VARCHAR(255),
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """)
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS user_api_keys (
                     id INT AUTO_INCREMENT PRIMARY KEY,

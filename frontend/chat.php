@@ -30,6 +30,14 @@ if (!$assessmentId) {
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- Markdown & HTML Sanitizer & Highlight.js & KaTeX -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
   <style>
     :root { color-scheme: light; }
     body { font-family: 'Manrope', system-ui, -apple-system, sans-serif; }
@@ -41,6 +49,7 @@ if (!$assessmentId) {
     .code-block { position: relative; }
     .copy-btn { position: absolute; top: 8px; right: 8px; font-size: 12px; padding: 4px 8px; border-radius: 12px; border: 1px solid #cbd5e1; background: #ffffff; color: #0f172a; cursor: pointer; }
     .copy-btn:hover { background: #e2e8f0; }
+    .katex-display { overflow-x: auto; overflow-y: hidden; padding: 4px 0; margin: 0.5em 0 !important; }
   </style>
   <style>
 /* Premium Teal Dropdown Styling for E-STRANGE & S-SPARC */
@@ -179,68 +188,93 @@ select.select2-hidden-accessible {
 
 </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 text-slate-900">
-  <div class="min-h-screen flex flex-col">
-    <header class="sticky top-0 z-10 border-b border-slate-200/70 bg-white/80 backdrop-blur">
-      <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+<body class="h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 text-slate-900 flex flex-col max-lg:h-auto max-lg:overflow-y-auto">
+  <div class="h-full flex flex-col flex-1 overflow-hidden max-lg:h-auto max-lg:overflow-visible">
+    <header class="shrink-0 border-b border-slate-200/70 bg-white/80 backdrop-blur z-20">
+      <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap md:flex-nowrap items-center justify-between gap-3">
         <div class="flex min-w-0 items-center gap-3">
-          <div class="h-10 w-10 rounded-xl bg-[#00A0A5] text-white grid place-items-center font-semibold">AI</div>
+          <div class="h-10 w-10 rounded-xl bg-[#00A0A5] text-white grid place-items-center font-semibold shrink-0">AI</div>
           <div class="min-w-0">
-            <div class="text-lg font-semibold">Chat Assistant</div>
-            <div class="text-xs text-slate-500 truncate max-w-[36rem]">courses: <strong><?= htmlspecialchars($currentCourse ?? '-') ?></strong> &mdash; Assessment: <strong><?= htmlspecialchars($currentAssessment ?? '-') ?></strong></div>
+            <div class="text-base sm:text-lg font-semibold truncate">Chat Assistant</div>
+            <div class="text-xs text-slate-500 truncate max-w-[28rem]">courses: <strong><?= htmlspecialchars($currentCourse ?? '-') ?></strong> &mdash; Assessment: <strong><?= htmlspecialchars($currentAssessment ?? '-') ?></strong></div>
             <div class="text-xs text-slate-600 font-medium" id="assessment-end-info"></div>
             <div class="text-xs font-semibold" id="assessment-end-countdown"></div>
           </div>
         </div>
-        <nav class="flex shrink-0 items-center gap-2 text-sm font-medium">
-          <button id="btn-api-key" onclick="openApiKeyModal()" type="button" class="inline-flex h-10 items-center gap-1.5 rounded-full border border-teal-300 bg-teal-50 px-4 text-teal-800 font-semibold hover:bg-teal-100 whitespace-nowrap shadow-2xs">
+        <nav class="flex flex-wrap items-center gap-1.5 text-xs sm:text-sm font-medium ml-auto">
+          <button id="btn-api-key" onclick="openApiKeyModal()" type="button" class="inline-flex h-9 items-center gap-1 rounded-full border border-teal-300 bg-teal-50 px-3 text-teal-800 font-semibold hover:bg-teal-100 whitespace-nowrap shadow-2xs">
             <span>🔑</span>
             <span id="api-key-btn-text">API Key</span>
           </button>
-          <a class="inline-flex h-10 items-center rounded-full px-3 text-slate-500 hover:bg-slate-100 hover:text-slate-700 whitespace-nowrap" href="dashboard.php">Dashboard</a>
-          <a class="inline-flex h-10 items-center rounded-full px-3 text-slate-500 hover:bg-slate-100 hover:text-slate-700 whitespace-nowrap" href="courses.php">Change courses</a>
-          <button id="view-prompt-tips" type="button" class="inline-flex h-10 items-center rounded-full border border-slate-200 px-4 text-slate-700 hover:border-slate-400 whitespace-nowrap">Lihat Tips Prompting</button>
-          <button id="new-chat" type="button" class="inline-flex h-10 items-center rounded-full bg-[#00A0A5] text-white px-4 hover:bg-[#008488] whitespace-nowrap">New chat</button>
-          <button id="clear-chat" type="button" class="inline-flex h-10 items-center rounded-full border border-slate-200 px-4 text-slate-700 hover:border-slate-400 whitespace-nowrap">Clear history</button>
+          <a class="inline-flex h-9 items-center rounded-full px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900 whitespace-nowrap" href="dashboard.php">Dashboard</a>
+          <a class="inline-flex h-9 items-center rounded-full px-3 text-slate-600 hover:bg-slate-100 hover:text-slate-900 whitespace-nowrap" href="courses.php">Change courses</a>
+          <button id="view-prompt-tips" type="button" class="inline-flex h-9 items-center rounded-full border border-slate-200 px-3 text-slate-700 hover:border-slate-400 whitespace-nowrap">Tips Prompting</button>
+          <button id="new-chat" type="button" class="inline-flex h-9 items-center rounded-full bg-[#00A0A5] text-white px-3.5 hover:bg-[#008488] whitespace-nowrap">New chat</button>
+          <button id="clear-chat" type="button" class="inline-flex h-9 items-center rounded-full border border-slate-200 px-3 text-slate-700 hover:border-slate-400 whitespace-nowrap">Clear</button>
           <?php if ($loggedIn): ?>
-            <a href="logout.php" class="inline-flex h-10 items-center rounded-full bg-red-500 text-white px-4 hover:bg-red-600 shadow-sm whitespace-nowrap">Logout</a>
+            <a href="logout.php" class="inline-flex h-9 items-center rounded-full bg-red-500 text-white px-3.5 hover:bg-red-600 shadow-sm whitespace-nowrap">Logout</a>
           <?php else: ?>
-            <a href="login.php" class="inline-flex h-10 items-center rounded-full border border-slate-300 px-4 text-slate-700 hover:border-slate-500 hover:text-slate-900 whitespace-nowrap">Login</a>
+            <a href="login.php" class="inline-flex h-9 items-center rounded-full border border-slate-300 px-3 text-slate-700 hover:border-slate-500 whitespace-nowrap">Login</a>
           <?php endif; ?>
         </nav>
       </div>
     </header>
 
     <?php if (!$loggedIn): ?>
-      <div class="max-w-6xl mx-auto w-full px-4 pt-4">
-        <div class="rounded-lg border border-amber-200 bg-amber-50 text-amber-900 px-4 py-3 text-sm">
+      <div class="max-w-7xl mx-auto w-full px-4 pt-3 shrink-0">
+        <div class="rounded-lg border border-amber-200 bg-amber-50 text-amber-900 px-4 py-2.5 text-xs sm:text-sm">
           You are not logged in. Log in on the login page so that the Flask session cookie is saved. If you get a job_id, check the status anytime by typing: <span class="font-mono">status &lt;job_id&gt;</span>.
         </div>
       </div>
     <?php endif; ?>
 
-    <main class="flex-1">
-      <div class="max-w-6xl mx-auto px-4 py-6 grid gap-4 lg:grid-cols-[1fr_320px] h-full">
-        <section class="glass rounded-2xl border border-white/60 shadow-lg p-4 sm:p-6 flex flex-col min-h-[60vh] lg:max-h-[calc(100vh-120px)]">
-          <div id="chat-window" class="flex-1 overflow-y-auto space-y-4 pr-1" aria-live="polite"></div>
-          <div id="typing" class="hidden mt-2 flex items-center gap-2 text-sm text-slate-600">
+    <main class="flex-1 overflow-hidden p-3 sm:p-4 lg:p-5 max-lg:overflow-y-auto">
+      <div class="max-w-7xl mx-auto h-full grid gap-4 lg:grid-cols-[1fr_340px] items-stretch">
+        <section class="glass rounded-2xl border border-white/60 shadow-lg p-3 sm:p-5 flex flex-col h-full overflow-hidden justify-between">
+          <div id="chat-window" class="flex-1 overflow-y-auto space-y-4 pr-1 min-h-[300px]" aria-live="polite"></div>
+          <div id="typing" class="hidden mt-2 flex items-center gap-2 text-sm text-slate-600 shrink-0">
             <span class="inline-flex items-center gap-1">
               <span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>
             </span>
             <span>Assistant is typing…</span>
           </div>
-          <form id="chat-form" class="mt-4" onsubmit="sendMessage(event)">
-            <div class="rounded-3xl border border-slate-300/90 bg-white p-4 shadow-sm focus-within:border-[#00A0A5] focus-within:ring-2 focus-within:ring-[#00A0A5]/20 transition flex flex-col justify-between">
+          <form id="chat-form" class="mt-3 shrink-0" onsubmit="sendMessage(event)">
+            <div class="rounded-3xl border border-slate-300/90 bg-white p-3 sm:p-4 shadow-sm focus-within:border-[#00A0A5] focus-within:ring-2 focus-within:ring-[#00A0A5]/20 transition flex flex-col justify-between">
               
+              <!-- C-I-O-E Metacognitive Protocol Live Indicator Bar -->
+              <div class="mb-2 pb-2 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span class="font-bold text-slate-700 flex items-center gap-1">
+                    <span class="text-[#00A0A5]">★</span> C-I-O-E Protocol:
+                  </span>
+                  <span id="cioe-badge-c" class="px-2 py-0.5 rounded-md font-mono font-semibold bg-slate-100 text-slate-400 border border-slate-200 transition duration-200 flex items-center gap-1 cursor-help" title="Context: Latar belakang & deskripsi tugas">
+                    <span>[C]</span> Context
+                  </span>
+                  <span id="cioe-badge-i" class="px-2 py-0.5 rounded-md font-mono font-semibold bg-slate-100 text-slate-400 border border-slate-200 transition duration-200 flex items-center gap-1 cursor-help" title="Input: Data input & parameter">
+                    <span>[I]</span> Input
+                  </span>
+                  <span id="cioe-badge-o" class="px-2 py-0.5 rounded-md font-mono font-semibold bg-slate-100 text-slate-400 border border-slate-200 transition duration-200 flex items-center gap-1 cursor-help" title="Output: Hasil & return yang diharapkan">
+                    <span>[O]</span> Output
+                  </span>
+                  <span id="cioe-badge-e" class="px-2 py-0.5 rounded-md font-mono font-semibold bg-slate-100 text-slate-400 border border-slate-200 transition duration-200 flex items-center gap-1 cursor-help" title="Error/Trace: Pesan error & kendala">
+                    <span>[E]</span> Error/Trace
+                  </span>
+                </div>
+                <button type="button" onclick="insertCIOETemplate()" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200/80 font-bold text-[10px] transition shadow-2xs cursor-pointer whitespace-nowrap" title="Isi otomatis template C-I-O-E">
+                  <span>✨</span>
+                  <span>+ Template C-I-O-E</span>
+                </button>
+              </div>
+
               <!-- Textarea Area -->
               <label for="chat-input" class="sr-only">Write a message</label>
-              <textarea id="chat-input" rows="3" class="w-full min-h-[5.5rem] max-h-56 resize-none overflow-y-auto bg-transparent px-3 pt-1.5 pb-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 leading-relaxed font-sans" placeholder="Tuliskan pertanyaan pemrograman Anda (min. 200 karakter, maks. 2000)..." required></textarea>
+              <textarea id="chat-input" rows="2" class="w-full min-h-[4rem] max-h-40 resize-none overflow-y-auto bg-transparent px-2 pt-1 pb-1.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 leading-relaxed font-sans" placeholder="Tuliskan pertanyaan pemrograman sesuai protokol C-I-O-E: [Context] + [Input Data] + [Output yang Diharapkan] + [Error Trace / Bug] (min. 10 karakter, maks. 2000)..." required></textarea>
 
               <!-- Bottom Toolbar inside Gemini Box -->
-              <div class="mt-3 pt-3 px-1 border-t border-slate-100 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2.5">
+              <div class="mt-2.5 pt-2.5 px-0.5 border-t border-slate-100 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2">
                 
-                <!-- Left Controls: Language & Mode Selector in 1 Single Line -->
-                <div class="flex items-center gap-1.5 flex-nowrap shrink-0 overflow-x-auto">
+                <!-- Left Controls: Language & Mode Selector -->
+                <div class="flex items-center gap-1.5 flex-wrap sm:flex-nowrap shrink-0">
                   <select id="language-select" class="gemini-pill-select shrink-0" title="Pilih Bahasa Pemrograman">
                     <option value="">Auto-detect</option>
                     <option value="Python" selected>Python</option>
@@ -260,16 +294,16 @@ select.select2-hidden-accessible {
                   </select>
                 </div>
 
-                <!-- Right Controls: Dynamic Query Badge, Character Counter & Circular Send Button (Gemini-style) -->
+                <!-- Right Controls: Dynamic Query Badge, Character Counter & Circular Send Button -->
                 <div class="flex items-center gap-2 flex-nowrap shrink-0 justify-end ml-auto">
-                  <div id="query-quota-badge" onclick="showTermsModal()" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-teal-50/90 border border-teal-200/80 text-[11px] font-semibold text-teal-800 shadow-2xs cursor-pointer hover:bg-teal-100 transition whitespace-nowrap" title="Klik untuk rincian kuota & syarat ketentuan">
+                  <div id="query-quota-badge" onclick="showTermsModal()" class="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-teal-50/90 border border-teal-200/80 text-[11px] font-semibold text-teal-800 shadow-2xs cursor-pointer hover:bg-teal-100 transition whitespace-nowrap" title="Klik untuk rincian kuota & syarat ketentuan">
                     <span class="text-teal-600">⚡</span>
                     <span>Sisa Query: <strong id="query-remaining-count" class="font-mono font-bold text-teal-900">1,500</strong> / <span id="query-limit-count" class="font-mono text-slate-500">1,500</span></span>
                   </div>
                   <div id="char-counter" class="text-[11px] font-mono text-slate-400 whitespace-nowrap">
-                    0 / 2000 chars (min. 200)
+                    0 / 2000 chars (min. 10)
                   </div>
-                  <button id="send-btn" type="submit" class="w-10 h-10 flex items-center justify-center rounded-full bg-[#00A0A5] text-white hover:bg-[#008589] transition shadow-sm hover:scale-105 active:scale-95 disabled:opacity-50 shrink-0" title="Kirim Prompt Pemrograman (min. 200 karakter)">
+                  <button id="send-btn" type="submit" class="w-9 h-9 flex items-center justify-center rounded-full bg-[#00A0A5] text-white hover:bg-[#008589] transition shadow-sm hover:scale-105 active:scale-95 disabled:opacity-50 shrink-0" title="Kirim Prompt Pemrograman (min. 10 karakter)">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
                     </svg>
@@ -280,23 +314,16 @@ select.select2-hidden-accessible {
 
             </div>
           </form>
-                    </div>
-                  </div>
-                </div>
-                <button id="send-btn" type="submit" class="h-11 self-center flex items-center justify-center rounded-xl bg-[#00A0A5] text-white px-4 font-semibold hover:bg-[#008488] focus:ring focus:ring-[#00A0A5]/20 disabled:opacity-50">Send</button>
-              </div>
-            </div>
-          </form>
-          <div id="rate-limit-notice" class="hidden mt-2 p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-xs font-semibold text-amber-900 flex items-center gap-2 animate-pulse"></div>
-          <div class="mt-3 flex flex-wrap gap-2 text-sm" id="suggestions">
-            <button type="button" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-700 hover:border-slate-400" data-suggest="Create a Python function named calculate_factorial that takes a single integer argument and returns its factorial. The function should include type annotations, a detailed docstring explaining the algorithm, and handle invalid input such as negative numbers or non-integer values by raising appropriate exceptions. Please also add inline comments explaining each logical step, and provide an example usage in the docstring. The function should be efficient and avoid recursion for very large numbers, using an iterative approach instead. Assume the input can be very large, so optimize for performance and memory usage. The code should be clear and easy to understand, following PEP8 style guidelines.">Factorial Python</button>
-            <button type="button" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-700 hover:border-slate-400" data-suggest="Write an SQL query that selects the top 10 most recently registered users from a users table, joining with a profiles table to retrieve each user's full name and email address. The query should filter out users who have not verified their email, sort the results by the created_at column in descending order, and include comments explaining each part of the query. Please ensure the query is well-formatted, readable, and uses table aliases for clarity.">SQL Query top 10 </button>
-            <button type="button" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-700 hover:border-slate-400" data-suggest="Create a Flask POST endpoint at /predict that accepts a JSON body with fields for age, gender, and symptoms (as a list of strings). Validate the input using Marshmallow or Pydantic, and return a JSON response with a prediction and a confidence score. If validation fails, return a detailed error message. Include type annotations, a docstring, and example request/response in the comments. The code should be modular, with input validation separated from the prediction logic.">Flask POST Endpoint</button>
-            <button type="button" class="rounded-full border border-slate-200 bg-white px-3 py-1 text-slate-700 hover:border-slate-400" data-suggest="Write a Python script that demonstrates how to read a CSV file containing user data, process the data to filter out users who have not verified their email, and then write the filtered data to a new CSV file. The script should use the csv module, include detailed comments explaining each step, handle possible exceptions such as file not found or invalid data, and print a summary of how many users were processed and how many were filtered.">CSV Processing Python</button>
+          <div id="rate-limit-notice" class="hidden mt-2 p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-xs font-semibold text-amber-900 flex items-center gap-2 animate-pulse shrink-0"></div>
+          <div class="mt-2.5 flex flex-wrap gap-1.5 text-xs shrink-0" id="suggestions">
+            <button type="button" class="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-slate-700 hover:border-slate-400 transition" data-suggest="Create a Python function named calculate_factorial that takes a single integer argument and returns its factorial. The function should include type annotations, a detailed docstring explaining the algorithm, and handle invalid input such as negative numbers or non-integer values by raising appropriate exceptions. Please also add inline comments explaining each logical step, and provide an example usage in the docstring. The function should be efficient and avoid recursion for very large numbers, using an iterative approach instead. Assume the input can be very large, so optimize for performance and memory usage. The code should be clear and easy to understand, following PEP8 style guidelines.">Factorial Python</button>
+            <button type="button" class="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-slate-700 hover:border-slate-400 transition" data-suggest="Write an SQL query that selects the top 10 most recently registered users from a users table, joining with a profiles table to retrieve each user's full name and email address. The query should filter out users who have not verified their email, sort the results by the created_at column in descending order, and include comments explaining each part of the query. Please ensure the query is well-formatted, readable, and uses table aliases for clarity.">SQL Query top 10</button>
+            <button type="button" class="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-slate-700 hover:border-slate-400 transition" data-suggest="Create a Flask POST endpoint at /predict that accepts a JSON body with fields for age, gender, and symptoms (as a list of strings). Validate the input using Marshmallow or Pydantic, and return a JSON response with a prediction and a confidence score. If validation fails, return a detailed error message. Include type annotations, a docstring, and example request/response in the comments. The code should be modular, with input validation separated from the prediction logic.">Flask POST Endpoint</button>
+            <button type="button" class="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-slate-700 hover:border-slate-400 transition" data-suggest="Write a Python script that demonstrates how to read a CSV file containing user data, process the data to filter out users who have not verified their email, and then write the filtered data to a new CSV file. The script should use the csv module, include detailed comments explaining each step, handle possible exceptions such as file not found or invalid data, and print a summary of how many users were processed and how many were filtered.">CSV Processing Python</button>
           </div>
         </section>
 
-        <aside class="hidden lg:block space-y-3">
+        <aside class="space-y-3 lg:overflow-y-auto lg:max-h-full pr-0.5">
           <div class="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm">
             <div class="flex items-center justify-between mb-2">
               <span class="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
@@ -340,45 +367,67 @@ select.select2-hidden-accessible {
             </div>
           </div>
           
-          <!-- Access & Policy Card -->
-          <div class="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm space-y-3">
-            <div class="flex items-center justify-between">
-              <div class="text-sm font-bold text-slate-800 flex items-center gap-1.5">
-                <svg class="w-4 h-4 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <!-- S-SPARC Access & Policy Card (Sleek Modern Redesign) -->
+          <div class="rounded-2xl bg-white border border-slate-200 p-3.5 shadow-sm space-y-3">
+            <!-- Header -->
+            <div class="flex items-center justify-between gap-2">
+              <div class="text-xs font-bold text-slate-800 flex items-center gap-1.5 truncate">
+                <svg class="w-4 h-4 text-teal-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
                 </svg>
-                <span>S-SPARC Access &amp; Policy</span>
+                <span class="truncate">Access Policy</span>
               </div>
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase">Free Access</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">BYOK Free Tier</span>
             </div>
             
-            <div class="text-xs text-slate-700 flex flex-col gap-2 bg-slate-50 p-3 rounded-xl border border-slate-100">
-              <div class="flex items-center justify-between">
-                <span class="text-slate-500 font-medium">Access Tier:</span>
-                <span class="font-bold text-teal-700">Personal Gemini Key</span>
+            <!-- Specs Key-Value Table -->
+            <div class="divide-y divide-slate-100 text-xs bg-slate-50/80 rounded-xl border border-slate-100 overflow-hidden">
+              <div class="px-3 py-2 flex items-center justify-between gap-2">
+                <span class="text-slate-500 font-medium">Access Tier</span>
+                <span class="font-bold text-teal-700 truncate">Personal Gemini Key</span>
               </div>
-              <div class="flex items-center justify-between">
-                <span class="text-slate-500 font-medium">Sisa Kuota Hari Ini:</span>
-                <span id="sidebar-query-remaining" class="font-bold text-teal-800 font-mono">1,500 req</span>
+              <div class="px-3 py-2 flex items-center justify-between gap-2">
+                <span class="text-slate-500 font-medium">Daily Quota</span>
+                <span id="sidebar-query-remaining" class="font-bold text-slate-800 font-mono">1,500 req / day</span>
               </div>
-              <div class="flex items-center justify-between">
-                <span class="text-slate-500 font-medium">Rate Limit:</span>
-                <span class="font-bold text-slate-900 font-mono">1 request / minute</span>
+              <div class="px-3 py-2 flex items-center justify-between gap-2">
+                <span class="text-slate-500 font-medium">Rate Cooldown</span>
+                <span class="font-bold text-slate-800 font-mono">1 req / min</span>
               </div>
-              <div class="flex items-center justify-between">
-                <span class="text-slate-500 font-medium">Prompt Limits:</span>
-                <span class="font-bold text-slate-900 font-mono">10 &ndash; 2,000 chars</span>
+              <div class="px-3 py-2 flex items-center justify-between gap-2">
+                <span class="text-slate-500 font-medium">Prompt Limits</span>
+                <span class="font-bold text-slate-800 font-mono">10 &ndash; 2,000 chars</span>
+              </div>
+              <div class="px-3 py-2 flex items-center justify-between gap-2">
+                <span class="text-slate-500 font-medium">Point Cost</span>
+                <span class="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200/70">0 Pts (Free)</span>
               </div>
             </div>
 
-            <div class="pt-1 space-y-2">
-              <button type="button" onclick="openApiKeyModal()" class="w-full py-2 px-3 rounded-xl border border-teal-300 bg-white hover:bg-teal-50 text-teal-800 text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-2xs">
+            <!-- Sleek Highlights Banner -->
+            <div class="p-2.5 rounded-xl border border-emerald-200/90 bg-emerald-50/60 text-[11px] space-y-1.5">
+              <div class="flex items-center gap-1.5 font-bold text-emerald-900">
+                <span>🏆</span>
+                <span>Leaderboard Points Protected</span>
+              </div>
+              <p class="text-slate-600 text-[11px] leading-snug">
+                BYOK uses 0 pts. Your assignment &amp; peer review points are 100% safe for ranking!
+              </p>
+              <div class="text-[10px] text-teal-800 flex items-center gap-1 pt-1 border-t border-emerald-200/50">
+                <span class="font-bold">⚡ Failover:</span>
+                <span>Auto-switches to System Pool / Ollama if limit hit.</span>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="pt-0.5 space-y-1.5">
+              <button type="button" onclick="openApiKeyModal()" class="w-full py-1.5 px-3 rounded-xl border border-teal-300 bg-white hover:bg-teal-50 text-teal-800 text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-2xs">
                 <span>🔑</span>
-                <span>Kelola Google Gemini API Key</span>
+                <span>Manage Gemini API Key</span>
               </button>
-              <button type="button" onclick="showTermsModal()" class="w-full py-1.5 px-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-900 text-[11px] font-semibold flex items-center justify-center gap-1.5 transition">
+              <button type="button" onclick="showTermsModal()" class="w-full py-1 px-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-900 text-[11px] font-medium flex items-center justify-center gap-1.5 transition">
                 <span>📜</span>
-                <span>Syarat &amp; Ketentuan API Pribadi</span>
+                <span>Terms &amp; Policy Details</span>
               </button>
             </div>
           </div>
@@ -456,6 +505,65 @@ select.select2-hidden-accessible {
       }
     }
 
+    function escapeHtml(string) {
+      return String(string).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function formatMessageContent(rawText, isUser = false) {
+      if (!rawText) return '';
+      let textToParse = String(rawText).trim();
+      
+      if (isUser) {
+        if (!textToParse.includes('```')) {
+          return escapeHtml(textToParse)
+            .replace(/\n/g, '<br/>')
+            .replace(/`([^`]+)`/g, '<code class="bg-slate-800 text-teal-300 px-2 py-0.5 rounded text-xs font-mono font-bold border border-slate-700 shadow-2xs">$1</code>');
+        }
+      }
+
+      if (!isUser && !textToParse.includes('```')) {
+        const isPureCode = (textToParse.startsWith('def ') || textToParse.startsWith('import ') || textToParse.startsWith('#include ') || textToParse.startsWith('public class ') || textToParse.startsWith('class ')) && !textToParse.includes('?') && !textToParse.toLowerCase().startsWith('buatkan') && !textToParse.toLowerCase().startsWith('jelaskan');
+        if (isPureCode) {
+          textToParse = '```python\n' + textToParse + '\n```';
+        }
+      }
+
+      let html = '';
+      if (typeof marked !== 'undefined') {
+        try {
+          if (typeof marked.parse === 'function') {
+            html = marked.parse(textToParse, { breaks: true, gfm: true });
+          } else if (typeof marked === 'function') {
+            html = marked(textToParse);
+          } else {
+            html = escapeHtml(textToParse).replace(/\n/g, '<br/>');
+          }
+        } catch (eMarked) {
+          console.warn('Marked parsing error:', eMarked);
+          html = escapeHtml(textToParse).replace(/\n/g, '<br/>');
+        }
+      } else {
+        html = escapeHtml(textToParse).replace(/\n/g, '<br/>');
+      }
+
+      if (typeof html !== 'string') {
+        html = escapeHtml(textToParse).replace(/\n/g, '<br/>');
+      }
+
+      if (typeof DOMPurify !== 'undefined' && typeof DOMPurify.sanitize === 'function') {
+        try {
+          html = DOMPurify.sanitize(html, {
+            ADD_TAGS: ['button', 'code', 'pre', 'svg', 'path', 'strong', 'em', 'h1', 'h2', 'h3', 'h4', 'ul', 'ol', 'li', 'blockquote', 'p', 'br', 'hr', 'div', 'span', 'mark'],
+            ADD_ATTR: ['class', 'style', 'viewBox', 'fill', 'stroke', 'd', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', 'data-lang']
+          });
+        } catch (ePurify) {
+          console.warn('DOMPurify sanitize error:', ePurify);
+        }
+      }
+
+      return html;
+    }
+
     function renderMessages() {
       const targetWindow = document.getElementById('chat-window');
       if (!targetWindow) {
@@ -468,15 +576,16 @@ select.select2-hidden-accessible {
       }
       targetWindow.innerHTML = '';
       state.messages.forEach(msg => {
+        const isUser = msg.sender === 'user';
         const row = document.createElement('div');
-        row.className = msg.sender === 'user' ? 'flex justify-end items-start gap-2' : 'flex justify-start items-start gap-2';
+        row.className = isUser ? 'flex justify-end items-start gap-2' : 'flex justify-start items-start gap-2';
 
         const avatar = document.createElement('div');
-        avatar.className = 'h-9 w-9 rounded-full flex-shrink-0 grid place-items-center text-xs font-semibold shadow-sm ' + (msg.sender === 'user' ? 'bg-slate-800 text-white' : 'bg-white text-slate-700 border border-slate-200');
-        avatar.textContent = msg.sender === 'user' ? 'You' : 'AI';
+        avatar.className = 'h-9 w-9 rounded-full flex-shrink-0 grid place-items-center text-xs font-semibold shadow-sm ' + (isUser ? 'bg-slate-800 text-white' : 'bg-white text-slate-700 border border-slate-200');
+        avatar.textContent = isUser ? 'You' : 'AI';
 
         const bubble = document.createElement('div');
-        bubble.className = msg.sender === 'user'
+        bubble.className = isUser
           ? 'max-w-3xl rounded-2xl bg-slate-900 text-white px-4 py-3 shadow'
           : 'max-w-3xl rounded-2xl bg-white text-slate-900 px-4 py-3 shadow border border-slate-100';
 
@@ -487,90 +596,25 @@ select.select2-hidden-accessible {
           bubble.appendChild(meta);
         }
 
-        let isCode = msg.sender === 'bot' && (
-          msg.text.includes('\n') ||
-          msg.text.includes(';') ||
-          msg.text.includes('{') ||
-          msg.text.includes('def ') ||
-          msg.text.includes('class ') ||
-          msg.text.includes('function ') ||
-          msg.text.includes('import ') ||
-          msg.text.includes('#include')
-        );
-
-        // Special case: guardrail text like "Here is the code result... Sorry, I can only help..."
-        // should be shown as normal chat text, not as a code block.
-        if (
-          msg.sender === 'bot' &&
-          msg.text.startsWith('Here is the code result:') &&
-          msg.text.includes('Sorry, I can only help with programming/code questions.')
-        ) {
-          isCode = false;
-        }
-
-        if (isCode) {
-          // If message contains fenced code blocks, split into text/code/text
-          if (msg.text.includes('```')) {
-            // Regex to capture parts: text before, each fenced block, and after
-            const parts = [];
-            const fenceRe = /```([a-zA-Z0-9+\-]*)\n([\s\S]*?)\n```/g;
-            let lastIndex = 0;
-            let m;
-            while ((m = fenceRe.exec(msg.text)) !== null) {
-              const start = m.index;
-              const lang = m[1] || '';
-              const codeContent = m[2] || '';
-              if (start > lastIndex) {
-                parts.push({ type: 'text', content: msg.text.slice(lastIndex, start) });
-              }
-              parts.push({ type: 'code', content: codeContent, lang });
-              lastIndex = fenceRe.lastIndex;
-            }
-            if (lastIndex < msg.text.length) {
-              parts.push({ type: 'text', content: msg.text.slice(lastIndex) });
-            }
-            parts.forEach(p => {
-              if (p.type === 'text') {
-                const textNode = document.createElement('div');
-                textNode.className = 'mb-2';
-                textNode.textContent = p.content.trim();
-                bubble.appendChild(textNode);
-              } else if (p.type === 'code') {
-                const wrapper = document.createElement('div');
-                wrapper.className = 'code-block rounded-xl border border-slate-200 bg-slate-50 text-slate-900 relative overflow-x-auto my-2';
-                const code = document.createElement('pre');
-                code.className = 'text-sm leading-relaxed p-3 whitespace-pre-wrap break-words';
-                code.textContent = p.content.trim();
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'copy-btn';
-                btn.textContent = 'Copy';
-                btn.dataset.copy = p.content.trim();
-                wrapper.appendChild(btn);
-                wrapper.appendChild(code);
-                bubble.appendChild(wrapper);
-              }
+        const textContent = document.createElement('div');
+        textContent.className = 'chat-bubble-content';
+        textContent.innerHTML = formatMessageContent(msg.text, isUser);
+        if (typeof renderMathInElement === 'function') {
+          try {
+            renderMathInElement(textContent, {
+              delimiters: [
+                { left: '$$', right: '$$', display: true },
+                { left: '$', right: '$', display: false },
+                { left: '\\(', right: '\\)', display: false },
+                { left: '\\[', right: '\\]', display: true }
+              ],
+              throwOnError: false
             });
-          } else {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'code-block rounded-xl border border-slate-200 bg-slate-50 text-slate-900 relative overflow-x-auto';
-            const code = document.createElement('pre');
-            code.className = 'text-sm leading-relaxed p-3 whitespace-pre-wrap break-words';
-            code.textContent = msg.text;
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'copy-btn';
-            btn.textContent = 'Copy';
-            btn.dataset.copy = msg.text;
-            wrapper.appendChild(btn);
-            wrapper.appendChild(code);
-            bubble.appendChild(wrapper);
+          } catch (eKaTeX) {
+            console.warn('KaTeX render error:', eKaTeX);
           }
-        } else {
-          const text = document.createElement('div');
-          text.textContent = msg.text;
-          bubble.appendChild(text);
         }
+        bubble.appendChild(textContent);
 
         if (msg.sender === 'bot' && msg.source === 'db' && msg.originalPrompt) {
           const footer = document.createElement('div');
@@ -587,16 +631,16 @@ select.select2-hidden-accessible {
           bubble.appendChild(footer);
         }
 
-        if (msg.sender === 'user') {
+        if (isUser) {
           row.appendChild(bubble);
           row.appendChild(avatar);
         } else {
           row.appendChild(avatar);
           row.appendChild(bubble);
         }
-        chatWindow.appendChild(row);
+        targetWindow.appendChild(row);
       });
-      chatWindow.scrollTop = chatWindow.scrollHeight;
+      targetWindow.scrollTop = targetWindow.scrollHeight;
     }
 
     function addMessage(sender, text, meta = '', extra = {}) {
@@ -843,11 +887,57 @@ select.select2-hidden-accessible {
 
     chatInput.addEventListener('input', autoResizeTextarea);
 
+    // Real-Time C-I-O-E Protocol Dynamic Lighting & Character Validation
+    function updateCIOEIndicators(text) {
+      const lower = (text || '').toLowerCase();
+      
+      const badgeC = document.getElementById('cioe-badge-c');
+      const badgeI = document.getElementById('cioe-badge-i');
+      const badgeO = document.getElementById('cioe-badge-o');
+      const badgeE = document.getElementById('cioe-badge-e');
+
+      const hasC = /\[context\]|\[c\]|python|java|c\+\+|cpp|javascript|php|sql|algoritma|framework|context|konteks|tugas|assignment|latar belakang|deskripsi|tujuan|skenario|studi kasus/i.test(lower);
+      const hasI = /\[input\]|\[i\]|input|given|parameter|argumen|array|list|integer|string|diberikan|prekondisi|data|variabel|sample|contoh|masukan/i.test(lower);
+      const hasO = /\[output\]|\[o\]|output|return|hasil|expected|diharapkan|keluaran|kompleksitas|complexity|o\(|postkondisi|kembalikan|format|target/i.test(lower);
+      const hasE = /\[error\]|\[e\]|error|bug|traceback|exception|failed|line|salah|baris|tidak berjalan|kendala|masalah|issue|syntaxerror|typeerror|valueerror|indexerror/i.test(lower);
+
+      const activeClass = "px-2 py-0.5 rounded-md font-mono font-bold bg-teal-100 text-teal-800 border border-teal-300 shadow-2xs transition flex items-center gap-1";
+      const inactiveClass = "px-2 py-0.5 rounded-md font-mono font-semibold bg-slate-100 text-slate-400 border border-slate-200 transition flex items-center gap-1";
+
+      if (badgeC) badgeC.className = hasC ? activeClass : inactiveClass;
+      if (badgeI) badgeI.className = hasI ? activeClass : inactiveClass;
+      if (badgeO) badgeO.className = hasO ? activeClass : inactiveClass;
+      if (badgeE) badgeE.className = hasE ? activeClass : inactiveClass;
+    }
+
+    function insertCIOETemplate() {
+      if (!chatInput) return;
+      const tpl = `[CONTEXT: Mata kuliah Pemrograman / Python]
+Saya sedang mengimplementasikan algoritma pencarian biner pada tugas struktur data.
+
+[INPUT: Parameter & Tipe Data]
+Diberikan array integer terurut 'arr' berukuran N (1 <= N <= 10^5) dan nilai target 'x'.
+
+[OUTPUT: Kondisi Akhir & Kompleksitas]
+Mengembalikan index elemen 'x' jika ditemukan, atau -1 jika tidak ada, dengan kompleksitas waktu O(log N).
+
+[ERROR TRACE / KENDALA]
+Kode saya mengalami infinite loop saat 'left == right'. Mohon jelaskan logika perbaikan pointer mid dan binary search tanpa memberikan full spoiler.`;
+      
+      chatInput.value = tpl;
+      validateInputState();
+      autoResizeTextarea();
+      chatInput.focus();
+    }
+
     // Real-Time Prompt Length & Character Validation
     function validateInputState(){
       if(!sendBtn || !chatInput) return;
       const v = chatInput.value || '';
       const len = v.trim().length;
+
+      updateCIOEIndicators(v);
+
       const charCounter = document.getElementById('char-counter');
       if (charCounter) {
         charCounter.textContent = `${len} / 2000 chars (min. 10)`;

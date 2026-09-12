@@ -255,12 +255,8 @@ async def token_usage_breakdown(
     finally:
         conn.close()
 
-@router.get(
-    "/impact-summary",
-    summary="Scientific Environmental Footprint Summary",
-    description="Calculates academic AI consumption metrics: Electrical energy in Wh/kWh, carbon footprint in kg CO2e, and freshwater server cooling in mL, with daily timeseries.",
-    response_description="Aggregate environmental metrics and daily breakdown"
-)
+@router.get("/impact-summary")
+@router.get("/environmental/footprint")
 async def impact_summary(
     days: int = Query(30, ge=1, le=365, description="Lookback window in days (default 30)"),
     scope: str = Query("all", description="Filtering scope: 'all', 'course', or 'assessment'"),
@@ -281,6 +277,9 @@ async def impact_summary(
     where_sql = " AND ".join(where_clauses)
 
     conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+
     try:
         with conn.cursor() as cur:
             cur.execute(
@@ -334,7 +333,8 @@ async def impact_summary(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     finally:
-        conn.close()
+        if conn:
+            conn.close()
 
 @router.get(
     "/assessment-leaderboard",
