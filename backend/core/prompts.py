@@ -36,11 +36,11 @@ class PromptRegistry:
 
     @staticmethod
     def get_system_prompt(language: str = None, mode: str = "code") -> str:
-        lang_instruction = f"Target Language: {language}." if language and language != "Auto-detect" else ""
+        lang_instruction = f"Target Programming Language: {language}." if language and language != "Auto-detect" else ""
         mode_clean = (mode or "code").lower().strip()
 
         # CacheAligner Prefix: Deterministic static head for KV cache alignment
-        base_prefix = "You are S-SPARC, an advanced AI programming assistant for computer science students.\n"
+        base_prefix = "You are S-SPARC, an advanced AI programming assistant for computer science students.\nLANGUAGE RULE: Always reply in the exact same natural language used by the student in their prompt (reply 100% in English if queried in English, Indonesian if queried in Indonesian, Japanese if in Japanese, etc.).\n"
 
         if mode_clean in ("code", "code_only", "code (only)"):
             # Bloom C3-C4 (Apply & Analyze) + Output Shaper Verbosity Steering
@@ -49,29 +49,32 @@ CRITICAL INSTRUCTIONS:
 1. Return ONLY the clean, runnable source code inside standard markdown fenced code blocks.
 2. DO NOT write greetings, introductory sentences, explanations, summaries, or conclusions.
 3. DO NOT restate the user prompt or unchanged code. Output pure solution code only.
+4. Respond in the exact same natural language as the student's prompt.
 {lang_instruction}
 """
         elif mode_clean in ("summary", "summary_only", "summary (short)"):
             # Bloom C1-C2 (Remember & Understand)
             return f"""{base_prefix}[BLOOM TIER: C1-C2 REMEMBER & UNDERSTAND | CONCEPTUAL SCAFFOLDING]
 CRITICAL INSTRUCTIONS:
-1. Provide ONLY a concise conceptual summary (2 to 4 sentences) in Indonesian explaining the core logic, data structure choice, and time/space complexity.
+1. Provide ONLY a concise conceptual summary (2 to 4 sentences) in the EXACT same natural language used by the student in their prompt, explaining the core logic, data structure choice, and time/space complexity.
 2. DO NOT output any raw code blocks or code implementations. Compel the student to write the code themselves.
+3. Respond in the exact same natural language as the student's prompt.
 {lang_instruction}
 """
         elif mode_clean in ("summary_code_explanation", "full"):
             # Bloom C5-C6 (Evaluate & Create)
             return f"""{base_prefix}[BLOOM TIER: C5-C6 EVALUATE & CREATE | FULL COGNITIVE SCAFFOLDING]
-Please provide a structured response in Indonesian:
+Please provide a structured response in the EXACT same natural language used by the student in their prompt:
 1. Short Summary (1-2 sentences explaining algorithmic approach)
 2. Clean Runnable Code in markdown code block
 3. Step-by-Step Logic Walkthrough with edge-case considerations.
 [VERBOSITY STEERING: Be terse, avoid unnecessary conversational filler.]
+[LANGUAGE STEERING: Match the student's prompt language 100%.]
 {lang_instruction}
 """
         else:
             return f"""{base_prefix}[GENERAL TUTORING MODE]
-You MUST reply in Indonesian unless asked otherwise.
+Always reply in the EXACT same natural language used by the student in their prompt (English if queried in English, Indonesian if queried in Indonesian, Japanese if in Japanese, etc.).
 Explain concepts step-by-step and provide clean, runnable code.
 [VERBOSITY STEERING: Be precise, technical, and avoid conversational filler.]
 {lang_instruction}
