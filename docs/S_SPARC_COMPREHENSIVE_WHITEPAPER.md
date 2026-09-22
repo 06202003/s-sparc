@@ -11,11 +11,11 @@
 [![FastAPI Core](https://img.shields.io/badge/Engine-FastAPI_Async-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Green Computing](https://img.shields.io/badge/Green_AI-Carbon_Tracking_IDN-2EA44F?style=for-the-badge&logo=leaf&logoColor=white)](#)
 [![UN SDGs](https://img.shields.io/badge/UN_SDGs-4_|_9_|_10_|_12_|_13_|_17-E5243B?style=for-the-badge&logo=unitednations&logoColor=white)](#)
-[![Live Interactive Viewer](https://img.shields.io/badge/Live_Web_App-Interactive_Viewer-38bdf8?style=for-the-badge&logo=googledocs&logoColor=white)](https://htmlpreview.github.io/?https://github.com/06202003/s-sparc/blob/main/docs/interactive_whitepaper.html)
+[![Live Interactive Viewer](https://img.shields.io/badge/Live_Web_App-Interactive_Viewer-38bdf8?style=for-the-badge&logo=googledocs&logoColor=white)](https://raw.githack.com/06202003/s-sparc/main/docs/index.html)
 
 ---
 
-> 🌐 **Live Interactive HTML Viewer**: [**Open S-SPARC Interactive Whitepaper Web App**](https://htmlpreview.github.io/?https://github.com/06202003/s-sparc/blob/main/docs/interactive_whitepaper.html) (Interactive Mermaid Zoom, Real-Time Section Filtering, KaTeX Math & Dark Mode)
+> 🌐 **Live Interactive HTML Viewer**: [**Open S-SPARC Interactive Whitepaper Web App**](https://raw.githack.com/06202003/s-sparc/main/docs/index.html) (Interactive Mermaid Zoom, Real-Time Section Filtering, KaTeX Math & Dark Mode)
 
 ---
 

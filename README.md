@@ -9,14 +9,14 @@
 [![FastAPI Core](https://img.shields.io/badge/Engine-FastAPI_Async-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Green Computing](https://img.shields.io/badge/Green_AI-Carbon_Tracking_IDN-2EA44F?style=for-the-badge&logo=leaf&logoColor=white)](#green-computing)
 [![UN SDGs](https://img.shields.io/badge/UN_SDGs-4_|_9_|_10_|_12_|_13_|_17-E5243B?style=for-the-badge&logo=unitednations&logoColor=white)](#un-sustainable-development-goals-sdgs)
-[![Interactive Whitepaper](https://img.shields.io/badge/Live_Web_App-Interactive_Whitepaper-38bdf8?style=for-the-badge&logo=googledocs&logoColor=white)](https://htmlpreview.github.io/?https://github.com/06202003/s-sparc/blob/main/docs/interactive_whitepaper.html)
+[![Interactive Whitepaper](https://img.shields.io/badge/Live_Web_App-Interactive_Whitepaper-38bdf8?style=for-the-badge&logo=googledocs&logoColor=white)](https://raw.githack.com/06202003/s-sparc/main/docs/index.html)
 [![Academic Whitepaper](https://img.shields.io/badge/Whitepaper-Comprehensive_MD-6366f1?style=for-the-badge&logo=markdown&logoColor=white)](docs/S_SPARC_COMPREHENSIVE_WHITEPAPER.md)
 
 ---
 
 > ### Official Academic Whitepaper and Documentation Hub
-> - 🌐 **Live Interactive Web Viewer (1-Click Browser Open)**: [**Launch S-SPARC Interactive Whitepaper Web App**](https://htmlpreview.github.io/?https://github.com/06202003/s-sparc/blob/main/docs/interactive_whitepaper.html)  
->   *(GitHub Pages URL: [`https://06202003.github.io/s-sparc/`](https://06202003.github.io/s-sparc/))*
+> - 🌐 **Live Interactive Web Viewer (Direct Browser Open)**: [**Launch S-SPARC Interactive Whitepaper Web App**](https://raw.githack.com/06202003/s-sparc/main/docs/index.html)  
+> - 🚀 **GitHub Pages Mirror**: [**https://06202003.github.io/s-sparc/**](https://06202003.github.io/s-sparc/) *(Requires GitHub Pages enabled on `main` branch in repo settings)*
 > - 📄 **Comprehensive Academic Whitepaper (Markdown)**: [`docs/S_SPARC_COMPREHENSIVE_WHITEPAPER.md`](docs/S_SPARC_COMPREHENSIVE_WHITEPAPER.md) (14 complete sections with full mathematical derivations and empirical statistics)
 > - 📊 **Official Pitch Deck (PDF)**: [`docs/S-SPARC Pitch Deck.pdf`](docs/S-SPARC%20Pitch%20Deck.pdf)
 > - 🏛️ **Academic Home**: **Maranatha Christian University (Universitas Kristen Maranatha)**, Bandung, Indonesia

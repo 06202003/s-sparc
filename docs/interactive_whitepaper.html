@@ -1147,13 +1147,23 @@ The **S-SPARC AI™ Initiative** was developed by the **ITMCU Team** at **Marana
 
         // Fetch and Render Markdown
         async function loadMarkdown() {
+            // Wait for marked to be available (handles slow CDN loading & proxies)
+            let retries = 0;
+            while (typeof marked === 'undefined' && retries < 40) {
+                await new Promise(r => setTimeout(r, 50));
+                retries++;
+            }
+
             try {
-                // Read from embedded script tag (100% works locally without CORS)
-                let markdown = document.getElementById('markdown-source').textContent;
+                const markdownSourceEl = document.getElementById('markdown-source');
+                if (!markdownSourceEl) return;
+                const markdown = markdownSourceEl.textContent;
                 
-                // Parse markdown using marked
-                const rawHtml = marked.parse(markdown);
-                document.getElementById('content').innerHTML = rawHtml;
+                if (typeof marked !== 'undefined') {
+                    document.getElementById('content').innerHTML = marked.parse(markdown);
+                } else {
+                    document.getElementById('content').innerHTML = `<pre style="white-space: pre-wrap; font-family: inherit;">${markdown}</pre>`;
+                }
 
                 // Assign IDs to all content headings for anchor linking
                 document.querySelectorAll('#content h1, #content h2, #content h3').forEach((heading, idx) => {
@@ -1164,145 +1174,162 @@ The **S-SPARC AI™ Initiative** was developed by the **ITMCU Team** at **Marana
 
                 // Dynamically build Sidebar TOC with ONLY primary H1 sections (Clean & Aesthetic)
                 const tocContainer = document.getElementById('tocContainer');
-                tocContainer.innerHTML = '';
-                
-                const mainSections = document.querySelectorAll('#content h1');
-                const tocLinks = [];
+                if (tocContainer) {
+                    tocContainer.innerHTML = '';
+                    const mainSections = document.querySelectorAll('#content h1');
+                    const tocLinks = [];
 
-                mainSections.forEach((heading, idx) => {
-                    const rawText = heading.textContent.trim();
-                    if (!rawText || rawText.startsWith('S-SPARC AI™') || rawText === 'TABLE OF CONTENTS') {
-                        return; // Skip main title & redundant TOC heading in the sidebar
-                    }
-
-                    const slug = heading.getAttribute('id') || slugify(rawText) || `section-${idx}`;
-
-                    const li = document.createElement('li');
-                    li.className = 'toc-item';
-
-                    const a = document.createElement('a');
-                    a.setAttribute('href', `#${slug}`);
-
-                    const matchNum = rawText.match(/^(\d+)\.\s*(.+)/);
-                    if (matchNum) {
-                        const badge = document.createElement('span');
-                        badge.className = 'toc-num-badge';
-                        badge.textContent = matchNum[1].padStart(2, '0');
-                        a.appendChild(badge);
-
-                        const textSpan = document.createElement('span');
-                        textSpan.textContent = matchNum[2];
-                        a.appendChild(textSpan);
-                    } else if (rawText.toUpperCase().includes('EXECUTIVE SUMMARY')) {
-                        const badge = document.createElement('span');
-                        badge.className = 'toc-num-badge';
-                        badge.textContent = 'EX';
-                        a.appendChild(badge);
-
-                        const textSpan = document.createElement('span');
-                        textSpan.textContent = 'Executive Summary';
-                        a.appendChild(textSpan);
-                    } else {
-                        const textSpan = document.createElement('span');
-                        textSpan.textContent = rawText;
-                        a.appendChild(textSpan);
-                    }
-
-                    a.onclick = function(e) {
-                        e.preventDefault();
-                        const target = document.getElementById(slug);
-                        if (target) {
-                            const headerOffset = 24;
-                            const elementPosition = target.getBoundingClientRect().top;
-                            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-                            window.scrollTo({
-                                top: offsetPosition,
-                                behavior: 'smooth'
-                            });
-                            history.replaceState(null, null, `#${slug}`);
-                            document.querySelectorAll('.toc-item a').forEach(el => el.classList.remove('active'));
-                            a.classList.add('active');
+                    mainSections.forEach((heading, idx) => {
+                        const rawText = heading.textContent.trim();
+                        if (!rawText || rawText.startsWith('S-SPARC AI™') || rawText === 'TABLE OF CONTENTS') {
+                            return; // Skip main title & redundant TOC heading in the sidebar
                         }
-                    };
 
-                    li.appendChild(a);
-                    tocContainer.appendChild(li);
-                    tocLinks.push({ heading, a });
-                });
+                        const slug = heading.getAttribute('id') || slugify(rawText) || `section-${idx}`;
 
-                // ScrollSpy to highlight active link on scroll
-                let scrollTimeout;
-                window.addEventListener('scroll', () => {
-                    if (scrollTimeout) clearTimeout(scrollTimeout);
-                    scrollTimeout = setTimeout(() => {
-                        const scrollPos = window.scrollY + 80;
-                        let currentActive = null;
-                        for (let i = 0; i < tocLinks.length; i++) {
-                            const top = tocLinks[i].heading.offsetTop;
-                            if (scrollPos >= top) {
-                                currentActive = tocLinks[i].a;
+                        const li = document.createElement('li');
+                        li.className = 'toc-item';
+
+                        const a = document.createElement('a');
+                        a.setAttribute('href', `#${slug}`);
+
+                        const matchNum = rawText.match(/^(\d+)\.\s*(.+)/);
+                        if (matchNum) {
+                            const badge = document.createElement('span');
+                            badge.className = 'toc-num-badge';
+                            badge.textContent = matchNum[1].padStart(2, '0');
+                            a.appendChild(badge);
+
+                            const textSpan = document.createElement('span');
+                            textSpan.textContent = matchNum[2];
+                            a.appendChild(textSpan);
+                        } else if (rawText.toUpperCase().includes('EXECUTIVE SUMMARY')) {
+                            const badge = document.createElement('span');
+                            badge.className = 'toc-num-badge';
+                            badge.textContent = 'EX';
+                            a.appendChild(badge);
+
+                            const textSpan = document.createElement('span');
+                            textSpan.textContent = 'Executive Summary';
+                            a.appendChild(textSpan);
+                        } else {
+                            const textSpan = document.createElement('span');
+                            textSpan.textContent = rawText;
+                            a.appendChild(textSpan);
+                        }
+
+                        a.onclick = function(e) {
+                            e.preventDefault();
+                            const target = document.getElementById(slug);
+                            if (target) {
+                                const headerOffset = 24;
+                                const elementPosition = target.getBoundingClientRect().top;
+                                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                                window.scrollTo({
+                                    top: offsetPosition,
+                                    behavior: 'smooth'
+                                });
+                                history.replaceState(null, null, `#${slug}`);
+                                document.querySelectorAll('.toc-item a').forEach(el => el.classList.remove('active'));
+                                a.classList.add('active');
                             }
-                        }
-                        if (currentActive) {
-                            document.querySelectorAll('.toc-item a').forEach(el => el.classList.remove('active'));
-                            currentActive.classList.add('active');
-                        }
-                    }, 50);
-                }, { passive: true });
+                        };
 
-                // Render KaTeX Math Formulas
-                renderMathInElement(document.getElementById('content'), {
-                    delimiters: [
-                        {left: '$$', right: '$$', display: true},
-                        {left: '$', right: '$', display: false}
-                    ],
-                    throwOnError: false
-                });
+                        li.appendChild(a);
+                        tocContainer.appendChild(li);
+                        tocLinks.push({ heading, a });
+                    });
+
+                    // ScrollSpy to highlight active link on scroll
+                    let scrollTimeout;
+                    window.addEventListener('scroll', () => {
+                        if (scrollTimeout) clearTimeout(scrollTimeout);
+                        scrollTimeout = setTimeout(() => {
+                            const scrollPos = window.scrollY + 80;
+                            let currentActive = null;
+                            for (let i = 0; i < tocLinks.length; i++) {
+                                const top = tocLinks[i].heading.offsetTop;
+                                if (scrollPos >= top) {
+                                    currentActive = tocLinks[i].a;
+                                }
+                            }
+                            if (currentActive) {
+                                document.querySelectorAll('.toc-item a').forEach(el => el.classList.remove('active'));
+                                currentActive.classList.add('active');
+                            }
+                        }, 50);
+                    }, { passive: true });
+                }
+
+                // Render KaTeX Math Formulas safely
+                try {
+                    if (typeof renderMathInElement !== 'undefined') {
+                        renderMathInElement(document.getElementById('content'), {
+                            delimiters: [
+                                {left: '$$', right: '$$', display: true},
+                                {left: '$', right: '$', display: false}
+                            ],
+                            throwOnError: false
+                        });
+                    }
+                } catch (e) {
+                    console.warn('KaTeX render warning:', e);
+                }
 
                 // Wrap Mermaid blocks in interactive card containers with smooth CSS scaling controls
-                const codeBlocks = document.querySelectorAll('pre code.language-mermaid');
-                let diagramIndex = 0;
+                try {
+                    const codeBlocks = document.querySelectorAll('pre code.language-mermaid');
+                    let diagramIndex = 0;
 
-                for (const block of codeBlocks) {
-                    const pre = block.parentElement;
-                    const mermaidCode = block.textContent;
-                    const cardId = `diagram-card-${diagramIndex}`;
-                    const scalableId = `diagram-scale-${diagramIndex}`;
+                    for (const block of codeBlocks) {
+                        const pre = block.parentElement;
+                        const mermaidCode = block.textContent;
+                        const cardId = `diagram-card-${diagramIndex}`;
+                        const scalableId = `diagram-scale-${diagramIndex}`;
 
-                    const card = document.createElement('div');
-                    card.className = 'diagram-card';
-                    card.id = cardId;
-                    card.innerHTML = `
-                        <div class="diagram-topbar">
-                            <span class="diagram-label">DIAGRAM VIEWER</span>
-                            <div class="diagram-controls">
-                                <button class="zoom-btn" onclick="zoomDiagram('${scalableId}', 1.2)" title="Zoom In">Zoom In</button>
-                                <button class="zoom-btn" onclick="zoomDiagram('${scalableId}', 0.833)" title="Zoom Out">Zoom Out</button>
-                                <button class="zoom-btn" onclick="resetDiagram('${scalableId}')" title="Reset View">Reset</button>
-                                <button class="zoom-btn" onclick="fullscreenDiagram('${cardId}')" title="Fullscreen">Fullscreen</button>
+                        const card = document.createElement('div');
+                        card.className = 'diagram-card';
+                        card.id = cardId;
+                        card.innerHTML = `
+                            <div class="diagram-topbar">
+                                <span class="diagram-label">DIAGRAM VIEWER</span>
+                                <div class="diagram-controls">
+                                    <button class="zoom-btn" onclick="zoomDiagram('${scalableId}', 1.2)" title="Zoom In">Zoom In</button>
+                                    <button class="zoom-btn" onclick="zoomDiagram('${scalableId}', 0.833)" title="Zoom Out">Zoom Out</button>
+                                    <button class="zoom-btn" onclick="resetDiagram('${scalableId}')" title="Reset View">Reset</button>
+                                    <button class="zoom-btn" onclick="fullscreenDiagram('${cardId}')" title="Fullscreen">Fullscreen</button>
+                                </div>
                             </div>
-                        </div>
-                        <div class="diagram-stage">
-                            <div class="diagram-scalable mermaid" id="${scalableId}">${mermaidCode}</div>
-                        </div>
-                    `;
+                            <div class="diagram-stage">
+                                <div class="diagram-scalable mermaid" id="${scalableId}">${mermaidCode}</div>
+                            </div>
+                        `;
 
-                    pre.replaceWith(card);
-                    diagramIndex++;
+                        pre.replaceWith(card);
+                        diagramIndex++;
+                    }
+
+                    if (typeof mermaid !== 'undefined') {
+                        if (document.fonts) {
+                            await document.fonts.ready;
+                        }
+                        await mermaid.run();
+                    }
+                } catch (e) {
+                    console.warn('Mermaid render warning:', e);
                 }
 
-                // Wait for web fonts to load before calculating Mermaid dimensions
-                if (document.fonts) {
-                    await document.fonts.ready;
+                // Highlight code syntax safely
+                try {
+                    if (typeof hljs !== 'undefined') {
+                        hljs.highlightAll();
+                    }
+                } catch (e) {
+                    console.warn('hljs warning:', e);
                 }
-
-                // Render all Mermaid diagrams at full natural resolution
-                await mermaid.run();
-
-                // Highlight code syntax
-                hljs.highlightAll();
 
             } catch (err) {
+                console.error(err);
                 document.getElementById('content').innerHTML = `<p style="color: #f85149;">Failed to load documentation: ${err.message}</p>`;
             }
         }
