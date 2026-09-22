@@ -10,35 +10,36 @@ class PromptLinter:
 
     # Keyword indicators for C-I-O-E components
     CONTEXT_KEYWORDS = [
-        "python", "java", "c++", "cpp", "javascript", "php", "sql", "framework",
-        "library", "react", "fastapi", "django", "laravel", "algorithm", "data structure",
-        "graph", "tree", "array", "linked list", "hash table", "matrix", "recursion",
-        "dynamic programming", "sorting", "searching", "backend", "frontend", "api"
+        "python", "java", "c++", "cpp", "c#", "csharp", "javascript", "typescript", "dart", "flutter",
+        "php", "sql", "golang", "rust", "kotlin", "swift", "framework", "library", "react", "vue",
+        "fastapi", "django", "laravel", "spring", "express", "algorithm", "data structure",
+        "graph", "tree", "array", "linked list", "hash table", "hash map", "matrix", "recursion",
+        "dynamic programming", "sorting", "searching", "greedy", "backtracking", "backend", "frontend", "api"
     ]
 
     INPUT_KEYWORDS = [
-        "input", "given", "parameter", "arguments", "precondition", "array of",
-        "list of", "integer", "string", "matrix size", "n =", "k =", "range",
-        "constraints", "positive", "non-empty", "sorted", "graph with"
+        "input", "given", "parameter", "parameters", "arguments", "precondition", "array of",
+        "list of", "integer", "string", "matrix size", "n =", "k =", "range", "length",
+        "constraints", "positive", "non-empty", "sorted", "graph with", "test cases", "sample input"
     ]
 
     OUTPUT_KEYWORDS = [
         "output", "return", "expected", "postcondition", "complexity", "time complexity",
         "space complexity", "o(n)", "o(log n)", "o(1)", "o(n^2)", "o(v+e)", "result",
-        "boolean", "index of", "modified array", "maximum", "minimum", "sum of"
+        "boolean", "index of", "modified array", "maximum", "minimum", "sum of", "sample output"
     ]
 
     ERROR_KEYWORDS = [
         "error", "bug", "traceback", "exception", "failed", "indexerror", "typeerror",
-        "valueerror", "keyerror", "recursionerror", "nullpointer", "segfault",
-        "stack trace", "infinite loop", "wrong output", "expected", "but got",
-        "line", "assertionerror", "time limit exceeded", "memory limit"
+        "valueerror", "keyerror", "recursionerror", "nullpointer", "segfault", "zerodivisionerror",
+        "stack trace", "infinite loop", "wrong output", "expected", "but got", "wa", "tle", "mle",
+        "line", "assertionerror", "time limit exceeded", "memory limit", "syntaxerror", "compilation error"
     ]
 
     TECHNICAL_PATTERNS = [
         r'\bdef\s+\w+\s*\(', r'\bclass\s+\w+', r'\[.*?\]', r'\{.*?\}',
         r'O\([1nN\^log\s\+\*]+\)', r'==|!=|<=|>=|->|=>', r'None|True|False',
-        r'\bint\b|\bstr\b|\bfloat\b|\bbool\b|\blist\b|\bdict\b|\bset\b'
+        r'\bint\b|\bstr\b|\bfloat\b|\bbool\b|\blist\b|\bdict\b|\bset\b|\bvector\b|\bmap\b'
     ]
 
     @staticmethod

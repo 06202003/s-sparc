@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import logging
 import socket
@@ -133,7 +134,7 @@ class GeminiMultiProviderGateway:
                 messages=messages,
                 api_key=api_key,
                 temperature=0.7,
-                timeout=5
+                timeout=10
             )
             return response.choices[0].message.content
         except Exception as e_litellm:
@@ -141,14 +142,15 @@ class GeminiMultiProviderGateway:
 
         raise Exception("API key call failed on both Direct REST and LiteLLM.")
 
-    def generate(self, messages: list, model: str = None, user_api_key: str = None) -> tuple:
+    def generate(self, messages: list, model: str = None, user_api_key: str = None, **kwargs) -> tuple:
         """
         Generates content using Gemini.
         Returns tuple: (content_text, provider_info, used_fallback)
         """
         model = model or self.default_model
-        if not model or model in ("gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.0-flash"):
-            model = "gemini-3.5-flash-lite"
+        # Map or normalize model identifiers
+        if not model or model == "default":
+            model = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 
         # --- Tier 1: User's Own API Key ---
         if user_api_key and user_api_key.strip():
@@ -173,7 +175,7 @@ class GeminiMultiProviderGateway:
             try:
                 content = self._try_single_key(api_key, messages, model)
                 self.current_idx = (key_idx + 1) % len(self.keys)
-                return content, "System Gemini Pool (Fallback)", True
+                return content, f"System Gemini Pool (Key #{key_idx+1})", True
             except Exception as e_sys:
                 logging.warning(f"System Gemini Key #{key_idx+1} failed: {e_sys}")
                 last_error = e_sys
@@ -185,13 +187,19 @@ class GeminiMultiProviderGateway:
 class OllamaClient:
     """
     Client for Local Ollama Runtime (Qwen2.5-Coder 14B).
-    Serves as local zero-cost fallback when Gemini cloud services are unavailable.
+    Serves as local zero-cost, high-precision coding fallback when Gemini cloud services are unavailable.
     """
     def __init__(self):
         self.base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").rstrip("/")
         self.model = os.getenv("OLLAMA_MODEL", "qwen2.5-coder:14b")
 
-    def generate(self, messages: list, model: str = None) -> str:
+    def _strip_think_tags(self, text: str) -> str:
+        """Strips any internal reasoning or think tags for clean final answer output."""
+        if not text:
+            return ""
+        return re.sub(r'<think>[\s\S]*?</think>', '', text).strip()
+
+    def generate(self, messages: list, model: str = None, **kwargs) -> str:
         model = model or self.model
         url = f"{self.base_url}/api/chat"
 
@@ -206,19 +214,23 @@ class OllamaClient:
         payload = {
             "model": model,
             "messages": ollama_messages,
-            "stream": False
+            "stream": False,
+            "options": {
+                "temperature": 0.6,
+                "top_p": 0.95
+            }
         }
 
         try:
-            timeout_val = int(os.getenv("OLLAMA_TIMEOUT", "3"))
+            timeout_val = int(os.getenv("OLLAMA_TIMEOUT", "5"))
             resp = requests.post(url, json=payload, timeout=timeout_val)
             if resp.status_code == 200:
                 data = resp.json()
                 res_content = data.get("message", {}).get("content", "")
                 if res_content and res_content.strip():
-                    return res_content
+                    return self._strip_think_tags(res_content)
         except Exception as e:
-            logging.warning(f"Ollama service call failed ({e}).")
+            logging.warning(f"Ollama service call failed ({e}). Utilizing offline knowledge fallback...")
 
         user_prompt = messages[-1].get("content", "") if messages else ""
         prompt_lower = user_prompt.lower()
@@ -362,17 +374,40 @@ print("Status Eksekusi: Berhasil diproses")
 
 class AdaptiveRouter:
     """
-    Adaptive Router for S-SPARC:
-    1. Tier 1 (Primary): User's personal Google Gemini API key.
-    2. Tier 2 (Fallback 1): System Gemini Key Pool (GEMINI_API_KEY_1..6).
-    3. Tier 3 (Fallback 2): Local Ollama Runtime (Qwen2.5-Coder 14B).
-    
-    Gamification points are decoupled: AI inference is free with 0 point deduction.
+    Adaptive Router for S-SPARC & E-STRANGE Platform:
+    1. Game ON Courses (game_course.is_active = 1):
+       - Gated by Gamification Points (>= 100 required).
+       - Cloud Gemini deducts 10 points.
+       - If points < 100, routes to Local Ollama with 0 points deducted.
+    2. Game OFF Courses (game_course.is_active = 0):
+       - Governed by Token Quota (5000 tokens limit). 0 gamification points deducted.
+       - If token usage < 5000: Cloud Gemini.
+       - If token usage >= 5000: Local Ollama.
+    3. Technical Failover (Rate Limit 429):
+       - If Gemini keys hit rate limits, fails over to Local Ollama with 0 points deducted.
     """
 
     def __init__(self):
         self.gemini_gateway = GeminiMultiProviderGateway()
         self.ollama_client = OllamaClient()
+
+    def _safe_call_gateway(self, messages: list, model: str = None, user_api_key: str = None) -> tuple:
+        import inspect
+        sig = inspect.signature(self.gemini_gateway.generate)
+        kwargs = {}
+        if 'model' in sig.parameters:
+            kwargs['model'] = model
+        if 'user_api_key' in sig.parameters or any(p.kind == inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values()):
+            kwargs['user_api_key'] = user_api_key
+        try:
+            res = self.gemini_gateway.generate(messages, **kwargs)
+        except TypeError:
+            res = self.gemini_gateway.generate(messages)
+        
+        if isinstance(res, tuple):
+            return res
+        else:
+            return str(res), "Gemini Flash Lite", False
 
     def route_and_generate(
         self, 
@@ -385,7 +420,7 @@ class AdaptiveRouter:
         model: str = None
     ) -> dict:
         """
-        Executes routing decision using User Key -> System Pool -> Local Ollama.
+        Executes routing decision based on Course Game Status, Points, Quotas, and Model Availability.
         """
         from backend.core.db import get_user_api_key
         username = username or "guest_student"
@@ -394,57 +429,147 @@ class AdaptiveRouter:
         if not user_api_key and username:
             user_api_key = get_user_api_key(username, provider="gemini")
 
-        # 2. Get user current points for informational display (0 points deducted)
+        # 2. Get user points and game status
         try:
             user_points = PointsAggregator.get_user_points(username)
         except Exception:
             user_points = 100.0
 
-        # 3. Attempt Gemini Cloud Generation (User Key -> System Key Pool)
-        try:
-            content, provider_desc, used_fallback = self.gemini_gateway.generate(
-                messages, 
-                model=model, 
-                user_api_key=user_api_key
-            )
-            
-            return {
-                "content": content,
-                "routed_to": "cloud_gemini",
-                "routing_reason": f"Success via {provider_desc}",
-                "points_before": user_points,
-                "points_deducted": 0.0,
-                "fallback_triggered": used_fallback,
-                "provider": provider_desc
-            }
+        is_game_active = PointsAggregator.is_game_active_for_assessment(
+            assessment_id=assessment_id, 
+            course_id=course_id
+        )
 
-        except GeminiRateLimitExhausted as e_limit:
-            # Technical Failover to Local Ollama
-            reason = f"All Gemini API keys rate limited/exhausted ({e_limit}). Technical failover to Local (Ollama)."
-            logging.warning(f"[ADAPTIVE ROUTER] {reason} User: {username}")
-            
-            content = self.ollama_client.generate(messages)
-            return {
-                "content": content,
-                "routed_to": "local_ollama",
-                "routing_reason": reason,
-                "points_before": user_points,
-                "points_deducted": 0.0,
-                "fallback_triggered": True,
-                "provider": "Ollama (Local Fallback)"
-            }
-        except Exception as e_gen:
-            reason = f"Gemini Cloud inference failed ({e_gen}). Technical failover to Local (Ollama)."
-            logging.warning(f"[ADAPTIVE ROUTER] {reason} User: {username}")
-            
-            content = self.ollama_client.generate(messages)
-            return {
-                "content": content,
-                "routed_to": "local_ollama",
-                "routing_reason": reason,
-                "points_before": user_points,
-                "points_deducted": 0.0,
-                "fallback_triggered": True,
-                "provider": "Ollama (Local Fallback)"
-            }
+        min_points_cloud = float(os.getenv("MIN_POINTS_CLOUD", "100"))
+        points_cost = float(os.getenv("POINTS_PER_CLOUD_REQUEST", "10"))
+        game_off_token_limit = int(os.getenv("GAME_OFF_TOKEN_LIMIT", "5000"))
+
+        # --- BRANCH 1: GAME ACTIVE (Point-based Routing) ---
+        if is_game_active and not force_cloud:
+            if user_points < min_points_cloud:
+                reason = f"Points ({user_points} < {min_points_cloud}). Routing to Local (Ollama)."
+                logging.info(f"[ADAPTIVE ROUTER] {reason} User: {username}")
+                content = self.ollama_client.generate(messages, model=model)
+                return {
+                    "content": content,
+                    "routed_to": "local_ollama",
+                    "routing_reason": reason,
+                    "points_before": user_points,
+                    "points_deducted": 0.0,
+                    "fallback_triggered": False,
+                    "provider": "Ollama (Local)"
+                }
+
+            # Sufficient points -> Attempt Cloud Gemini
+            try:
+                content, provider_desc, used_fallback = self._safe_call_gateway(
+                    messages, 
+                    model=model, 
+                    user_api_key=user_api_key
+                )
+                PointsAggregator.deduct_user_points(username, points_cost)
+                return {
+                    "content": content,
+                    "routed_to": "cloud_gemini",
+                    "routing_reason": f"Success via {provider_desc}",
+                    "points_before": user_points,
+                    "points_deducted": points_cost,
+                    "fallback_triggered": used_fallback,
+                    "provider": provider_desc
+                }
+            except GeminiRateLimitExhausted as e_limit:
+                reason = f"All Gemini API keys rate limited/exhausted ({e_limit}). Technical failover to Local (Ollama)."
+                logging.warning(f"[ADAPTIVE ROUTER] {reason} User: {username}")
+                content = self.ollama_client.generate(messages, model=model)
+                return {
+                    "content": content,
+                    "routed_to": "local_ollama",
+                    "routing_reason": reason,
+                    "points_before": user_points,
+                    "points_deducted": 0.0,
+                    "fallback_triggered": True,
+                    "provider": "Ollama (Local Fallback)"
+                }
+            except Exception as e_gen:
+                err_str = str(e_gen)
+                is_rate_limit = "rate limit" in err_str.lower() or "429" in err_str.lower() or "exhausted" in err_str.lower()
+                reason = f"Gemini Rate Limited ({err_str}). Technical failover to Local (Ollama)." if is_rate_limit else f"Gemini Cloud inference failed ({err_str}). Technical failover to Local (Ollama)."
+                logging.warning(f"[ADAPTIVE ROUTER] {reason} User: {username}")
+                content = self.ollama_client.generate(messages, model=model)
+                return {
+                    "content": content,
+                    "routed_to": "local_ollama",
+                    "routing_reason": reason,
+                    "points_before": user_points,
+                    "points_deducted": 0.0,
+                    "fallback_triggered": True,
+                    "provider": "Ollama (Local Fallback)"
+                }
+
+        # --- BRANCH 2: GAME INACTIVE (Token Quota Routing) ---
+        else:
+            token_usage = PointsAggregator.get_user_token_usage(
+                username=username, 
+                assessment_id=assessment_id, 
+                course_id=course_id
+            )
+
+            if token_usage >= game_off_token_limit and not force_cloud:
+                reason = f"Kuota token ({token_usage}/{game_off_token_limit}) terlampaui. Dialihkan ke Local Ollama."
+                logging.info(f"[ADAPTIVE ROUTER] {reason} User: {username}")
+                content = self.ollama_client.generate(messages, model=model)
+                return {
+                    "content": content,
+                    "routed_to": "local_ollama",
+                    "routing_reason": reason,
+                    "points_before": user_points,
+                    "points_deducted": 0.0,
+                    "fallback_triggered": False,
+                    "provider": "Ollama (Local)"
+                }
+
+            # Under token quota -> Attempt Cloud Gemini
+            try:
+                content, provider_desc, used_fallback = self._safe_call_gateway(
+                    messages, 
+                    model=model, 
+                    user_api_key=user_api_key
+                )
+                return {
+                    "content": content,
+                    "routed_to": "cloud_gemini",
+                    "routing_reason": f"Success via {provider_desc} (Game OFF / Under Quota: {token_usage}/{game_off_token_limit})",
+                    "points_before": user_points,
+                    "points_deducted": 0.0,
+                    "fallback_triggered": used_fallback,
+                    "provider": provider_desc
+                }
+            except GeminiRateLimitExhausted as e_limit:
+                reason = f"All Gemini API keys rate limited/exhausted ({e_limit}). Technical failover to Local (Ollama)."
+                logging.warning(f"[ADAPTIVE ROUTER] {reason} User: {username}")
+                content = self.ollama_client.generate(messages, model=model)
+                return {
+                    "content": content,
+                    "routed_to": "local_ollama",
+                    "routing_reason": reason,
+                    "points_before": user_points,
+                    "points_deducted": 0.0,
+                    "fallback_triggered": True,
+                    "provider": "Ollama (Local Fallback)"
+                }
+            except Exception as e_gen:
+                err_str = str(e_gen)
+                is_rate_limit = "rate limit" in err_str.lower() or "429" in err_str.lower() or "exhausted" in err_str.lower()
+                reason = f"Gemini Rate Limited ({err_str}). Technical failover to Local (Ollama)." if is_rate_limit else f"Gemini Cloud inference failed ({err_str}). Technical failover to Local (Ollama)."
+                logging.warning(f"[ADAPTIVE ROUTER] {reason} User: {username}")
+                content = self.ollama_client.generate(messages, model=model)
+                return {
+                    "content": content,
+                    "routed_to": "local_ollama",
+                    "routing_reason": reason,
+                    "points_before": user_points,
+                    "points_deducted": 0.0,
+                    "fallback_triggered": True,
+                    "provider": "Ollama (Local Fallback)"
+                }
 

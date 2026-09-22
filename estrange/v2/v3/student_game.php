@@ -27,11 +27,12 @@
 	$sql = "SELECT course.course_id, course.name, 
 			game_course.prize_text FROM course 
 			INNER JOIN game_course ON game_course.course_id = course.course_id 
-			INNER JOIN game_student_course ON game_student_course.course_id = course.course_id
+			INNER JOIN enrollment ON enrollment.course_id = course.course_id
 			WHERE game_course.is_active = 1 
-			AND game_student_course.student_id = '".$_SESSION['user_id']."' ";
+			AND enrollment.student_id = '".$_SESSION['user_id']."' 
+			ORDER BY course.name ASC";
 	$result = mysqli_query($db,$sql);
-	if ($result->num_rows == 0) {
+	if (!$result || $result->num_rows == 0) {
 		// if the student is not enrolled to at least one gamified course, redirect to student_nogame
 		header('Location: student_no_game.php');
 		exit;
@@ -207,7 +208,7 @@ select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:fo
 			</div>
 
 			<?php 
-				$isParticipating = false;
+				$isParticipating = true;
 				$gsID = -1;
 				
 				$sql = "SELECT gs_id, is_participating
@@ -218,9 +219,16 @@ select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:fo
 
 				if ($result && $result->num_rows > 0) {
 					$row = $result->fetch_assoc();
-					if($row['is_participating'] == 1)
-						$isParticipating = true;
+					$isParticipating = ($row['is_participating'] == 1);
 					$gsID = $row['gs_id'];
+				} else {
+					// Auto-insert record if missing
+					$insertSql = "INSERT INTO game_student_course (student_id, course_id, is_participating, total_points) 
+								  VALUES ('".$_SESSION['user_id']."', '".$courseID."', 1, 0)";
+					if ($db->query($insertSql)) {
+						$gsID = $db->insert_id;
+						$isParticipating = true;
+					}
 				}
 
 				// Global points variables

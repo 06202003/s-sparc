@@ -10,16 +10,32 @@ CIF_KG_PER_KWH = 0.384
 ENERGY_PER_TOKEN_WH = 0.003
 SERVER_NAME = os.getenv("SERVER_NAME", "s-sparc-lab-server-01")
 
-def calculate_environmental_impact(total_tokens: int):
+def calculate_environmental_impact(total_tokens: int) -> dict:
+    """
+    Computes environmental footprint calibrated for Indonesian power grid CIF and modern datacenter PUE:
+    - Energy (Wh & kWh)
+    - Carbon (kg CO2e & g CO2e)
+    - Freshwater Consumption (mL & L)
+    - Tree Absorption Equivalency (years of tree absorption)
+    """
     energy_wh = total_tokens * ENERGY_PER_TOKEN_WH * PUE
     energy_kwh = energy_wh / 1000.0
     carbon_kg = energy_kwh * CIF_KG_PER_KWH
+    carbon_g = carbon_kg * 1000.0
     water_ml = energy_kwh * (WUE_SITE_L_PER_KWH + WUE_SOURCE_L_PER_KWH) * 1000.0
+    
+    # 1 mature tree absorbs approx 21.77 kg CO2 / year = 0.0596 kg CO2 / day
+    trees_saved_equiv = carbon_kg / 21.77
+    
     return {
-        "energy_wh": energy_wh,
-        "energy_kwh": energy_kwh,
-        "carbon_kg": carbon_kg,
-        "water_ml": water_ml
+        "energy_wh": round(energy_wh, 4),
+        "energy_kwh": round(energy_kwh, 6),
+        "carbon_kg": round(carbon_kg, 6),
+        "carbon_g_co2e": round(carbon_g, 3),
+        "water_ml": round(water_ml, 3),
+        "trees_saved_equiv": round(trees_saved_equiv, 6),
+        "pue": PUE,
+        "cif_kg_per_kwh": CIF_KG_PER_KWH
     }
 
 def log_environmental_impact(user_id: str, job_id: str, total_tokens: int, assessment_id: str = None, course_id: str = None):

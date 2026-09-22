@@ -11,6 +11,15 @@
 [![MariaDB](https://img.shields.io/badge/MariaDB-10.11_Cluster-003545?style=for-the-badge&logo=mariadb&logoColor=white)](https://mariadb.org)
 [![Gemini 3.5 Flash Lite](https://img.shields.io/badge/AI_Engine-Google_Gemini_3.5_Flash_Lite-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev)
 [![Green Computing](https://img.shields.io/badge/Green_Campus-Carbon_Tracking_IDN-2EA44F?style=for-the-badge&logo=leaf&logoColor=white)](#sustainability)
+[![Interactive Whitepaper](https://img.shields.io/badge/Docs-Interactive_Whitepaper-38bdf8?style=for-the-badge&logo=googledocs&logoColor=white)](docs/interactive_whitepaper.html)
+[![Academic Whitepaper](https://img.shields.io/badge/Whitepaper-Comprehensive_MD-6366f1?style=for-the-badge&logo=markdown&logoColor=white)](docs/S_SPARC_COMPREHENSIVE_WHITEPAPER.md)
+
+---
+
+> 📖 **Official Academic Whitepaper & Interactive Viewer**:
+> - 📄 **Academic Whitepaper (Markdown)**: [`docs/S_SPARC_COMPREHENSIVE_WHITEPAPER.md`](docs/S_SPARC_COMPREHENSIVE_WHITEPAPER.md)
+> - 🌐 **Interactive Whitepaper & Viewer (HTML)**: [`docs/interactive_whitepaper.html`](docs/interactive_whitepaper.html)
+> - 📊 **Pitch Deck (PDF)**: [`docs/S-SPARC Pitch Deck.pdf`](docs/S-SPARC%20Pitch%20Deck.pdf)
 
 ---
 

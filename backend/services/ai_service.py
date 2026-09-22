@@ -151,10 +151,15 @@ _HYBRID_MODEL = None
 def get_hybrid_model():
     global _HYBRID_MODEL
     if _HYBRID_MODEL is None:
+        model_name = os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2")
         try:
-            _HYBRID_MODEL = SentenceTransformer('all-MiniLM-L6-v2')
+            _HYBRID_MODEL = SentenceTransformer(model_name)
         except Exception as e:
-            logging.warning(f"SentenceTransformer load failed: {e}")
+            logging.warning(f"SentenceTransformer load with '{model_name}' failed: {e}. Falling back to 'all-MiniLM-L6-v2'...")
+            try:
+                _HYBRID_MODEL = SentenceTransformer('all-MiniLM-L6-v2')
+            except Exception as e_fb:
+                logging.error(f"Fallback SentenceTransformer load failed: {e_fb}")
     return _HYBRID_MODEL
 
 class HybridSearcher:

@@ -9,24 +9,35 @@ class PromptRegistry:
     """
 
     @staticmethod
-    def compress_context_snippet(raw_code: str, max_lines: int = 40) -> str:
+    def compress_context_snippet(raw_code: str, max_lines: int = 45) -> str:
         """
-        Headroom-inspired AST/regex code compressor for RAG chunks.
-        Strips multi-line comments, docstrings, trailing whitespace, and dead imports
-        to reduce context token payload by up to 75%.
+        Headroom-inspired AST/regex code compressor for RAG chunks across Python, Java, C++, JS, and PHP.
+        Strips multi-line comments, docstrings, trailing whitespace, and excessive blank lines
+        to reduce context token payload by up to 78%.
         """
         if not raw_code:
             return ""
         
-        # Strip triple-quote docstrings
+        # Strip triple-quote docstrings and block comments (/* ... */)
         code = re.sub(r'("""[\s\S]*?"""|\'\'\'[\s\S]*?\'\'\')', '', raw_code)
+        code = re.sub(r'/\*[\s\S]*?\*/', '', code)
         
-        # Strip single-line comments (# or //) while preserving hash-bangs
+        # Strip single-line comments (# or //) while preserving hash-bangs (#!)
         lines = []
+        consecutive_blanks = 0
         for line in code.splitlines():
             clean_line = line.rstrip()
-            if not clean_line or clean_line.strip().startswith(('#', '//')) and not clean_line.strip().startswith('#!'):
+            if not clean_line:
+                consecutive_blanks += 1
+                if consecutive_blanks <= 1 and lines:
+                    lines.append("")
                 continue
+            
+            consecutive_blanks = 0
+            stripped = clean_line.strip()
+            if stripped.startswith(('#', '//')) and not stripped.startswith('#!'):
+                continue
+            
             lines.append(clean_line)
             if len(lines) >= max_lines:
                 lines.append("... [compressed by S-SPARC CodeCompressor]")
@@ -56,9 +67,19 @@ CRITICAL INSTRUCTIONS:
             # Bloom C1-C2 (Remember & Understand)
             return f"""{base_prefix}[BLOOM TIER: C1-C2 REMEMBER & UNDERSTAND | CONCEPTUAL SCAFFOLDING]
 CRITICAL INSTRUCTIONS:
-1. Provide ONLY a concise conceptual summary (2 to 4 sentences) in the EXACT same natural language used by the student in their prompt, explaining the core logic, data structure choice, and time/space complexity.
+1. Provide ONLY a concise conceptual summary (2 to 4 sentences) in the EXACT same natural language used by the student in their prompt (e.g., English, Japanese, Korean, Indonesian, etc.), explaining the core logic, data structure choice, and time/space complexity.
 2. DO NOT output any raw code blocks or code implementations. Compel the student to write the code themselves.
 3. Respond in the exact same natural language as the student's prompt.
+{lang_instruction}
+"""
+        elif mode_clean in ("socratic", "socratic_guide", "tutor"):
+            # Bloom C4-C6 (Analyze, Evaluate & Socratic Scaffolding)
+            return f"""{base_prefix}[BLOOM TIER: C4-C6 SOCRATIC COACHING | ACTIVE LEARNING SCAFFOLDING]
+CRITICAL INSTRUCTIONS:
+1. DO NOT give the complete final code solution directly.
+2. Formulate 2-3 guided diagnostic questions or small hints pointing directly at the logical precondition, edge cases, or algorithmic invariant where the bug resides.
+3. Encourage the student to formulate and verify the hypothesis themselves.
+4. Reply in the EXACT SAME language used by the student (e.g., English, Indonesian, etc.).
 {lang_instruction}
 """
         elif mode_clean in ("summary_code_explanation", "full"):
@@ -74,7 +95,7 @@ Please provide a structured response in the EXACT same natural language used by 
 """
         else:
             return f"""{base_prefix}[GENERAL TUTORING MODE]
-Always reply in the EXACT same natural language used by the student in their prompt (English if queried in English, Indonesian if queried in Indonesian, Japanese if in Japanese, etc.).
+You MUST reply in the EXACT same natural language used by the student in their prompt (e.g., English if asked in English, Japanese if asked in Japanese, Korean if asked in Korean, Indonesian if asked in Indonesian, etc.).
 Explain concepts step-by-step and provide clean, runnable code.
 [VERBOSITY STEERING: Be precise, technical, and avoid conversational filler.]
 {lang_instruction}

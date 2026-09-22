@@ -65,6 +65,7 @@ frontend/vendor/
 # Local backup and scratch data
 # =========================
 *.bak
+scratch/
 gpt_queue_status.json
 mbpp_clone.json
 mbpp_real.json
@@ -87,7 +88,8 @@ pretrained_model/
 **/*.spm
 *.sql
 *.zip
-!*.sql.gz
+*.sql.gz
+*.gz
 
 # =========================
 # E-STRANGE Student Submissions & Upload Cache

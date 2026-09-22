@@ -23,8 +23,14 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
   
   $course_id = mysqli_real_escape_string($db,$_POST['course_id']);
   
-  $sql = "UPDATE game_student_course SET is_participating = '".$isParticipating."'
+  if ($id <= 0 || empty($id)) {
+    $sql = "INSERT INTO game_student_course (student_id, course_id, is_participating, total_points) 
+            VALUES ('".$_SESSION['user_id']."', '".$course_id."', '".$isParticipating."', 0)
+            ON DUPLICATE KEY UPDATE is_participating = '".$isParticipating."'";
+  } else {
+    $sql = "UPDATE game_student_course SET is_participating = '".$isParticipating."'
 		WHERE gs_id='".$id."'";
+  }
   $db->query($sql);
   
   // for access statistics of game page
