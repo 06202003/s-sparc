@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import json
 import logging
+import os
+import re
 from dataclasses import asdict, dataclass
-
-from openai import OpenAI
+from typing import Any
 
 from .config import Settings
 from .static_analysis import StaticAnalysisResult
@@ -20,7 +21,7 @@ class JudgeResult:
     summary: str
     source: str
 
-    def to_dict(self) -> dict:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
@@ -28,7 +29,37 @@ class LLMJudge:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
         self.logger = logging.getLogger(__name__)
-        self.client = OpenAI(api_key=settings.llm_api_key, timeout=30.0, max_retries=2) if settings.llm_api_key else None
+        self.keys = self._load_gemini_keys()
+        self.current_idx = 0
+
+    def _load_gemini_keys(self) -> list[str]:
+        keys = []
+        for name in ("GEMINI_API_KEY_1", "GEMINI_API_KEY_2", "GEMINI_API_KEY_3", "GEMINI_API_KEY_4", "GEMINI_API_KEY_5", "GEMINI_API_KEY_6"):
+            val = os.getenv(name)
+            if val and len(val.strip()) >= 20 and val.strip() not in keys:
+                keys.append(val.strip())
+        
+        for fallback in ("GEMINI_API_KEY", "GOOGLE_API_KEY", "EVALUATOR_GEMINI_API_KEY"):
+            val = os.getenv(fallback)
+            if val and len(val.strip()) >= 20 and val.strip() not in keys:
+                keys.append(val.strip())
+
+        self.logger.info("LLMJudge initialized with %d Google Gemini API key(s)", len(keys))
+        return keys
+
+    def _clean_json_text(self, text: str) -> str:
+        text = text.strip()
+        if text.startswith("```"):
+            lines = text.splitlines()
+            if lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines and lines[-1].startswith("```"):
+                lines = lines[:-1]
+            text = "\n".join(lines).strip()
+        match = re.search(r"\{.*\}", text, re.DOTALL)
+        if match:
+            return match.group(0)
+        return text
 
     def judge(
         self,
@@ -38,7 +69,8 @@ class LLMJudge:
         semantic_similarity: float,
         static_result: StaticAnalysisResult,
     ) -> JudgeResult:
-        if self.client is None:
+        if not self.keys:
+            self.logger.warning("No Gemini API keys found in environment. Using heuristic fallback.")
             return self._heuristic_judge(prompt, code, language, semantic_similarity, static_result)
 
         truncated_code = code[:6000]
@@ -58,30 +90,48 @@ class LLMJudge:
             f"Code:\n{truncated_code}"
         )
 
-        try:
-            response = self.client.chat.completions.create(
-                model=self.settings.llm_model,
-                temperature=0.0,
-                response_format={"type": "json_object"},
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ],
-            )
-            content = response.choices[0].message.content or "{}"
-            payload = json.loads(content)
-            return JudgeResult(
-                alignment=float(payload.get("alignment", 0.0)),
-                logic=float(payload.get("logic", 0.0)),
-                quality=float(payload.get("quality", 0.0)),
-                readability=float(payload.get("readability", 0.0)),
-                completeness=float(payload.get("completeness", 0.0)),
-                summary=str(payload.get("summary", "LLM evaluation completed.")),
-                source=f"llm:{self.settings.llm_model}",
-            )
-        except Exception as exc:
-            self.logger.warning("LLM judge failed, falling back to heuristic scoring: %s", exc)
-            return self._heuristic_judge(prompt, code, language, semantic_similarity, static_result)
+        model_name = self.settings.llm_model.strip()
+        if not model_name.startswith("gemini/") and not model_name.startswith("google/"):
+            litellm_model = f"gemini/{model_name}"
+        else:
+            litellm_model = model_name
+
+        attempts = 0
+        max_attempts = len(self.keys)
+
+        while attempts < max_attempts:
+            key = self.keys[self.current_idx]
+            self.current_idx = (self.current_idx + 1) % len(self.keys)
+            attempts += 1
+
+            try:
+                import litellm
+                res = litellm.completion(
+                    model=litellm_model,
+                    api_key=key,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt},
+                    ],
+                    timeout=20.0,
+                )
+                raw_text = res.choices[0].message.content or "{}"
+                cleaned = self._clean_json_text(raw_text)
+                payload = json.loads(cleaned)
+                return JudgeResult(
+                    alignment=float(payload.get("alignment", 0.0)),
+                    logic=float(payload.get("logic", 0.0)),
+                    quality=float(payload.get("quality", 0.0)),
+                    readability=float(payload.get("readability", 0.0)),
+                    completeness=float(payload.get("completeness", 0.0)),
+                    summary=str(payload.get("summary", "Gemini evaluation completed.")),
+                    source=f"gemini:{model_name}",
+                )
+            except Exception as exc:
+                self.logger.warning("Gemini key evaluation attempt failed (%s): %s", key[:8], exc)
+
+        self.logger.warning("All Gemini API keys failed or hit rate limits. Falling back to heuristic scoring.")
+        return self._heuristic_judge(prompt, code, language, semantic_similarity, static_result)
 
     @staticmethod
     def _clamp(score: float) -> float:

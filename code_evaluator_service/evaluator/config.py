@@ -38,7 +38,7 @@ class Settings:
     embedding_model_name: str = field(
         default_factory=lambda: os.getenv("EVALUATOR_EMBEDDING_MODEL", "intfloat/multilingual-e5-base")
     )
-    llm_model: str = field(default_factory=lambda: os.getenv("EVALUATOR_LLM_MODEL", "gpt-4o-mini"))
+    llm_model: str = field(default_factory=lambda: os.getenv("EVALUATOR_GEMINI_MODEL") or os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite"))
     llm_api_key: str | None = field(
         default_factory=lambda: os.getenv("EVALUATOR_OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY")
     )
