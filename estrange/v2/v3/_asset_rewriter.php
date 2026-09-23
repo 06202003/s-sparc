@@ -85,10 +85,20 @@ if (!function_exists('rewrite_offline_assets')) {
             '#https?://cdn\.jsdelivr\.net/npm/chart\.js(/dist/chart\.umd\.js)?#i' => $baseAssets . 'chart.umd.js',
 
             // DataTables -> Local DataTables CSS & JS
+            '#(https?:)?//cdn\.datatables\.net/v/bs5/dt-[^/]+/datatables\.min\.css#i' => $baseAssets . 'datatables.min.css',
+            '#(https?:)?//cdn\.datatables\.net/v/bs5/dt-[^/]+/datatables\.min\.js#i' => $baseAssets . 'datatables.min.js',
+            '#(https?:)?//cdn\.datatables\.net/responsive/[^/]+/css/responsive\.bootstrap5\.min\.css#i' => $baseAssets . 'responsive.bootstrap5.min.css',
+            '#(https?:)?//cdn\.datatables\.net/responsive/[^/]+/js/responsive\.bootstrap5\.min\.js#i' => $baseAssets . 'responsive.bootstrap5.min.js',
             '#(https?:)?//cdn\.datatables\.net/[^/]+/css/jquery\.dataTables\.min\.css#i' => $baseAssets . 'jquery.dataTables.min.css',
             '#(https?:)?//cdn\.datatables\.net/responsive/[^/]+/css/responsive\.dataTables\.min\.css#i' => $baseAssets . 'responsive.dataTables.min.css',
             '#(https?:)?//cdn\.datatables\.net/[^/]+/js/jquery\.dataTables\.min\.js#i' => $baseAssets . 'jquery.dataTables.min.js',
             '#(https?:)?//cdn\.datatables\.net/responsive/[^/]+/js/dataTables\.responsive\.min\.js#i' => $baseAssets . 'dataTables.responsive.min.js',
+
+            // Prettify Code Highlighting -> Local run_prettify.js
+            '#https?://cdn\.jsdelivr\.net/gh/google/code-prettify[^"\']+#i' => $baseAssets . 'run_prettify.js',
+
+            // Offline HTML5 Background Video -> Local bg_video.mp4
+            '#https?://cdn\.jsdelivr\.net/gh/06202003/MainPortfolio/data/[^"\']+\.mp4#i' => $baseAssets . 'bg_video.mp4',
 
             // AI Backend FASTAPI_URL in S-SPARC -> Local api_proxy.php
             '#const FASTAPI_URL = ["\']https://estrangeinternal\.itmaranatha\.org["\'];#i' => 'const FASTAPI_URL = "api_proxy.php";'
