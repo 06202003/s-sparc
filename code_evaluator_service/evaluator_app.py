@@ -94,6 +94,12 @@ async def run_evaluation(background_tasks: BackgroundTasks = None, background: b
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
+@app.get("/stop-evaluation")
+async def stop_evaluation() -> dict:
+    pipeline.reset_state()
+    return {"status": "ok", "message": "Evaluation state has been reset to Idle."}
+
+
 @app.get("/stats")
 async def stats() -> dict:
     latest = pipeline.read_latest_stats()
@@ -287,6 +293,9 @@ async def web_dashboard():
         .btn-primary { background: linear-gradient(135deg, #0d9488, #0284c7); color: white; box-shadow: 0 4px 14px rgba(13, 148, 136, 0.4); }
         .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
 
+        .btn-rose { background: linear-gradient(135deg, #e11d48, #be123c); color: white; box-shadow: 0 4px 14px rgba(225, 29, 72, 0.4); }
+        .btn-rose:hover { opacity: 0.9; transform: translateY(-1px); }
+
         .btn-secondary { background: rgba(255, 255, 255, 0.05); color: var(--text-main); border: 1px solid var(--card-border); }
         .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); }
 
@@ -375,6 +384,9 @@ async def web_dashboard():
         <div class="controls">
             <button class="btn btn-primary" onclick="triggerEvaluation()">
                 ⚡ Jalankan Pembersihan Manual (Background)
+            </button>
+            <button class="btn btn-rose" onclick="stopEvaluation()">
+                🛑 Stop / Reset Evaluasi
             </button>
             <button class="btn btn-secondary" onclick="fetchLogs()">
                 🔄 Refresh Logs
@@ -490,6 +502,20 @@ async def web_dashboard():
                 setTimeout(fetchLogs, 500);
             } catch (err) {
                 alert("Gagal menjalankan evaluasi: " + err);
+            }
+        }
+
+        async function stopEvaluation() {
+            if(!confirm("Hentikan/reset proses evaluasi sekarang?")) return;
+            try {
+                let res = await fetch('stop-evaluation');
+                if(!res.ok) res = await fetch('/stop-evaluation');
+                const data = await res.json();
+                alert(data.message || "Evaluasi dihentikan.");
+                setTimeout(fetchStats, 500);
+                setTimeout(fetchLogs, 500);
+            } catch (err) {
+                alert("Gagal menghentikan evaluasi: " + err);
             }
         }
 

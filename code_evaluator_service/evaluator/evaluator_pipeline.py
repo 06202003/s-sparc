@@ -68,11 +68,21 @@ class EvaluatorPipeline:
         self.anomaly_detector = anomaly_detector or AnomalyDetector()
         self.logger = logging.getLogger(__name__)
         self._run_lock = threading.Lock()
+        self._cancel_requested = False
 
     def is_running(self) -> bool:
         return self._run_lock.locked()
 
+    def reset_state(self) -> None:
+        self._cancel_requested = True
+        if self._run_lock.locked():
+            try:
+                self._run_lock.release()
+            except RuntimeError:
+                pass
+
     def run(self, trigger: str = "manual") -> dict[str, Any]:
+        self._cancel_requested = False
         if not self._run_lock.acquire(blocking=False):
             raise RuntimeError("Evaluation run already in progress")
 
@@ -86,6 +96,9 @@ class EvaluatorPipeline:
             seen_hashes: dict[str, str] = {}
 
             for batch in self.database.iterate_entries(self.settings.batch_size):
+                if self._cancel_requested:
+                    self.logger.info("Evaluation loop stopped by user request.")
+                    break
                 batch_count += 1
                 self.logger.info("Processing batch %s with %s entries", batch_count, len(batch))
                 for row in batch:

@@ -4,4 +4,4 @@ RewriteEngine On
 RewriteRule ^$ http://127.0.0.1:5000/docs [P,L]
 
 # Proxy all S-SPARC FastAPI & Evaluator endpoints to port 5000 (HTTPS Port 443 -> Port 5000)
-RewriteRule ^(api|health|docs|redoc|openapi\.json|user|generate-code|educational|environmental|gamification|evaluator|stats|run-evaluation|reports|backups|logs)(.*)$ http://127.0.0.1:5000%{REQUEST_URI} [P,L]
+RewriteRule ^(api|health|docs|redoc|openapi\.json|user|generate-code|educational|environmental|gamification|evaluator|stats|run-evaluation|stop-evaluation|reports|backups|logs)(.*)$ http://127.0.0.1:5000%{REQUEST_URI} [P,L]
