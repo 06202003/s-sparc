@@ -1,7 +1,10 @@
 <?php
+require_once __DIR__ . '/_asset_rewriter.php';
 // check whether the page is accessed without session
 
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    @session_start();
+}
 
 // if logged in, redirect to the dashboard page
 if(isset($_SESSION['name']) == true && $_SESSION['sub_domain'] == "mcu"){

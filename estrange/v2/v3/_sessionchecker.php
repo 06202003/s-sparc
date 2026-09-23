@@ -1,9 +1,10 @@
 <?php
+require_once __DIR__ . '/_asset_rewriter.php';
 // check whether the user has been logged in
 
 // start the session if it has not been started
-if (session_id() == "")
-  session_start();
+if (session_status() === PHP_SESSION_NONE)
+  @session_start();
 
 // redirect if it is not logged in
 if(isset($_SESSION['name']) == false || $_SESSION['sub_domain'] != "mcu"){

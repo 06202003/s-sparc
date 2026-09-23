@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/_asset_rewriter.php';
 // just a configuration for the database access
 $servername = "localhost";
 $username = "root";

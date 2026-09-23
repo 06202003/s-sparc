@@ -1,0 +1,22 @@
+/* Offline Font Fallback */
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 400 700;
+    font-display: swap;
+    src: local('Inter'), local('Segoe UI'), local('Arial');
+}
+@font-face {
+    font-family: 'JetBrains Mono';
+    font-style: normal;
+    font-weight: 400 700;
+    font-display: swap;
+    src: local('JetBrains Mono'), local('Consolas'), local('Courier New');
+}
+@font-face {
+    font-family: 'Plus Jakarta Sans';
+    font-style: normal;
+    font-weight: 400 800;
+    font-display: swap;
+    src: local('Plus Jakarta Sans'), local('Segoe UI'), local('Arial');
+}
