@@ -156,6 +156,7 @@ Available in `docs/system_flow_diagrams.md` and `docs/DIAGRAM_ALIR_S-SPARC_ESTRA
      from code_evaluator_service.evaluator_app import list_reports as list_eval_reports
      from code_evaluator_service.evaluator_app import list_backups as list_eval_backups
      from code_evaluator_service.evaluator_app import stop_evaluation as stop_eval
+     from code_evaluator_service.evaluator_app import clear_logs as clear_eval_logs
 
      @app.get("/stats", tags=["System Diagnostics"], summary="Code Evaluator Statistics")
      async def stats_alias():
@@ -168,6 +169,10 @@ Available in `docs/system_flow_diagrams.md` and `docs/DIAGRAM_ALIR_S-SPARC_ESTRA
      @app.get("/stop-evaluation", tags=["System Diagnostics"], summary="Stop/Reset Code Evaluation")
      async def stop_evaluation_alias():
          return await stop_eval()
+
+     @app.get("/clear-logs", tags=["System Diagnostics"], summary="Clear Code Evaluator Log File")
+     async def clear_logs_alias():
+         return await clear_eval_logs()
 
      @app.get("/logs", response_class=PlainTextResponse, tags=["System Diagnostics"], summary="Code Evaluator Logs")
      async def logs_alias(lines: int = 200):

@@ -130,6 +130,17 @@ async def get_logs(lines: int = Query(200, ge=1, le=5000)):
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
+@app.get("/clear-logs")
+async def clear_logs() -> dict:
+    log_path = settings.log_dir / "code_evaluator_service.log"
+    try:
+        if log_path.exists():
+            log_path.write_text("", encoding="utf-8")
+        return {"status": "ok", "message": "Log file cleared successfully."}
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
 @app.get("/reports")
 async def list_reports():
     reports = []
@@ -391,6 +402,9 @@ async def web_dashboard():
             <button class="btn btn-secondary" onclick="fetchLogs()">
                 🔄 Refresh Logs
             </button>
+            <button class="btn btn-secondary" onclick="clearLogs()">
+                🧹 Clear Logs
+            </button>
             <a href="/stats" target="_blank" class="btn btn-secondary">📊 JSON Stats</a>
             <a href="/health" target="_blank" class="btn btn-secondary">🩺 JSON Health</a>
             <a href="/logs" target="_blank" class="btn btn-secondary">📜 Raw Log File</a>
@@ -516,6 +530,19 @@ async def web_dashboard():
                 setTimeout(fetchLogs, 500);
             } catch (err) {
                 alert("Gagal menghentikan evaluasi: " + err);
+            }
+        }
+
+        async function clearLogs() {
+            if(!confirm("Hapus seluruh isi log sistem sekarang?")) return;
+            try {
+                let res = await fetch('clear-logs');
+                if(!res.ok) res = await fetch('/clear-logs');
+                const data = await res.json();
+                alert(data.message || "Log berhasil dihapus!");
+                fetchLogs();
+            } catch (err) {
+                alert("Gagal menghapus log: " + err);
             }
         }
 
