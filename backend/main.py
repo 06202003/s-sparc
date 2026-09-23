@@ -164,7 +164,7 @@ Available in `docs/system_flow_diagrams.md` and `docs/DIAGRAM_ALIR_S-SPARC_ESTRA
      async def run_evaluation_alias(background: bool = True):
          return await run_eval(background=background)
 
-     @app.get("/logs", tags=["System Diagnostics"], summary="Code Evaluator Logs")
+     @app.get("/logs", response_class=PlainTextResponse, tags=["System Diagnostics"], summary="Code Evaluator Logs")
      async def logs_alias(lines: int = 200):
          return await get_eval_logs(lines=lines)
 

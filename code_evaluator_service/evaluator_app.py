@@ -431,7 +431,10 @@ async def web_dashboard():
             try {
                 let res = await fetch('logs?lines=250');
                 if(!res.ok) res = await fetch('/logs?lines=250');
-                const text = await res.text();
+                let text = await res.text();
+                if (text.startsWith('"') && text.endsWith('"')) {
+                    try { text = JSON.parse(text); } catch(e) {}
+                }
                 const consoleElem = document.getElementById('log-console');
                 consoleElem.innerText = text;
                 consoleElem.scrollTop = consoleElem.scrollHeight;
