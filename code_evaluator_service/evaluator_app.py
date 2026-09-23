@@ -69,12 +69,17 @@ async def health() -> dict:
 
 
 @app.get("/run-evaluation")
-async def run_evaluation(background_tasks: BackgroundTasks, background: bool = True) -> dict:
+async def run_evaluation(background_tasks: BackgroundTasks = None, background: bool = True) -> dict:
     if pipeline.is_running():
-        raise HTTPException(status_code=409, detail="Evaluation is already running")
+        return {
+            "status": "already_running",
+            "message": "Evaluation is already running in background",
+        }
 
     if background:
-        background_tasks.add_task(pipeline.run, "manual-background")
+        import threading
+        thread = threading.Thread(target=pipeline.run, args=("manual-background",), daemon=True)
+        thread.start()
         return {
             "status": "accepted",
             "message": "Evaluation started in background",
@@ -408,7 +413,8 @@ async def web_dashboard():
     <script>
         async function fetchStats() {
             try {
-                const res = await fetch('/stats');
+                let res = await fetch('stats');
+                if(!res.ok) res = await fetch('/stats');
                 const data = await res.json();
                 document.getElementById('db-entries').innerText = data.current_db_entries !== undefined && data.current_db_entries !== null ? data.current_db_entries.toLocaleString() : '-';
                 
@@ -423,7 +429,8 @@ async def web_dashboard():
 
         async function fetchLogs() {
             try {
-                const res = await fetch('/logs?lines=250');
+                let res = await fetch('logs?lines=250');
+                if(!res.ok) res = await fetch('/logs?lines=250');
                 const text = await res.text();
                 const consoleElem = document.getElementById('log-console');
                 consoleElem.innerText = text;
@@ -435,13 +442,14 @@ async def web_dashboard():
 
         async function fetchFiles() {
             try {
-                const resR = await fetch('/reports');
+                let resR = await fetch('reports');
+                if(!resR.ok) resR = await fetch('/reports');
                 const dataR = await resR.json();
                 const rList = document.getElementById('reports-list');
                 if (dataR.reports && dataR.reports.length > 0) {
                     rList.innerHTML = dataR.reports.map(r => `
                         <li class="file-item">
-                            <a href="${r.url}" target="_blank">📄 ${r.filename}</a>
+                            <a href="${r.url.startsWith('/') ? '.' + r.url : r.url}" target="_blank">📄 ${r.filename}</a>
                             <span style="color:#64748b">${(r.size_bytes / 1024).toFixed(1)} KB</span>
                         </li>
                     `).join('');
@@ -449,13 +457,14 @@ async def web_dashboard():
                     rList.innerHTML = '<li class="file-item" style="color:#64748b">Belum ada laporan evaluasi.</li>';
                 }
 
-                const resB = await fetch('/backups');
+                let resB = await fetch('backups');
+                if(!resB.ok) resB = await fetch('/backups');
                 const dataB = await resB.json();
                 const bList = document.getElementById('backups-list');
                 if (dataB.backups && dataB.backups.length > 0) {
                     bList.innerHTML = dataB.backups.map(b => `
                         <li class="file-item">
-                            <a href="${b.url}" target="_blank">📦 ${b.filename}</a>
+                            <a href="${b.url.startsWith('/') ? '.' + b.url : b.url}" target="_blank">📦 ${b.filename}</a>
                             <span style="color:#64748b">${(b.size_bytes / 1024).toFixed(1)} KB</span>
                         </li>
                     `).join('');
@@ -470,11 +479,12 @@ async def web_dashboard():
         async function triggerEvaluation() {
             if(!confirm("Jalankan pembersihan & evaluasi anomali sekarang di background?")) return;
             try {
-                const res = await fetch('/run-evaluation?background=true');
+                let res = await fetch('run-evaluation?background=true');
+                if(!res.ok) res = await fetch('/run-evaluation?background=true');
                 const data = await res.json();
                 alert(data.message || "Evaluasi berhasil dijalankan!");
-                fetchStats();
-                fetchLogs();
+                setTimeout(fetchStats, 500);
+                setTimeout(fetchLogs, 500);
             } catch (err) {
                 alert("Gagal menjalankan evaluasi: " + err);
             }

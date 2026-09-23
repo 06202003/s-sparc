@@ -152,6 +152,9 @@ Available in `docs/system_flow_diagrams.md` and `docs/DIAGRAM_ALIR_S-SPARC_ESTRA
 
      from code_evaluator_service.evaluator_app import stats as get_eval_stats
      from code_evaluator_service.evaluator_app import run_evaluation as run_eval
+     from code_evaluator_service.evaluator_app import get_logs as get_eval_logs
+     from code_evaluator_service.evaluator_app import list_reports as list_eval_reports
+     from code_evaluator_service.evaluator_app import list_backups as list_eval_backups
 
      @app.get("/stats", tags=["System Diagnostics"], summary="Code Evaluator Statistics")
      async def stats_alias():
@@ -159,9 +162,19 @@ Available in `docs/system_flow_diagrams.md` and `docs/DIAGRAM_ALIR_S-SPARC_ESTRA
 
      @app.get("/run-evaluation", tags=["System Diagnostics"], summary="Trigger Manual Code Evaluation")
      async def run_evaluation_alias(background: bool = True):
-         from fastapi import BackgroundTasks
-         bt = BackgroundTasks()
-         return await run_eval(background_tasks=bt, background=background)
+         return await run_eval(background=background)
+
+     @app.get("/logs", tags=["System Diagnostics"], summary="Code Evaluator Logs")
+     async def logs_alias(lines: int = 200):
+         return await get_eval_logs(lines=lines)
+
+     @app.get("/reports", tags=["System Diagnostics"], summary="Code Evaluator Reports")
+     async def reports_alias():
+         return await list_eval_reports()
+
+     @app.get("/backups", tags=["System Diagnostics"], summary="Code Evaluator Backups")
+     async def backups_alias():
+         return await list_eval_backups()
  except Exception as exc:
      print(f"[WARNING] Failed to mount code_evaluator_service into main app: {exc}")
 
