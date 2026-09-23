@@ -21,20 +21,18 @@ settings = get_settings()
 
 def configure_logging() -> None:
     log_path = settings.log_dir / "code_evaluator_service.log"
-    root_logger = logging.getLogger()
-    if root_logger.handlers:
-        return
-
-    root_logger.setLevel(getattr(logging, settings.log_level.upper(), logging.INFO))
+    settings.log_dir.mkdir(parents=True, exist_ok=True)
+    
+    file_handler = RotatingFileHandler(log_path, maxBytes=5_000_000, backupCount=5, encoding="utf-8")
     formatter = logging.Formatter("%(asctime)s | %(levelname)s | %(name)s | %(message)s")
-
-    file_handler = RotatingFileHandler(log_path, maxBytes=2_000_000, backupCount=5, encoding="utf-8")
     file_handler.setFormatter(formatter)
-    root_logger.addHandler(file_handler)
 
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(formatter)
-    root_logger.addHandler(console_handler)
+    for logger_name in ("", "code_evaluator_service", "code_evaluator_service.evaluator.evaluator_pipeline", "code_evaluator_service.evaluator.llm_judge", "code_evaluator_service.evaluator.database"):
+        log_obj = logging.getLogger(logger_name)
+        log_obj.setLevel(logging.INFO)
+        has_file = any(isinstance(h, RotatingFileHandler) and str(getattr(h, "baseFilename", "")) == str(log_path.resolve()) for h in log_obj.handlers)
+        if not has_file:
+            log_obj.addHandler(file_handler)
 
 
 configure_logging()

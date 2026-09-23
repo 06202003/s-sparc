@@ -101,9 +101,16 @@ class EvaluatorPipeline:
                     break
                 batch_count += 1
                 self.logger.info("Processing batch %s with %s entries", batch_count, len(batch))
-                for row in batch:
+                for idx, row in enumerate(batch, 1):
+                    if self._cancel_requested:
+                        break
                     entry = self._evaluate_row(row, seen_hashes)
                     evaluations.append(entry)
+                    if idx % 5 == 0 or idx == len(batch) or entry.suspicious or entry.deletion_reason:
+                        self.logger.info(
+                            "Batch %s [%s/%s] | ID: %s | Score: %.2f | Gemini Summary: %s",
+                            batch_count, idx, len(batch), str(entry.id)[:8], entry.final_score, str(entry.llm_summary)[:60]
+                        )
 
             feature_rows = [
                 {
