@@ -19,16 +19,33 @@ class DatabaseClient:
 
     @contextmanager
     def connection(self):
-        conn = pymysql.connect(
-            host=self.settings.mysql_host,
-            port=self.settings.mysql_port,
-            user=self.settings.mysql_user,
-            password=self.settings.mysql_password,
-            database=self.settings.mysql_db,
-            charset="utf8mb4",
-            cursorclass=pymysql.cursors.DictCursor,
-            autocommit=False,
-        )
+        target_db = self.settings.mysql_db
+        try:
+            conn = pymysql.connect(
+                host=self.settings.mysql_host,
+                port=self.settings.mysql_port,
+                user=self.settings.mysql_user,
+                password=self.settings.mysql_password,
+                database=target_db,
+                charset="utf8mb4",
+                cursorclass=pymysql.cursors.DictCursor,
+                autocommit=False,
+            )
+        except pymysql.err.OperationalError as err:
+            if err.args[0] == 1049 and target_db != "estrange_v7":
+                self.logger.warning("Database '%s' not found (1049). Falling back to 'estrange_v7'.", target_db)
+                conn = pymysql.connect(
+                    host=self.settings.mysql_host,
+                    port=self.settings.mysql_port,
+                    user=self.settings.mysql_user,
+                    password=self.settings.mysql_password,
+                    database="estrange_v7",
+                    charset="utf8mb4",
+                    cursorclass=pymysql.cursors.DictCursor,
+                    autocommit=False,
+                )
+            else:
+                raise
         try:
             yield conn
         finally:

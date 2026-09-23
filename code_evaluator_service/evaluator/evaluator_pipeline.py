@@ -251,7 +251,20 @@ class EvaluatorPipeline:
                 for entry in entries
             ],
         }
-        backup_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+        content = json.dumps(payload, indent=2, ensure_ascii=False)
+        backup_path.write_text(content, encoding="utf-8")
+
+        for extra_dir in [
+            self.settings.service_root / "backups",
+            self.settings.service_root / "evaluator" / "backup",
+            self.settings.service_root / "evaluator" / "backups",
+        ]:
+            try:
+                extra_dir.mkdir(parents=True, exist_ok=True)
+                (extra_dir / backup_path.name).write_text(content, encoding="utf-8")
+            except Exception as exc:
+                self.logger.warning("Could not write extra backup copy to %s: %s", extra_dir, exc)
+
         self.logger.info("Backup created before deletion: %s", backup_path)
         return str(backup_path)
 
@@ -302,7 +315,14 @@ class EvaluatorPipeline:
 
     def _write_report(self, run_key: str, report: dict[str, Any]) -> Path:
         report_path = self.settings.report_dir / f"evaluation_report_{run_key}.json"
-        report_path.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
+        content = json.dumps(report, indent=2, ensure_ascii=False)
+        report_path.write_text(content, encoding="utf-8")
+        for extra_dir in [self.settings.service_root / "evaluator" / "reports"]:
+            try:
+                extra_dir.mkdir(parents=True, exist_ok=True)
+                (extra_dir / report_path.name).write_text(content, encoding="utf-8")
+            except Exception as exc:
+                self.logger.warning("Could not write extra report copy to %s: %s", extra_dir, exc)
         return report_path
 
     def _write_latest_stats(self, report: dict[str, Any]) -> None:

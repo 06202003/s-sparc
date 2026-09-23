@@ -145,11 +145,30 @@ Available in `docs/system_flow_diagrams.md` and `docs/DIAGRAM_ALIR_S-SPARC_ESTRA
  app.include_router(domain.router, prefix="/api", tags=["Domain/Learning"], include_in_schema=False)
  app.include_router(ai_chat.router, prefix="/api", tags=["AI Chatbot"], include_in_schema=False)
 
+ # Mount Code Evaluator Sub-App & Dashboard for HTTPS Port 443 Access
+ try:
+     from code_evaluator_service.evaluator_app import app as evaluator_app
+     app.mount("/evaluator", evaluator_app)
+
+     from code_evaluator_service.evaluator_app import stats as get_eval_stats
+     from code_evaluator_service.evaluator_app import run_evaluation as run_eval
+
+     @app.get("/stats", tags=["System Diagnostics"], summary="Code Evaluator Statistics")
+     async def stats_alias():
+         return await get_eval_stats()
+
+     @app.get("/run-evaluation", tags=["System Diagnostics"], summary="Trigger Manual Code Evaluation")
+     async def run_evaluation_alias(background: bool = True):
+         from fastapi import BackgroundTasks
+         bt = BackgroundTasks()
+         return await run_eval(background_tasks=bt, background=background)
+ except Exception as exc:
+     print(f"[WARNING] Failed to mount code_evaluator_service into main app: {exc}")
+
  return app
 
 app = create_app()
 
 if __name__ == "__main__":
  import uvicorn
- uvicorn.run("backend.main:app", host="0.0.0.0", port=8000, reload=True)
 

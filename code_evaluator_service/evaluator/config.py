@@ -46,6 +46,7 @@ class Settings:
     dry_run: bool = field(default_factory=lambda: os.getenv("EVALUATOR_DRY_RUN", "false").lower() == "true")
     max_rows_per_run: int = field(default_factory=lambda: int(os.getenv("EVALUATOR_MAX_ROWS_PER_RUN", "0")))
     log_level: str = field(default_factory=lambda: os.getenv("EVALUATOR_LOG_LEVEL", "INFO"))
+    service_root: Path = field(default_factory=lambda: SERVICE_ROOT)
     backup_dir: Path = field(default_factory=lambda: SERVICE_ROOT / "backup")
     report_dir: Path = field(default_factory=lambda: SERVICE_ROOT / "reports")
     log_dir: Path = field(default_factory=lambda: SERVICE_ROOT / "logs")
@@ -55,6 +56,10 @@ class Settings:
         self.backup_dir.mkdir(parents=True, exist_ok=True)
         self.report_dir.mkdir(parents=True, exist_ok=True)
         self.log_dir.mkdir(parents=True, exist_ok=True)
+        (SERVICE_ROOT / "backups").mkdir(parents=True, exist_ok=True)
+        (SERVICE_ROOT / "evaluator" / "backup").mkdir(parents=True, exist_ok=True)
+        (SERVICE_ROOT / "evaluator" / "backups").mkdir(parents=True, exist_ok=True)
+        (SERVICE_ROOT / "evaluator" / "reports").mkdir(parents=True, exist_ok=True)
 
 
 @lru_cache(maxsize=1)
