@@ -1,11 +1,11 @@
 <?php
 require_once __DIR__ . '/_asset_rewriter.php';
 // just a configuration for the database access
-$servername = "localhost";
-$username = "root";
-$password = getenv('MYSQL_PASSWORD') ?: "";
-$dbname = "estrange_v7";
-$baseDomainLink = 'http://127.0.0.1:8088/';
+$servername = getenv('DB_HOST') ?: "localhost";
+$username = getenv('DB_USER') ?: "root";
+$password = getenv('DB_PASS') !== false && getenv('DB_PASS') !== '' ? getenv('DB_PASS') : (getenv('MYSQL_PASSWORD') ?: "");
+$dbname = getenv('DB_NAME') ?: "estrange_v7";
+$baseDomainLink = getenv('BASE_DOMAIN_LINK') ?: 'http://127.0.0.1:8088/';
 
 $db = mysqli_connect($servername, $username, $password, $dbname);
 // human language for suspicion explanation

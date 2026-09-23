@@ -1,0 +1,19 @@
+# E-STRANGE & S-SPARC cPanel Apache Configuration
+RewriteEngine On
+RewriteBase /
+
+# Set default index
+DirectoryIndex index.php index.html
+
+# Prevent directory browsing
+Options -Indexes
+
+# Allow HTTP Authorization headers
+SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+
+# Serve existing files and directories directly
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Proxy API endpoints to local FastAPI if present, or route to PHP fallback
+RewriteRule ^(api|health|docs|redoc|openapi\.json)(.*)$ api_proxy.php [L,QSA]
