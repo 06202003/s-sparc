@@ -4,11 +4,19 @@ import json
 import logging
 import os
 import re
+import time
 from dataclasses import asdict, dataclass
 from typing import Any
 
+import litellm
+
 from .config import Settings
 from .static_analysis import StaticAnalysisResult
+
+# Suppress noisy LiteLLM logs
+litellm.suppress_debug_info = True
+logging.getLogger("LiteLLM").setLevel(logging.ERROR)
+logging.getLogger("litellm").setLevel(logging.ERROR)
 
 
 @dataclass(slots=True)
@@ -31,6 +39,8 @@ class LLMJudge:
         self.logger = logging.getLogger(__name__)
         self.keys = self._load_gemini_keys()
         self.current_idx = 0
+        self.disabled_keys: set[str] = set()
+        self.rate_limited_until: dict[str, float] = {}
 
     def _load_gemini_keys(self) -> list[str]:
         keys = []
@@ -69,18 +79,25 @@ class LLMJudge:
         semantic_similarity: float,
         static_result: StaticAnalysisResult,
     ) -> JudgeResult:
-        if not self.keys:
-            self.logger.warning("No Gemini API keys found in environment. Using heuristic fallback.")
+        # Fast-Path for clear high-confidence or obviously empty code
+        if not code.strip() or not static_result.syntax_valid or semantic_similarity < 0.40:
             return self._heuristic_judge(prompt, code, language, semantic_similarity, static_result)
 
-        truncated_code = code[:6000]
+        now = time.time()
+        active_keys = [
+            k for k in self.keys
+            if k not in self.disabled_keys and self.rate_limited_until.get(k, 0) < now
+        ]
+
+        if not active_keys:
+            return self._heuristic_judge(prompt, code, language, semantic_similarity, static_result)
+
+        truncated_code = code[:4000]
         system_prompt = (
             "You are evaluating code snippets for a programming chatbot retrieval knowledge base. "
-            "Many entries are intentionally partial snippets rather than full standalone programs. "
             "Reward semantic relevance, local correctness, syntax sanity, and usefulness as a retrievable snippet. "
-            "Do not heavily penalize brevity, missing boilerplate, or incomplete surrounding context if the snippet is still useful. "
             "Return JSON only with numeric fields alignment, logic, quality, readability, completeness in range 0-10, "
-            "and a short summary string. Penalize semantic mismatch, obviously broken syntax, nonsense code, or misleading snippets."
+            "and a short summary string."
         )
         user_prompt = (
             f"Prompt:\n{prompt}\n\n"
@@ -96,16 +113,11 @@ class LLMJudge:
         else:
             litellm_model = model_name
 
-        attempts = 0
-        max_attempts = len(self.keys)
-
-        while attempts < max_attempts:
-            key = self.keys[self.current_idx]
-            self.current_idx = (self.current_idx + 1) % len(self.keys)
-            attempts += 1
+        for _ in range(len(active_keys)):
+            key = active_keys[self.current_idx % len(active_keys)]
+            self.current_idx += 1
 
             try:
-                import litellm
                 res = litellm.completion(
                     model=litellm_model,
                     api_key=key,
@@ -113,7 +125,7 @@ class LLMJudge:
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_prompt},
                     ],
-                    timeout=20.0,
+                    timeout=15.0,
                 )
                 raw_text = res.choices[0].message.content or "{}"
                 cleaned = self._clean_json_text(raw_text)
@@ -128,9 +140,16 @@ class LLMJudge:
                     source=f"gemini:{model_name}",
                 )
             except Exception as exc:
-                self.logger.warning("Gemini key evaluation attempt failed (%s): %s", key[:8], exc)
+                err_str = str(exc)
+                if "PERMISSION_DENIED" in err_str or "403" in err_str or "invalid_api_key" in err_str:
+                    self.logger.warning("Gemini key disabled due to 403 Permission Denied (%s...)", key[:8])
+                    self.disabled_keys.add(key)
+                elif "429" in err_str or "RESOURCE_EXHAUSTED" in err_str or "Quota exceeded" in err_str:
+                    self.logger.info("Gemini key hit 429 rate limit (%s...), pausing key for 60s", key[:8])
+                    self.rate_limited_until[key] = time.time() + 60.0
+                else:
+                    self.logger.warning("Gemini API call warning (%s...): %s", key[:8], err_str[:100])
 
-        self.logger.warning("All Gemini API keys failed or hit rate limits. Falling back to heuristic scoring.")
         return self._heuristic_judge(prompt, code, language, semantic_similarity, static_result)
 
     @staticmethod

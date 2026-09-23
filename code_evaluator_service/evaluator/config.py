@@ -24,7 +24,7 @@ class Settings:
     mysql_port: int = field(default_factory=lambda: int(os.getenv("MYSQL_PORT", "3306")))
     mysql_user: str = field(default_factory=lambda: os.getenv("MYSQL_USER", "root"))
     mysql_password: str = field(default_factory=lambda: os.getenv("MYSQL_PASSWORD", ""))
-    mysql_db: str = field(default_factory=lambda: os.getenv("MYSQL_DB", "db_semantic"))
+    mysql_db: str = field(default_factory=lambda: os.getenv("MYSQL_DB", "estrange_v7"))
     batch_size: int = field(default_factory=lambda: int(os.getenv("EVALUATOR_BATCH_SIZE", "50")))
     semantic_similarity_threshold: float = field(
         default_factory=lambda: float(os.getenv("EVALUATOR_SEMANTIC_THRESHOLD", "0.80"))
