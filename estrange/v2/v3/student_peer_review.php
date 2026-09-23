@@ -97,27 +97,27 @@
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-	<script src="https://cdn.tailwindcss.com"></script>
+	<script src="strange_html_layout_additional_files/vendor/tailwind.cdn.js"></script>
 
 	<!-- jQuery -->
 	<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
 	<!-- DataTables -->
-	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
-	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
-	<script type="text/javascript" src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-	<script type="text/javascript" src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="strange_html_layout_additional_files/vendor/jquery.dataTables.min.css">
+	<link rel="stylesheet" type="text/css" href="strange_html_layout_additional_files/vendor/responsive.dataTables.min.css">
+	<script type="text/javascript" src="strange_html_layout_additional_files/vendor/jquery.dataTables.min.js"></script>
+	<script type="text/javascript" src="strange_html_layout_additional_files/vendor/dataTables.responsive.min.js"></script>
 
 	<!-- SweetAlert2 -->
-	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+	<script src="strange_html_layout_additional_files/vendor/sweetalert2.all.min.js"></script>
 
 	<!-- Notyf library -->
 	<link rel="stylesheet" href="strange_html_layout_additional_files/notyf.min.css">
 	<script src="strange_html_layout_additional_files/notyf.min.js"></script>
 	
 	<!-- Select2 -->
-	<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-	<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+	<link href="strange_html_layout_additional_files/vendor/select2.min.css" rel="stylesheet" />
+	<script src="strange_html_layout_additional_files/vendor/select2.min.js"></script>
 
 	<style>
 		:root { color-scheme: light; }

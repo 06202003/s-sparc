@@ -28,20 +28,20 @@ $assessmentId = $_SESSION['assessment_id'] ?? '';
   <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="../strange_html_layout_additional_files/vendor/tailwind.cdn.js"></script>
+  <script src="../strange_html_layout_additional_files/vendor/sweetalert2.all.min.js"></script>
   <!-- Select2 CSS & JS -->
-  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <link href="../strange_html_layout_additional_files/vendor/select2.min.css" rel="stylesheet" />
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script src="../strange_html_layout_additional_files/vendor/select2.min.js"></script>
   <!-- Markdown & HTML Sanitizer & Highlight.js & KaTeX -->
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <script src="../strange_html_layout_additional_files/vendor/marked.min.js"></script>
+  <script src="../strange_html_layout_additional_files/vendor/purify.min.js"></script>
+  <link rel="stylesheet" href="../strange_html_layout_additional_files/vendor/atom-one-dark.min.css">
+  <script src="../strange_html_layout_additional_files/vendor/highlight.min.js"></script>
+  <link rel="stylesheet" href="../strange_html_layout_additional_files/vendor/katex.min.css">
+  <script src="../strange_html_layout_additional_files/vendor/katex.min.js"></script>
+  <script src="../strange_html_layout_additional_files/vendor/auto-render.min.js"></script>
   <style>
     :root { color-scheme: light; }
     body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }

@@ -30,16 +30,16 @@ if ($assessmentsRes) {
   <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="../strange_html_layout_additional_files/vendor/tailwind.cdn.js"></script>
+  <script src="../strange_html_layout_additional_files/vendor/chart.umd.js"></script>
   <!-- DataTables & Select2 -->
-  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-  <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
-  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="../strange_html_layout_additional_files/vendor/jquery.dataTables.min.css">
+  <link rel="stylesheet" href="../strange_html_layout_additional_files/vendor/responsive.dataTables.min.css">
+  <link href="../strange_html_layout_additional_files/vendor/select2.min.css" rel="stylesheet" />
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-  <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script src="../strange_html_layout_additional_files/vendor/jquery.dataTables.min.js"></script>
+  <script src="../strange_html_layout_additional_files/vendor/dataTables.responsive.min.js"></script>
+  <script src="../strange_html_layout_additional_files/vendor/select2.min.js"></script>
   <style>
     :root { color-scheme: light; }
     body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }

@@ -124,7 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Change Password</title>
-<script src="https://cdn.tailwindcss.com"></script>
+<script src="strange_html_layout_additional_files/vendor/tailwind.cdn.js"></script>
   <style>
 /* Premium Teal Dropdown Styling for E-STRANGE & S-SPARC */
 /* Ensure SweetAlert2 hidden select is never displayed */

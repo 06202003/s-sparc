@@ -133,7 +133,7 @@ if ($expiresAtMs <= 0) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>E-STRANGE: Quiz Submission</title>
 <link rel="icon" href="strange_html_layout_additional_files/icon.png">
-<script src="https://cdn.tailwindcss.com"></script>
+<script src="strange_html_layout_additional_files/vendor/tailwind.cdn.js"></script>
 <style>body { font-family: Inter, system-ui, sans-serif; }</style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 text-slate-900">

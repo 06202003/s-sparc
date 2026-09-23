@@ -41,15 +41,15 @@ if ($loggedIn) {
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-  <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+  <script src="strange_html_layout_additional_files/vendor/tailwind.cdn.js"></script>
+  <script src="strange_html_layout_additional_files/vendor/chart.umd.js"></script>
+  <link rel="stylesheet" href="strange_html_layout_additional_files/vendor/jquery.dataTables.min.css">
+  <link rel="stylesheet" href="strange_html_layout_additional_files/vendor/responsive.dataTables.min.css">
+  <link rel="stylesheet" href="strange_html_layout_additional_files/vendor/select2.min.css">
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-  <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+  <script src="strange_html_layout_additional_files/vendor/jquery.dataTables.min.js"></script>
+  <script src="strange_html_layout_additional_files/vendor/dataTables.responsive.min.js"></script>
+  <script src="strange_html_layout_additional_files/vendor/select2.min.js"></script>
   <style>
     .odd-row { background-color: #f8fafc; }
     .even-row { background-color: #ffffff; }

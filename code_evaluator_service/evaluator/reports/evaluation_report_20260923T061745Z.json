@@ -1,0 +1,50 @@
+{
+  "run_id": "20260923T061745Z",
+  "service": "code_evaluator_service",
+  "trigger": "manual-background",
+  "started_at": "2026-09-23T06:17:45.529114+00:00",
+  "finished_at": "2026-09-23T06:20:23.754204+00:00",
+  "duration_seconds": 158.23,
+  "total_entries": 5671,
+  "valid_entries": 5480,
+  "review_entries": 0,
+  "deleted_entries": 191,
+  "average_similarity": 0.8821,
+  "average_score": 8.3429,
+  "suspicious_entries": 567,
+  "backup_path": "C:\\Users\\master\\Downloads\\s-sparc\\code_evaluator_service\\backup\\code_embeddings_backup_20260923T061745Z.json",
+  "dry_run": false,
+  "thresholds": {
+    "semantic_similarity_threshold": 0.8,
+    "review_score_threshold": 4.8,
+    "final_score_threshold": 5.2
+  },
+  "review_breakdown": {},
+  "deleted_breakdown": {
+    "DUPLICATE": 115,
+    "INVALID": 76
+  },
+  "sample_review_ids": [],
+  "sample_deleted_ids": [
+    "fc466cea-e5c2-44f9-b736-2e8e29592a77",
+    "9a00ef38-7585-4b41-9999-522bf1c692cd",
+    "706c2b98-4be3-4a90-97c1-7a422b0ca93f",
+    "ba8c8e33-d25a-443a-9c02-a3b76adf3d89",
+    "e20fb6c2-969a-49b7-972a-d4157e00dc5b",
+    "bc4cfd7b-c7c0-421e-ac99-51235a6944b7",
+    "d5ebe795-e8ea-46ae-999d-3edf2297ba31",
+    "5bd553ca-68b1-450c-b3b5-8a151816f9e3",
+    "beb4aeb1-59bd-484e-9ec5-e4a4ee8121a9",
+    "13cef6f8-a5b9-4850-a69d-c270ace77709",
+    "bdc99f39-fe67-4df2-a6ee-2db66ea1067f",
+    "a63609aa-b99f-479e-a23f-57d11560c9e1",
+    "09fdb0b5-186d-4c73-85bc-b16169775155",
+    "ff99e2e3-73ef-4096-aa53-d777732f069b",
+    "6dcc0891-9782-43f8-8ac2-e8a7b05df627",
+    "84356a82-b9af-4f8a-b304-807ce79c9883",
+    "4791951b-07dc-4f7a-a727-2f7e1508e9f1",
+    "025de646-03c8-40bf-b843-9084bd8659ec",
+    "a4a38587-5d16-4806-a38f-83a4b63cf3fa",
+    "7501abc2-80e1-4e84-afb5-a3d496bc6b8b"
+  ]
+}

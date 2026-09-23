@@ -49,7 +49,7 @@ try {
   <meta charset="utf-8">
   <title>Admin Dashboard</title>
   <link rel="stylesheet" href="/assets/styles.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="strange_html_layout_additional_files/vendor/chart.umd.js"></script>
   <style>
 /* Premium Teal Dropdown Styling for E-STRANGE & S-SPARC */
 /* Ensure SweetAlert2 hidden select is never displayed */

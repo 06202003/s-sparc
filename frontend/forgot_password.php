@@ -129,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="strange_html_layout_additional_files/vendor/tailwind.cdn.js"></script>
   <style>
     body { font-family: 'Manrope', system-ui, -apple-system, sans-serif; }
     .glass { backdrop-filter: blur(10px); background: rgba(255,255,255,0.85); }

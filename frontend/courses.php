@@ -108,13 +108,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css" />
+  <script src="strange_html_layout_additional_files/vendor/tailwind.cdn.js"></script>
+  <link href="strange_html_layout_additional_files/vendor/select2.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="strange_html_layout_additional_files/vendor/jquery.dataTables.min.css" />
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-  <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="strange_html_layout_additional_files/vendor/select2.min.js"></script>
+  <script src="strange_html_layout_additional_files/vendor/jquery.dataTables.min.js"></script>
+  <script src="strange_html_layout_additional_files/vendor/sweetalert2.all.min.js"></script>
   <style>
     body { font-family: 'Manrope', system-ui, -apple-system, sans-serif; }
     /* Perkecil tampilan pagination DataTables */

@@ -57,8 +57,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
   <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="strange_html_layout_additional_files/vendor/tailwind.cdn.js"></script>
+  <script src="strange_html_layout_additional_files/vendor/sweetalert2.all.min.js"></script>
   <link rel="stylesheet" href="strange_html_layout_additional_files/notyf.min.css">
   <script src="strange_html_layout_additional_files/notyf.min.js"></script>
   <style>

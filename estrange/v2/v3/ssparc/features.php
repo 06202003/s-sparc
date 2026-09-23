@@ -17,8 +17,8 @@ $sso_role = $_SESSION['role'] ?? 'student';
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="../strange_html_layout_additional_files/vendor/fontawesome.all.min.css" />
+    <link href="../strange_html_layout_additional_files/vendor/bootstrap.min.css" rel="stylesheet" />
     <style>
       :root {
         --brand-teal: #00A0A5;
@@ -379,9 +379,9 @@ $sso_role = $_SESSION['role'] ?? 'student';
     </footer>
 
     <!-- Bootstrap 5 Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../strange_html_layout_additional_files/vendor/bootstrap.bundle.min.js"></script>
     <!-- Particles.js -->
-    <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+    <script src="../strange_html_layout_additional_files/vendor/particles.min.js"></script>
     <script>
       if (typeof particlesJS !== 'undefined') {
         particlesJS('particles-js', {
