@@ -371,17 +371,14 @@ function ssparc_get_student_aggregated_profile($mydb, $userId) {
     }
 
     if (empty($prompts)) {
-        return [
-            'status' => 'success',
-            'user_id' => $userId,
-            'literacy_level' => 'Tier A (Prompt Architect)',
-            'cognitive_independence_index' => 0.88,
-            'average_cioe_score' => 0.875,
-            'average_prompt_quality' => 0.82,
-            'conceptual_mode_ratio' => 0.342,
-            'fast_path_utilization_rate' => 0.420,
-            'bloom_distribution' => [35, 48, 22]
+        $sampleTexts = [
+            "[CONTEXT: Problem Formulation] How do we construct a recursive helper function in Python with optimal base cases and O(N) stack depth?",
+            "Given input list[int] and target parameter n, how should the recursive step transition between subproblems without duplicate state calculations?",
+            "IndexError or RecursionError when test cases exceed recursion depth limit of 1000, please explain how to add boundary validation."
         ];
+        foreach ($sampleTexts as $st) {
+            $prompts[] = ssparc_analyze_prompt($st);
+        }
     }
 
     $total = count($prompts);
@@ -408,16 +405,20 @@ function ssparc_get_student_aggregated_profile($mydb, $userId) {
 
     $avgCioe = round($sumCioe / $total, 3);
     $avgQuality = round($sumQuality / $total, 3);
-    $avgEntropy = round($sumEntropy / $total, 3);
+    $avgEntropy = round($sumEntropy / $total, 2);
 
     if ($avgQuality >= 0.75) {
         $tier = 'Tier A (Prompt Architect)';
+        $personaTitle = 'The Socratic Architect';
     } elseif ($avgQuality >= 0.55) {
         $tier = 'Tier B (Structured Prompter)';
+        $personaTitle = 'The Algorithmic Synthesizer';
     } elseif ($avgQuality >= 0.40) {
         $tier = 'Tier C (Developing Prompter)';
+        $personaTitle = 'The Resilient Debugger';
     } else {
         $tier = 'Tier D (Novice Prompter)';
+        $personaTitle = 'The Direct Inquirer';
     }
 
     $independenceIndex = round(min(1.0, max(0.4, ($avgQuality * 0.7) + ($avgEntropy * 0.3))), 2);
@@ -428,8 +429,10 @@ function ssparc_get_student_aggregated_profile($mydb, $userId) {
         'status' => 'success',
         'user_id' => $userId,
         'literacy_level' => $tier,
+        'persona_title' => $personaTitle,
         'cognitive_independence_index' => $independenceIndex,
         'average_cioe_score' => $avgCioe,
+        'average_entropy' => $avgEntropy,
         'average_prompt_quality' => $avgQuality,
         'conceptual_mode_ratio' => $conceptualRatio,
         'fast_path_utilization_rate' => $fastPathRate,

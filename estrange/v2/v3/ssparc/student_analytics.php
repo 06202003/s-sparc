@@ -44,8 +44,8 @@ $userId = $_SESSION['user_id'] ?? 'student_demo';
         </p>
       </div>
       <div class="bg-white/10 border border-white/20 rounded-2xl p-4 text-center min-w-[200px] backdrop-blur">
-        <span class="text-xs text-teal-200 uppercase tracking-wider font-semibold block">AI Literacy Tier</span>
-        <span id="profile-literacy-level" class="text-xl font-extrabold text-white block mt-1">Prompt Architect</span>
+        <span class="text-xs text-teal-200 uppercase tracking-wider font-semibold block">Cognitive Persona</span>
+        <span id="profile-literacy-level" class="text-xl font-extrabold text-white block mt-1">The Algorithmic Synthesizer</span>
         <span id="profile-independence-index" class="text-xs font-mono bg-white/20 text-white px-2 py-0.5 rounded-full inline-block mt-2">Independence: 0.88 / 1.0</span>
       </div>
     </div>
@@ -58,7 +58,7 @@ $userId = $_SESSION['user_id'] ?? 'student_demo';
           <span class="font-bold">C-I-O-E Adherence</span>
           <span>Protocol</span>
         </div>
-        <div id="stat-cioe-adherence" class="text-2xl font-extrabold text-slate-900">87.5%</div>
+        <div id="stat-cioe-adherence" class="text-2xl font-extrabold text-slate-900">58.3%</div>
         <p class="text-[11px] text-slate-500 mt-1">Completeness rate of Context, Input, Output, and Error trace</p>
       </div>
 
@@ -67,7 +67,7 @@ $userId = $_SESSION['user_id'] ?? 'student_demo';
           <span class="font-bold">Prompt Information Density</span>
           <span>Shannon Entropy H(X)</span>
         </div>
-        <div id="stat-prompt-quality" class="text-2xl font-extrabold text-indigo-900 font-mono">0.82 / 1.0</div>
+        <div id="stat-prompt-quality" class="text-2xl font-extrabold text-indigo-900 font-mono">0.61 / 1.0</div>
         <p class="text-[11px] text-slate-500 mt-1">Average semantic density and technical specification depth</p>
       </div>
 
@@ -76,7 +76,7 @@ $userId = $_SESSION['user_id'] ?? 'student_demo';
           <span class="font-bold">Conceptual Fading Ratio</span>
           <span>Bloom C1-C2</span>
         </div>
-        <div id="stat-conceptual-ratio" class="text-2xl font-extrabold text-amber-900 font-mono">34.2%</div>
+        <div id="stat-conceptual-ratio" class="text-2xl font-extrabold text-amber-900 font-mono">33.3%</div>
         <p class="text-[11px] text-slate-500 mt-1">Ratio of conceptual guidance requests without code spoilers</p>
       </div>
 
@@ -85,7 +85,7 @@ $userId = $_SESSION['user_id'] ?? 'student_demo';
           <span class="font-bold">0-Token Fast-Path Hits</span>
           <span>Stewardship</span>
         </div>
-        <div id="stat-fast-path-rate" class="text-2xl font-extrabold text-emerald-900 font-mono">42.0%</div>
+        <div id="stat-fast-path-rate" class="text-2xl font-extrabold text-emerald-900 font-mono">35.0%</div>
         <p class="text-[11px] text-slate-500 mt-1">Repository solution reuse avoiding redundant cloud compute</p>
       </div>
 
@@ -209,12 +209,12 @@ $userId = $_SESSION['user_id'] ?? 'student_demo';
         }
         if (res.ok) {
           const profile = await res.json();
-          document.getElementById('profile-literacy-level').textContent = profile.literacy_level || 'Prompt Architect';
+          document.getElementById('profile-literacy-level').textContent = profile.persona_title || profile.literacy_level || 'The Algorithmic Synthesizer';
           document.getElementById('profile-independence-index').textContent = `Independence: ${profile.cognitive_independence_index || 0.88} / 1.0`;
-          document.getElementById('stat-cioe-adherence').textContent = `${((profile.average_cioe_score || 0.85) * 100).toFixed(1)}%`;
-          document.getElementById('stat-prompt-quality').textContent = `${profile.average_prompt_quality || 0.82} / 1.0`;
-          document.getElementById('stat-conceptual-ratio').textContent = `${((profile.conceptual_mode_ratio || 0.35) * 100).toFixed(1)}%`;
-          document.getElementById('stat-fast-path-rate').textContent = `${((profile.fast_path_utilization_rate || 0.42) * 100).toFixed(1)}%`;
+          document.getElementById('stat-cioe-adherence').textContent = `${(((profile.average_cioe_score ?? 0.583) * 100)).toFixed(1)}%`;
+          document.getElementById('stat-prompt-quality').textContent = `${(profile.average_entropy ?? 0.61)} / 1.0`;
+          document.getElementById('stat-conceptual-ratio').textContent = `${(((profile.conceptual_mode_ratio ?? 0.333) * 100)).toFixed(1)}%`;
+          document.getElementById('stat-fast-path-rate').textContent = `${(((profile.fast_path_utilization_rate ?? 0.35) * 100)).toFixed(1)}%`;
           if (profile.bloom_distribution && Array.isArray(profile.bloom_distribution)) {
             bloomData = profile.bloom_distribution;
           }
