@@ -623,6 +623,8 @@
             max-width: 100% !important;
             height: auto !important;
             overflow: visible !important;
+            shape-rendering: geometricPrecision !important;
+            text-rendering: geometricPrecision !important;
         }
 
         /* Fullscreen handling */
@@ -1481,7 +1483,23 @@ The **S-SPARC AI™ Initiative** was conceptualized and developed by the **ITMCU
             const state = window.diagramStates[scalableId];
 
             function applyTransform() {
-                scalableEl.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.scale})`;
+                const svg = scalableEl.querySelector('svg');
+                if (svg) {
+                    let g = svg.querySelector('g.svg-panzoom-root');
+                    if (!g) {
+                        g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                        g.setAttribute('class', 'svg-panzoom-root');
+                        while (svg.firstChild) {
+                            g.appendChild(svg.firstChild);
+                        }
+                        svg.appendChild(g);
+                        svg.style.overflow = 'visible';
+                    }
+                    g.setAttribute('transform', `translate(${state.panX}, ${state.panY}) scale(${state.scale})`);
+                    scalableEl.style.transform = 'none';
+                } else {
+                    scalableEl.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.scale})`;
+                }
             }
 
             // Pointer Down (Mouse, Touch, Pen drag)
@@ -1491,7 +1509,6 @@ The **S-SPARC AI™ Initiative** was conceptualized and developed by the **ITMCU
                 state.startX = e.clientX - state.panX;
                 state.startY = e.clientY - state.panY;
                 viewportEl.classList.add('is-dragging');
-                scalableEl.style.transition = 'none';
                 try {
                     viewportEl.setPointerCapture(e.pointerId);
                 } catch (err) {}
@@ -1537,7 +1554,6 @@ The **S-SPARC AI™ Initiative** was conceptualized and developed by the **ITMCU
                     state.panX = mouseX - ratio * (mouseX - state.panX);
                     state.panY = mouseY - ratio * (mouseY - state.panY);
                     state.scale = newScale;
-                    scalableEl.style.transition = 'transform 0.12s ease-out';
                     applyTransform();
                 }
             }, { passive: false });
@@ -1551,7 +1567,22 @@ The **S-SPARC AI™ Initiative** was conceptualized and developed by the **ITMCU
             state.scale = Math.max(0.25, Math.min(4.5, state.scale * factor));
             const el = document.getElementById(id);
             if (el) {
-                el.style.transition = 'transform 0.2s cubic-bezier(0.2, 0, 0, 1)';
+                const svg = el.querySelector('svg');
+                if (svg) {
+                    let g = svg.querySelector('g.svg-panzoom-root');
+                    if (!g) {
+                        g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                        g.setAttribute('class', 'svg-panzoom-root');
+                        while (svg.firstChild) {
+                            g.appendChild(svg.firstChild);
+                        }
+                        svg.appendChild(g);
+                        svg.style.overflow = 'visible';
+                    }
+                    g.setAttribute('transform', `translate(${state.panX}, ${state.panY}) scale(${state.scale})`);
+                    el.style.transform = 'none';
+                    return;
+                }
                 el.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.scale})`;
             }
         };
@@ -1564,7 +1595,15 @@ The **S-SPARC AI™ Initiative** was conceptualized and developed by the **ITMCU
             }
             const el = document.getElementById(id);
             if (el) {
-                el.style.transition = 'transform 0.25s cubic-bezier(0.2, 0, 0, 1)';
+                const svg = el.querySelector('svg');
+                if (svg) {
+                    let g = svg.querySelector('g.svg-panzoom-root');
+                    if (g) {
+                        g.setAttribute('transform', 'translate(0, 0) scale(1)');
+                        el.style.transform = 'none';
+                        return;
+                    }
+                }
                 el.style.transform = 'translate(0px, 0px) scale(1)';
             }
         };
