@@ -41,6 +41,18 @@ if (!empty($_GET['path'])) {
 
 $path = '/' . ltrim($path, '/');
 
+// Intercept Wrapped endpoints to guarantee 100% accurate assessment metadata from live DB
+if (preg_match('#^/api/(?:domain/)?assessments/([0-9a-zA-Z_\-]+)/wrapped#i', $path, $m)) {
+    require_once __DIR__ . '/../_config.php';
+    require_once __DIR__ . '/_wrapped_service.php';
+    $assessmentId = $m[1];
+    $userId = $_GET['user_id'] ?? ($_SESSION['user_id'] ?? 'student_demo');
+    $wrappedResult = ssparc_get_wrapped_for_assessment($db, $userId, $assessmentId);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode($wrappedResult, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 // Build query string if any (excluding 'path' or 'endpoint' param)
 $queryParams = $_GET;
 unset($queryParams['path'], $queryParams['endpoint']);
