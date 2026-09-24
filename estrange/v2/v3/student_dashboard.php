@@ -322,15 +322,16 @@ select.select2-hidden-accessible {
 						</thead>
 						<tbody class="divide-y divide-slate-100">
 							<?php
-								$sql = "SELECT assessment.assessment_id, assessment.public_assessment_id, assessment.name AS assessment_name, assessment.description, assessment.submission_close_time,
+								$sql = "SELECT assessment.assessment_id, assessment.public_assessment_id, assessment.name AS assessment_name, assessment.description, assessment.submission_close_time, assessment.allow_late_submission,
 									 assessment.course_id, course.name AS course_name
-									 FROM assessment INNER JOIN enrollment ON enrollment.course_id = assessment.course_id
-									 INNER JOIN course ON course.course_id = enrollment.course_id
-									 WHERE enrollment.student_id = '".$_SESSION['user_id']."'
-									 AND (assessment.submission_close_time > CURRENT_TIMESTAMP OR assessment.allow_late_submission = '1')
-									 AND assessment.submission_open_time < CURRENT_TIMESTAMP
-									 AND course.is_active = 1 
-									 ORDER BY assessment.submission_close_time ASC";
+									 FROM assessment 
+									 INNER JOIN course ON course.course_id = assessment.course_id
+									 LEFT JOIN enrollment ON enrollment.course_id = assessment.course_id AND enrollment.student_id = '".$_SESSION['user_id']."'
+									 LEFT JOIN game_student_course ON game_student_course.course_id = assessment.course_id AND game_student_course.student_id = '".$_SESSION['user_id']."'
+									 WHERE (enrollment.student_id IS NOT NULL OR game_student_course.student_id IS NOT NULL)
+									   AND assessment.submission_open_time < CURRENT_TIMESTAMP
+									   AND course.is_active = 1 
+									 ORDER BY assessment.submission_close_time DESC";
 								$result = mysqli_query($db,$sql);
 
 								if ($result && $result->num_rows > 0) {
@@ -344,6 +345,8 @@ select.select2-hidden-accessible {
 										$descClean = preg_replace('/<p>\s*<br>\s*<\/p>/', '', $descClean);
 										$descCleanEscaped = addslashes(htmlspecialchars(strip_tags($descClean)));
 										$titleEscaped = addslashes(htmlspecialchars($row['assessment_name']));
+
+										$isClosed = (strtotime($row['submission_close_time']) < time());
 
 										echo '<tr class="hover:bg-slate-50/80 transition-colors">';
 										echo '<td class="py-3.5 px-3 font-bold text-slate-900">'.htmlspecialchars($row['assessment_name']).'</td>';
@@ -370,10 +373,12 @@ select.select2-hidden-accessible {
 													<button type="submit" class="px-2.5 py-1 text-[11px] font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition" title="Download submitted file">Download</button>
 												  </form>';
 
-											// Resubmit
-											echo '<form class="inline" action="student_assessment_submit.php?id='.htmlspecialchars($row['public_assessment_id']).'" method="post">
-													<button type="submit" class="px-2.5 py-1 text-[11px] font-semibold bg-[#00A0A5] text-white hover:bg-slate-800 rounded-lg transition shadow-2xs">Resubmit</button>
-												  </form>';
+											// Resubmit (if open or late allowed)
+											if (!$isClosed || (isset($row['allow_late_submission']) && $row['allow_late_submission'] == '1')) {
+												echo '<form class="inline" action="student_assessment_submit.php?id='.htmlspecialchars($row['public_assessment_id']).'" method="post">
+														<button type="submit" class="px-2.5 py-1 text-[11px] font-semibold bg-[#00A0A5] text-white hover:bg-slate-800 rounded-lg transition shadow-2xs">Resubmit</button>
+													  </form>';
+											}
 
 											// Suspicion & Clarity metrics check
 											ensure_submission_metrics($db, $rowt['sub_id']);
@@ -386,8 +391,6 @@ select.select2-hidden-accessible {
 											$resQual = mysqli_query($db, $sqlQual);
 											$hasQual = ($resQual && $resQual->num_rows > 0);
 											$rowQual = $hasQual ? $resQual->fetch_assoc() : null;
-
-											$isClosed = (strtotime($row['submission_close_time']) < time());
 
 											// Clean Dropdown for Analysis & Reports
 											if ($hasSusp || $hasQual || $isClosed) {
@@ -441,11 +444,23 @@ select.select2-hidden-accessible {
 										} else {
 											echo '<td class="py-3.5 px-3 text-center"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">Pending</span></td>';
 											echo '<td class="py-3.5 px-3 text-right">
-													<a href="student_assessment_submit.php?id='.htmlspecialchars($row['public_assessment_id']).'" class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold bg-[#00A0A5] text-white hover:bg-slate-800 rounded-lg transition shadow-2xs">
+													<div class="flex items-center justify-end gap-1.5">';
+											
+											if (!$isClosed || (isset($row['allow_late_submission']) && $row['allow_late_submission'] == '1')) {
+												echo '<a href="student_assessment_submit.php?id='.htmlspecialchars($row['public_assessment_id']).'" class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold bg-[#00A0A5] text-white hover:bg-slate-800 rounded-lg transition shadow-2xs">
 														<span>Submit Solution</span>
 														<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-													</a>
-												  </td>';
+													  </a>';
+											}
+
+											if ($isClosed) {
+												echo '<a href="ssparc/student_prompt_wrapped.php?assessment_id='.htmlspecialchars($row['assessment_id']).'" class="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 rounded-lg transition shadow-2xs">
+														<span class="w-2 h-2 rounded-full bg-purple-500"></span>
+														<span>Prompt Wrapped</span>
+													  </a>';
+											}
+
+											echo '</div></td>';
 										}
 
 										echo '</tr>';

@@ -436,6 +436,7 @@ if (!function_exists('setHeaderStudent')) {
 
         $navItems = [
             ['key' => 'dashboard', 'label' => 'Home', 'url' => 'student_dashboard.php'],
+            ['key' => 'submissions', 'label' => 'Submissions', 'url' => 'student_submission.php'],
             ['key' => 'enroll', 'label' => 'Enroll Course', 'url' => 'student_enroll.php'],
             ['key' => 'enrollment', 'label' => 'Detail Course', 'url' => 'student_enrollment.php'],
             ['key' => 'game', 'label' => 'Game', 'url' => 'student_game.php'],

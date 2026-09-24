@@ -40,6 +40,7 @@ function renderSSOHeader($activePage = 'chat', $title = 'Chat Assistant') {
         <nav class="flex shrink-0 items-center gap-1.5 text-xs font-medium">
           <a class="inline-flex h-8 items-center rounded-lg px-3 transition <?= ($activePage === 'home') ? 'bg-[#00A0A5] text-white font-semibold shadow-xs' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>" href="index.php">Home</a>
           <?php if ($sso_role === 'student'): ?>
+            <a class="inline-flex h-8 items-center rounded-lg px-3 transition text-slate-600 hover:bg-slate-100 hover:text-slate-900" href="../student_submission.php">Submissions</a>
             <a class="inline-flex h-8 items-center rounded-lg px-3 transition <?= ($activePage === 'courses') ? 'bg-[#00A0A5] text-white font-semibold shadow-xs' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>" href="courses.php">Courses</a>
             <?php if ($activePage !== 'courses' && !empty($_SESSION['assessment_id']) && !empty($_SESSION['current_course_id'])): ?>
               <a class="inline-flex h-8 items-center rounded-lg px-3 transition <?= ($activePage === 'chat') ? 'bg-[#00A0A5] text-white font-semibold shadow-xs' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>" href="chat.php">Chat Assistant</a>
