@@ -53,6 +53,17 @@ if (preg_match('#^/api/(?:domain/)?assessments/([0-9a-zA-Z_\-]+)/wrapped#i', $pa
     exit;
 }
 
+// Intercept Educational Student Profile to sync with live prompt telemetry
+if (preg_match('#^/api/educational/student-profile(?:/([0-9a-zA-Z_\-]+))?#i', $path, $m)) {
+    require_once __DIR__ . '/../_config.php';
+    require_once __DIR__ . '/_wrapped_service.php';
+    $userId = !empty($m[1]) ? $m[1] : ($_GET['user_id'] ?? ($_SESSION['user_id'] ?? 'student_demo'));
+    $profileResult = ssparc_get_student_aggregated_profile($db, $userId);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode($profileResult, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 // Build query string if any (excluding 'path' or 'endpoint' param)
 $queryParams = $_GET;
 unset($queryParams['path'], $queryParams['endpoint']);

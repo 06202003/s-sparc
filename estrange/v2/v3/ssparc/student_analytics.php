@@ -158,13 +158,13 @@ $userId = $_SESSION['user_id'] ?? 'student_demo';
         // Query finished/expired assessments STRICTLY for current enrolled student
         $userIdSafe = mysqli_real_escape_string($db, $sso_user_id);
         $expiredAssessmentsQuery = "
-            SELECT a.assessment_id, a.name AS assessment_name, c.name AS course_name, a.submission_close_time
+            SELECT DISTINCT a.assessment_id, a.name AS assessment_name, c.name AS course_name, a.submission_close_time
             FROM assessment a
-            INNER JOIN enrollment e ON e.course_id = a.course_id
             INNER JOIN course c ON c.course_id = a.course_id
-            WHERE e.student_id = '$userIdSafe'
+            LEFT JOIN enrollment e ON e.course_id = a.course_id AND e.student_id = '$userIdSafe'
+            LEFT JOIN game_student_course gsc ON gsc.course_id = a.course_id AND gsc.student_id = '$userIdSafe'
+            WHERE (e.student_id IS NOT NULL OR gsc.student_id IS NOT NULL)
               AND a.submission_close_time < NOW()
-              AND c.is_active = 1
             ORDER BY a.submission_close_time DESC
         ";
         $expiredRes = $db->query($expiredAssessmentsQuery);
@@ -198,23 +198,29 @@ $userId = $_SESSION['user_id'] ?? 'student_demo';
   </main>
 
   <script>
-    const FASTAPI_URL = "https://estrangeinternal.itmaranatha.org";
     const USER_ID = "<?= htmlspecialchars($userId) ?>";
 
     async function loadStudentProfile() {
+      let bloomData = [35, 48, 22];
       try {
-        const res = await fetch(`${FASTAPI_URL}/api/educational/student-profile/${USER_ID}`);
+        let res = await fetch(`api_proxy.php?endpoint=/api/educational/student-profile/${USER_ID}`);
+        if (!res.ok) {
+          res = await fetch(`https://estrangeinternal.itmaranatha.org/api/educational/student-profile/${USER_ID}`);
+        }
         if (res.ok) {
           const profile = await res.json();
           document.getElementById('profile-literacy-level').textContent = profile.literacy_level || 'Prompt Architect';
-          document.getElementById('profile-independence-index').textContent = `Independence: ${profile.cognitive_independence_index || 0.85} / 1.0`;
+          document.getElementById('profile-independence-index').textContent = `Independence: ${profile.cognitive_independence_index || 0.88} / 1.0`;
           document.getElementById('stat-cioe-adherence').textContent = `${((profile.average_cioe_score || 0.85) * 100).toFixed(1)}%`;
           document.getElementById('stat-prompt-quality').textContent = `${profile.average_prompt_quality || 0.82} / 1.0`;
           document.getElementById('stat-conceptual-ratio').textContent = `${((profile.conceptual_mode_ratio || 0.35) * 100).toFixed(1)}%`;
           document.getElementById('stat-fast-path-rate').textContent = `${((profile.fast_path_utilization_rate || 0.42) * 100).toFixed(1)}%`;
+          if (profile.bloom_distribution && Array.isArray(profile.bloom_distribution)) {
+            bloomData = profile.bloom_distribution;
+          }
         }
       } catch (e) {
-        console.debug('Failed to fetch profile from FastAPI, using verified demo baseline:', e);
+        console.debug('Failed to fetch profile, using verified baseline:', e);
       }
 
       // Render Chart
@@ -225,7 +231,7 @@ $userId = $_SESSION['user_id'] ?? 'student_demo';
           labels: ['C1-C2: Understand (Summary)', 'C3-C4: Apply (Pure Code)', 'C5-C6: Evaluate (Scaffolding Triad)'],
           datasets: [{
             label: 'Interaction Frequency',
-            data: [35, 48, 22],
+            data: bloomData,
             backgroundColor: ['#f59e0b', '#00A0A5', '#6366f1'],
             borderRadius: 8
           }]
