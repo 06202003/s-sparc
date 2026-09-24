@@ -579,9 +579,8 @@
         .diagram-viewport {
             position: relative;
             width: 100%;
-            height: 480px;
-            min-height: 380px;
-            overflow: hidden !important; /* NO NATIVE SCROLLBARS! */
+            min-height: 320px;
+            overflow: hidden !important; /* Clean containment, no scrollbars */
             cursor: grab;
             user-select: none;
             -webkit-user-select: none;
@@ -594,6 +593,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 28px 18px;
         }
 
         .diagram-viewport.is-dragging {
@@ -607,16 +607,14 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            max-width: none;
+            width: 100%;
         }
 
         .diagram-scalable svg {
             display: block;
             margin: 0 auto;
-            width: auto !important;
-            max-width: none !important;
+            max-width: 100% !important;
             height: auto !important;
-            max-height: none !important;
             overflow: visible !important;
         }
 
@@ -1418,23 +1416,23 @@ The **S-SPARC AI™ Initiative** was conceptualized and developed by the **ITMCU
             theme: 'base',
             securityLevel: 'loose',
             fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-            fontSize: 11,
+            fontSize: 13,
             flowchart: {
                 htmlLabels: true,
                 useMaxWidth: true,
                 curve: 'basis',
-                padding: 12,
-                nodeSpacing: 25,
-                rankSpacing: 28
+                padding: 16,
+                nodeSpacing: 32,
+                rankSpacing: 36
             },
             sequence: {
                 useMaxWidth: true,
-                diagramMarginX: 16,
-                diagramMarginY: 12,
-                actorMargin: 30,
-                boxMargin: 8,
-                noteMargin: 10,
-                messageMargin: 20
+                diagramMarginX: 20,
+                diagramMarginY: 16,
+                actorMargin: 36,
+                boxMargin: 10,
+                noteMargin: 12,
+                messageMargin: 24
             },
             themeVariables: {
                 darkMode: true,
