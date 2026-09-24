@@ -391,36 +391,36 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
     function renderSlide4(container) {
       const cr = wrappedData.critic_room;
       container.innerHTML = `
-        <div class="space-y-4 my-auto slide-content text-left">
+        <div class="space-y-3.5 my-auto slide-content text-left">
           <div class="text-center space-y-1">
             <span class="text-xs font-semibold text-amber-400 uppercase tracking-wider">Evaluation Room</span>
             <h2 class="text-xl font-bold text-white">AI Critic Feedback</h2>
           </div>
 
           <!-- Best Prompt -->
-          <div class="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 space-y-1.5">
+          <div class="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 space-y-1.5">
             <div class="flex items-center justify-between text-xs">
               <span class="font-bold text-emerald-400">Most Effective Prompt</span>
-              <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-mono">${cr.best_prompt.score}% Score</span>
+              <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-mono font-semibold">${cr.best_prompt.score}% Score</span>
             </div>
-            <p class="text-xs text-slate-200 line-clamp-2 font-mono-code bg-black/30 p-2 rounded-lg">
+            <div class="text-xs text-slate-200 font-mono-code bg-black/40 p-2.5 rounded-lg border border-white/5 break-words leading-relaxed">
               "${cr.best_prompt.text}"
-            </p>
-            <p class="text-[11px] text-emerald-300/90">${cr.best_prompt.why_stellar}</p>
+            </div>
+            <p class="text-[11px] text-emerald-300/90 leading-normal">${cr.best_prompt.why_stellar}</p>
           </div>
 
           <!-- Needs Polish Prompt -->
-          <div class="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 space-y-1.5">
+          <div class="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 space-y-1.5">
             <div class="flex items-center justify-between text-xs">
               <span class="font-bold text-rose-400">Improvement Recommendation</span>
-              <span class="text-[10px] bg-rose-500/20 text-rose-300 px-2 py-0.5 rounded-full font-mono">${cr.needs_polish_prompt.score}% Score</span>
+              <span class="text-[10px] bg-rose-500/20 text-rose-300 px-2 py-0.5 rounded-full font-mono font-semibold">${cr.needs_polish_prompt.score}% Score</span>
             </div>
             <p class="text-[11px] text-slate-300 leading-relaxed">
               ${cr.needs_polish_prompt.ai_critic_comment}
             </p>
-            <div class="p-2 rounded-lg bg-black/40 border border-white/5 space-y-1">
-              <span class="text-[10px] font-bold text-teal-300 block uppercase">Optimal C-I-O-E Format:</span>
-              <pre class="text-[10px] font-mono-code text-slate-200 whitespace-pre-wrap">${cr.needs_polish_prompt.suggested_rewrite}</pre>
+            <div class="p-2.5 rounded-lg bg-black/40 border border-white/5 space-y-1">
+              <span class="text-[10px] font-bold text-teal-300 block uppercase tracking-wider">Optimal C-I-O-E Format:</span>
+              <div class="text-[11px] font-mono-code text-slate-200 whitespace-pre-wrap break-words leading-relaxed">${cr.needs_polish_prompt.suggested_rewrite}</div>
             </div>
           </div>
         </div>
