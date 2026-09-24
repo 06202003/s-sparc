@@ -279,6 +279,12 @@ select.select2-hidden-accessible {
 												  </form>';
 										}
 
+										// Prompt Wrapped (unlocked when assessment deadline has passed)
+										$isClosed = (strtotime($row['submission_close_time']) < time());
+										if ($isClosed) {
+											echo '<a href="ssparc/student_prompt_wrapped.php?assessment_id='.htmlspecialchars($row['assessment_id']).'" class="px-2.5 py-1 text-[11px] font-semibold bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 rounded-lg transition">Prompt Wrapped</a>';
+										}
+
 										echo '</div></td>';
 										echo '</tr>';
 									}

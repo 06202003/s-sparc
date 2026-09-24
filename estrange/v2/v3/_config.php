@@ -371,19 +371,16 @@ if (!function_exists('setHeaderLecturer')) {
         $userName = htmlspecialchars($_SESSION['name'] ?? 'Lecturer');
         $userRole = htmlspecialchars(ucfirst($_SESSION['role'] ?? 'lecturer'));
         $self = htmlentities($_SERVER['PHP_SELF']);
-        $isSsparc = (strpos($_SERVER['PHP_SELF'], '/ssparc/') !== false);
-        $logoSrc = $isSsparc ? '../strange_html_layout_additional_files/logo.png' : 'strange_html_layout_additional_files/logo.png';
-        $rootPrefix = $isSsparc ? '../' : '';
-        $ssparcPrefix = $isSsparc ? '' : 'ssparc/';
+        $logoSrc = (strpos($_SERVER['PHP_SELF'], '/ssparc/') !== false) ? '../strange_html_layout_additional_files/logo.png' : 'strange_html_layout_additional_files/logo.png';
 
         $navItems = [
-            ['key' => 'courses', 'label' => 'Detail Course', 'url' => $rootPrefix . 'lecturer_dashboard.php'],
-            ['key' => 'peer_review', 'label' => 'Peer Review', 'url' => $rootPrefix . 'lecturer_peer_review.php'],
-            ['key' => 'colecturer courses', 'label' => 'Co-Lecturing', 'url' => $rootPrefix . 'colecturer_courses.php'],
-            ['key' => 'research_analytics', 'label' => 'Research Telemetry', 'url' => $ssparcPrefix . 'lecturer_analytics.php'],
-            ['key' => 'ssparc_stats', 'label' => 'S-SPARC Analytics', 'url' => $ssparcPrefix . 'environmental_impact.php'],
-            ['key' => 'update personal information', 'label' => 'Account', 'url' => $rootPrefix . 'user_info_self_update.php'],
-            ['key' => 'about', 'label' => 'About', 'url' => $rootPrefix . 'user_about.php'],
+            ['key' => 'courses', 'label' => 'Detail Course', 'url' => 'lecturer_dashboard.php'],
+            ['key' => 'peer_review', 'label' => 'Peer Review', 'url' => 'lecturer_peer_review.php'],
+            ['key' => 'colecturer courses', 'label' => 'Co-Lecturing', 'url' => 'colecturer_courses.php'],
+            ['key' => 'research_analytics', 'label' => 'Research Telemetry', 'url' => 'ssparc/lecturer_analytics.php'],
+            ['key' => 'ssparc_stats', 'label' => 'S-SPARC Analytics', 'url' => 'ssparc/environmental_impact.php'],
+            ['key' => 'update personal information', 'label' => 'Account', 'url' => 'user_info_self_update.php'],
+            ['key' => 'about', 'label' => 'About', 'url' => 'user_about.php'],
         ];
 
         echo '
@@ -435,22 +432,19 @@ if (!function_exists('setHeaderStudent')) {
         $userName = htmlspecialchars($_SESSION['name'] ?? 'Student');
         $userRole = htmlspecialchars(ucfirst($_SESSION['role'] ?? 'student'));
         $self = htmlentities($_SERVER['PHP_SELF']);
-        $isSsparc = (strpos($_SERVER['PHP_SELF'], '/ssparc/') !== false);
-        $logoSrc = $isSsparc ? '../strange_html_layout_additional_files/logo.png' : 'strange_html_layout_additional_files/logo.png';
-        $rootPrefix = $isSsparc ? '../' : '';
-        $ssparcPrefix = $isSsparc ? '' : 'ssparc/';
+        $logoSrc = (strpos($_SERVER['PHP_SELF'], '/ssparc/') !== false) ? '../strange_html_layout_additional_files/logo.png' : 'strange_html_layout_additional_files/logo.png';
 
         $navItems = [
-            ['key' => 'dashboard', 'label' => 'Home', 'url' => $rootPrefix . 'student_dashboard.php'],
-            ['key' => 'enroll', 'label' => 'Enroll Course', 'url' => $rootPrefix . 'student_enroll.php'],
-            ['key' => 'enrollment', 'label' => 'Detail Course', 'url' => $rootPrefix . 'student_enrollment.php'],
-            ['key' => 'game', 'label' => 'Game', 'url' => $rootPrefix . 'student_game.php'],
-            ['key' => 'peer_review', 'label' => 'Peer Review', 'url' => $rootPrefix . 'student_peer_review.php'],
-            ['key' => 'colecturer_courses', 'label' => 'Co-Lecturing', 'url' => $rootPrefix . 'colecturer_courses.php'],
-            ['key' => 'courses', 'label' => 'S-SPARC AI Chat', 'url' => $ssparcPrefix . 'courses.php'],
-            ['key' => 'wrapped', 'label' => 'Prompt Wrapped', 'url' => $ssparcPrefix . 'student_analytics.php'],
-            ['key' => 'update personal information', 'label' => 'Account', 'url' => $rootPrefix . 'user_info_self_update.php'],
-            ['key' => 'about', 'label' => 'About', 'url' => $rootPrefix . 'user_about.php'],
+            ['key' => 'dashboard', 'label' => 'Home', 'url' => 'student_dashboard.php'],
+            ['key' => 'enroll', 'label' => 'Enroll Course', 'url' => 'student_enroll.php'],
+            ['key' => 'enrollment', 'label' => 'Detail Course', 'url' => 'student_enrollment.php'],
+            ['key' => 'game', 'label' => 'Game', 'url' => 'student_game.php'],
+            ['key' => 'peer_review', 'label' => 'Peer Review', 'url' => 'student_peer_review.php'],
+            ['key' => 'colecturer_courses', 'label' => 'Co-Lecturing', 'url' => 'colecturer_courses.php'],
+            ['key' => 'courses', 'label' => 'S-SPARC AI Chat', 'url' => 'ssparc/courses.php'],
+            ['key' => 'wrapped', 'label' => 'Prompt Wrapped', 'url' => 'ssparc/student_analytics.php'],
+            ['key' => 'update personal information', 'label' => 'Account', 'url' => 'user_info_self_update.php'],
+            ['key' => 'about', 'label' => 'About', 'url' => 'user_about.php'],
         ];
 
         echo '
@@ -502,20 +496,17 @@ if (!function_exists('setHeaderAdmin')) {
         $userName = htmlspecialchars($_SESSION['name'] ?? 'Administrator');
         $userRole = htmlspecialchars(ucfirst($_SESSION['role'] ?? 'admin'));
         $self = htmlentities($_SERVER['PHP_SELF']);
-        $isSsparc = (strpos($_SERVER['PHP_SELF'], '/ssparc/') !== false);
-        $logoSrc = $isSsparc ? '../strange_html_layout_additional_files/logo.png' : 'strange_html_layout_additional_files/logo.png';
-        $rootPrefix = $isSsparc ? '../' : '';
-        $ssparcPrefix = $isSsparc ? '' : 'ssparc/';
+        $logoSrc = (strpos($_SERVER['PHP_SELF'], '/ssparc/') !== false) ? '../strange_html_layout_additional_files/logo.png' : 'strange_html_layout_additional_files/logo.png';
 
         $navItems = [
-            ['key' => 'courses', 'label' => 'Courses', 'url' => $rootPrefix . 'admin_dashboard.php'],
-            ['key' => 'users', 'label' => 'User Management', 'url' => $rootPrefix . 'admin_user.php'],
-            ['key' => 'peer_review', 'label' => 'Peer Review', 'url' => $rootPrefix . 'admin_peer_review.php'],
-            ['key' => 'ai_config', 'label' => 'AI Configuration', 'url' => $rootPrefix . 'admin_ssparc_config.php'],
-            ['key' => 'research_analytics', 'label' => 'Research Telemetry', 'url' => $ssparcPrefix . 'lecturer_analytics.php'],
-            ['key' => 'ssparc_stats', 'label' => 'Platform Sustainability', 'url' => $ssparcPrefix . 'environmental_impact.php'],
-            ['key' => 'update personal information', 'label' => 'Account', 'url' => $rootPrefix . 'user_info_self_update.php'],
-            ['key' => 'about', 'label' => 'About', 'url' => $rootPrefix . 'user_about.php'],
+            ['key' => 'courses', 'label' => 'Courses', 'url' => 'admin_dashboard.php'],
+            ['key' => 'users', 'label' => 'User Management', 'url' => 'admin_user.php'],
+            ['key' => 'peer_review', 'label' => 'Peer Review', 'url' => 'admin_peer_review.php'],
+            ['key' => 'ai_config', 'label' => 'AI Configuration', 'url' => 'admin_ssparc_config.php'],
+            ['key' => 'research_analytics', 'label' => 'Research Telemetry', 'url' => 'ssparc/lecturer_analytics.php'],
+            ['key' => 'ssparc_stats', 'label' => 'Platform Sustainability', 'url' => 'ssparc/environmental_impact.php'],
+            ['key' => 'update personal information', 'label' => 'Account', 'url' => 'user_info_self_update.php'],
+            ['key' => 'about', 'label' => 'About', 'url' => 'user_about.php'],
         ];
 
         echo '

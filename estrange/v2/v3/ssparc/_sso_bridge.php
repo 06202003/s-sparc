@@ -43,14 +43,14 @@ function renderSSOHeader($activePage = 'chat', $title = 'Chat Assistant') {
             <a class="inline-flex h-8 items-center rounded-lg px-3 transition <?= ($activePage === 'courses') ? 'bg-[#00A0A5] text-white font-semibold shadow-xs' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>" href="courses.php">Courses</a>
             <?php if ($activePage !== 'courses' && !empty($_SESSION['assessment_id']) && !empty($_SESSION['current_course_id'])): ?>
               <a class="inline-flex h-8 items-center rounded-lg px-3 transition <?= ($activePage === 'chat') ? 'bg-[#00A0A5] text-white font-semibold shadow-xs' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>" href="chat.php">Chat Assistant</a>
-              <a class="inline-flex h-8 items-center rounded-lg px-3 transition <?= ($activePage === 'environmental_impact') ? 'bg-[#00A0A5] text-white font-semibold shadow-xs' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>" href="environmental_impact.php">Eco-Metrics</a>
             <?php endif; ?>
-            <a class="inline-flex h-8 items-center rounded-lg px-3 transition <?= ($activePage === 'analytics' || $activePage === 'wrapped') ? 'bg-[#00A0A5] text-white font-semibold shadow-xs' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>" href="student_analytics.php">Prompt Wrapped</a>
+            <a class="inline-flex h-8 items-center rounded-lg px-3 transition <?= ($activePage === 'student_analytics' || $activePage === 'wrapped') ? 'bg-[#00A0A5] text-white font-semibold shadow-xs' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>" href="student_analytics.php">Prompt Wrapped</a>
+            <a class="inline-flex h-8 items-center rounded-lg px-3 transition <?= ($activePage === 'environmental_impact') ? 'bg-[#00A0A5] text-white font-semibold shadow-xs' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>" href="environmental_impact.php">Eco-Metrics</a>
           <?php else: ?>
-            <a class="inline-flex h-8 items-center rounded-lg px-3 transition <?= ($activePage === 'research_analytics') ? 'bg-[#00A0A5] text-white font-semibold shadow-xs' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>" href="lecturer_analytics.php">Research Analytics</a>
             <?php if ($sso_role === 'admin'): ?>
               <a class="inline-flex h-8 items-center rounded-lg px-3 transition text-slate-600 hover:bg-slate-100 hover:text-slate-900" href="../admin_ssparc_config.php">AI Config</a>
             <?php endif; ?>
+            <a class="inline-flex h-8 items-center rounded-lg px-3 transition <?= ($activePage === 'lecturer_analytics') ? 'bg-[#00A0A5] text-white font-semibold shadow-xs' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>" href="lecturer_analytics.php">Research Telemetry</a>
             <a class="inline-flex h-8 items-center rounded-lg px-3 transition <?= ($activePage === 'environmental_impact') ? 'bg-[#00A0A5] text-white font-semibold shadow-xs' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>" href="environmental_impact.php">Eco-Metrics</a>
           <?php endif; ?>
           <a class="inline-flex h-8 items-center rounded-lg border border-slate-300 px-3 text-slate-700 hover:border-slate-400 hover:bg-slate-50 transition shadow-xs" href="<?= $backLink ?>">Back to E-STRANGE</a>
