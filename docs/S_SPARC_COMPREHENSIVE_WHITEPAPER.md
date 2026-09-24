@@ -341,56 +341,70 @@ flowchart LR
 To support high-concurrency educational workloads with sub-second responsiveness, zero data leakage, and rigorous pedagogical guardrails, S-SPARC is engineered as an **asynchronous microservice ecosystem** that bridges institutional Learning Management Systems (LMS) with multi-tier generative AI providers.
 
 ```mermaid
-graph TB
-    subgraph Client_Layer ["Layer 1: Client & LMS Presentation Tier"]
-        UI["Student Inquiry Workbench & Prompt Wrapped Player<br/><i>(PHP 8.2 / Glassmorphism Vanilla CSS / KaTeX / JS)</i>"]
-        Fac["Faculty Analytics & Research Telemetry Hub<br/><i>(Cohort Tracking, Bloom's Radar, CSV Exporter)</i>"]
-        LMS["E-STRANGE Institutional LMS Core<br/><i>(Course Management, Assessment Deadline Engine, Submissions)</i>"]
+flowchart TD
+    classDef client fill:#13233a,stroke:#38bdf8,stroke-width:2px,color:#f8fafc;
+    classDef gateway fill:#2a1b4e,stroke:#c084fc,stroke-width:2px,color:#f8fafc;
+    classDef microservice fill:#064e3b,stroke:#34d399,stroke-width:2px,color:#f8fafc;
+    classDef provider fill:#451a03,stroke:#fbbf24,stroke-width:2px,color:#f8fafc;
+    classDef data fill:#1e293b,stroke:#94a3b8,stroke-width:2px,color:#f8fafc;
+    classDef output fill:#1e3a8a,stroke:#60a5fa,stroke-width:2px,color:#f8fafc;
+
+    subgraph L1 ["1. Client & LMS Presentation Tier"]
+        direction LR
+        UI["<b>Student Workbench</b><br/>C-I-O-E & Prompt Wrapped"]:::client
+        FAC["<b>Faculty Analytics Hub</b><br/>Cohort Radar & Telemetry"]:::client
     end
 
-    subgraph Gateway_Layer ["Layer 2: Security, SSO & Interoperability Gateway"]
-        SSO["SSO Bridge & Session Synchronizer<br/><i>(HMAC-SHA256 Token Auth / State Validation)</i>"]
-        Asset["Dynamic Asset Rewriter & CDN Proxy<br/><i>(Zero-404 Asset Normalizer & Script Injector)</i>"]
-        Auth["Role-Based Access Control (RBAC)<br/><i>(Student Learner vs Teaching Assistant vs Instructor)</i>"]
+    subgraph L2 ["2. Security & Gateway Tier"]
+        direction LR
+        SSO["<b>SSO & HMAC Guard</b><br/>Signed Session Validation"]:::gateway
+        PROXY["<b>Asset Rewriter</b><br/>Dynamic Path & RBAC Proxy"]:::gateway
     end
 
-    subgraph Service_Layer ["Layer 3: S-SPARC Asynchronous Microservices (FastAPI Python 3.12)"]
-        Linter["C-I-O-E Protocol & Shannon Entropy Engine<br/><i>(H(X) Information Density & Socratic Scaffolding Validator)</i>"]
-        Memory["Hybrid Semantic Memory Engine<br/><i>(FAISS Dense Vector Cache + BM25Okapi Sparse Retrieval & RRF)</i>"]
-        Router["Dynamic Multi-Tier Router & Circuit Breaker<br/><i>(Exponential Backoff, HTTP 429 Failover, Provider Orchestration)</i>"]
-        Green["Thermodynamic Carbon & Water Accounting Engine<br/><i>(Real-Time PUE 1.12 & Grid Carbon Intensity Computation)</i>"]
+    subgraph L3 ["3. S-SPARC Microservice Engine (FastAPI Python 3.12)"]
+        direction TB
+        LINT["<b>Shannon Entropy & C-I-O-E Linter</b><br/>Sub-10ms Linguistic & Quality Scoring"]:::microservice
+        CACHE{"<b>Hybrid Semantic Memory</b><br/>FAISS Dense + BM25 RRF"}:::microservice
+        ROUTER["<b>Dynamic Circuit Breaker & Fallback Router</b><br/>Multi-Provider Health & Quota Dispatcher"]:::microservice
     end
 
-    subgraph Model_Execution_Layer ["Layer 4: Multi-Tier Inference Execution Providers"]
-        T1["Tier 1: Free High-Speed Cloud LPUs / APIs<br/><i>(Groq LPU / Cerebras / Gemini 2.5 Flash Lite — Latency: ~1.2s - 1.8s)</i>"]
-        T2["Tier 2: BYOK & Enterprise Pooled Key Orchestrator<br/><i>(OpenAI GPT-4o / Claude 3.5 Sonnet / Gemini Pro — Latency: ~1.8s - 2.5s)</i>"]
-        T3["Tier 3: On-Premise Air-Gapped Local LLM Runtime<br/><i>(Ollama Qwen2.5-Coder 14B / DeepSeek — Latency: ~5.5s - 8.2s — 100% Sovereignty)</i>"]
+    subgraph L4 ["4. Multi-Tier Model Inference Providers"]
+        direction LR
+        T1["<b>Tier 1: Cloud LPUs</b><br/>Groq / Cerebras / Gemini"]:::provider
+        T2["<b>Tier 2: BYOK Pool</b><br/>Enterprise Key Pool"]:::provider
+        T3["<b>Tier 3: Local Sovereign Host</b><br/>Ollama Qwen2.5 (100% Offline)"]:::provider
     end
 
-    subgraph Database_Layer ["Layer 5: Unified Relational & Vector Persistence"]
-        DB_SQL[("E-STRANGE MySQL Platform<br/><i>assessments, courses, enrollments, submissions, prompt_logs</i>")]
-        DB_VEC[("FAISS Vector Index Store<br/><i>384-d Dense Embeddings + BM25 Inverted Index</i>")]
+    subgraph L5 ["5. Unified Storage & Environmental Accounting"]
+        direction LR
+        ECO["<b>Thermodynamic Engine</b><br/>Energy Wh, CO2e & Water mL"]:::data
+        DB_SQL[("<b>E-STRANGE DB</b><br/>MySQL Records")]:::data
+        DB_VEC[("<b>Vector Index</b><br/>384-d Store")]:::data
     end
 
-    UI <--> SSO
-    Fac <--> SSO
-    LMS <--> SSO
-    SSO <--> Auth
-    SSO <--> Asset
-    Auth <--> Linter
-    Linter --> Memory
-    Memory <--> DB_VEC
-    Memory -- "Cache Miss (Similarity < 0.88)" --> Router
-    Router --> T1
-    Router --> T2
-    Router --> T3
-    T1 --> Green
-    T2 --> Green
-    T3 --> Green
-    Green --> UI
-    Green -. "Log Telemetry" .-> DB_SQL
-    LMS <--> DB_SQL
-    Fac <--> DB_SQL
+    OUT["<b>Delivered Response</b><br/>Scaffolded Socratic Hint + Green Environmental Receipt"]:::output
+
+    %% Clean Pipeline Flow
+    UI --> SSO
+    FAC --> SSO
+    SSO --> PROXY
+    PROXY --> LINT
+    LINT --> CACHE
+
+    CACHE <--> DB_VEC
+    CACHE -- "Cache Hit (Similarity >= 0.88)<br/>[ <45ms | 0 Tokens | 0 Wh ]" --> ECO
+    CACHE -- "Cache Miss (Similarity < 0.88)" --> ROUTER
+
+    ROUTER --> T1
+    ROUTER --> T2
+    ROUTER --> T3
+
+    T1 --> ECO
+    T2 --> ECO
+    T3 --> ECO
+
+    ECO --> DB_SQL
+    ECO --> OUT
 ```
 
 ---

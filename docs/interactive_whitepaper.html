@@ -373,7 +373,7 @@
         #main {
             margin-left: 330px;
             flex: 1;
-            max-width: 1020px;
+            max-width: 1040px;
             padding: 40px 52px;
         }
 
@@ -488,15 +488,15 @@
             font-size: 0.85em;
         }
 
-        /* Ultra-Clean Compact Diagram Cards */
+        /* Ultra-Clean Modern Diagram Cards */
         .diagram-card {
             background-color: var(--bg-secondary);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
-            margin: 16px auto;
-            max-width: 680px;
+            border-radius: 10px;
+            margin: 22px auto;
+            max-width: 900px;
             overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
             position: relative;
         }
 
@@ -504,13 +504,13 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 4px 10px;
+            padding: 7px 12px;
             background-color: var(--bg-tertiary);
             border-bottom: 1px solid var(--border-color);
         }
 
         .diagram-label {
-            font-size: 0.65rem;
+            font-size: 0.68rem;
             font-weight: 700;
             letter-spacing: 0.06em;
             color: var(--text-muted);
@@ -519,16 +519,16 @@
 
         .diagram-controls {
             display: flex;
-            gap: 4px;
+            gap: 5px;
         }
 
         .zoom-btn {
             background-color: var(--bg-primary);
             border: 1px solid var(--border-color);
             color: var(--text-primary);
-            padding: 2px 6px;
+            padding: 2px 8px;
             border-radius: 4px;
-            font-size: 0.65rem;
+            font-size: 0.68rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
@@ -541,18 +541,19 @@
         }
 
         .diagram-stage {
-            padding: 12px 8px;
+            padding: 26px 20px;
             overflow-x: auto;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 60px;
+            min-height: 120px;
+            background: radial-gradient(circle at center, rgba(56, 189, 248, 0.03) 0%, transparent 70%);
         }
 
         .diagram-scalable {
             transform-origin: top center;
             transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);
-            width: auto;
+            width: 100%;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -561,31 +562,50 @@
         .diagram-scalable svg {
             display: block;
             margin: 0 auto;
+            width: auto !important;
             max-width: 100% !important;
-            max-height: 280px !important;
             height: auto !important;
             overflow: visible !important;
         }
 
         /* Mermaid Node & Label Text Styling to Prevent Box Overflows */
         .mermaid .node .label {
-            line-height: 1.25 !important;
-            padding: 4px 8px !important;
+            line-height: 1.4 !important;
+            padding: 8px 14px !important;
             text-align: center !important;
-            font-size: 0.72rem !important;
+            font-size: 0.82rem !important;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
         }
 
         .mermaid .node rect, .mermaid .node circle, .mermaid .node polygon {
-            stroke-width: 1.5px !important;
+            stroke-width: 2px !important;
+            rx: 6px !important;
+            ry: 6px !important;
         }
 
         .mermaid .edgeLabel {
             background-color: var(--bg-primary) !important;
-            padding: 2px 4px !important;
-            border-radius: 3px !important;
+            padding: 4px 8px !important;
+            border-radius: 5px !important;
             border: 1px solid var(--border-color) !important;
             color: var(--text-primary) !important;
-            font-size: 0.7rem !important;
+            font-size: 0.74rem !important;
+        }
+
+        .mermaid .cluster rect {
+            fill: rgba(15, 23, 42, 0.65) !important;
+            stroke: var(--border-color) !important;
+            stroke-width: 1.5px !important;
+            stroke-dasharray: 4 4 !important;
+            rx: 8px !important;
+            ry: 8px !important;
+        }
+
+        .mermaid .cluster text {
+            fill: var(--text-primary) !important;
+            font-weight: 700 !important;
+            font-size: 0.85rem !important;
+            font-family: 'Outfit', sans-serif !important;
         }
 
         /* Blockquotes / Callouts */
@@ -1000,56 +1020,70 @@ flowchart LR
 To support high-concurrency educational workloads with sub-second responsiveness, zero data leakage, and rigorous pedagogical guardrails, S-SPARC is engineered as an **asynchronous microservice ecosystem** that bridges institutional Learning Management Systems (LMS) with multi-tier generative AI providers.
 
 ```mermaid
-graph TB
-    subgraph Client_Layer ["Layer 1: Client & LMS Presentation Tier"]
-        UI["Student Inquiry Workbench & Prompt Wrapped Player<br/><i>(PHP 8.2 / Glassmorphism Vanilla CSS / KaTeX / JS)</i>"]
-        Fac["Faculty Analytics & Research Telemetry Hub<br/><i>(Cohort Tracking, Bloom's Radar, CSV Exporter)</i>"]
-        LMS["E-STRANGE Institutional LMS Core<br/><i>(Course Management, Assessment Deadline Engine, Submissions)</i>"]
+flowchart TD
+    classDef client fill:#13233a,stroke:#38bdf8,stroke-width:2px,color:#f8fafc;
+    classDef gateway fill:#2a1b4e,stroke:#c084fc,stroke-width:2px,color:#f8fafc;
+    classDef microservice fill:#064e3b,stroke:#34d399,stroke-width:2px,color:#f8fafc;
+    classDef provider fill:#451a03,stroke:#fbbf24,stroke-width:2px,color:#f8fafc;
+    classDef data fill:#1e293b,stroke:#94a3b8,stroke-width:2px,color:#f8fafc;
+    classDef output fill:#1e3a8a,stroke:#60a5fa,stroke-width:2px,color:#f8fafc;
+
+    subgraph L1 ["1. Client & LMS Presentation Tier"]
+        direction LR
+        UI["<b>Student Workbench</b><br/>C-I-O-E & Prompt Wrapped"]:::client
+        FAC["<b>Faculty Analytics Hub</b><br/>Cohort Radar & Telemetry"]:::client
     end
 
-    subgraph Gateway_Layer ["Layer 2: Security, SSO & Interoperability Gateway"]
-        SSO["SSO Bridge & Session Synchronizer<br/><i>(HMAC-SHA256 Token Auth / State Validation)</i>"]
-        Asset["Dynamic Asset Rewriter & CDN Proxy<br/><i>(Zero-404 Asset Normalizer & Script Injector)</i>"]
-        Auth["Role-Based Access Control (RBAC)<br/><i>(Student Learner vs Teaching Assistant vs Instructor)</i>"]
+    subgraph L2 ["2. Security & Gateway Tier"]
+        direction LR
+        SSO["<b>SSO & HMAC Guard</b><br/>Signed Session Validation"]:::gateway
+        PROXY["<b>Asset Rewriter</b><br/>Dynamic Path & RBAC Proxy"]:::gateway
     end
 
-    subgraph Service_Layer ["Layer 3: S-SPARC Asynchronous Microservices (FastAPI Python 3.12)"]
-        Linter["C-I-O-E Protocol & Shannon Entropy Engine<br/><i>(H(X) Information Density & Socratic Scaffolding Validator)</i>"]
-        Memory["Hybrid Semantic Memory Engine<br/><i>(FAISS Dense Vector Cache + BM25Okapi Sparse Retrieval & RRF)</i>"]
-        Router["Dynamic Multi-Tier Router & Circuit Breaker<br/><i>(Exponential Backoff, HTTP 429 Failover, Provider Orchestration)</i>"]
-        Green["Thermodynamic Carbon & Water Accounting Engine<br/><i>(Real-Time PUE 1.12 & Grid Carbon Intensity Computation)</i>"]
+    subgraph L3 ["3. S-SPARC Microservice Engine (FastAPI Python 3.12)"]
+        direction TB
+        LINT["<b>Shannon Entropy & C-I-O-E Linter</b><br/>Sub-10ms Linguistic & Quality Scoring"]:::microservice
+        CACHE{"<b>Hybrid Semantic Memory</b><br/>FAISS Dense + BM25 RRF"}:::microservice
+        ROUTER["<b>Dynamic Circuit Breaker & Fallback Router</b><br/>Multi-Provider Health & Quota Dispatcher"]:::microservice
     end
 
-    subgraph Model_Execution_Layer ["Layer 4: Multi-Tier Inference Execution Providers"]
-        T1["Tier 1: Free High-Speed Cloud LPUs / APIs<br/><i>(Groq LPU / Cerebras / Gemini 2.5 Flash Lite — Latency: ~1.2s - 1.8s)</i>"]
-        T2["Tier 2: BYOK & Enterprise Pooled Key Orchestrator<br/><i>(OpenAI GPT-4o / Claude 3.5 Sonnet / Gemini Pro — Latency: ~1.8s - 2.5s)</i>"]
-        T3["Tier 3: On-Premise Air-Gapped Local LLM Runtime<br/><i>(Ollama Qwen2.5-Coder 14B / DeepSeek — Latency: ~5.5s - 8.2s — 100% Sovereignty)</i>"]
+    subgraph L4 ["4. Multi-Tier Model Inference Providers"]
+        direction LR
+        T1["<b>Tier 1: Cloud LPUs</b><br/>Groq / Cerebras / Gemini"]:::provider
+        T2["<b>Tier 2: BYOK Pool</b><br/>Enterprise Key Pool"]:::provider
+        T3["<b>Tier 3: Local Sovereign Host</b><br/>Ollama Qwen2.5 (100% Offline)"]:::provider
     end
 
-    subgraph Database_Layer ["Layer 5: Unified Relational & Vector Persistence"]
-        DB_SQL[("E-STRANGE MySQL Platform<br/><i>assessments, courses, enrollments, submissions, prompt_logs</i>")]
-        DB_VEC[("FAISS Vector Index Store<br/><i>384-d Dense Embeddings + BM25 Inverted Index</i>")]
+    subgraph L5 ["5. Unified Storage & Environmental Accounting"]
+        direction LR
+        ECO["<b>Thermodynamic Engine</b><br/>Energy Wh, CO2e & Water mL"]:::data
+        DB_SQL[("<b>E-STRANGE DB</b><br/>MySQL Records")]:::data
+        DB_VEC[("<b>Vector Index</b><br/>384-d Store")]:::data
     end
 
-    UI <--> SSO
-    Fac <--> SSO
-    LMS <--> SSO
-    SSO <--> Auth
-    SSO <--> Asset
-    Auth <--> Linter
-    Linter --> Memory
-    Memory <--> DB_VEC
-    Memory -- "Cache Miss (Similarity < 0.88)" --> Router
-    Router --> T1
-    Router --> T2
-    Router --> T3
-    T1 --> Green
-    T2 --> Green
-    T3 --> Green
-    Green --> UI
-    Green -. "Log Telemetry" .-> DB_SQL
-    LMS <--> DB_SQL
-    Fac <--> DB_SQL
+    OUT["<b>Delivered Response</b><br/>Scaffolded Socratic Hint + Green Environmental Receipt"]:::output
+
+    %% Clean Pipeline Flow
+    UI --> SSO
+    FAC --> SSO
+    SSO --> PROXY
+    PROXY --> LINT
+    LINT --> CACHE
+
+    CACHE <--> DB_VEC
+    CACHE -- "Cache Hit (Similarity >= 0.88)<br/>[ <45ms | 0 Tokens | 0 Wh ]" --> ECO
+    CACHE -- "Cache Miss (Similarity < 0.88)" --> ROUTER
+
+    ROUTER --> T1
+    ROUTER --> T2
+    ROUTER --> T3
+
+    T1 --> ECO
+    T2 --> ECO
+    T3 --> ECO
+
+    ECO --> DB_SQL
+    ECO --> OUT
 ```
 
 ---
@@ -1301,29 +1335,29 @@ The **S-SPARC AI™ Initiative** was conceptualized and developed by the **ITMCU
             }
         }
 
-        // Initialize Mermaid with compact dimensions and clear contrast
+        // Initialize Mermaid with clean dimensions and clear contrast
         mermaid.initialize({
             startOnLoad: false,
             theme: 'base',
             securityLevel: 'loose',
             fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-            fontSize: 10,
+            fontSize: 11,
             flowchart: {
                 htmlLabels: true,
-                useMaxWidth: false,
+                useMaxWidth: true,
                 curve: 'basis',
-                padding: 6,
-                nodeSpacing: 18,
-                rankSpacing: 20
+                padding: 12,
+                nodeSpacing: 25,
+                rankSpacing: 28
             },
             sequence: {
-                useMaxWidth: false,
-                diagramMarginX: 10,
-                diagramMarginY: 8,
-                actorMargin: 20,
-                boxMargin: 6,
-                noteMargin: 8,
-                messageMargin: 16
+                useMaxWidth: true,
+                diagramMarginX: 16,
+                diagramMarginY: 12,
+                actorMargin: 30,
+                boxMargin: 8,
+                noteMargin: 10,
+                messageMargin: 20
             },
             themeVariables: {
                 darkMode: true,
@@ -1559,28 +1593,6 @@ The **S-SPARC AI™ Initiative** was conceptualized and developed by the **ITMCU
                             await document.fonts.ready;
                         }
                         await mermaid.run();
-
-                        // Enforce native diagram bounding and prevent extreme upscaling
-                        document.querySelectorAll('.mermaid svg').forEach(svg => {
-                            svg.style.height = 'auto';
-                            const viewBox = svg.getAttribute('viewBox');
-                            if (viewBox) {
-                                const parts = viewBox.trim().split(/\s+/);
-                                if (parts.length === 4) {
-                                    const vbWidth = parseFloat(parts[2]);
-                                    const vbHeight = parseFloat(parts[3]);
-                                    const constrainedWidth = Math.min(vbWidth, 680);
-                                    svg.style.maxWidth = constrainedWidth + 'px';
-                                    svg.style.width = '100%';
-                                    if (vbHeight > 280) {
-                                        svg.style.maxHeight = '280px';
-                                    }
-                                }
-                            } else {
-                                svg.style.maxWidth = '580px';
-                                svg.style.width = 'auto';
-                            }
-                        });
                     }
                 } catch (e) {
                     console.warn('Mermaid render warning:', e);
