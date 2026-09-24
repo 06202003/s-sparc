@@ -24,8 +24,8 @@ function renderSSOHeader($activePage = 'chat', $title = 'Chat Assistant') {
     <header class="sticky top-0 z-30 border-b border-slate-200/80 bg-white/90 backdrop-blur-md shadow-xs">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
         <div class="flex min-w-0 items-center gap-3">
-          <div class="h-10 w-10 rounded-xl bg-[#00A0A5] text-white flex items-center justify-center font-bold text-sm shadow-xs shrink-0">
-            AI
+          <div class="h-10 w-10 rounded-xl bg-[#00A0A5] text-white flex items-center justify-center shadow-xs shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
           </div>
           <div class="min-w-0">
             <div class="text-base font-bold text-slate-900 tracking-tight flex items-center gap-2">
