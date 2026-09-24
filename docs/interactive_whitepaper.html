@@ -488,15 +488,15 @@
             font-size: 0.85em;
         }
 
-        /* Compact & Scalable Diagram Cards */
+        /* Ultra-Clean Compact Diagram Cards */
         .diagram-card {
             background-color: var(--bg-secondary);
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            margin: 18px auto;
-            max-width: 760px;
+            margin: 16px auto;
+            max-width: 680px;
             overflow: hidden;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
             position: relative;
         }
 
@@ -504,13 +504,13 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 6px 12px;
+            padding: 4px 10px;
             background-color: var(--bg-tertiary);
             border-bottom: 1px solid var(--border-color);
         }
 
         .diagram-label {
-            font-size: 0.68rem;
+            font-size: 0.65rem;
             font-weight: 700;
             letter-spacing: 0.06em;
             color: var(--text-muted);
@@ -519,16 +519,16 @@
 
         .diagram-controls {
             display: flex;
-            gap: 5px;
+            gap: 4px;
         }
 
         .zoom-btn {
             background-color: var(--bg-primary);
             border: 1px solid var(--border-color);
             color: var(--text-primary);
-            padding: 2px 8px;
+            padding: 2px 6px;
             border-radius: 4px;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
@@ -541,46 +541,51 @@
         }
 
         .diagram-stage {
-            padding: 14px 10px;
+            padding: 12px 8px;
             overflow-x: auto;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 80px;
+            min-height: 60px;
         }
 
         .diagram-scalable {
             transform-origin: top center;
             transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);
-            width: 100%;
+            width: auto;
             display: flex;
             justify-content: center;
+            align-items: center;
         }
 
         .diagram-scalable svg {
-            max-width: 90% !important;
-            max-height: 340px !important;
-            height: auto !important;
             display: block;
             margin: 0 auto;
+            max-width: 100% !important;
+            max-height: 280px !important;
+            height: auto !important;
             overflow: visible !important;
         }
 
         /* Mermaid Node & Label Text Styling to Prevent Box Overflows */
         .mermaid .node .label {
-            line-height: 1.35 !important;
-            padding: 6px 10px !important;
+            line-height: 1.25 !important;
+            padding: 4px 8px !important;
             text-align: center !important;
-            font-size: 0.78rem !important;
+            font-size: 0.72rem !important;
+        }
+
+        .mermaid .node rect, .mermaid .node circle, .mermaid .node polygon {
+            stroke-width: 1.5px !important;
         }
 
         .mermaid .edgeLabel {
             background-color: var(--bg-primary) !important;
-            padding: 2px 6px !important;
-            border-radius: 4px !important;
+            padding: 2px 4px !important;
+            border-radius: 3px !important;
             border: 1px solid var(--border-color) !important;
             color: var(--text-primary) !important;
-            font-size: 0.75rem !important;
+            font-size: 0.7rem !important;
         }
 
         /* Blockquotes / Callouts */
@@ -741,17 +746,17 @@ S-SPARC streamlines the dialectical learning process into **5 clear, linear step
 
 ```mermaid
 flowchart LR
-    classDef step1 fill:#0d2d4c,stroke:#388bfd,stroke-width:2px,color:#ffffff;
-    classDef step2 fill:#3d2c00,stroke:#d29922,stroke-width:2px,color:#ffffff;
-    classDef step3 fill:#0e3a1e,stroke:#3fb950,stroke-width:2px,color:#ffffff;
-    classDef step4 fill:#431e03,stroke:#f0883e,stroke-width:2px,color:#ffffff;
-    classDef step5 fill:#063a36,stroke:#39c5bb,stroke-width:2px,color:#ffffff;
+    classDef step1 fill:#0d2d4c,stroke:#388bfd,stroke-width:1.5px,color:#ffffff;
+    classDef step2 fill:#3d2c00,stroke:#d29922,stroke-width:1.5px,color:#ffffff;
+    classDef step3 fill:#0e3a1e,stroke:#3fb950,stroke-width:1.5px,color:#ffffff;
+    classDef step4 fill:#431e03,stroke:#f0883e,stroke-width:1.5px,color:#ffffff;
+    classDef step5 fill:#063a36,stroke:#39c5bb,stroke-width:1.5px,color:#ffffff;
 
-    S1["<b>STEP 1: Formulate Inquiry</b><br/>User fills 4 guided fields<br/>(Context, Input, Output, Error)"]:::step1
-    S2["<b>STEP 2: Smart Quality Check</b><br/>Entropy & C-I-O-E Linter<br/>delivers instant feedback"]:::step2
-    S3["<b>STEP 3: Dialectical Answer</b><br/>Delivers progressive hint<br/>+ Green carbon receipt"]:::step3
-    S4["<b>STEP 4: 60s Reflexive Pause</b><br/>Screen pauses so student<br/>cross-checks & tests code"]:::step4
-    S5["<b>STEP 5: Prompt Wrapped</b><br/>Post-assessment reflection<br/>on cognitive growth"]:::step5
+    S1["<b>STEP 1: Formulate</b><br/>Fill C-I-O-E fields"]:::step1
+    S2["<b>STEP 2: Linter Check</b><br/>Entropy & Quality feedback"]:::step2
+    S3["<b>STEP 3: Dialectic Hint</b><br/>Progressive hint + Green receipt"]:::step3
+    S4["<b>STEP 4: 60s Pause</b><br/>Reflect & test in IDE"]:::step4
+    S5["<b>STEP 5: Wrapped</b><br/>Post-assessment reflection"]:::step5
 
     S1 --> S2 --> S3 --> S4 --> S5
 ```
@@ -923,9 +928,9 @@ To guarantee high availability across variable network conditions and institutio
 
 ```mermaid
 flowchart TD
-    classDef t1 fill:#0d2d4c,stroke:#388bfd,stroke-width:2px,color:#ffffff;
-    classDef t2 fill:#3d2c00,stroke:#d29922,stroke-width:2px,color:#ffffff;
-    classDef t3 fill:#0e3a1e,stroke:#3fb950,stroke-width:2px,color:#ffffff;
+    classDef t1 fill:#0d2d4c,stroke:#388bfd,stroke-width:1.5px,color:#ffffff;
+    classDef t2 fill:#3d2c00,stroke:#d29922,stroke-width:1.5px,color:#ffffff;
+    classDef t3 fill:#0e3a1e,stroke:#3fb950,stroke-width:1.5px,color:#ffffff;
 
     Q["Student C-I-O-E Inquiry"]:::t1 --> T1{"Tier 1: Free Cloud API"}:::t1
     T1 -- "Active & Within Quota" --> R1["Accelerated Cloud Engine<br/>(Groq / Cerebras / Gemini)<br/>Latency: ~1.2s - 1.8s"]:::t1
@@ -972,14 +977,14 @@ S-SPARC is integrated directly with the institutional LMS database (**E-STRANGE 
 
 ```mermaid
 flowchart LR
-    classDef db fill:#1e293b,stroke:#64748b,stroke-width:2px,color:#ffffff;
-    classDef ssp fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#ffffff;
-    classDef out fill:#064e3b,stroke:#10b981,stroke-width:2px,color:#ffffff;
+    classDef db fill:#1e293b,stroke:#64748b,stroke-width:1.5px,color:#ffffff;
+    classDef ssp fill:#0f172a,stroke:#38bdf8,stroke-width:1.5px,color:#ffffff;
+    classDef out fill:#064e3b,stroke:#10b981,stroke-width:1.5px,color:#ffffff;
 
-    E1[("E-STRANGE DB<br/>assessments, courses,<br/>enrollments, submissions")]:::db --> S1["S-SPARC Telemetry Engine"]:::ssp
-    S1 --> S2["Live Faculty Dashboard"]:::ssp
-    S1 --> S3["Cognitive Bloom's Radar"]:::ssp
-    S1 --> S4["Pseudonymized Research Export (CSV)"]:::out
+    E1[("E-STRANGE DB<br/>assessments, courses,<br/>submissions")]:::db --> S1["S-SPARC Telemetry"]:::ssp
+    S1 --> S2["Faculty Dashboard"]:::ssp
+    S1 --> S3["Bloom's Radar"]:::ssp
+    S1 --> S4["Research Export (CSV)"]:::out
 ```
 
 ### Faculty Dashboard Features:
@@ -996,26 +1001,26 @@ flowchart LR
 graph TB
     subgraph Client_Layer ["Client & LMS Presentation Layer"]
         UI["Student Web Interface & Prompt Wrapped Player"]
-        Fac["Faculty Analytics & Research Telemetry Hub"]
+        Fac["Faculty Analytics Hub"]
         LMS["E-STRANGE LMS Platform (PHP 8 / MySQL)"]
     end
 
     subgraph Gateway_Layer ["SSO & Security Gateway"]
         SSO["SSO Bridge & Asset Rewriter"]
-        Auth["Session & Role-Based Access Control"]
+        Auth["Session & Role RBAC"]
     end
 
     subgraph Service_Layer ["S-SPARC Core Microservices (FastAPI Python 3.12)"]
-        Linter["C-I-O-E Protocol & Shannon Entropy Linter"]
-        Memory["FAISS Vector Cache & BM25 Semantic Engine"]
-        Router["Multi-Tier Fallback Router & Circuit Breaker"]
-        Green["Thermodynamic Carbon & Water Accounting Engine"]
+        Linter["C-I-O-E & Shannon Entropy Linter"]
+        Memory["FAISS Vector Cache & BM25 Engine"]
+        Router["Multi-Tier Fallback Router"]
+        Green["Green Thermodynamic Engine"]
     end
 
     subgraph Model_Execution_Layer ["Multi-Tier Inference Providers"]
-        T1["Tier 1: Free High-Speed Cloud API (Groq / Cerebras)"]
-        T2["Tier 2: BYOK Enterprise Pool (OpenAI / Anthropic / Gemini)"]
-        T3["Tier 3: On-Premise Local Host (Ollama Qwen2.5 14B)"]
+        T1["Tier 1: Cloud API (Groq / Cerebras)"]
+        T2["Tier 2: BYOK Pool (OpenAI / Anthropic / Gemini)"]
+        T3["Tier 3: Local Host (Ollama Qwen2.5 14B)"]
     end
 
     UI <--> SSO
@@ -1194,23 +1199,23 @@ The **S-SPARC AI™ Initiative** was conceptualized and developed by the **ITMCU
             theme: 'base',
             securityLevel: 'loose',
             fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-            fontSize: 11,
+            fontSize: 10,
             flowchart: {
                 htmlLabels: true,
-                useMaxWidth: true,
+                useMaxWidth: false,
                 curve: 'basis',
-                padding: 10,
-                nodeSpacing: 22,
-                rankSpacing: 24
+                padding: 6,
+                nodeSpacing: 18,
+                rankSpacing: 20
             },
             sequence: {
-                useMaxWidth: true,
-                diagramMarginX: 12,
-                diagramMarginY: 10,
-                actorMargin: 28,
-                boxMargin: 8,
-                noteMargin: 10,
-                messageMargin: 20
+                useMaxWidth: false,
+                diagramMarginX: 10,
+                diagramMarginY: 8,
+                actorMargin: 20,
+                boxMargin: 6,
+                noteMargin: 8,
+                messageMargin: 16
             },
             themeVariables: {
                 darkMode: true,
@@ -1446,6 +1451,28 @@ The **S-SPARC AI™ Initiative** was conceptualized and developed by the **ITMCU
                             await document.fonts.ready;
                         }
                         await mermaid.run();
+
+                        // Enforce native diagram bounding and prevent extreme upscaling
+                        document.querySelectorAll('.mermaid svg').forEach(svg => {
+                            svg.style.height = 'auto';
+                            const viewBox = svg.getAttribute('viewBox');
+                            if (viewBox) {
+                                const parts = viewBox.trim().split(/\s+/);
+                                if (parts.length === 4) {
+                                    const vbWidth = parseFloat(parts[2]);
+                                    const vbHeight = parseFloat(parts[3]);
+                                    const constrainedWidth = Math.min(vbWidth, 680);
+                                    svg.style.maxWidth = constrainedWidth + 'px';
+                                    svg.style.width = '100%';
+                                    if (vbHeight > 280) {
+                                        svg.style.maxHeight = '280px';
+                                    }
+                                }
+                            } else {
+                                svg.style.maxWidth = '580px';
+                                svg.style.width = 'auto';
+                            }
+                        });
                     }
                 } catch (e) {
                     console.warn('Mermaid render warning:', e);
