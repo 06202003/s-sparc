@@ -102,7 +102,11 @@ To ensure uninterrupted service across varied network environments and budget co
 - **Tier 2: System Key Pool Fallback**: If a user key is unconfigured or encounters quota limits, the router seamlessly falls back to a load-balanced institutional key pool.
 - **Tier 3: Local Zero-Cost Offline Fallback (Ollama)**: If cloud connectivity fails or rate limits occur (HTTP 429), inference automatically redirects to a locally hosted **Ollama Qwen2.5-Coder 14B** instance (**~5.5s - 8.2s** latency, 100% offline).
 
-### 3. Hybrid Semantic Memory (<45ms, 0 Token Cost)
+### 3. S-SPARC Prompt Wrapped & AI Critic Evaluation
+- **Per-Assessment Prompt Wrapped**: An interactive 6-slide story player delivered upon assessment deadline completion, visualizing iteration volume, Shannon Entropy $H(X)$, C-I-O-E protocol scores, thermodynamic green telemetry, and cognitive persona classification.
+- **AI Critic & Socratic Scaffolding**: Automated prompt quality evaluation and algorithmic prompt rewrites guiding students toward deeper problem formulation.
+
+### 4. Hybrid Semantic Memory (<45ms, 0 Token Cost)
 S-SPARC features a hybrid retrieval cache fusing:
 - **Sparse Search (BM25)** for exact keyword and function signature matching.
 - **Dense Vector Search (SentenceTransformers `all-MiniLM-L6-v2`)** for semantic context matching.
