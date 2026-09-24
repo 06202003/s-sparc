@@ -214,16 +214,19 @@ Inspired by modern data-storytelling interfaces, **S-SPARC Prompt Wrapped** is a
 
 ```mermaid
 flowchart TD
-    classDef wrap fill:#1b2333,stroke:#38bdf8,stroke-width:2px,color:#ffffff;
+    classDef wrap fill:#121824,stroke:#38bdf8,stroke-width:1.5px,color:#f1f5f9;
     
-    W1["<b>Slide 1: Overview</b><br/>Assessment Milestone<br/>& Completion Celebration"]:::wrap
-    W2["<b>Slide 2: Volume & Iterations</b><br/>Total Prompts Dispatched<br/>& Average Tokens per Prompt"]:::wrap
-    W3["<b>Slide 3: Information Entropy</b><br/>Shannon Entropy H(X)<br/>& C-I-O-E Quality Index"]:::wrap
-    W4["<b>Slide 4: AI Critic Scaffolding</b><br/>C-I-O-E Dimension Breakdown<br/>& Socratic Guidance"]:::wrap
-    W5["<b>Slide 5: Eco-Footprint</b><br/>Energy (Wh), Carbon (g CO2e),<br/>& Zero-Cost Cache Savings"]:::wrap
-    W6["<b>Slide 6: Cognitive Persona</b><br/>Archetype Classification<br/>& Verified Mastery Badges"]:::wrap
+    subgraph Row1 ["Quantitative Telemetry (Slides 1 - 3)"]
+        direction LR
+        W1["<b>Slide 1: Overview</b><br/>Milestone Summary"]:::wrap --> W2["<b>Slide 2: Volume</b><br/>Prompts & Tokens"]:::wrap --> W3["<b>Slide 3: Entropy</b><br/>Shannon H(X) & CIOE"]:::wrap
+    end
 
-    W1 --> W2 --> W3 --> W4 --> W5 --> W6
+    subgraph Row2 ["Cognitive & Eco Reflection (Slides 4 - 6)"]
+        direction LR
+        W4["<b>Slide 4: Scaffolding</b><br/>AI Critic Review"]:::wrap --> W5["<b>Slide 5: Eco-Footprint</b><br/>Energy, CO2e & H2O"]:::wrap --> W6["<b>Slide 6: Persona</b><br/>Cognitive Archetype"]:::wrap
+    end
+
+    Row1 --> Row2
 ```
 
 ### Prompt Wrapped Slide Breakdown:
