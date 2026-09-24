@@ -26,11 +26,8 @@ if ($uStmt) {
     echo "<p style='color: #b91c1c;'>❌ Gagal mereset password 2172001: " . htmlspecialchars($db->error) . "</p>";
 }
 
-// 2. Perpanjang Expired Assessment
-$qClose = $db->query("UPDATE assessment SET submission_close_time = '2026-12-31 23:59:59', allow_late_submission = 1");
-if ($qClose) {
-    echo "<p style='color: #15803d;'>✅ <b>Deadline Assessment</b>: Berhasil diperpanjang hingga <b>31 Desember 2026</b> (Allow Late = 1)</p>";
-}
+// 2. Deadline Assessment (Optional / Tidak menimpa deadline asli agar Wrapped berfungsi sesuai batas waktu)
+// $qClose = $db->query("UPDATE assessment SET submission_close_time = '2026-12-31 23:59:59', allow_late_submission = 1");
 
 // 3. Enroll 2172001 ke seluruh Course
 $uRes = $db->query("SELECT user_id FROM user WHERE username = '2172001'");
