@@ -115,22 +115,36 @@ $userId = $_SESSION['user_id'] ?? 'student_demo';
           <p class="text-xs text-slate-500">Problem formulation discipline &amp; ethical AI interaction</p>
         </div>
         <div id="badges-container" class="space-y-2.5">
-          <div class="p-3 bg-teal-50 border border-teal-200 rounded-xl flex items-center gap-3">
-            <span class="text-sm font-bold text-teal-700 bg-teal-100 w-8 h-8 rounded-lg flex items-center justify-center shrink-0 font-mono">C</span>
+          <div class="p-3 bg-teal-50/80 border border-teal-200 rounded-xl flex items-center gap-3 transition hover:shadow-2xs">
+            <div class="w-9 h-9 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center shrink-0 shadow-2xs">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
             <div>
               <div class="font-bold text-xs text-teal-900">C-I-O-E Protocol Master</div>
               <div class="text-[11px] text-teal-700">Consistently supplies pre-conditions &amp; error traces</div>
             </div>
           </div>
-          <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-3">
-            <span class="text-sm font-bold text-emerald-700 bg-emerald-100 w-8 h-8 rounded-lg flex items-center justify-center shrink-0 font-mono">0T</span>
+
+          <div class="p-3 bg-emerald-50/80 border border-emerald-200 rounded-xl flex items-center gap-3 transition hover:shadow-2xs">
+            <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 shadow-2xs">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
             <div>
               <div class="font-bold text-xs text-emerald-900">Zero-Waste Compute Champion</div>
               <div class="text-[11px] text-emerald-700">Leverages 0-token vector caching &gt; 40%</div>
             </div>
           </div>
-          <div class="p-3 bg-indigo-50 border border-indigo-200 rounded-xl flex items-center gap-3">
-            <span class="text-sm font-bold text-indigo-700 bg-indigo-100 w-8 h-8 rounded-lg flex items-center justify-center shrink-0 font-mono">PA</span>
+
+          <div class="p-3 bg-indigo-50/80 border border-indigo-200 rounded-xl flex items-center gap-3 transition hover:shadow-2xs">
+            <div class="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0 shadow-2xs">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+            </div>
             <div>
               <div class="font-bold text-xs text-indigo-900">Prompt Architect</div>
               <div class="text-[11px] text-indigo-700">High information density score &ge; 0.80</div>
