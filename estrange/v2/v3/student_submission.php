@@ -333,19 +333,47 @@ select.select2-hidden-accessible {
 			const isOpen = !menu.classList.contains('hidden');
 			
 			// Close all other dropdowns
-			document.querySelectorAll('.dropdown-menu-box').forEach(el => el.classList.add('hidden'));
+			document.querySelectorAll('.dropdown-menu-box').forEach(el => {
+				el.classList.add('hidden');
+				el.style.position = '';
+				el.style.top = '';
+				el.style.left = '';
+			});
 			
 			if (!isOpen) {
+				const rect = btn.getBoundingClientRect();
+				const menuWidth = 192; // 12rem (w-48)
+				const menuHeight = 130;
+				
+				menu.style.position = 'fixed';
+				menu.style.zIndex = '99999';
+				
+				// Align right edge of dropdown with button
+				let leftPos = rect.right - menuWidth;
+				if (leftPos < 10) leftPos = 10;
+				menu.style.left = `${leftPos}px`;
+				
+				// Open upwards if near bottom of viewport
+				if (rect.bottom + menuHeight > window.innerHeight && rect.top > menuHeight) {
+					menu.style.top = `${rect.top - menuHeight - 4}px`;
+				} else {
+					menu.style.top = `${rect.bottom + 4}px`;
+				}
+				
 				menu.classList.remove('hidden');
 			}
 		}
 
-		// Close dropdowns on outside click
+		// Close dropdowns on outside click or container scroll
 		document.addEventListener('click', function(e) {
 			if (!e.target.closest('[data-dropdown-wrapper]')) {
 				document.querySelectorAll('.dropdown-menu-box').forEach(el => el.classList.add('hidden'));
 			}
 		});
+
+		window.addEventListener('scroll', function() {
+			document.querySelectorAll('.dropdown-menu-box').forEach(el => el.classList.add('hidden'));
+		}, true);
 
 		$(document).ready(function() {
 			new DataTable('#studentSubmission', {
