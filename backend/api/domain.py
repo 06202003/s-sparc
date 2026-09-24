@@ -488,3 +488,19 @@ async def course_leaderboard(
         raise HTTPException(status_code=500, detail=str(e))
     finally:
         conn.close()
+
+@router.get(
+    "/assessments/{assessment_id}/wrapped",
+    summary="Get Spotify-Wrapped Style Prompt Critic Report",
+    description="Synthesizes student prompt telemetry, C-I-O-E protocol scores, Shannon Entropy, and AI Critic reviews for an expired assessment.",
+    response_description="Interactive Spotify-Wrapped report payload"
+)
+async def get_assessment_prompt_wrapped(
+    assessment_id: str,
+    user_id: Optional[str] = Query(None, description="Optional explicit student user_id"),
+    req_user_id: str = Depends(get_current_user_id)
+):
+    target_uid = user_id or req_user_id
+    from backend.services.prompt_critic import PromptCriticService
+    return PromptCriticService.get_assessment_wrapped(target_uid, assessment_id)
+

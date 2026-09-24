@@ -1,5 +1,6 @@
 <?php
 /**
+<<<<<<< HEAD
  * E-STRANGE & S-SPARC Universal AI Proxy Bridge
  * 
  * Proxies API requests to the Python FastAPI backend (http://127.0.0.1:5000)
@@ -9,12 +10,20 @@
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
+=======
+ * Standalone Frontend API Proxy
+ */
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, X-User-ID, X-Student-ID, X-API-Key, Accept");
+>>>>>>> db592a8 (feat: implement S-SPARC Prompt Wrapped story player, BYOK telemetry, and research CSV export)
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit;
 }
 
+<<<<<<< HEAD
 $rawInput = file_get_contents('php_input') ?: file_get_contents('php://input');
 $requestUri = $_SERVER['REQUEST_URI'] ?? '';
 $parsedUri = parse_url($requestUri, PHP_URL_PATH);
@@ -95,10 +104,81 @@ if (!$geminiKey) {
     echo json_encode([
         'status' => 'error',
         'message' => 'AI Service Unavailable: Neither FastAPI daemon nor Gemini API Key configured.'
+=======
+$backendBaseUrl = getenv('FASTAPI_BACKEND_URL') ?: (getenv('FLASK_BASE_URL') ?: 'https://estrangeinternal.itmaranatha.org');
+
+$path = '';
+if (!empty($_GET['path'])) {
+    $path = $_GET['path'];
+} elseif (!empty($_GET['endpoint'])) {
+    $path = $_GET['endpoint'];
+} elseif (!empty($_SERVER['PATH_INFO'])) {
+    $path = $_SERVER['PATH_INFO'];
+} else {
+    $requestUri = $_SERVER['REQUEST_URI'] ?? '';
+    $scriptName = $_SERVER['SCRIPT_NAME'] ?? '';
+    if (strpos($requestUri, $scriptName) === 0) {
+        $path = substr($requestUri, strlen($scriptName));
+        $path = explode('?', $path)[0];
+    }
+}
+
+$path = '/' . ltrim($path, '/');
+
+$queryParams = $_GET;
+unset($queryParams['path'], $queryParams['endpoint']);
+$queryString = http_build_query($queryParams);
+
+$targetUrl = rtrim($backendBaseUrl, '/') . $path . ($queryString ? ('?' . $queryString) : '');
+
+$ch = curl_init($targetUrl);
+$method = $_SERVER['REQUEST_METHOD'];
+curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+
+$headers = [];
+$incomingHeaders = function_exists('getallheaders') ? getallheaders() : [];
+foreach ($incomingHeaders as $name => $value) {
+    $lower = strtolower($name);
+    if (in_array($lower, ['authorization', 'content-type', 'accept', 'x-api-key', 'x-user-id', 'x-student-id'])) {
+        $headers[] = "$name: $value";
+    }
+}
+if (!empty($headers)) {
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+}
+
+
+if (in_array($method, ['POST', 'PUT', 'PATCH', 'DELETE'])) {
+    $body = file_get_contents('php://input');
+    if (!empty($body)) {
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+    }
+}
+
+$response = curl_exec($ch);
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+$contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+$curlError = curl_error($ch);
+curl_close($ch);
+
+if ($response === false) {
+    http_response_code(502);
+    header('Content-Type: application/json');
+    echo json_encode([
+        'error' => true,
+        'message' => 'Failed to connect to backend AI server: ' . $curlError,
+        'target' => $targetUrl
+>>>>>>> db592a8 (feat: implement S-SPARC Prompt Wrapped story player, BYOK telemetry, and research CSV export)
     ]);
     exit;
 }
 
+<<<<<<< HEAD
 // Call Gemini 1.5/2.0 Flash REST API directly
 $data = json_decode($rawInput, true) ?: [];
 $userMessage = $data['prompt'] ?? $data['message'] ?? $data['text'] ?? 'Hello';
@@ -134,3 +214,13 @@ echo json_encode([
     'message' => $aiText,
     'source' => 'direct-gemini-fallback'
 ]);
+=======
+http_response_code($httpCode ?: 200);
+if ($contentType) {
+    header("Content-Type: $contentType");
+} else {
+    header("Content-Type: application/json");
+}
+
+echo $response;
+>>>>>>> db592a8 (feat: implement S-SPARC Prompt Wrapped story player, BYOK telemetry, and research CSV export)

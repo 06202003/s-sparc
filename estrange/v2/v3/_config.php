@@ -1,5 +1,7 @@
 <?php
+// Dynamic offline/lab asset rewriter & proxy
 require_once __DIR__ . '/_asset_rewriter.php';
+
 // just a configuration for the database access
 $servername = getenv('DB_HOST') ?: "localhost";
 $username = getenv('DB_USER') ?: "root";

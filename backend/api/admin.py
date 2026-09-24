@@ -301,3 +301,38 @@ async def compute_assessment_points_endpoint(data: ComputeRequest, admin_id: str
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get(
+    "/wrapped/analytics",
+    summary="Cohort AI Literacy & Prompt Telemetry Analytics",
+    description="Aggregates class-wide prompt metrics, C-I-O-E mastery radar, persona distributions, and BYOK footprints for researchers.",
+    response_description="Cohort prompt analytics payload"
+)
+async def get_cohort_wrapped_analytics(
+    course_id: Optional[str] = Query(None, description="Optional Course ID"),
+    assessment_id: Optional[str] = Query(None, description="Optional Assessment ID"),
+    admin_id: str = Depends(require_admin)
+):
+    from backend.services.prompt_critic import PromptCriticService
+    return PromptCriticService.get_cohort_research_analytics(course_id=course_id, assessment_id=assessment_id)
+
+@router.get(
+    "/wrapped/export-csv",
+    summary="Export Research Dataset (.CSV)",
+    description="Streams a clean CSV dataset of raw prompt telemetry and C-I-O-E dimensions for educational data mining.",
+    response_description="CSV file download"
+)
+async def export_research_csv(
+    course_id: Optional[str] = Query(None, description="Optional Course ID"),
+    assessment_id: Optional[str] = Query(None, description="Optional Assessment ID"),
+    admin_id: str = Depends(require_admin)
+):
+    from backend.services.prompt_critic import PromptCriticService
+    csv_content = PromptCriticService.generate_research_csv(course_id=course_id, assessment_id=assessment_id)
+    filename = f"ssparc_prompt_research_dataset_{assessment_id or 'all'}.csv"
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+

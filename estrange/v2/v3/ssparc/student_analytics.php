@@ -116,24 +116,24 @@ $userId = $_SESSION['user_id'] ?? 'student_demo';
         </div>
         <div id="badges-container" class="space-y-2.5">
           <div class="p-3 bg-teal-50 border border-teal-200 rounded-xl flex items-center gap-3">
-            <span class="text-2xl">🏆</span>
+            <span class="text-xl font-bold text-teal-700 bg-teal-100 w-8 h-8 rounded-lg flex items-center justify-center">C</span>
             <div>
               <div class="font-bold text-xs text-teal-900">C-I-O-E Protocol Master</div>
               <div class="text-[11px] text-teal-700">Selalu menyertakan pre-kondisi &amp; error trace</div>
             </div>
           </div>
           <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-3">
-            <span class="text-2xl">⚡</span>
+            <span class="text-xl font-bold text-emerald-700 bg-emerald-100 w-8 h-8 rounded-lg flex items-center justify-center">0T</span>
             <div>
               <div class="font-bold text-xs text-emerald-900">Zero-Waste Compute Champion</div>
               <div class="text-[11px] text-emerald-700">Mengoptimalkan 0-token vector caching &gt; 40%</div>
             </div>
           </div>
           <div class="p-3 bg-indigo-50 border border-indigo-200 rounded-xl flex items-center gap-3">
-            <span class="text-2xl">🧠</span>
+            <span class="text-xl font-bold text-indigo-700 bg-indigo-100 w-8 h-8 rounded-lg flex items-center justify-center">PA</span>
             <div>
               <div class="font-bold text-xs text-indigo-900">Prompt Architect</div>
-              <div class="text-[11px] text-indigo-700">Densitas informasi $S_{\text{prompt}} \ge 0.80$</div>
+              <div class="text-[11px] text-indigo-700">Densitas informasi S_prompt &ge; 0.80</div>
             </div>
           </div>
         </div>
@@ -141,7 +141,58 @@ $userId = $_SESSION['user_id'] ?? 'student_demo';
 
     </div>
 
+    <!-- S-SPARC Assessment Wrapped Archive -->
+    <div class="metric-card space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+        <div>
+          <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+            <span>S-SPARC Prompt Wrapped Archive</span>
+            <span class="text-[11px] font-semibold bg-teal-50 text-teal-700 border border-teal-200 px-2 py-0.5 rounded-full">Kilas Balik Tugas</span>
+          </h3>
+          <p class="text-xs text-slate-500">Kilas balik interaktif gaya Spotify-Wrapped yang otomatis terbuka setelah assessment resmi berakhir (expired).</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="wrapped-assessments-grid">
+        <?php
+        // Query finished/expired assessments for current student
+        $expiredAssessmentsQuery = "
+            SELECT a.assessment_id, a.name AS assessment_name, c.name AS course_name, a.submission_close_time
+            FROM assessment a
+            LEFT JOIN course c ON c.course_id = a.course_id
+            WHERE a.submission_close_time < NOW()
+            ORDER BY a.submission_close_time DESC LIMIT 6
+        ";
+        $expiredRes = $db->query($expiredAssessmentsQuery);
+        if ($expiredRes && $expiredRes->num_rows > 0) {
+            while ($row = $expiredRes->fetch_assoc()) {
+                ?>
+                <div class="p-4 rounded-2xl bg-slate-900 text-white flex flex-col justify-between space-y-3 shadow-md border border-slate-800">
+                  <div class="space-y-1">
+                    <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block"><?= htmlspecialchars($row['course_name'] ?: 'Course') ?></span>
+                    <h4 class="font-bold text-sm text-white line-clamp-1"><?= htmlspecialchars($row['assessment_name']) ?></h4>
+                    <span class="text-[11px] text-slate-400 block font-mono">Selesai: <?= date('d M Y', strtotime($row['submission_close_time'])) ?></span>
+                  </div>
+                  <a href="student_prompt_wrapped.php?assessment_id=<?= urlencode($row['assessment_id']) ?>" class="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-slate-950 font-bold text-xs text-center transition flex items-center justify-center gap-1.5 shadow">
+                    <span>Buka S-SPARC Wrapped</span>
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                  </a>
+                </div>
+                <?php
+            }
+        } else {
+            ?>
+            <div class="col-span-full p-6 text-center text-slate-500 text-xs bg-slate-50 rounded-xl border border-slate-200">
+              Belum ada assessment yang berstatus selesai/expired. S-SPARC Wrapped akan otomatis muncul di sini setelah waktu tugas berakhir.
+            </div>
+            <?php
+        }
+        ?>
+      </div>
+    </div>
+
   </main>
+
 
   <script>
     const FASTAPI_URL = "https://estrangeinternal.itmaranatha.org";

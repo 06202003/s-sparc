@@ -2,6 +2,7 @@
 /**
  * E-STRANGE & S-SPARC Dynamic Asset & AI Proxy Rewriter
  * 
+<<<<<<< HEAD
  * Automatically detects whether the client/server is in an offline lab environment.
  * If offline, transparently intercepts the HTML output and rewrites CDN links to local
  * assets in assets/vendor/ and routes AI prompt requests to api_proxy.php.
@@ -10,18 +11,71 @@
  */
 
 if (session_status() === PHP_SESSION_NONE && php_sapi_name() !== 'cli' && !headers_sent()) {
+=======
+ * Automatically intercepts HTML output and rewrites CDN links to local
+ * assets in assets/vendor/ and routes AI prompt requests to api_proxy.php.
+ * 
+ * Works across all pages and subfolders (root, ssparc, karina, etc.)
+ */
+
+if (session_status() === PHP_SESSION_NONE && php_sapi_name() !== 'cli') {
+>>>>>>> db592a8 (feat: implement S-SPARC Prompt Wrapped story player, BYOK telemetry, and research CSV export)
     @session_start();
+}
+
+/**
+<<<<<<< HEAD
+ * Core rewrite function that transforms CDN links into local vendor assets
+ */
+if (!function_exists('rewrite_offline_assets')) {
+    function rewrite_offline_assets($html, $requestUri = null) {
+=======
+ * Determine the relative path to assets/vendor/ dynamically based on the current execution context
+ */
+if (!function_exists('get_offline_assets_base')) {
+    function get_offline_assets_base() {
+        // Method 1: Check running script directory vs root directory
+        $baseDir = str_replace('\\', '/', realpath(__DIR__));
+        $currentDir = str_replace('\\', '/', realpath(getcwd()));
+
+        if (!empty($baseDir) && !empty($currentDir) && strpos($currentDir, $baseDir) === 0) {
+            $sub = trim(substr($currentDir, strlen($baseDir)), '/');
+            if (!empty($sub)) {
+                $depth = count(explode('/', $sub));
+                return str_repeat('../', $depth) . 'assets/vendor/';
+            }
+            return 'assets/vendor/';
+        }
+
+        // Method 2: Check SCRIPT_NAME / PHP_SELF / REQUEST_URI
+        $uris = [
+            $_SERVER['SCRIPT_NAME'] ?? '',
+            $_SERVER['PHP_SELF'] ?? '',
+            $_SERVER['REQUEST_URI'] ?? ''
+        ];
+
+        foreach ($uris as $u) {
+            if (empty($u)) continue;
+            if (stripos($u, '/ssparc/') !== false || stripos($u, '/karina/') !== false) {
+                return '../assets/vendor/';
+            }
+        }
+
+        return 'assets/vendor/';
+    }
 }
 
 /**
  * Core rewrite function that transforms CDN links into local vendor assets
  */
 if (!function_exists('rewrite_offline_assets')) {
-    function rewrite_offline_assets($html, $requestUri = null) {
+    function rewrite_offline_assets($html) {
+>>>>>>> db592a8 (feat: implement S-SPARC Prompt Wrapped story player, BYOK telemetry, and research CSV export)
         if (empty($html) || !is_string($html)) {
             return $html;
         }
 
+<<<<<<< HEAD
         if ($requestUri === null) {
             $requestUri = $_SERVER['REQUEST_URI'] ?? '';
         }
@@ -31,6 +85,12 @@ if (!function_exists('rewrite_offline_assets')) {
         if (stristr($requestUri, 'ssparc') !== false || stristr($requestUri, 'karina') !== false) {
             $baseAssets = '../assets/vendor/';
         }
+=======
+        $baseAssets = get_offline_assets_base();
+
+        // Determine correct path to api_proxy.php
+        $proxyPath = ($baseAssets === '../assets/vendor/') ? 'api_proxy.php' : 'ssparc/api_proxy.php';
+>>>>>>> db592a8 (feat: implement S-SPARC Prompt Wrapped story player, BYOK telemetry, and research CSV export)
 
         // Clean preconnect links
         $html = preg_replace('#<link rel="preconnect"[^>]*>\s*#i', '', $html);
@@ -47,9 +107,15 @@ if (!function_exists('rewrite_offline_assets')) {
             // jQuery -> Local jquery.min.js
             '#https?://code\.jquery\.com/jquery-[^"\']+\.js#i' => $baseAssets . 'jquery.min.js',
 
+<<<<<<< HEAD
             // SweetAlert2 -> Local sweetalert2.all.min.js
             '#https?://cdn\.jsdelivr\.net/npm/sweetalert2@[^"\']+#i' => $baseAssets . 'sweetalert2.all.min.js',
             '#https?://cdn\.jsdelivr\.net/npm/sweetalert2#i' => $baseAssets . 'sweetalert2.all.min.js',
+=======
+            // SweetAlert2 -> Local sweetalert2.all.min.js & sweetalert2.min.css
+            '#https?://cdn\.jsdelivr\.net/npm/sweetalert2@[^/]+/dist/sweetalert2\.min\.css#i' => $baseAssets . 'sweetalert2.min.css',
+            '#https?://cdn\.jsdelivr\.net/npm/sweetalert2@[^"\']+#i' => $baseAssets . 'sweetalert2.all.min.js',
+>>>>>>> db592a8 (feat: implement S-SPARC Prompt Wrapped story player, BYOK telemetry, and research CSV export)
 
             // FontAwesome -> Local fontawesome/all.min.css
             '#https?://cdnjs\.cloudflare\.com/ajax/libs/font-awesome/[^/]+/css/all\.min\.css#i' => $baseAssets . 'fontawesome/all.min.css',
@@ -65,8 +131,11 @@ if (!function_exists('rewrite_offline_assets')) {
             // Select2 -> Local select2.min.css & select2.min.js
             '#https?://cdn\.jsdelivr\.net/npm/select2@[^/]+/dist/css/select2\.min\.css#i' => $baseAssets . 'select2.min.css',
             '#https?://cdn\.jsdelivr\.net/npm/select2@[^/]+/dist/js/select2\.min\.js#i' => $baseAssets . 'select2.min.js',
+<<<<<<< HEAD
             '#https?://cdnjs\.cloudflare\.com/ajax/libs/select2/[^/]+/css/select2\.min\.css#i' => $baseAssets . 'select2.min.css',
             '#https?://cdnjs\.cloudflare\.com/ajax/libs/select2/[^/]+/js/select2\.min\.js#i' => $baseAssets . 'select2.min.js',
+=======
+>>>>>>> db592a8 (feat: implement S-SPARC Prompt Wrapped story player, BYOK telemetry, and research CSV export)
 
             // Marked & DOMPurify -> Local marked.min.js & purify.min.js
             '#https?://cdn\.jsdelivr\.net/npm/marked(/marked)?\.min\.js#i' => $baseAssets . 'marked.min.js',
@@ -84,16 +153,25 @@ if (!function_exists('rewrite_offline_assets')) {
             // Chart.js -> Local chart.umd.js
             '#https?://cdn\.jsdelivr\.net/npm/chart\.js(/dist/chart\.umd\.js)?#i' => $baseAssets . 'chart.umd.js',
 
+<<<<<<< HEAD
             // DataTables -> Local DataTables CSS & JS
             '#(https?:)?//cdn\.datatables\.net/v/bs5/dt-[^/]+/datatables\.min\.css#i' => $baseAssets . 'datatables.min.css',
             '#(https?:)?//cdn\.datatables\.net/v/bs5/dt-[^/]+/datatables\.min\.js#i' => $baseAssets . 'datatables.min.js',
             '#(https?:)?//cdn\.datatables\.net/responsive/[^/]+/css/responsive\.bootstrap5\.min\.css#i' => $baseAssets . 'responsive.bootstrap5.min.css',
             '#(https?:)?//cdn\.datatables\.net/responsive/[^/]+/js/responsive\.bootstrap5\.min\.js#i' => $baseAssets . 'responsive.bootstrap5.min.js',
+=======
+            // DataTables & Bootstrap 5 Extensions -> Local DataTables CSS & JS
+            '#(https?:)?//cdn\.datatables\.net/v/bs5/[^/]+/datatables\.min\.js#i' => $baseAssets . 'datatables.min.js',
+            '#(https?:)?//cdn\.datatables\.net/v/bs5/[^/]+/datatables\.min\.css#i' => $baseAssets . 'datatables.min.css',
+            '#(https?:)?//cdn\.datatables\.net/responsive/[^/]+/js/responsive\.bootstrap5\.min\.js#i' => $baseAssets . 'responsive.bootstrap5.min.js',
+            '#(https?:)?//cdn\.datatables\.net/responsive/[^/]+/css/responsive\.bootstrap5\.min\.css#i' => $baseAssets . 'responsive.bootstrap5.min.css',
+>>>>>>> db592a8 (feat: implement S-SPARC Prompt Wrapped story player, BYOK telemetry, and research CSV export)
             '#(https?:)?//cdn\.datatables\.net/[^/]+/css/jquery\.dataTables\.min\.css#i' => $baseAssets . 'jquery.dataTables.min.css',
             '#(https?:)?//cdn\.datatables\.net/responsive/[^/]+/css/responsive\.dataTables\.min\.css#i' => $baseAssets . 'responsive.dataTables.min.css',
             '#(https?:)?//cdn\.datatables\.net/[^/]+/js/jquery\.dataTables\.min\.js#i' => $baseAssets . 'jquery.dataTables.min.js',
             '#(https?:)?//cdn\.datatables\.net/responsive/[^/]+/js/dataTables\.responsive\.min\.js#i' => $baseAssets . 'dataTables.responsive.min.js',
 
+<<<<<<< HEAD
             // Prettify Code Highlighting -> Local run_prettify.js
             '#https?://cdn\.jsdelivr\.net/gh/google/code-prettify[^"\']+#i' => $baseAssets . 'run_prettify.js',
 
@@ -102,6 +180,14 @@ if (!function_exists('rewrite_offline_assets')) {
 
             // AI Backend FASTAPI_URL in S-SPARC -> Local api_proxy.php
             '#const FASTAPI_URL = ["\']https://estrangeinternal\.itmaranatha\.org["\'];#i' => 'const FASTAPI_URL = "api_proxy.php";'
+=======
+            // Google Code Prettify -> Local run_prettify.js
+            '#https?://cdn\.jsdelivr\.net/gh/google/code-prettify[^"\']+/run_prettify\.js#i' => $baseAssets . 'run_prettify.js',
+            '#https?://cdn\.rawgit\.com/google/code-prettify[^"\']+/run_prettify\.js#i' => $baseAssets . 'run_prettify.js',
+
+            // AI Backend FASTAPI_URL in S-SPARC -> Local api_proxy.php
+            '#const FASTAPI_URL = ["\']https://estrangeinternal\.itmaranatha\.org["\'];#i' => 'const FASTAPI_URL = "' . $proxyPath . '";'
+>>>>>>> db592a8 (feat: implement S-SPARC Prompt Wrapped story player, BYOK telemetry, and research CSV export)
         ];
 
         $rewritten = preg_replace(array_keys($replacements), array_values($replacements), $html);
@@ -115,6 +201,7 @@ if (!function_exists('rewrite_offline_assets')) {
     }
 }
 
+<<<<<<< HEAD
 // 1. Check for manual override via URL parameter if needed: ?offline=1 or ?offline=0
 if (isset($_GET['offline'])) {
     $_SESSION['is_lab_offline'] = ($_GET['offline'] === '1' || $_GET['offline'] === 'true');
@@ -140,6 +227,12 @@ if (!isset($_SESSION['is_lab_offline'])) {
 
 // 3. Register Output Buffer Rewriter if Offline Mode is Active
 if (!empty($_SESSION['is_lab_offline']) || (isset($force_offline_assets) && $force_offline_assets === true)) {
+=======
+// Activate Output Buffer Rewriter by default (unless explicitly disabled via ?online_cdn=1)
+$disableLocalAssets = (isset($_GET['online_cdn']) && ($_GET['online_cdn'] === '1' || $_GET['online_cdn'] === 'true'));
+
+if (!$disableLocalAssets) {
+>>>>>>> db592a8 (feat: implement S-SPARC Prompt Wrapped story player, BYOK telemetry, and research CSV export)
     if (!defined('ESTRANGE_ASSET_REWRITER_ACTIVE')) {
         define('ESTRANGE_ASSET_REWRITER_ACTIVE', true);
         ob_start('rewrite_offline_assets');
