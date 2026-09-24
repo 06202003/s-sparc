@@ -45,7 +45,9 @@ function renderSSOHeader($activePage = 'chat', $title = 'Chat Assistant') {
               <a class="inline-flex h-8 items-center rounded-lg px-3 transition <?= ($activePage === 'chat') ? 'bg-[#00A0A5] text-white font-semibold shadow-xs' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>" href="chat.php">Chat Assistant</a>
               <a class="inline-flex h-8 items-center rounded-lg px-3 transition <?= ($activePage === 'environmental_impact') ? 'bg-[#00A0A5] text-white font-semibold shadow-xs' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>" href="environmental_impact.php">Eco-Metrics</a>
             <?php endif; ?>
+            <a class="inline-flex h-8 items-center rounded-lg px-3 transition <?= ($activePage === 'analytics' || $activePage === 'wrapped') ? 'bg-[#00A0A5] text-white font-semibold shadow-xs' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>" href="student_analytics.php">Prompt Wrapped</a>
           <?php else: ?>
+            <a class="inline-flex h-8 items-center rounded-lg px-3 transition <?= ($activePage === 'research_analytics') ? 'bg-[#00A0A5] text-white font-semibold shadow-xs' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>" href="lecturer_analytics.php">Research Analytics</a>
             <?php if ($sso_role === 'admin'): ?>
               <a class="inline-flex h-8 items-center rounded-lg px-3 transition text-slate-600 hover:bg-slate-100 hover:text-slate-900" href="../admin_ssparc_config.php">AI Config</a>
             <?php endif; ?>
