@@ -362,12 +362,12 @@ select.select2-hidden-accessible {
 										if (!empty($rowt['sub_id'])) {
 											echo '<td class="py-3.5 px-3 text-center"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Submitted</span></td>';
 											echo '<td class="py-3.5 px-3 text-right">';
-											echo '<div class="flex items-center justify-end gap-1.5 flex-wrap">';
+											echo '<div class="flex items-center justify-end gap-1.5">';
 											
 											// Download submission
 											echo '<form class="inline" action="user_download_code.php" method="post">
 													<input type="hidden" name="id" value="'.htmlspecialchars($rowt['sub_id']).'">
-													<button type="submit" class="px-2.5 py-1 text-[11px] font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition">Download</button>
+													<button type="submit" class="px-2.5 py-1 text-[11px] font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition" title="Download submitted file">Download</button>
 												  </form>';
 
 											// Resubmit
@@ -375,38 +375,66 @@ select.select2-hidden-accessible {
 													<button type="submit" class="px-2.5 py-1 text-[11px] font-semibold bg-[#00A0A5] text-white hover:bg-slate-800 rounded-lg transition shadow-2xs">Resubmit</button>
 												  </form>';
 
-											// Suspicion report
+											// Suspicion & Clarity metrics check
 											ensure_submission_metrics($db, $rowt['sub_id']);
 											$sqlSusp = "SELECT suspicion_id, suspicion_type FROM suspicion WHERE submission_id = '".$rowt['sub_id']."'";
 											$resSusp = mysqli_query($db, $sqlSusp);
-											if ($resSusp && $resSusp->num_rows > 0) {
-												$rowSusp = $resSusp->fetch_assoc();
-												$btnLabel = ($rowSusp['suspicion_type'] == "real") ? "Originality Report" : "Originality Simulation";
-												$btnClass = ($rowSusp['suspicion_type'] == "real") ? "bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100" : "bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100";
-												echo '<form class="inline" action="user_suspicion_report.php" method="post">
-														<input type="hidden" name="id" value="'.htmlspecialchars($rowSusp['suspicion_id']).'">
-														<input type="hidden" name="course_name" value="'.htmlspecialchars($row['course_name']).'">
-														<input type="hidden" name="assessment_name" value="'.htmlspecialchars($row['assessment_name']).'">
-														<input type="hidden" name="mode" value="1">
-														<button type="submit" class="px-2.5 py-1 text-[11px] font-semibold rounded-lg transition '.$btnClass.'">'.$btnLabel.'</button>
-													  </form>';
-											}
+											$hasSusp = ($resSusp && $resSusp->num_rows > 0);
+											$rowSusp = $hasSusp ? $resSusp->fetch_assoc() : null;
 
-											// Code quality suggestion
 											$sqlQual = "SELECT public_suggestion_id FROM code_clarity_suggestion WHERE submission_id = '".$rowt['sub_id']."'";
 											$resQual = mysqli_query($db, $sqlQual);
-											if ($resQual && $resQual->num_rows > 0) {
-												$rowQual = $resQual->fetch_assoc();
-												echo '<form class="inline" action="student_code_clarity.php?id='.htmlspecialchars($rowQual['public_suggestion_id']).'" method="post">
-														<input type="hidden" name="mode" value="1">
-														<button type="submit" class="px-2.5 py-1 text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 rounded-lg transition">Code Clarity</button>
-													  </form>';
-											}
+											$hasQual = ($resQual && $resQual->num_rows > 0);
+											$rowQual = $hasQual ? $resQual->fetch_assoc() : null;
 
-											// Prompt Wrapped (unlocked when assessment deadline has passed)
 											$isClosed = (strtotime($row['submission_close_time']) < time());
-											if ($isClosed) {
-												echo '<a href="ssparc/student_prompt_wrapped.php?assessment_id='.htmlspecialchars($row['assessment_id']).'" class="px-2.5 py-1 text-[11px] font-semibold bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 rounded-lg transition">Prompt Wrapped</a>';
+
+											// Clean Dropdown for Analysis & Reports
+											if ($hasSusp || $hasQual || $isClosed) {
+												echo '<div class="relative inline-block text-left" data-dropdown-wrapper>';
+												echo '<button type="button" onclick="toggleDropdownMenu(event, this)" class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold bg-white text-slate-700 hover:bg-slate-50 border border-slate-300 rounded-lg transition shadow-2xs">
+														<span>Reports</span>
+														<svg class="w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+													  </button>';
+												echo '<div class="dropdown-menu-box hidden absolute right-0 mt-1 w-48 bg-white border border-slate-200 rounded-xl shadow-xl py-1 z-50 text-left space-y-0.5 divide-y divide-slate-100">';
+												
+												echo '<div class="px-1 py-0.5">';
+												if ($hasSusp) {
+													$btnLabel = ($rowSusp['suspicion_type'] == "real") ? "Originality Report" : "Originality Simulation";
+													echo '<form class="m-0" action="user_suspicion_report.php" method="post">
+															<input type="hidden" name="id" value="'.htmlspecialchars($rowSusp['suspicion_id']).'">
+															<input type="hidden" name="course_name" value="'.htmlspecialchars($row['course_name']).'">
+															<input type="hidden" name="assessment_name" value="'.htmlspecialchars($row['assessment_name']).'">
+															<input type="hidden" name="mode" value="1">
+															<button type="submit" class="w-full px-2.5 py-1.5 text-[11px] font-medium text-slate-700 hover:bg-slate-50 hover:text-amber-700 rounded-lg transition flex items-center gap-2 text-left">
+																<span class="w-2 h-2 rounded-full bg-amber-400 shrink-0"></span>
+																<span class="truncate">'.$btnLabel.'</span>
+															</button>
+														  </form>';
+												}
+
+												if ($hasQual) {
+													echo '<form class="m-0" action="student_code_clarity.php?id='.htmlspecialchars($rowQual['public_suggestion_id']).'" method="post">
+															<input type="hidden" name="mode" value="1">
+															<button type="submit" class="w-full px-2.5 py-1.5 text-[11px] font-medium text-slate-700 hover:bg-slate-50 hover:text-emerald-700 rounded-lg transition flex items-center gap-2 text-left">
+																<span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
+																<span class="truncate">Code Clarity</span>
+															</button>
+														  </form>';
+												}
+												echo '</div>';
+
+												if ($isClosed) {
+													echo '<div class="px-1 py-0.5">
+															<a href="ssparc/student_prompt_wrapped.php?assessment_id='.htmlspecialchars($row['assessment_id']).'" class="w-full px-2.5 py-1.5 text-[11px] font-semibold text-purple-700 hover:bg-purple-50 rounded-lg transition flex items-center gap-2 text-left">
+																<span class="w-2 h-2 rounded-full bg-purple-500 shrink-0"></span>
+																<span class="truncate">Prompt Wrapped</span>
+															</a>
+														  </div>';
+												}
+
+												echo '</div>';
+												echo '</div>';
 											}
 
 											echo '</div></td>';
@@ -433,6 +461,27 @@ select.select2-hidden-accessible {
 	</main>
 
 	<script>
+		function toggleDropdownMenu(e, btn) {
+			e.stopPropagation();
+			const wrapper = btn.closest('[data-dropdown-wrapper]');
+			const menu = wrapper.querySelector('.dropdown-menu-box');
+			const isOpen = !menu.classList.contains('hidden');
+			
+			// Close all other dropdowns
+			document.querySelectorAll('.dropdown-menu-box').forEach(el => el.classList.add('hidden'));
+			
+			if (!isOpen) {
+				menu.classList.remove('hidden');
+			}
+		}
+
+		// Close dropdowns on outside click
+		document.addEventListener('click', function(e) {
+			if (!e.target.closest('[data-dropdown-wrapper]')) {
+				document.querySelectorAll('.dropdown-menu-box').forEach(el => el.classList.add('hidden'));
+			}
+		});
+
 		$(document).ready(function() {
 			new DataTable('#studentDashboard', {
 				responsive: true,
