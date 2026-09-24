@@ -580,10 +580,11 @@
             position: relative;
             width: 100%;
             min-height: 320px;
-            overflow: hidden !important; /* Clean containment, no scrollbars */
+            overflow: hidden !important;
             cursor: grab;
             user-select: none;
             -webkit-user-select: none;
+            touch-action: none !important; /* Prevents browser touch-scroll interference during dragging */
             background-color: #070b12;
             background-image: 
                 radial-gradient(circle at center, rgba(56, 189, 248, 0.05) 0%, transparent 75%),
@@ -608,6 +609,12 @@
             justify-content: center;
             align-items: center;
             width: 100%;
+        }
+
+        .diagram-scalable * {
+            pointer-events: none !important;
+            user-select: none !important;
+            -webkit-user-select: none !important;
         }
 
         .diagram-scalable svg {
@@ -1485,47 +1492,52 @@ The **S-SPARC AI™ Initiative** was conceptualized and developed by the **ITMCU
 
             const state = window.diagramStates[scalableId];
 
-            function applyTransform(smooth = false) {
-                if (smooth) {
-                    scalableEl.style.transition = 'transform 0.18s cubic-bezier(0.2, 0, 0, 1)';
-                } else {
-                    scalableEl.style.transition = 'none';
-                }
+            function applyTransform() {
                 scalableEl.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.scale})`;
             }
 
-            // Mouse Down (Drag to Pan)
-            viewportEl.addEventListener('mousedown', (e) => {
-                if (e.button !== 0) return; // Only left click
+            // Pointer Down (Mouse, Touch, Pen drag)
+            viewportEl.addEventListener('pointerdown', (e) => {
+                if (e.button !== 0 && e.pointerType === 'mouse') return; // Only primary mouse button
                 state.isDragging = true;
                 state.startX = e.clientX - state.panX;
                 state.startY = e.clientY - state.panY;
                 viewportEl.classList.add('is-dragging');
+                scalableEl.style.transition = 'none';
+                try {
+                    viewportEl.setPointerCapture(e.pointerId);
+                } catch (err) {}
                 e.preventDefault();
             });
 
-            // Window Mouse Move & Up (prevents losing drag when mouse moves outside viewport quickly)
-            window.addEventListener('mousemove', (e) => {
+            // Pointer Move
+            viewportEl.addEventListener('pointermove', (e) => {
                 if (!state.isDragging) return;
                 state.panX = e.clientX - state.startX;
                 state.panY = e.clientY - state.startY;
-                applyTransform(false);
+                applyTransform();
             });
 
-            window.addEventListener('mouseup', () => {
+            // Pointer Up / Cancel
+            const handlePointerEnd = (e) => {
                 if (state.isDragging) {
                     state.isDragging = false;
                     viewportEl.classList.remove('is-dragging');
+                    try {
+                        viewportEl.releasePointerCapture(e.pointerId);
+                    } catch (err) {}
                 }
-            });
+            };
 
-            // Mouse Wheel Zoom centered at cursor
+            viewportEl.addEventListener('pointerup', handlePointerEnd);
+            viewportEl.addEventListener('pointercancel', handlePointerEnd);
+
+            // Mouse Wheel Zoom
             viewportEl.addEventListener('wheel', (e) => {
                 e.preventDefault();
                 const zoomFactor = e.deltaY < 0 ? 1.15 : 0.87;
                 const rect = viewportEl.getBoundingClientRect();
                 
-                // Cursor position relative to center of viewport
                 const mouseX = e.clientX - rect.left - rect.width / 2;
                 const mouseY = e.clientY - rect.top - rect.height / 2;
 
@@ -1537,47 +1549,10 @@ The **S-SPARC AI™ Initiative** was conceptualized and developed by the **ITMCU
                     state.panX = mouseX - ratio * (mouseX - state.panX);
                     state.panY = mouseY - ratio * (mouseY - state.panY);
                     state.scale = newScale;
-                    applyTransform(true);
+                    scalableEl.style.transition = 'transform 0.12s ease-out';
+                    applyTransform();
                 }
             }, { passive: false });
-
-            // Touch support (1-finger pan, 2-finger pinch)
-            let touchStartX = 0, touchStartY = 0, initialDistance = 0, initialScale = 1.0;
-
-            viewportEl.addEventListener('touchstart', (e) => {
-                if (e.touches.length === 1) {
-                    state.isDragging = true;
-                    touchStartX = e.touches[0].clientX - state.panX;
-                    touchStartY = e.touches[0].clientY - state.panY;
-                } else if (e.touches.length === 2) {
-                    state.isDragging = false;
-                    initialDistance = Math.hypot(
-                        e.touches[0].clientX - e.touches[1].clientX,
-                        e.touches[0].clientY - e.touches[1].clientY
-                    );
-                    initialScale = state.scale;
-                }
-            }, { passive: true });
-
-            viewportEl.addEventListener('touchmove', (e) => {
-                if (e.touches.length === 1 && state.isDragging) {
-                    state.panX = e.touches[0].clientX - touchStartX;
-                    state.panY = e.touches[0].clientY - touchStartY;
-                    applyTransform(false);
-                } else if (e.touches.length === 2 && initialDistance > 0) {
-                    const currentDist = Math.hypot(
-                        e.touches[0].clientX - e.touches[1].clientX,
-                        e.touches[0].clientY - e.touches[1].clientY
-                    );
-                    state.scale = Math.max(0.25, Math.min(4.5, initialScale * (currentDist / initialDistance)));
-                    applyTransform(false);
-                }
-            }, { passive: true });
-
-            viewportEl.addEventListener('touchend', () => {
-                state.isDragging = false;
-                initialDistance = 0;
-            });
         }
 
         window.zoomDiagram = function(id, factor) {
