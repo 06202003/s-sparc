@@ -349,49 +349,48 @@ flowchart TD
     classDef data fill:#1e293b,stroke:#94a3b8,stroke-width:2px,color:#f8fafc;
     classDef output fill:#1e3a8a,stroke:#60a5fa,stroke-width:2px,color:#f8fafc;
 
-    subgraph L1 ["1. Client & LMS Presentation Tier"]
+    subgraph L1 ["Layer 1: Client Presentation Tier"]
         direction LR
-        UI["<b>Student Workbench</b><br/>C-I-O-E & Prompt Wrapped"]:::client
-        FAC["<b>Faculty Analytics Hub</b><br/>Cohort Radar & Telemetry"]:::client
+        UI["Student Inquiry Workbench<br/>(C-I-O-E & Prompt Wrapped)"]:::client
+        FAC["Faculty Analytics Hub<br/>(Cohort Radar & Telemetry)"]:::client
     end
 
-    subgraph L2 ["2. Security & Gateway Tier"]
+    subgraph L2 ["Layer 2: Security & Gateway Tier"]
         direction LR
-        SSO["<b>SSO & HMAC Guard</b><br/>Signed Session Validation"]:::gateway
-        PROXY["<b>Asset Rewriter</b><br/>Dynamic Path & RBAC Proxy"]:::gateway
+        SSO["SSO Bridge & HMAC Guard<br/>(Session Validation)"]:::gateway
+        PROXY["Asset Rewriter & Proxy<br/>(Dynamic Path & RBAC)"]:::gateway
     end
 
-    subgraph L3 ["3. S-SPARC Microservice Engine (FastAPI Python 3.12)"]
-        direction TB
-        LINT["<b>Shannon Entropy & C-I-O-E Linter</b><br/>Sub-10ms Linguistic & Quality Scoring"]:::microservice
-        CACHE{"<b>Hybrid Semantic Memory</b><br/>FAISS Dense + BM25 RRF"}:::microservice
-        ROUTER["<b>Dynamic Circuit Breaker & Fallback Router</b><br/>Multi-Provider Health & Quota Dispatcher"]:::microservice
+    subgraph L3 ["Layer 3: S-SPARC Microservices Engine"]
+        LINT["Shannon Entropy & C-I-O-E Linter Engine<br/>(Sub-10ms Linguistic & Quality Scoring)"]:::microservice
+        CACHE{"Hybrid Semantic Memory Engine<br/>(FAISS Dense + BM25 RRF)"}:::microservice
+        DB_VEC[("FAISS Vector Index<br/>(384-d Dense Store)")]:::data
+        ROUTER["Dynamic Fallback Router & Circuit Breaker<br/>(Health & Quota-Aware Dispatcher)"]:::microservice
     end
 
-    subgraph L4 ["4. Multi-Tier Model Inference Providers"]
+    subgraph L4 ["Layer 4: Multi-Tier Model Inference"]
         direction LR
-        T1["<b>Tier 1: Cloud LPUs</b><br/>Groq / Cerebras / Gemini"]:::provider
-        T2["<b>Tier 2: BYOK Pool</b><br/>Enterprise Key Pool"]:::provider
-        T3["<b>Tier 3: Local Sovereign Host</b><br/>Ollama Qwen2.5 (100% Offline)"]:::provider
+        T1["Tier 1: Cloud LPUs<br/>(Groq / Cerebras / Gemini)"]:::provider
+        T2["Tier 2: BYOK Pool<br/>(Enterprise Key Pool)"]:::provider
+        T3["Tier 3: Local Sovereign Host<br/>(Ollama Qwen2.5 Offline)"]:::provider
     end
 
-    subgraph L5 ["5. Unified Storage & Environmental Accounting"]
+    subgraph L5 ["Layer 5: Unified Persistence & Eco Accounting"]
         direction LR
-        ECO["<b>Thermodynamic Engine</b><br/>Energy Wh, CO2e & Water mL"]:::data
-        DB_SQL[("<b>E-STRANGE DB</b><br/>MySQL Records")]:::data
-        DB_VEC[("<b>Vector Index</b><br/>384-d Store")]:::data
+        ECO["Thermodynamic Accounting Engine<br/>(Physics-based Wh, CO2e & Water mL)"]:::data
+        DB_SQL[("E-STRANGE LMS Database<br/>(MySQL Relational Records)")]:::data
     end
 
-    OUT["<b>Delivered Response</b><br/>Scaffolded Socratic Hint + Green Environmental Receipt"]:::output
+    RESP["Delivered Scaffolded Response<br/>(Socratic Hint + Green Environmental Receipt)"]:::output
 
-    %% Clean Pipeline Flow
+    %% Pipeline Dataflow
     UI --> SSO
     FAC --> SSO
     SSO --> PROXY
     PROXY --> LINT
     LINT --> CACHE
 
-    CACHE <--> DB_VEC
+    CACHE <-->|Semantic Vector Lookup| DB_VEC
     CACHE -- "Cache Hit (Similarity >= 0.88)<br/>[ <45ms | 0 Tokens | 0 Wh ]" --> ECO
     CACHE -- "Cache Miss (Similarity < 0.88)" --> ROUTER
 
@@ -404,7 +403,7 @@ flowchart TD
     T3 --> ECO
 
     ECO --> DB_SQL
-    ECO --> OUT
+    ECO --> RESP
 ```
 
 ---
