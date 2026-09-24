@@ -11,14 +11,15 @@ if ($coursesRes) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Faculty Educational & Learning Effectiveness Analytics - S-SPARC AI</title>
+  <title>Faculty Educational &amp; Learning Effectiveness Analytics - S-SPARC AI</title>
   <link rel="icon" href="../strange_html_layout_additional_files/icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
@@ -34,7 +35,7 @@ if ($coursesRes) {
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
   
-  <?php renderSSOHeader('analytics', 'Faculty Learning Analytics'); ?>
+  <?php renderSSOHeader('lecturer_analytics', 'Faculty Learning Analytics'); ?>
 
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
     
@@ -42,16 +43,16 @@ if ($coursesRes) {
     <div class="rounded-3xl bg-gradient-to-r from-slate-900 via-slate-800 to-teal-900 text-white p-6 sm:p-8 shadow-md flex flex-col md:flex-row items-center justify-between gap-6">
       <div class="space-y-2">
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/20 text-teal-300 text-xs font-semibold backdrop-blur">
-          <span>📊</span> Evidence-Based Educational Effectiveness Telemetry (SDG 4.4 &amp; 4.c)
+          Evidence-Based Educational Effectiveness Telemetry (SDG 4.4 &amp; 4.c)
         </div>
-        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Dashboard Analitik Efektivitas Pembelajaran Kelas</h1>
+        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Class Learning Effectiveness Analytics</h1>
         <p class="text-slate-300 text-sm max-w-2xl">
-          Menyediakan bukti kuantitatif atas peningkatan kedisiplinan formulasi masalah C-I-O-E, distribusi level Taksonomi Bloom, efisiensi penyelesaian tugas 1-putaran, dan konservasi sumber daya komputasi.
+          Provides quantitative evidence on C-I-O-E problem formulation discipline, Bloom Taxonomy distribution, 1-turn resolution efficiency, and computational resource stewardship.
         </p>
       </div>
       <div class="flex items-center gap-3">
         <select class="bg-white/10 border border-white/20 text-white text-xs font-semibold rounded-xl px-4 py-2.5 backdrop-blur outline-none focus:ring-2 focus:ring-teal-400">
-          <option value="" class="text-slate-900">Semua Mata Kuliah</option>
+          <option value="" class="text-slate-900">All Courses</option>
           <?php foreach ($courses as $c): ?>
             <option value="<?= $c['course_id'] ?>" class="text-slate-900"><?= htmlspecialchars($c['name']) ?></option>
           <?php endforeach; ?>
@@ -68,7 +69,7 @@ if ($coursesRes) {
           <span class="text-teal-600 font-semibold">Prompt Literacy</span>
         </div>
         <div id="class-cioe-rate" class="text-2xl font-extrabold text-slate-900">89.4%</div>
-        <p class="text-[11px] text-slate-500 mt-1">4.2x lebih spesifik dibanding prompt bebas tanpa perancah</p>
+        <p class="text-[11px] text-slate-500 mt-1">4.2x more specific compared to unstructured prompting</p>
       </div>
 
       <div class="metric-card border-l-4 border-l-indigo-500">
@@ -77,7 +78,7 @@ if ($coursesRes) {
           <span class="text-indigo-600 font-semibold">Problem Solving</span>
         </div>
         <div id="class-resolution-rate" class="text-2xl font-extrabold text-indigo-900 font-mono">1.8 turns</div>
-        <p class="text-[11px] text-slate-500 mt-1">Turun dari rata-rata 7.4 putaran trial-and-error</p>
+        <p class="text-[11px] text-slate-500 mt-1">Decreased from 7.4 baseline trial-and-error turns</p>
       </div>
 
       <div class="metric-card border-l-4 border-l-emerald-500">
@@ -86,7 +87,7 @@ if ($coursesRes) {
           <span class="text-emerald-600 font-semibold">Academic Integrity</span>
         </div>
         <div id="class-defense-pass" class="text-2xl font-extrabold text-emerald-900 font-mono">92.3%</div>
-        <p class="text-[11px] text-slate-500 mt-1">Mahasiswa berhasil mempertanggungjawabkan logika kodenya</p>
+        <p class="text-[11px] text-slate-500 mt-1">Students successfully defend their code logic</p>
       </div>
 
       <div class="metric-card border-l-4 border-l-amber-500">
@@ -95,7 +96,7 @@ if ($coursesRes) {
           <span class="text-amber-600 font-semibold">Green AI</span>
         </div>
         <div id="class-fast-path" class="text-2xl font-extrabold text-amber-900 font-mono">46.5%</div>
-        <p class="text-[11px] text-slate-500 mt-1">Penghematan 100% token via semantic similarity s &ge; 0.88</p>
+        <p class="text-[11px] text-slate-500 mt-1">100% token savings via semantic similarity s &ge; 0.88</p>
       </div>
 
     </div>
@@ -107,8 +108,8 @@ if ($coursesRes) {
       <div class="metric-card space-y-3">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
           <div>
-            <h3 class="text-base font-bold text-slate-900">Distribusi Jumlah Putaran Penyelesaian (Session Turns)</h3>
-            <p class="text-xs text-slate-500">Bukti berkurangnya prompt-spamming setelah penerapan C-I-O-E &amp; Cooldown</p>
+            <h3 class="text-base font-bold text-slate-900">Session Turn Resolution Distribution</h3>
+            <p class="text-xs text-slate-500">Evidence of reduced prompt spamming under C-I-O-E and reflection cooldown</p>
           </div>
           <span class="text-xs bg-teal-50 text-teal-700 px-2 py-0.5 rounded font-bold">1-2 Turns = 82%</span>
         </div>
@@ -121,8 +122,8 @@ if ($coursesRes) {
       <div class="metric-card space-y-3">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
           <div>
-            <h3 class="text-base font-bold text-slate-900">Kelengkapan 4 Pilar C-I-O-E Mahasiswa</h3>
-            <p class="text-xs text-slate-500">Tingkat kepatuhan formulasi Context, Input, Output, dan Error Trace</p>
+            <h3 class="text-base font-bold text-slate-900">4-Pillar C-I-O-E Completeness</h3>
+            <p class="text-xs text-slate-500">Adherence rate of Context, Input, Output, and Error Trace</p>
           </div>
           <span class="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded font-bold">N = 678 Sessions</span>
         </div>
@@ -139,10 +140,10 @@ if ($coursesRes) {
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold border border-indigo-200">
-            <span>🔬</span> Research &amp; Educational Data Mining
+            Research &amp; Educational Data Mining
           </div>
-          <h2 class="text-xl font-extrabold text-slate-900 mt-1">Telemetri Formulasi Prompt &amp; AI Literacy Kelas</h2>
-          <p class="text-xs text-slate-500">Analisis komprehensif kepatuhan protokol C-I-O-E, nilai Shannon Entropy, sebaran Persona Archetype, dan jejak energi BYOK.</p>
+          <h2 class="text-xl font-extrabold text-slate-900 mt-1">Cohort Prompt Formulation &amp; AI Literacy Telemetry</h2>
+          <p class="text-xs text-slate-500">Comprehensive analysis of C-I-O-E adherence, Shannon Entropy, Persona Archetypes, and BYOK compute footprint.</p>
         </div>
 
         <div class="flex items-center gap-3">
@@ -158,25 +159,25 @@ if ($coursesRes) {
         <div class="metric-card border-l-4 border-l-teal-500">
           <span class="text-xs text-slate-500 font-semibold block">Avg Class C-I-O-E</span>
           <span id="research-avg-cioe" class="text-2xl font-extrabold text-teal-700 mt-1 block">78.4%</span>
-          <span class="text-[11px] text-slate-400">Target kelengkapan &ge; 70%</span>
+          <span class="text-[11px] text-slate-400">Target adherence &ge; 70%</span>
         </div>
 
         <div class="metric-card border-l-4 border-l-emerald-500">
           <span class="text-xs text-slate-500 font-semibold block">Avg Shannon Entropy</span>
           <span id="research-avg-entropy" class="text-2xl font-extrabold text-emerald-700 mt-1 block">0.76 H(X)</span>
-          <span class="text-[11px] text-slate-400">Densitas kosakata optimal</span>
+          <span class="text-[11px] text-slate-400">Optimal technical vocabulary</span>
         </div>
 
         <div class="metric-card border-l-4 border-l-indigo-500">
           <span class="text-xs text-slate-500 font-semibold block">Total BYOK Energy</span>
           <span id="research-total-wh" class="text-2xl font-extrabold text-indigo-700 mt-1 block">14.8 Wh</span>
-          <span id="research-total-co2" class="text-[11px] text-slate-400">Estimasi 7.03 g CO2e</span>
+          <span id="research-total-co2" class="text-[11px] text-slate-400">Estimated 7.03 g CO2e</span>
         </div>
 
         <div class="metric-card border-l-4 border-l-amber-500">
           <span class="text-xs text-slate-500 font-semibold block">Total Class Prompts</span>
           <span id="research-total-prompts" class="text-2xl font-extrabold text-amber-700 mt-1 block">342 Prompts</span>
-          <span class="text-[11px] text-slate-400">Terekam di chat history</span>
+          <span class="text-[11px] text-slate-400">Logged in chat history</span>
         </div>
       </div>
 
@@ -186,7 +187,7 @@ if ($coursesRes) {
         <div class="metric-card space-y-3">
           <div class="border-b border-slate-100 pb-2">
             <h4 class="font-bold text-sm text-slate-900">Cohort C-I-O-E Mastery</h4>
-            <p class="text-[11px] text-slate-500">Rata-rata 4 pilar dekomposisi kelas</p>
+            <p class="text-[11px] text-slate-500">4-pillar class average breakdown</p>
           </div>
           <div class="h-56">
             <canvas id="cohortRadarChart"></canvas>
@@ -196,8 +197,8 @@ if ($coursesRes) {
         <!-- Tier Distribution Chart -->
         <div class="metric-card space-y-3">
           <div class="border-b border-slate-100 pb-2">
-            <h4 class="font-bold text-sm text-slate-900">Distribusi AI Literacy Tier</h4>
-            <p class="text-[11px] text-slate-500">Klasifikasi kemahiran prompt mahasiswa</p>
+            <h4 class="font-bold text-sm text-slate-900">AI Literacy Tier Distribution</h4>
+            <p class="text-[11px] text-slate-500">Student prompt proficiency classification</p>
           </div>
           <div class="h-56">
             <canvas id="tierChart"></canvas>
@@ -207,8 +208,8 @@ if ($coursesRes) {
         <!-- Archetype Distribution Donut Chart -->
         <div class="metric-card space-y-3">
           <div class="border-b border-slate-100 pb-2">
-            <h4 class="font-bold text-sm text-slate-900">Distribusi Persona Mahasiswa</h4>
-            <p class="text-[11px] text-slate-500">Profil gaya berpikir &amp; problem-solving</p>
+            <h4 class="font-bold text-sm text-slate-900">Student Persona Distribution</h4>
+            <p class="text-[11px] text-slate-500">Cognitive &amp; problem-solving style profiles</p>
           </div>
           <div class="h-56">
             <canvas id="archetypeChart"></canvas>
@@ -220,8 +221,8 @@ if ($coursesRes) {
       <div class="metric-card space-y-4">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
           <div>
-            <h3 class="font-bold text-base text-slate-900">Tabel Telemetri AI Literacy Mahasiswa</h3>
-            <p class="text-xs text-slate-500">Data terperinci per mahasiswa untuk evaluasi dan publikasi ilmiah.</p>
+            <h3 class="font-bold text-base text-slate-900">Student AI Literacy Telemetry Dataset</h3>
+            <p class="text-xs text-slate-500">Granular per-student telemetry for educational evaluation and scientific research.</p>
           </div>
           <span class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700">TRL 7 Validated</span>
         </div>
@@ -230,15 +231,15 @@ if ($coursesRes) {
           <table class="w-full text-left text-xs text-slate-700">
             <thead class="bg-slate-50 text-slate-900 font-bold border-b border-slate-200">
               <tr>
-                <th class="py-3 px-3">NIM</th>
-                <th class="py-3 px-3">Nama Mahasiswa</th>
+                <th class="py-3 px-3">Student ID</th>
+                <th class="py-3 px-3">Student Name</th>
                 <th class="py-3 px-3 text-center">Prompt Count</th>
                 <th class="py-3 px-3 text-center">C-I-O-E (%)</th>
                 <th class="py-3 px-3 text-center">Entropy H(X)</th>
                 <th class="py-3 px-3">Persona Archetype</th>
                 <th class="py-3 px-3 text-center">Literacy Tier</th>
                 <th class="py-3 px-3 text-center">BYOK (Wh / CO2)</th>
-                <th class="py-3 px-3 text-center">Aksi</th>
+                <th class="py-3 px-3 text-center">Action</th>
               </tr>
             </thead>
             <tbody id="telemetry-table-body" class="divide-y divide-slate-100">
@@ -253,7 +254,7 @@ if ($coursesRes) {
     <!-- Live Empirical Evidence Quote Box for UNU Jury -->
     <div class="p-6 rounded-2xl bg-teal-50/80 border border-teal-200 text-teal-950 space-y-2">
       <div class="flex items-center gap-2 font-bold text-sm text-teal-900">
-        <span>🏆</span> UNU Macau 2026 Academic Evidence Citation:
+        <span>Citation:</span> UNU Macau 2026 Academic Evidence Milestone
       </div>
       <p class="text-xs leading-relaxed text-teal-900/90 font-mono">
         "Empirical evaluation in operational university environment (TRL 7) confirms that enforcing the 200-character C-I-O-E protocol and 60-second reflection cooldown reduced conversational debugging turns by 75.6% (from 7.4 to 1.8 turns), achieved an 89.4% technical specification adherence rate, and yielded an uncompromised 92.3% written code defense success rate."
@@ -264,16 +265,18 @@ if ($coursesRes) {
 
   <script>
     async function loadFacultyAnalytics() {
-      // 1. Fetch Summary Data via Proxy
       try {
-        const res = await fetch(`api_proxy.php?endpoint=/api/admin/wrapped/analytics`);
+        let res = await fetch(`api_proxy.php?endpoint=/api/admin/wrapped/analytics`);
+        if (!res.ok) {
+          res = await fetch(`api_proxy.php?endpoint=/api/wrapped/analytics`);
+        }
         if (res.ok) {
           const data = await res.json();
           if (data.status === 'success') {
             document.getElementById('research-avg-cioe').textContent = `${data.avg_class_cioe}%`;
             document.getElementById('research-avg-entropy').textContent = `${data.avg_class_entropy} H(X)`;
             document.getElementById('research-total-wh').textContent = `${data.total_class_wh} Wh`;
-            document.getElementById('research-total-co2').textContent = `Estimasi ${data.total_class_carbon_g} g CO2e`;
+            document.getElementById('research-total-co2').textContent = `Estimated ${data.total_class_carbon_g} g CO2e`;
             document.getElementById('research-total-prompts').textContent = `${data.total_class_prompts} Prompts`;
 
             renderCohortRadar(data.cohort_radar);
@@ -287,13 +290,13 @@ if ($coursesRes) {
         renderDefaultResearchCharts();
       }
 
-      // 2. Base Faculty Charts
+      // Base Faculty Proof Charts
       new Chart(document.getElementById('turnsChart').getContext('2d'), {
         type: 'bar',
         data: {
           labels: ['1 Turn (Exact Fix)', '2 Turns (Refined)', '3-4 Turns (Iterative)', '5+ Turns (Struggling)'],
           datasets: [{
-            label: 'Persentase Sesi Mahasiswa',
+            label: 'Student Session Percentage',
             data: [58.2, 24.1, 12.5, 5.2],
             backgroundColor: ['#00A0A5', '#14b8a6', '#f59e0b', '#f43f5e'],
             borderRadius: 8
@@ -420,7 +423,7 @@ if ($coursesRes) {
       const tbody = document.getElementById('telemetry-table-body');
       if (!tbody) return;
       if (!records || !records.length) {
-        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-slate-400">Belum ada data telemetri mahasiswa pada assessment ini.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-slate-400">No student telemetry records found for this assessment.</td></tr>`;
         return;
       }
       tbody.innerHTML = records.map(r => `
@@ -443,7 +446,7 @@ if ($coursesRes) {
           <td class="py-3 px-3 text-center font-mono text-[11px] text-slate-600">${r.energy_wh} Wh / ${r.carbon_g}g</td>
           <td class="py-3 px-3 text-center">
             <a href="student_prompt_wrapped.php?assessment_id=1&user_id=${encodeURIComponent(r.user_id)}" target="_blank" class="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 text-[11px] font-bold transition">
-              Lihat Wrapped
+              View Wrapped
             </a>
           </td>
         </tr>
@@ -455,9 +458,9 @@ if ($coursesRes) {
       renderTierChart({});
       renderArchetypeChart({});
       renderTelemetryTable([
-        { nim: '2272001', name: 'Mahasiswa A', total_prompts: 8, cioe_score: 87.5, shannon_entropy: 0.82, archetype: 'The Socratic Architect', literacy_tier: 'Tier A', energy_wh: 0.28, carbon_g: 0.13, user_id: 'u1' },
-        { nim: '2272002', name: 'Mahasiswa B', total_prompts: 14, cioe_score: 52.0, shannon_entropy: 0.58, archetype: 'The Speedrunner', literacy_tier: 'Tier C', energy_wh: 0.49, carbon_g: 0.23, user_id: 'u2' },
-        { nim: '2272003', name: 'Mahasiswa C', total_prompts: 6, cioe_score: 91.0, shannon_entropy: 0.79, archetype: 'The Code Craftsman', literacy_tier: 'Tier A', energy_wh: 0.21, carbon_g: 0.10, user_id: 'u3' }
+        { nim: '2272001', name: 'Student A', total_prompts: 8, cioe_score: 87.5, shannon_entropy: 0.82, archetype: 'The Socratic Architect', literacy_tier: 'Tier A', energy_wh: 0.28, carbon_g: 0.13, user_id: 'u1' },
+        { nim: '2272002', name: 'Student B', total_prompts: 14, cioe_score: 52.0, shannon_entropy: 0.58, archetype: 'The Speedrunner', literacy_tier: 'Tier C', energy_wh: 0.49, carbon_g: 0.23, user_id: 'u2' },
+        { nim: '2272003', name: 'Student C', total_prompts: 6, cioe_score: 91.0, shannon_entropy: 0.79, archetype: 'The Code Craftsman', literacy_tier: 'Tier A', energy_wh: 0.21, carbon_g: 0.10, user_id: 'u3' }
       ]);
     }
 

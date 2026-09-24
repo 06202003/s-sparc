@@ -68,7 +68,7 @@ class PromptCriticService:
                         "assessment_title": assessment_title,
                         "course_name": course_name,
                         "due_date": due_date_str,
-                        "message": "S-SPARC Wrapped dikunci selama assessment masih aktif. Wrapped otomatis terbuka setelah waktu pengerjaan tugas resmi berakhir."
+                        "message": "S-SPARC Wrapped is locked while the assessment is active. It automatically unlocks once the assessment submission window officially closes."
                     }
 
                 # 2. Fetch Prompts & Chats for this Assessment
@@ -283,7 +283,7 @@ class PromptCriticService:
                     "score": round(best_item['analysis']['prompt_quality_score'] * 100, 1),
                     "entropy": best_item['analysis']['shannon_entropy'],
                     "cioe_score": round(best_item['analysis']['cioe_score'] * 100, 1),
-                    "why_stellar": best_item['analysis']['feedback'][0] if best_item['analysis']['feedback'] else "Struktur lengkap dan spesifikasi teknis sangat jelas."
+                    "why_stellar": best_item['analysis']['feedback'][0] if best_item['analysis']['feedback'] else "Complete structure with clear technical specifications and constraints."
                 },
                 "needs_polish_prompt": {
                     "text": worst_item['prompt'],
@@ -311,42 +311,42 @@ class PromptCriticService:
             return {
                 "title": "The Socratic Architect",
                 "tagline": "Master of Context & Mathematical Precision",
-                "description": "Menyusun kerangka berpikir lengkap dengan spesifikasi teknis, batasan input, dan target kompleksitas yang matang.",
+                "description": "Constructs comprehensive cognitive frameworks with rigorous technical specifications, input bounds, and algorithmic constraints.",
                 "power_stat": "95% C-I-O-E Protocol Adherence"
             }
         elif fast_path_hits >= 2 or fast_path_hits >= total_prompts * 0.4:
             return {
                 "title": "The Fast-Path Prodigy",
                 "tagline": "Zero-Token Semantic Cache Master",
-                "description": "Mahir memicu cache semantik kurikulum, mengoptimalkan kecepatan respons dan menekan konsumsi token cloud.",
+                "description": "Skillfully triggers semantic vector cache hits, maximizing response turnaround while eliminating redundant cloud compute.",
                 "power_stat": f"{fast_path_hits}x Zero-Token Cache Hits"
             }
         elif error_pct >= 40:
             return {
                 "title": "The Bug Hunter",
                 "tagline": "Precision Debugger & Traceback Striker",
-                "description": "Fokus membedah exception dan root cause bug dengan menyertakan traceback, nomor baris, dan skenario kegagalan.",
+                "description": "Excels at dissecting exceptions and root causes by supplying explicit tracebacks, line references, and failure scenarios.",
                 "power_stat": f"{error_pct}% Error Investigation Rate"
             }
         elif avg_tech >= 0.50:
             return {
                 "title": "The Code Craftsman",
                 "tagline": "Type-Safe & Algorithmic Thinker",
-                "description": "Prompt kaya akan istilah tipe data eksplisit, notasi O(N), dan struktur data tingkat lanjut.",
+                "description": "Prompts are dense with explicit type annotations, Big-O complexities, and advanced data structure terminology.",
                 "power_stat": f"{round(avg_tech * 100)}% Technical Token Density"
             }
         elif total_prompts >= 8:
             return {
                 "title": "The Speedrunner",
                 "tagline": "Rapid Iteration & Dynamic Explorer",
-                "description": "Bereksperimen dengan iterasi cepat dan menguji hipotesis pemrograman secara dinamis melalui interaksi berkala.",
+                "description": "Iterates rapidly, testing computational hypotheses dynamically through continuous short-turn feedback loops.",
                 "power_stat": f"{total_prompts} Continuous Interactions"
             }
         else:
             return {
                 "title": "The Developing Prompter",
                 "tagline": "Rising AI Literacy Explorer",
-                "description": "Mulai membiasakan diri menggunakan AI terstruktur. Dengan menambahkan konteks dan batasan input, dekomposisi akan semakin presisi.",
+                "description": "Building foundational structured prompting habits. Adding explicit context and input bounds will yield higher precision.",
                 "power_stat": "Growing Computational Decomposition"
             }
 
@@ -356,22 +356,22 @@ class PromptCriticService:
         analysis = worst_item['analysis']
         missing_parts = []
         if not analysis['cioe_breakdown']['has_context']:
-            missing_parts.append("Konteks Bahasa/Framework")
+            missing_parts.append("Language/Framework Context")
         if not analysis['cioe_breakdown']['has_input']:
-            missing_parts.append("Spesifikasi Input/Prekondisi")
+            missing_parts.append("Input/Pre-condition Specifications")
         if not analysis['cioe_breakdown']['has_output']:
-            missing_parts.append("Kondisi Output/Kompleksitas")
+            missing_parts.append("Output/Complexity Constraints")
 
         critic_comment = (
-            f"Prompt ini terasa terlalu abstrak karena tidak menyertakan {', '.join(missing_parts) if missing_parts else 'detail teknis yang mendalam'}. "
-            f"AI cenderung memberikan jawaban generik jika Anda tidak mengunci batasan waktu O(N) dan struktur data inputnya."
+            f"This prompt appears overly abstract because it lacks {', '.join(missing_parts) if missing_parts else 'in-depth technical constraints'}. "
+            f"The AI tends to provide generic responses unless you anchor input data types, O(N) complexity constraints, and pre-conditions."
         )
 
         suggested_rewrite = (
-            f"[CONTEXT: Python 3 / Algoritma]\n"
-            f"[INPUT: Array integer berukuran N <= 10^5, nilai acak]\n"
-            f"[OUTPUT: Return integer nilai minimum dengan target kompleksitas O(N log N)]\n"
-            f"Pertanyaan: Bagaimanakah implementasi efisien untuk menyelesaikan '{p_text[:80]}...'?"
+            f"[CONTEXT: Python 3 / Algorithms]\n"
+            f"[INPUT: Integer array of size N <= 10^5, randomized values]\n"
+            f"[OUTPUT: Return minimum integer with O(N log N) target complexity]\n"
+            f"Query: What is the optimal implementation to solve '{p_text[:80]}...'?"
         )
 
         return {
@@ -383,16 +383,16 @@ class PromptCriticService:
     def _generate_action_items(context_pct: int, input_pct: int, output_pct: int, avg_entropy: float) -> List[str]:
         actions = []
         if context_pct < 60:
-            actions.append("Kunci Konteks di Awal: Selalu sebutkan bahasa pemrograman, versi, atau topik modul di baris pertama.")
+            actions.append("Anchor Context First: State the programming language, runtime version, or module topic in the initial line.")
         if input_pct < 60:
-            actions.append("Sertakan Batasan Input: Jelaskan tipe data parameter dan batasan ukuran data (contoh: N <= 10^5) agar algoritma tepat sasaran.")
+            actions.append("Specify Input Constraints: Detail parameter types and size limits (e.g., N <= 10^5) for precise algorithmic targeting.")
         if output_pct < 60:
-            actions.append("Tentukan Target Kompleksitas: Sertakan target output dan kompleksitas waktu yang diharapkan (misal: O(1) space, O(N) time).")
+            actions.append("Define Complexity Targets: Include expected output data structures and runtime/space limits (e.g., O(1) space, O(N) time).")
         if avg_entropy < 0.60:
-            actions.append("Perkaya Kosakata Teknis: Gunakan istilah struktur data baku daripada kalimat deskriptif umum.")
+            actions.append("Enrich Technical Vocabulary: Use standard data structure terminology over generalized descriptions.")
         
         if len(actions) < 3:
-            actions.append("Pertahankan Gaya C-I-O-E: Komposisi prompt Anda sudah sangat matang, pertahankan pada assessment berikutnya!")
+            actions.append("Maintain C-I-O-E Discipline: Your prompt composition is mature—maintain this standard in subsequent assessments!")
 
         return actions[:3]
 
@@ -632,7 +632,7 @@ class PromptCriticService:
             "persona": {
                 "title": "The Independent Master",
                 "tagline": "Zero-AI Autonomous Achiever",
-                "description": "Menyelesaikan assessment secara mandiri tanpa memerlukan bantuan prompt AI.",
+                "description": "Solved the assessment independently without requiring AI assistance.",
                 "power_stat": "100% Pure Organic Cognitive Effort"
             },
             "dimensions": {
@@ -642,8 +642,8 @@ class PromptCriticService:
                 "radar": {"Context": 100, "Input": 100, "Output": 100, "Error": 100, "Vocabulary": 100}
             },
             "critic_room": {
-                "best_prompt": {"text": "Menyelesaikan kode secara mandiri.", "score": 100, "why_stellar": "Penyelesaian murni tanpa ketergantungan AI."},
-                "needs_polish_prompt": {"text": "-", "score": 100, "ai_critic_comment": "Tidak ada prompt yang perlu dikritik.", "suggested_rewrite": "-"}
+                "best_prompt": {"text": "Solved code autonomously.", "score": 100, "why_stellar": "Pure autonomous problem-solving without AI dependency."},
+                "needs_polish_prompt": {"text": "-", "score": 100, "ai_critic_comment": "No prompts required evaluation.", "suggested_rewrite": "-"}
             },
             "byok_sustainability": {
                 "energy_wh": 0.0,
@@ -653,7 +653,7 @@ class PromptCriticService:
                 "fast_path_ratio": 100.0
             },
             "action_items": [
-                "Pertahankan kemandirian berpikir kritis Anda pada assessment tingkat lanjut!"
+                "Maintain your autonomous problem-solving and critical thinking in future advanced assessments!"
             ]
         }
 
@@ -663,19 +663,19 @@ class PromptCriticService:
             user_id=user_id,
             assessment_id=assessment_id,
             assessment_title=f"Assessment #{assessment_id}",
-            course_name="Algoritma & Struktur Data",
+            course_name="Algorithms & Data Structures",
             user_prompts=[
                 {
                     "id": "1",
-                    "prompt": "[CONTEXT: Python 3 Binary Search] Diberikan array terurut list[int] berukuran n. Bagaimana menemukan target dengan O(log n) tanpa rekursi?",
+                    "prompt": "[CONTEXT: Python 3 Binary Search] Given a sorted list[int] of size n, how do we find target with O(log n) iteratively without recursion?",
                     "timestamp": datetime.utcnow().isoformat(),
-                    "analysis": PromptLinter.analyze("[CONTEXT: Python 3 Binary Search] Diberikan array terurut list[int] berukuran n. Bagaimana menemukan target dengan O(log n) tanpa rekursi?")
+                    "analysis": PromptLinter.analyze("[CONTEXT: Python 3 Binary Search] Given a sorted list[int] of size n, how do we find target with O(log n) iteratively without recursion?")
                 },
                 {
                     "id": "2",
-                    "prompt": "tolong benerin error IndexError list index out of range pada baris 15 di fungsi binary_search",
+                    "prompt": "IndexError: list index out of range at line 15 in binary_search function, please help debug the boundary condition",
                     "timestamp": datetime.utcnow().isoformat(),
-                    "analysis": PromptLinter.analyze("tolong benerin error IndexError list index out of range pada baris 15 di fungsi binary_search")
+                    "analysis": PromptLinter.analyze("IndexError: list index out of range at line 15 in binary_search function, please help debug the boundary condition")
                 }
             ],
             total_tokens_used=640,
