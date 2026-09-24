@@ -488,49 +488,80 @@
             font-size: 0.85em;
         }
 
-        /* Ultra-Clean Modern Diagram Cards */
+        /* Ultra-Clean Modern Diagram Cards with Interactive Pan & Zoom */
         .diagram-card {
             background-color: var(--bg-secondary);
             border: 1px solid var(--border-color);
             border-radius: 10px;
-            margin: 22px auto;
-            max-width: 900px;
+            margin: 24px auto;
+            max-width: 960px;
             overflow: hidden;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.18);
             position: relative;
+            display: flex;
+            flex-direction: column;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .diagram-card:hover {
+            border-color: rgba(56, 189, 248, 0.4);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.25);
         }
 
         .diagram-topbar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 7px 12px;
+            padding: 8px 14px;
             background-color: var(--bg-tertiary);
             border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 8px;
+            z-index: 10;
         }
 
-        .diagram-label {
-            font-size: 0.68rem;
+        .diagram-title-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .diagram-badge {
+            font-size: 0.65rem;
             font-weight: 700;
             letter-spacing: 0.06em;
-            color: var(--text-muted);
+            color: var(--accent-blue);
+            background: rgba(56, 189, 248, 0.12);
+            padding: 2px 7px;
+            border-radius: 4px;
+            border: 1px solid rgba(56, 189, 248, 0.25);
             text-transform: uppercase;
+        }
+
+        .diagram-hint {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            font-weight: 500;
         }
 
         .diagram-controls {
             display: flex;
-            gap: 5px;
+            gap: 6px;
+            align-items: center;
         }
 
         .zoom-btn {
             background-color: var(--bg-primary);
             border: 1px solid var(--border-color);
             color: var(--text-primary);
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 0.68rem;
+            padding: 4px 10px;
+            border-radius: 5px;
+            font-size: 0.72rem;
             font-weight: 600;
             cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
             transition: all 0.2s;
         }
 
@@ -538,34 +569,80 @@
             background-color: var(--accent-blue);
             color: #ffffff;
             border-color: var(--accent-blue);
+            transform: translateY(-1px);
         }
 
-        .diagram-stage {
-            padding: 26px 20px;
-            overflow-x: auto;
+        .zoom-btn:active {
+            transform: translateY(0);
+        }
+
+        .diagram-viewport {
+            position: relative;
+            width: 100%;
+            height: 480px;
+            min-height: 380px;
+            overflow: hidden !important; /* NO NATIVE SCROLLBARS! */
+            cursor: grab;
+            user-select: none;
+            -webkit-user-select: none;
+            background-color: #070b12;
+            background-image: 
+                radial-gradient(circle at center, rgba(56, 189, 248, 0.05) 0%, transparent 75%),
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 100% 100%, 28px 28px, 28px 28px;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 120px;
-            background: radial-gradient(circle at center, rgba(56, 189, 248, 0.03) 0%, transparent 70%);
+        }
+
+        .diagram-viewport.is-dragging {
+            cursor: grabbing !important;
         }
 
         .diagram-scalable {
-            transform-origin: top center;
-            transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);
-            width: 100%;
+            transform-origin: center center;
+            pointer-events: none;
+            will-change: transform;
             display: flex;
             justify-content: center;
             align-items: center;
+            max-width: none;
         }
 
         .diagram-scalable svg {
             display: block;
             margin: 0 auto;
             width: auto !important;
-            max-width: 100% !important;
+            max-width: none !important;
             height: auto !important;
+            max-height: none !important;
             overflow: visible !important;
+        }
+
+        /* Fullscreen handling */
+        .diagram-card:fullscreen,
+        .diagram-card:-webkit-full-screen {
+            width: 100vw !important;
+            height: 100vh !important;
+            max-width: 100vw !important;
+            max-height: 100vh !important;
+            border-radius: 0 !important;
+            border: none !important;
+            margin: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            background-color: var(--bg-primary) !important;
+            z-index: 999999 !important;
+        }
+
+        .diagram-card:fullscreen .diagram-viewport,
+        .diagram-card:-webkit-full-screen .diagram-viewport {
+            flex: 1 1 auto !important;
+            height: calc(100vh - 52px) !important;
+            min-height: 0 !important;
+            max-height: none !important;
+            width: 100% !important;
         }
 
         /* Mermaid Node & Label Text Styling to Prevent Box Overflows */
@@ -1393,36 +1470,168 @@ The **S-SPARC AI™ Initiative** was conceptualized and developed by the **ITMCU
                 .replace(/\s+/g, '-');
         }
 
-        // Zoom state tracking
-        window.diagramScales = {};
+        // Global diagram state management (pan, zoom, dragging)
+        window.diagramStates = {};
+
+        function initDiagramPanZoom(viewportEl, scalableEl, scalableId) {
+            if (!window.diagramStates[scalableId]) {
+                window.diagramStates[scalableId] = {
+                    scale: 1.0,
+                    panX: 0,
+                    panY: 0,
+                    isDragging: false,
+                    startX: 0,
+                    startY: 0
+                };
+            }
+
+            const state = window.diagramStates[scalableId];
+
+            function applyTransform(smooth = false) {
+                if (smooth) {
+                    scalableEl.style.transition = 'transform 0.18s cubic-bezier(0.2, 0, 0, 1)';
+                } else {
+                    scalableEl.style.transition = 'none';
+                }
+                scalableEl.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.scale})`;
+            }
+
+            // Mouse Down (Drag to Pan)
+            viewportEl.addEventListener('mousedown', (e) => {
+                if (e.button !== 0) return; // Only left click
+                state.isDragging = true;
+                state.startX = e.clientX - state.panX;
+                state.startY = e.clientY - state.panY;
+                viewportEl.classList.add('is-dragging');
+                e.preventDefault();
+            });
+
+            // Window Mouse Move & Up (prevents losing drag when mouse moves outside viewport quickly)
+            window.addEventListener('mousemove', (e) => {
+                if (!state.isDragging) return;
+                state.panX = e.clientX - state.startX;
+                state.panY = e.clientY - state.startY;
+                applyTransform(false);
+            });
+
+            window.addEventListener('mouseup', () => {
+                if (state.isDragging) {
+                    state.isDragging = false;
+                    viewportEl.classList.remove('is-dragging');
+                }
+            });
+
+            // Mouse Wheel Zoom centered at cursor
+            viewportEl.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const zoomFactor = e.deltaY < 0 ? 1.15 : 0.87;
+                const rect = viewportEl.getBoundingClientRect();
+                
+                // Cursor position relative to center of viewport
+                const mouseX = e.clientX - rect.left - rect.width / 2;
+                const mouseY = e.clientY - rect.top - rect.height / 2;
+
+                const prevScale = state.scale;
+                const newScale = Math.max(0.25, Math.min(4.5, prevScale * zoomFactor));
+                
+                if (newScale !== prevScale) {
+                    const ratio = newScale / prevScale;
+                    state.panX = mouseX - ratio * (mouseX - state.panX);
+                    state.panY = mouseY - ratio * (mouseY - state.panY);
+                    state.scale = newScale;
+                    applyTransform(true);
+                }
+            }, { passive: false });
+
+            // Touch support (1-finger pan, 2-finger pinch)
+            let touchStartX = 0, touchStartY = 0, initialDistance = 0, initialScale = 1.0;
+
+            viewportEl.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 1) {
+                    state.isDragging = true;
+                    touchStartX = e.touches[0].clientX - state.panX;
+                    touchStartY = e.touches[0].clientY - state.panY;
+                } else if (e.touches.length === 2) {
+                    state.isDragging = false;
+                    initialDistance = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+                    initialScale = state.scale;
+                }
+            }, { passive: true });
+
+            viewportEl.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 1 && state.isDragging) {
+                    state.panX = e.touches[0].clientX - touchStartX;
+                    state.panY = e.touches[0].clientY - touchStartY;
+                    applyTransform(false);
+                } else if (e.touches.length === 2 && initialDistance > 0) {
+                    const currentDist = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+                    state.scale = Math.max(0.25, Math.min(4.5, initialScale * (currentDist / initialDistance)));
+                    applyTransform(false);
+                }
+            }, { passive: true });
+
+            viewportEl.addEventListener('touchend', () => {
+                state.isDragging = false;
+                initialDistance = 0;
+            });
+        }
 
         window.zoomDiagram = function(id, factor) {
-            if (!window.diagramScales[id]) {
-                window.diagramScales[id] = 1.0;
+            if (!window.diagramStates[id]) {
+                window.diagramStates[id] = { scale: 1.0, panX: 0, panY: 0, isDragging: false };
             }
-            window.diagramScales[id] = Math.max(0.4, Math.min(2.5, window.diagramScales[id] * factor));
+            const state = window.diagramStates[id];
+            state.scale = Math.max(0.25, Math.min(4.5, state.scale * factor));
             const el = document.getElementById(id);
             if (el) {
-                el.style.transform = `scale(${window.diagramScales[id]})`;
+                el.style.transition = 'transform 0.2s cubic-bezier(0.2, 0, 0, 1)';
+                el.style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.scale})`;
             }
         };
 
         window.resetDiagram = function(id) {
-            window.diagramScales[id] = 1.0;
+            if (window.diagramStates[id]) {
+                window.diagramStates[id].scale = 1.0;
+                window.diagramStates[id].panX = 0;
+                window.diagramStates[id].panY = 0;
+            }
             const el = document.getElementById(id);
             if (el) {
-                el.style.transform = `scale(1)`;
+                el.style.transition = 'transform 0.25s cubic-bezier(0.2, 0, 0, 1)';
+                el.style.transform = 'translate(0px, 0px) scale(1)';
             }
         };
 
         window.fullscreenDiagram = function(cardId) {
             const card = document.getElementById(cardId);
+            if (!card) return;
             if (!document.fullscreenElement) {
-                card.requestFullscreen().catch(err => alert(err.message));
+                card.requestFullscreen().catch(err => {
+                    console.warn('Fullscreen request failed:', err);
+                });
             } else {
                 document.exitFullscreen();
             }
         };
+
+        // Listen for fullscreen change to auto-center view
+        document.addEventListener('fullscreenchange', () => {
+            const fsCard = document.fullscreenElement;
+            if (fsCard && fsCard.classList.contains('diagram-card')) {
+                const sc = fsCard.querySelector('.diagram-scalable');
+                if (sc && sc.id && window.diagramStates[sc.id]) {
+                    window.diagramStates[sc.id].panX = 0;
+                    window.diagramStates[sc.id].panY = 0;
+                    sc.style.transform = `translate(0px, 0px) scale(${window.diagramStates[sc.id].scale})`;
+                }
+            }
+        });
 
         // Fetch and Render Markdown
         async function loadMarkdown() {
@@ -1555,7 +1764,7 @@ The **S-SPARC AI™ Initiative** was conceptualized and developed by the **ITMCU
                     console.warn('KaTeX render warning:', e);
                 }
 
-                // Wrap Mermaid blocks in interactive card containers with smooth CSS scaling controls
+                // Wrap Mermaid blocks in interactive card containers with smooth Pan & Zoom controls
                 try {
                     const codeBlocks = document.querySelectorAll('pre code.language-mermaid');
                     let diagramIndex = 0;
@@ -1565,22 +1774,28 @@ The **S-SPARC AI™ Initiative** was conceptualized and developed by the **ITMCU
                         const mermaidCode = block.textContent;
                         const cardId = `diagram-card-${diagramIndex}`;
                         const scalableId = `diagram-scale-${diagramIndex}`;
+                        const viewportId = `diagram-viewport-${diagramIndex}`;
 
                         const card = document.createElement('div');
                         card.className = 'diagram-card';
                         card.id = cardId;
                         card.innerHTML = `
                             <div class="diagram-topbar">
-                                <span class="diagram-label">FLOW DIAGRAM</span>
+                                <div class="diagram-title-group">
+                                    <span class="diagram-badge">INTERACTIVE DIAGRAM</span>
+                                    <span class="diagram-hint">Click & Drag to Pan • Scroll to Zoom</span>
+                                </div>
                                 <div class="diagram-controls">
-                                    <button class="zoom-btn" onclick="zoomDiagram('${scalableId}', 1.15)" title="Zoom In">Zoom In</button>
-                                    <button class="zoom-btn" onclick="zoomDiagram('${scalableId}', 0.85)" title="Zoom Out">Zoom Out</button>
-                                    <button class="zoom-btn" onclick="resetDiagram('${scalableId}')" title="Reset View">Reset</button>
-                                    <button class="zoom-btn" onclick="fullscreenDiagram('${cardId}')" title="Fullscreen">Fullscreen</button>
+                                    <button class="zoom-btn" onclick="zoomDiagram('${scalableId}', 1.25)" title="Zoom In (+)">＋ Zoom In</button>
+                                    <button class="zoom-btn" onclick="zoomDiagram('${scalableId}', 0.8)" title="Zoom Out (-)">－ Zoom Out</button>
+                                    <button class="zoom-btn" onclick="resetDiagram('${scalableId}')" title="Fit to View">⟲ Fit / Reset</button>
+                                    <button class="zoom-btn" onclick="fullscreenDiagram('${cardId}')" title="Toggle Fullscreen">⛶ Fullscreen</button>
                                 </div>
                             </div>
-                            <div class="diagram-stage">
-                                <div class="diagram-scalable mermaid" id="${scalableId}">${mermaidCode}</div>
+                            <div class="diagram-viewport" id="${viewportId}">
+                                <div class="diagram-scalable" id="${scalableId}">
+                                    <div class="mermaid">${mermaidCode}</div>
+                                </div>
                             </div>
                         `;
 
@@ -1593,6 +1808,15 @@ The **S-SPARC AI™ Initiative** was conceptualized and developed by the **ITMCU
                             await document.fonts.ready;
                         }
                         await mermaid.run();
+                    }
+
+                    // Attach Pan & Zoom event listeners to all diagrams
+                    for (let i = 0; i < diagramIndex; i++) {
+                        const vp = document.getElementById(`diagram-viewport-${i}`);
+                        const sc = document.getElementById(`diagram-scale-${i}`);
+                        if (vp && sc) {
+                            initDiagramPanZoom(vp, sc, `diagram-scale-${i}`);
+                        }
                     }
                 } catch (e) {
                     console.warn('Mermaid render warning:', e);
