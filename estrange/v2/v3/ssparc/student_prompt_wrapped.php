@@ -5,11 +5,11 @@ $userId = $_SESSION['user_id'] ?? 'student_demo';
 $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
 ?>
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>S-SPARC Prompt Wrapped - Kilas Balik AI Literacy</title>
+  <title>S-SPARC Prompt Wrapped - AI Literacy Review</title>
   <link rel="icon" href="../strange_html_layout_additional_files/icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -63,10 +63,6 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
       from { opacity: 0; transform: translateY(12px) scale(0.98); }
       to { opacity: 1; transform: translateY(0) scale(1); }
     }
-    .nav-btn {
-      cursor: pointer;
-      z-index: 20;
-    }
   </style>
 </head>
 <body class="min-h-screen story-bg flex flex-col items-center justify-center p-3 sm:p-6">
@@ -94,7 +90,7 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
           </span>
           <span id="header-assessment-title" class="truncate max-w-[200px] font-medium text-slate-200">Assessment #<?= htmlspecialchars($assessmentId) ?></span>
         </div>
-        <a href="student_analytics.php" class="hover:text-white transition p-1 rounded-full bg-white/5 hover:bg-white/10" title="Keluar">
+        <a href="student_analytics.php" class="hover:text-white transition p-1 rounded-full bg-white/5 hover:bg-white/10" title="Exit">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </a>
       </div>
@@ -105,7 +101,7 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
       <!-- Loading State -->
       <div id="loading-spinner" class="text-center space-y-4 my-auto">
         <div class="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-        <p class="text-slate-400 text-sm font-medium">Menyusun kilas balik AI Literacy Anda...</p>
+        <p class="text-slate-400 text-sm font-medium">Synthesizing your AI Literacy review...</p>
       </div>
     </div>
 
@@ -113,14 +109,14 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
     <div class="relative z-30 flex items-center justify-between text-[11px] text-slate-400 border-t border-white/10 pt-3">
       <span class="flex items-center gap-1.5">
         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span id="slide-indicator">Slide 1 dari 6</span>
+        <span id="slide-indicator">Slide 1 of 6</span>
       </span>
-      <span class="hidden sm:inline text-slate-400">Tap kiri/kanan untuk navigasi</span>
+      <span class="hidden sm:inline text-slate-400">Tap left/right to navigate</span>
       <div class="flex items-center gap-2">
-        <button id="btn-prev" class="p-1.5 rounded-lg bg-white/5 hover:bg-white/15 text-white transition" title="Sebelumnya">
+        <button id="btn-prev" class="p-1.5 rounded-lg bg-white/5 hover:bg-white/15 text-white transition" title="Previous">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
         </button>
-        <button id="btn-next" class="p-1.5 rounded-lg bg-white/5 hover:bg-white/15 text-white transition" title="Berikutnya">
+        <button id="btn-next" class="p-1.5 rounded-lg bg-white/5 hover:bg-white/15 text-white transition" title="Next">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
         </button>
       </div>
@@ -141,7 +137,7 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
     let wrappedData = null;
     let currentSlide = 0;
     const TOTAL_SLIDES = 6;
-    const SLIDE_DURATION = 6000; // 6 detik per slide
+    const SLIDE_DURATION = 6500; // 6.5s per slide
     let slideTimer = null;
     let progressInterval = null;
     let progressStartTime = 0;
@@ -153,6 +149,9 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
       try {
         const url = `api_proxy.php?endpoint=/api/domain/assessments/${ASSESSMENT_ID}/wrapped&user_id=${USER_ID}`;
         const res = await fetch(url);
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
         const data = await res.json();
 
         if (data.status === 'locked') {
@@ -165,11 +164,11 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
           document.getElementById('header-assessment-title').innerText = data.assessment_title || `Assessment #${ASSESSMENT_ID}`;
           startStory();
         } else {
-          showError(data.message || 'Gagal memuat data kilas balik.');
+          showError(data.message || 'Failed to load assessment wrapped data.');
         }
       } catch (err) {
         console.error("Fetch wrapped error:", err);
-        showError('Koneksi ke backend API terputus. Silakan coba kembali.');
+        showError('Unable to connect to AI analytics backend. Please verify your connection.');
       }
     }
 
@@ -177,21 +176,21 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
       document.getElementById('loading-spinner').remove();
       document.getElementById('slide-viewport').innerHTML = `
         <div class="text-center space-y-5 my-auto px-4 slide-content">
-          <div class="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-400 text-2xl font-bold">
-            🔒
+          <div class="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-400 text-xl font-bold">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
           </div>
           <div class="space-y-2">
-            <h2 class="text-xl font-bold text-white tracking-tight">S-SPARC Wrapped Belum Terbuka</h2>
+            <h2 class="text-xl font-bold text-white tracking-tight">S-SPARC Wrapped Locked</h2>
             <p class="text-xs text-slate-300 leading-relaxed max-w-sm mx-auto">
-              ${data.message || 'Wrapped otomatis dapat diakses setelah waktu pengerjaan tugas resmi berakhir (expired) untuk menjaga integritas kelas.'}
+              ${data.message || 'Prompt Wrapped automatically unlocks after the assessment deadline expires to maintain academic integrity.'}
             </p>
           </div>
           <div class="p-3 rounded-xl bg-white/5 border border-white/10 text-xs font-mono text-slate-400 inline-block">
-            Batas Waktu: ${data.due_date || 'Sedang Berlangsung'}
+            Deadline: ${data.due_date || 'In Progress'}
           </div>
           <div>
             <a href="student_analytics.php" class="inline-block mt-2 px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-white transition">
-              Kembali ke Analitik
+              Back to Analytics
             </a>
           </div>
         </div>
@@ -199,11 +198,12 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
     }
 
     function showError(msg) {
-      document.getElementById('loading-spinner').remove();
+      const spinner = document.getElementById('loading-spinner');
+      if (spinner) spinner.remove();
       document.getElementById('slide-viewport').innerHTML = `
         <div class="text-center space-y-4 my-auto px-4">
           <p class="text-rose-400 text-sm font-semibold">${msg}</p>
-          <a href="student_analytics.php" class="inline-block px-4 py-2 rounded-xl bg-slate-800 text-xs text-white">Kembali</a>
+          <a href="student_analytics.php" class="inline-block px-4 py-2 rounded-xl bg-slate-800 text-xs text-white">Back to Analytics</a>
         </div>
       `;
     }
@@ -214,7 +214,7 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
 
     function renderSlide(index) {
       currentSlide = index;
-      document.getElementById('slide-indicator').innerText = `Slide ${index + 1} dari ${TOTAL_SLIDES}`;
+      document.getElementById('slide-indicator').innerText = `Slide ${index + 1} of ${TOTAL_SLIDES}`;
       
       // Update Progress Bar Fills
       for (let i = 0; i < TOTAL_SLIDES; i++) {
@@ -269,21 +269,21 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
           </div>
 
           <div class="p-6 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-teal-500/5 border border-emerald-500/30 text-center space-y-3">
-            <span class="text-xs font-semibold uppercase text-emerald-300 block">Predikat AI Literacy</span>
+            <span class="text-xs font-semibold uppercase text-emerald-300 block">AI Literacy Tier</span>
             <div class="text-3xl font-black text-white tracking-tight">${s.literacy_tier}</div>
             <div class="inline-block px-3 py-1 rounded-full text-xs font-bold bg-emerald-500 text-slate-950">
-              Skor Mutu: ${s.overall_score}%
+              Quality Score: ${s.overall_score}%
             </div>
           </div>
 
           <div class="grid grid-cols-2 gap-3 text-left">
             <div class="p-3.5 rounded-xl bg-white/5 border border-white/10">
-              <span class="text-[11px] text-slate-400 block">Total Interaksi Prompt</span>
-              <span class="text-lg font-bold text-white mt-0.5 block">${s.total_prompts} Pertanyaan</span>
+              <span class="text-[11px] text-slate-400 block">Total Prompt Queries</span>
+              <span class="text-lg font-bold text-white mt-0.5 block">${s.total_prompts} Interactions</span>
             </div>
             <div class="p-3.5 rounded-xl bg-white/5 border border-white/10">
               <span class="text-[11px] text-slate-400 block">0-Token Semantic Hits</span>
-              <span class="text-lg font-bold text-teal-300 mt-0.5 block">${s.fast_path_hits}x Cache Hit</span>
+              <span class="text-lg font-bold text-teal-300 mt-0.5 block">${s.fast_path_hits}x Cache Hits</span>
             </div>
           </div>
         </div>
@@ -296,12 +296,12 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
       container.innerHTML = `
         <div class="space-y-6 my-auto text-center slide-content">
           <div class="space-y-1">
-            <span class="text-xs font-semibold text-teal-400 uppercase tracking-wider">Profil Gaya Berpikir</span>
-            <h2 class="text-xl font-bold text-white">Persona Prompting Anda</h2>
+            <span class="text-xs font-semibold text-teal-400 uppercase tracking-wider">Cognitive Style Profile</span>
+            <h2 class="text-xl font-bold text-white">Your Prompting Persona</h2>
           </div>
 
           <div class="p-6 rounded-2xl bg-gradient-to-b from-slate-800/80 to-slate-900 border border-teal-500/40 text-center space-y-4 shadow-xl">
-            <div class="w-14 h-14 rounded-2xl bg-teal-500/20 border border-teal-400/40 flex items-center justify-center mx-auto text-teal-300 text-lg font-bold">
+            <div class="w-14 h-14 rounded-2xl bg-teal-500/20 border border-teal-400/40 flex items-center justify-center mx-auto text-teal-300 text-sm font-bold font-mono">
               AI
             </div>
             <div>
@@ -325,8 +325,8 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
       container.innerHTML = `
         <div class="space-y-4 my-auto text-center slide-content">
           <div class="space-y-1">
-            <span class="text-xs font-semibold text-indigo-400 uppercase tracking-wider">Metrik Dekomposisi</span>
-            <h2 class="text-xl font-bold text-white">Radar Penguasaan C-I-O-E</h2>
+            <span class="text-xs font-semibold text-indigo-400 uppercase tracking-wider">Decomposition Metrics</span>
+            <h2 class="text-xl font-bold text-white">C-I-O-E Protocol Mastery</h2>
           </div>
 
           <div class="relative w-full max-w-[280px] aspect-square mx-auto">
@@ -346,7 +346,6 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
         </div>
       `;
 
-      // Render Radar Chart with Chart.js
       setTimeout(() => {
         const ctx = document.getElementById('radarCanvas')?.getContext('2d');
         if (!ctx) return;
@@ -386,21 +385,21 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
       }, 50);
     }
 
-    // Slide 4: AI Critic Room (Best vs Polish)
+    // Slide 4: AI Critic Room
     function renderSlide4(container) {
       const cr = wrappedData.critic_room;
       container.innerHTML = `
         <div class="space-y-4 my-auto slide-content text-left">
           <div class="text-center space-y-1">
-            <span class="text-xs font-semibold text-amber-400 uppercase tracking-wider">Ruang Evaluasi</span>
-            <h2 class="text-xl font-bold text-white">Ulasan Kritikus AI</h2>
+            <span class="text-xs font-semibold text-amber-400 uppercase tracking-wider">Evaluation Room</span>
+            <h2 class="text-xl font-bold text-white">AI Critic Feedback</h2>
           </div>
 
           <!-- Best Prompt -->
           <div class="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 space-y-1.5">
             <div class="flex items-center justify-between text-xs">
-              <span class="font-bold text-emerald-400">Prompt Paling Efektif</span>
-              <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-mono">${cr.best_prompt.score}% Mutu</span>
+              <span class="font-bold text-emerald-400">Most Effective Prompt</span>
+              <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-mono">${cr.best_prompt.score}% Score</span>
             </div>
             <p class="text-xs text-slate-200 line-clamp-2 font-mono-code bg-black/30 p-2 rounded-lg">
               "${cr.best_prompt.text}"
@@ -411,14 +410,14 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
           <!-- Needs Polish Prompt -->
           <div class="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 space-y-1.5">
             <div class="flex items-center justify-between text-xs">
-              <span class="font-bold text-rose-400">Rekomendasi Peningkatan</span>
-              <span class="text-[10px] bg-rose-500/20 text-rose-300 px-2 py-0.5 rounded-full font-mono">${cr.needs_polish_prompt.score}% Mutu</span>
+              <span class="font-bold text-rose-400">Improvement Recommendation</span>
+              <span class="text-[10px] bg-rose-500/20 text-rose-300 px-2 py-0.5 rounded-full font-mono">${cr.needs_polish_prompt.score}% Score</span>
             </div>
             <p class="text-[11px] text-slate-300 leading-relaxed">
               ${cr.needs_polish_prompt.ai_critic_comment}
             </p>
             <div class="p-2 rounded-lg bg-black/40 border border-white/5 space-y-1">
-              <span class="text-[10px] font-bold text-teal-300 block uppercase">Contoh Penulisan C-I-O-E Ideal:</span>
+              <span class="text-[10px] font-bold text-teal-300 block uppercase">Optimal C-I-O-E Format:</span>
               <pre class="text-[10px] font-mono-code text-slate-200 whitespace-pre-wrap">${cr.needs_polish_prompt.suggested_rewrite}</pre>
             </div>
           </div>
@@ -432,34 +431,34 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
       container.innerHTML = `
         <div class="space-y-6 my-auto text-center slide-content">
           <div class="space-y-1">
-            <span class="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Jejak Komputasi Mandiri</span>
-            <h2 class="text-xl font-bold text-white">Dampak Lingkungan BYOK</h2>
+            <span class="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Autonomous Compute Footprint</span>
+            <h2 class="text-xl font-bold text-white">BYOK Environmental Impact</h2>
           </div>
 
           <div class="p-6 rounded-2xl bg-gradient-to-b from-teal-900/40 to-slate-900 border border-teal-500/30 text-center space-y-4 shadow-xl">
             <div class="space-y-1">
               <span class="text-3xl font-black text-emerald-300 tracking-tight">${byok.energy_wh} Wh</span>
-              <span class="text-xs text-slate-400 block">Total Energi Listrik Terpakai</span>
+              <span class="text-xs text-slate-400 block">Total Compute Energy Consumed</span>
             </div>
 
             <div class="grid grid-cols-2 gap-3 pt-2">
               <div class="p-3 rounded-xl bg-white/5 border border-white/10">
-                <span class="text-[10px] text-slate-400 block">Estimasi Emisi Karbon</span>
+                <span class="text-[10px] text-slate-400 block">Estimated Carbon Emissions</span>
                 <span class="text-sm font-bold text-white mt-0.5 block">${byok.carbon_g} g CO2e</span>
               </div>
               <div class="p-3 rounded-xl bg-white/5 border border-white/10">
-                <span class="text-[10px] text-slate-400 block">Jejak Air Pendingin</span>
+                <span class="text-[10px] text-slate-400 block">Cooling Water Footprint</span>
                 <span class="text-sm font-bold text-teal-300 mt-0.5 block">${byok.water_ml} mL</span>
               </div>
             </div>
 
             <div class="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300 font-medium">
-              Status: ${byok.rating}
+              Rating: ${byok.rating}
             </div>
           </div>
 
           <p class="text-[11px] text-slate-400 leading-relaxed px-2">
-            Dengan menggunakan API Key pribadi dan protokol dekomposisi terstruktur, Anda membantu mendistribusikan beban komputasi secara bertanggung jawab.
+            By utilizing your personal API Key and structured decomposition protocols, you help distribute compute load responsibly.
           </p>
         </div>
       `;
@@ -471,7 +470,7 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
       container.innerHTML = `
         <div class="space-y-5 my-auto text-center slide-content">
           <div class="space-y-1">
-            <span class="text-xs font-semibold text-teal-400 uppercase tracking-wider">Langkah Lanjutan</span>
+            <span class="text-xs font-semibold text-teal-400 uppercase tracking-wider">Next Steps</span>
             <h2 class="text-xl font-bold text-white">Level-Up AI Literacy</h2>
           </div>
 
@@ -487,10 +486,10 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
           <div class="pt-2 space-y-2">
             <button id="btn-export-card" class="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 font-bold text-xs text-slate-950 transition shadow-lg flex items-center justify-center gap-2">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-              <span>Download Kartu Summary Wrapped</span>
+              <span>Download Wrapped Summary Card</span>
             </button>
             <a href="student_analytics.php" class="block w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-slate-300 transition">
-              Selesai & Lihat Semua Analitik
+              Complete &amp; View All Analytics
             </a>
           </div>
         </div>
@@ -503,7 +502,7 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
     function exportSummaryCard() {
       const card = document.getElementById('wrapped-container');
       const btn = document.getElementById('btn-export-card');
-      if (btn) btn.innerText = "Mengunduh kartu...";
+      if (btn) btn.innerText = "Generating card...";
 
       html2canvas(card, {
         scale: 2,
@@ -514,10 +513,10 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
         link.download = `ssparc_wrapped_assessment_${ASSESSMENT_ID}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
-        if (btn) btn.innerText = "Download Kartu Summary Wrapped";
+        if (btn) btn.innerText = "Download Wrapped Summary Card";
       }).catch(err => {
         console.error(err);
-        if (btn) btn.innerText = "Download Kartu Summary Wrapped";
+        if (btn) btn.innerText = "Download Wrapped Summary Card";
       });
     }
 
@@ -583,8 +582,7 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
       if (e.key === ' ') isPaused = !isPaused;
     });
 
-    // Start loading on page ready
-    loadWrappedData();
+    document.addEventListener('DOMContentLoaded', loadWrappedData);
   </script>
 </body>
 </html>
