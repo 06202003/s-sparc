@@ -266,13 +266,13 @@ select.select2-hidden-accessible {
 
 										$isClosed = (strtotime($row['submission_close_time']) < time());
 
-										if ($hasSusp || $hasQual || $isClosed) {
+										if ($hasSusp || $hasQual) {
 											echo '<div class="relative inline-block text-left" data-dropdown-wrapper>';
 											echo '<button type="button" onclick="toggleDropdownMenu(event, this)" class="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold bg-white text-slate-700 hover:bg-slate-50 border border-slate-300 rounded-lg transition shadow-2xs">
 													<span>Reports</span>
 													<svg class="w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
 												  </button>';
-											echo '<div class="dropdown-menu-box hidden absolute right-0 mt-1 w-48 bg-white border border-slate-200 rounded-xl shadow-xl py-1 z-50 text-left space-y-0.5 divide-y divide-slate-100">';
+											echo '<div class="dropdown-menu-box hidden absolute right-0 mt-1 w-48 bg-white border border-slate-200 rounded-xl shadow-xl py-1 z-50 text-left space-y-0.5">';
 											
 											echo '<div class="px-1 py-0.5">';
 											if ($hasSusp) {
@@ -299,15 +299,6 @@ select.select2-hidden-accessible {
 													  </form>';
 											}
 											echo '</div>';
-
-											if ($isClosed) {
-												echo '<div class="px-1 py-0.5">
-														<a href="ssparc/student_prompt_wrapped.php?assessment_id='.htmlspecialchars($row['assessment_id']).'" class="w-full px-2.5 py-1.5 text-[11px] font-semibold text-purple-700 hover:bg-purple-50 rounded-lg transition flex items-center gap-2 text-left">
-															<span class="w-2 h-2 rounded-full bg-purple-500 shrink-0"></span>
-															<span class="truncate">Prompt Wrapped</span>
-														</a>
-													  </div>';
-											}
 
 											echo '</div>';
 											echo '</div>';
