@@ -147,8 +147,10 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
     // Fetch Wrapped Data from API
     async function loadWrappedData() {
       try {
-        const url = `api_proxy.php?endpoint=/api/domain/assessments/${ASSESSMENT_ID}/wrapped&user_id=${USER_ID}`;
-        const res = await fetch(url);
+        let res = await fetch(`api_proxy.php?endpoint=/api/assessments/${ASSESSMENT_ID}/wrapped&user_id=${USER_ID}`);
+        if (!res.ok && res.status === 404) {
+          res = await fetch(`api_proxy.php?endpoint=/api/domain/assessments/${ASSESSMENT_ID}/wrapped&user_id=${USER_ID}`);
+        }
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}: ${res.statusText}`);
         }

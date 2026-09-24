@@ -134,7 +134,7 @@ Available in `docs/system_flow_diagrams.md` and `docs/DIAGRAM_ALIR_S-SPARC_ESTRA
          return FileResponse(docs_path, media_type="text/html")
      raise HTTPException(status_code=404, detail="Redocly documentation bundle not found.")
 
- # Include API routers (support both root and /api prefixes)
+ # Include API routers (support root, /api, /api/domain, /api/admin prefixes)
  from backend.api import auth, admin, domain, ai_chat
  app.include_router(auth.router, prefix="", tags=["Authentication"])
  app.include_router(admin.router, prefix="", tags=["Administrative"])
@@ -144,6 +144,8 @@ Available in `docs/system_flow_diagrams.md` and `docs/DIAGRAM_ALIR_S-SPARC_ESTRA
  app.include_router(admin.router, prefix="/api", tags=["Administrative"], include_in_schema=False)
  app.include_router(domain.router, prefix="/api", tags=["Domain/Learning"], include_in_schema=False)
  app.include_router(ai_chat.router, prefix="/api", tags=["AI Chatbot"], include_in_schema=False)
+ app.include_router(domain.router, prefix="/api/domain", tags=["Domain/Learning"], include_in_schema=False)
+ app.include_router(admin.router, prefix="/api/admin", tags=["Administrative"], include_in_schema=False)
 
  # Mount Code Evaluator Sub-App & Dashboard for HTTPS Port 443 Access
  try:
