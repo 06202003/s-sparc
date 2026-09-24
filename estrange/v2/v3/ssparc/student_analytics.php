@@ -12,9 +12,8 @@ $userId = $_SESSION['user_id'] ?? 'student_demo';
   <link rel="icon" href="../strange_html_layout_additional_files/icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script src="../strange_html_layout_additional_files/vendor/tailwind.cdn.js"></script>
-  <script src="../strange_html_layout_additional_files/vendor/chart.umd.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body { font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; }
     .metric-card {
