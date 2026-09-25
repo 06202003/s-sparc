@@ -8,6 +8,9 @@ if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? '') !== 'student') {
 include '_config.php';
 include '_ai_quiz.php';
 
+$nowUnix = time();
+$duration = 180; // 3 menit waktu pengerjaan quiz
+
 $submissionId = filter_input(INPUT_GET, 'submission_id', FILTER_VALIDATE_INT);
 if (!$submissionId) {
     header('Location: student_dashboard.php');
@@ -33,25 +36,32 @@ if ($quiz['status'] === 'failed' && isset($_GET['retry']) && $_GET['retry'] === 
     exit;
 }
 
+// Start quiz timer if ready and not started yet
 if ($quiz['status'] === 'ready' && empty($quiz['answered_at']) && empty($quiz['quiz_started_at'])) {
-    $startStmt = $db->prepare('UPDATE generated_quizzes SET quiz_started_at = NOW(), quiz_expires_at = DATE_ADD(NOW(), INTERVAL 1 MINUTE) WHERE quiz_id = ? AND quiz_started_at IS NULL');
-    $startStmt->bind_param('i', $quiz['quiz_id']);
+    $startedAtStr = date('Y-m-d H:i:s', $nowUnix);
+    $expiresAtStr = date('Y-m-d H:i:s', $nowUnix + $duration);
+    
+    $startStmt = $db->prepare('UPDATE generated_quizzes SET quiz_started_at = ?, quiz_expires_at = ? WHERE quiz_id = ? AND quiz_started_at IS NULL');
+    $startStmt->bind_param('ssi', $startedAtStr, $expiresAtStr, $quiz['quiz_id']);
     $startStmt->execute();
     $startStmt->close();
-    $quiz['quiz_started_at'] = date('Y-m-d H:i:s');
-    $quiz['quiz_expires_at'] = date('Y-m-d H:i:s', time() + 60);
+    
+    $quiz['quiz_started_at'] = $startedAtStr;
+    $quiz['quiz_expires_at'] = $expiresAtStr;
 }
 
 $message = '';
+// Check if quiz has genuinely expired (with 10s grace tolerance)
 if ($quiz['status'] === 'ready' && empty($quiz['answered_at']) && !empty($quiz['quiz_expires_at'])) {
     $expiresAtUnix = strtotime($quiz['quiz_expires_at']);
-    if ($expiresAtUnix !== false && $expiresAtUnix <= time()) {
+    if ($expiresAtUnix !== false && $expiresAtUnix < ($nowUnix - 10)) {
         $message = 'Waktu menjawab sudah habis. Jawaban tidak dapat dikirim.';
-        $expiredStmt = $db->prepare('UPDATE generated_quizzes SET answered_at = NOW(), score_points = 0 WHERE quiz_id = ? AND answered_at IS NULL');
-        $expiredStmt->bind_param('i', $quiz['quiz_id']);
+        $nowStr = date('Y-m-d H:i:s', $nowUnix);
+        $expiredStmt = $db->prepare('UPDATE generated_quizzes SET answered_at = ?, score_points = 0 WHERE quiz_id = ? AND answered_at IS NULL');
+        $expiredStmt->bind_param('si', $nowStr, $quiz['quiz_id']);
         $expiredStmt->execute();
         $expiredStmt->close();
-        $quiz['answered_at'] = date('Y-m-d H:i:s');
+        $quiz['answered_at'] = $nowStr;
         $quiz['score_points'] = 0;
     }
 }
@@ -59,28 +69,29 @@ if ($quiz['status'] === 'ready' && empty($quiz['answered_at']) && !empty($quiz['
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $quiz['status'] === 'ready' && empty($quiz['answered_at'])) {
     if (isset($_POST['abort_quiz']) && $_POST['abort_quiz'] === '1') {
         abort_submission_quiz($db, (int)$quiz['quiz_id']);
-        $quiz['answered_at'] = date('Y-m-d H:i:s');
+        $quiz['answered_at'] = date('Y-m-d H:i:s', $nowUnix);
         $quiz['score_points'] = 0;
-        $message = 'Sesi quiz dibatalkan karena Anda berpindah tab atau memindahkan fokus dari browser. Nilai: 0/3.';
+        $message = 'Sesi quiz dibatalkan karena Anda berpindah tab. Nilai: 0/3.';
         if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
             header('Content-Type: application/json');
             echo json_encode(['ok' => true]);
             exit;
         }
-    } elseif (empty($quiz['quiz_expires_at']) || strtotime($quiz['quiz_expires_at']) < time()) {
+    } elseif (empty($quiz['quiz_expires_at']) || (strtotime($quiz['quiz_expires_at']) < ($nowUnix - 10))) {
         $message = 'Waktu menjawab sudah habis. Jawaban tidak dapat dikirim.';
-        $expiredStmt = $db->prepare('UPDATE generated_quizzes SET answered_at = NOW(), score_points = 0 WHERE quiz_id = ? AND answered_at IS NULL');
-        $expiredStmt->bind_param('i', $quiz['quiz_id']);
+        $nowStr = date('Y-m-d H:i:s', $nowUnix);
+        $expiredStmt = $db->prepare('UPDATE generated_quizzes SET answered_at = ?, score_points = 0 WHERE quiz_id = ? AND answered_at IS NULL');
+        $expiredStmt->bind_param('si', $nowStr, $quiz['quiz_id']);
         $expiredStmt->execute();
         $expiredStmt->close();
-        $quiz['answered_at'] = date('Y-m-d H:i:s');
+        $quiz['answered_at'] = $nowStr;
     } else {
-    $answers = $_POST['answers'] ?? [];
-    $questionStmt = $db->prepare('SELECT question_id, correct_option FROM generated_quiz_questions WHERE quiz_id = ? ORDER BY question_id');
-    $questionStmt->bind_param('i', $quiz['quiz_id']);
-    $questionStmt->execute();
-    $questions = $questionStmt->get_result()->fetch_all(MYSQLI_ASSOC);
-    $questionStmt->close();
+        $answers = $_POST['answers'] ?? [];
+        $questionStmt = $db->prepare('SELECT question_id, correct_option FROM generated_quiz_questions WHERE quiz_id = ? ORDER BY question_id');
+        $questionStmt->bind_param('i', $quiz['quiz_id']);
+        $questionStmt->execute();
+        $questions = $questionStmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $questionStmt->close();
         if (count($questions) === 3 && count($answers) === 3) {
             $correctCount = 0;
             $updateQuestion = $db->prepare('UPDATE generated_quiz_questions SET selected_option = ?, is_correct = ? WHERE question_id = ? AND quiz_id = ?');
@@ -93,11 +104,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $quiz['status'] === 'ready' && empt
             }
             $updateQuestion->close();
             $score = (float)$correctCount;
-            $updateQuiz = $db->prepare('UPDATE generated_quizzes SET score_points = ?, penalty_points = CASE WHEN ? < 3 THEN penalty_points ELSE 0 END, answered_at = NOW() WHERE quiz_id = ? AND answered_at IS NULL');
-            $updateQuiz->bind_param('dii', $score, $correctCount, $quiz['quiz_id']);
+            $nowStr = date('Y-m-d H:i:s', $nowUnix);
+            $updateQuiz = $db->prepare('UPDATE generated_quizzes SET score_points = ?, penalty_points = CASE WHEN ? < 3 THEN penalty_points ELSE 0 END, answered_at = ? WHERE quiz_id = ? AND answered_at IS NULL');
+            $updateQuiz->bind_param('disi', $score, $correctCount, $nowStr, $quiz['quiz_id']);
             $updateQuiz->execute();
             $updateQuiz->close();
-            $quiz['answered_at'] = date('Y-m-d H:i:s');
+            $quiz['answered_at'] = $nowStr;
             $quiz['score_points'] = $score;
             $message = 'Quiz selesai. Jawaban benar: ' . $correctCount . ' dari 3.';
         } else {
@@ -122,8 +134,8 @@ if (!empty($quiz['quiz_expires_at'])) {
         $expiresAtMs = (int)($expiresAtUnix * 1000);
     }
 }
-if ($expiresAtMs <= 0) {
-    $expiresAtMs = time() * 1000;
+if ($expiresAtMs <= ($nowUnix * 1000) && empty($quiz['answered_at'])) {
+    $expiresAtMs = ($nowUnix + $duration) * 1000;
 }
 ?>
 <!DOCTYPE html>
@@ -133,7 +145,7 @@ if ($expiresAtMs <= 0) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>E-STRANGE: Quiz Submission</title>
 <link rel="icon" href="strange_html_layout_additional_files/icon.png">
-<script src="strange_html_layout_additional_files/vendor/tailwind.cdn.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
 <style>body { font-family: Inter, system-ui, sans-serif; }</style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 text-slate-900">
@@ -152,9 +164,10 @@ setInterval(function () {
   fetch('generate_submission_quiz.php?submission_id=<?= (int)$submissionId ?>', { cache: 'no-store' })
     .then(function (response) { return response.json(); })
     .then(function (data) {
-      if (data.status === 'ready') window.location.reload();
-      if (data.status === 'failed') window.location.reload();
-    });
+      if (data.status === 'ready' || data.status === 'failed') {
+        window.location.reload();
+      }
+    }).catch(function() {});
 }, 2000);
 </script>
 <?php elseif ($quiz['status'] === 'failed'): ?>
@@ -166,7 +179,7 @@ setInterval(function () {
 <a href="student_submission.php" class="mt-6 block rounded-xl bg-teal-600 px-4 py-3 text-center text-sm font-semibold text-white">Kembali ke Submission</a>
 <?php else: ?>
 <form method="post" id="quiz-form" class="mt-6 space-y-6">
-<div class="sticky top-3 z-10 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-bold text-amber-900"><span>Waktu tersisa</span><span id="quiz-timer">01:00</span></div>
+<div class="sticky top-3 z-10 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-bold text-amber-900"><span>Waktu tersisa</span><span id="quiz-timer">03:00</span></div>
 <?php foreach ($questions as $index => $question): ?>
 <fieldset class="space-y-3">
 <legend class="font-semibold"><?= $index + 1 ?>. <?= htmlspecialchars($question['question_text']) ?></legend>
@@ -182,24 +195,31 @@ setInterval(function () {
 (function () {
     var expiresAt = <?= (int)$expiresAtMs ?>;
     var timer = document.getElementById('quiz-timer');
-    var interval = setInterval(function () {
+    var isExpiredHandled = false;
+
+    function updateTimer() {
         var remaining = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
         var minutes = Math.floor(remaining / 60);
         var seconds = remaining % 60;
-        timer.textContent = String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
+        if (timer) {
+            timer.textContent = String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
+        }
 
-        if (remaining <= 0) {
-            clearInterval(interval);
-            timer.textContent = '00:00';
+        if (remaining <= 0 && !isExpiredHandled) {
+            isExpiredHandled = true;
+            if (timer) timer.textContent = '00:00';
             alert('Waktu menjawab sudah habis.');
             window.location.reload();
         }
-    }, 250);
+    }
 
-    // Anti-cheating: Otomatis hentikan quiz jika pindah tab atau keluar fokus browser
+    updateTimer();
+    var interval = setInterval(updateTimer, 500);
+
+    // Anti-cheating: Hentikan quiz jika berpindah tab browser
     var quizSubmitted = false;
     var isReady = false;
-    setTimeout(function () { isReady = true; }, 1000);
+    setTimeout(function () { isReady = true; }, 1500);
 
     var quizForm = document.getElementById('quiz-form');
     if (quizForm) {
@@ -209,7 +229,7 @@ setInterval(function () {
     }
 
     function handleQuizAbort() {
-        if (!isReady || quizSubmitted) return;
+        if (!isReady || quizSubmitted || isExpiredHandled) return;
         quizSubmitted = true;
 
         var formData = new FormData();
@@ -219,10 +239,10 @@ setInterval(function () {
         if (navigator.sendBeacon) {
             navigator.sendBeacon(window.location.href, formData);
         } else {
-            fetch(window.location.href, { method: 'POST', body: formData, keepalive: true });
+            fetch(window.location.href, { method: 'POST', body: formData, keepalive: true }).catch(function(){});
         }
 
-        alert('Anda berpindah tab atau keluar dari fokus browser! Sesi quiz dihentikan dan nilai Anda 0/3.');
+        alert('Anda berpindah tab browser! Sesi quiz dihentikan dan nilai Anda 0/3.');
         window.location.reload();
     }
 
@@ -231,10 +251,6 @@ setInterval(function () {
             handleQuizAbort();
         }
     });
-
-    window.addEventListener('blur', function () {
-        handleQuizAbort();
-    });
 })();
 </script>
 <?php endif; ?>
@@ -242,4 +258,3 @@ setInterval(function () {
 </main>
 </body>
 </html>
-

@@ -10,6 +10,10 @@ $dbname = getenv('DB_NAME') ?: "estrange_v7";
 $baseDomainLink = getenv('BASE_DOMAIN_LINK') ?: 'http://127.0.0.1:8088/';
 
 $db = mysqli_connect($servername, $username, $password, $dbname);
+if ($db) {
+    mysqli_set_charset($db, 'utf8mb4');
+    @mysqli_query($db, "SET time_zone = '+07:00'");
+}
 // human language for suspicion explanation
 $human_language = "en"; // "id" or "en"
 // number of students with highest points shown in gamification
