@@ -322,7 +322,7 @@ select.select2-hidden-accessible {
 
         <!-- API Key Status Notice Banner -->
         <div id="apiKeyNotice" class="rounded-xl border border-amber-200 bg-amber-50 text-amber-900 p-4 text-xs space-y-2 shadow-xs transition-all">
-          <div class="flex items-start justify-between gap-3">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div class="flex items-start gap-2.5">
               <span id="apiKeyNoticeIcon" class="text-xl shrink-0 mt-0.5">⚠️</span>
               <div>
@@ -330,7 +330,7 @@ select.select2-hidden-accessible {
                 <span id="apiKeyNoticeDesc" class="block text-xs mt-0.5 text-slate-700">You have not registered your personal API Key. Please accept the Terms &amp; Conditions and register your API key before launching the S-SPARC AI Assistant.</span>
               </div>
             </div>
-            <button type="button" id="apiKeyActionBtn" onclick="openApiKeyFlow(true)" class="shrink-0 bg-[#00A0A5] hover:bg-[#008488] text-white font-bold px-3 py-1.5 rounded-lg transition text-xs shadow-xs">
+            <button type="button" id="apiKeyActionBtn" onclick="openApiKeyFlow(true)" class="w-full sm:w-auto shrink-0 bg-[#00A0A5] hover:bg-[#008488] text-white font-bold px-3.5 py-2 sm:py-1.5 rounded-lg transition text-xs shadow-xs text-center">
               Set API Key Now
             </button>
           </div>
@@ -374,18 +374,18 @@ select.select2-hidden-accessible {
             <div id="assessmentPreview" class="hidden rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs space-y-2">
               <div class="font-bold text-slate-800 text-sm" id="prevAsmtName">-</div>
               <div class="text-slate-600" id="prevAsmtDesc">-</div>
-              <div class="flex items-center gap-4 text-[11px] text-slate-500 pt-2 border-t border-slate-200">
+              <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-[11px] text-slate-500 pt-2 border-t border-slate-200">
                 <span>Submission Deadline: <strong id="prevAsmtDue" class="text-slate-700">-</strong></span>
                 <span>Allowed Extension: <strong id="prevAsmtExt" class="text-slate-700 font-mono">-</strong></span>
               </div>
             </div>
 
             <!-- Action Buttons -->
-            <div class="pt-3 flex items-center justify-between gap-3">
-              <a href="../student_dashboard.php" class="inline-flex items-center justify-center px-4 py-2.5 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition no-underline">
+            <div class="pt-3 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3">
+              <a href="../student_dashboard.php" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2.5 text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition no-underline text-center">
                 Cancel &amp; Return to Dashboard
               </a>
-              <button type="submit" id="submitBtn" class="inline-flex items-center justify-center px-6 py-2.5 text-sm font-bold text-white bg-[#00A0A5] hover:bg-[#008488] rounded-xl shadow-xs transition focus:ring-2 focus:ring-[#00A0A5] focus:ring-offset-2">
+              <button type="submit" id="submitBtn" class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-2.5 text-sm font-bold text-white bg-[#00A0A5] hover:bg-[#008488] rounded-xl shadow-xs transition focus:ring-2 focus:ring-[#00A0A5] focus:ring-offset-2 text-center">
                 Launch S-SPARC AI Assistant &rarr;
               </button>
             </div>

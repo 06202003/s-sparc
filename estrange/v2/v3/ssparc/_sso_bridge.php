@@ -21,23 +21,25 @@ function renderSSOHeader($activePage = 'chat', $title = 'Chat Assistant') {
     global $sso_name, $sso_role, $sso_user_id;
     $backLink = ($sso_role === 'student') ? '../student_dashboard.php' : (($sso_role === 'lecturer') ? '../lecturer_dashboard.php' : '../admin_dashboard.php');
     ?>
-    <header class="sticky top-0 z-30 border-b border-slate-200/80 bg-white/90 backdrop-blur-md shadow-xs">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
-        <div class="flex min-w-0 items-center gap-3">
-          <div class="h-10 w-10 rounded-xl bg-[#00A0A5] text-white flex items-center justify-center shadow-xs shrink-0">
+    <header class="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur-md shadow-xs">
+      <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex items-center justify-between gap-3">
+        <div class="flex min-w-0 items-center gap-2.5 sm:gap-3">
+          <div class="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-[#00A0A5] text-white flex items-center justify-center shadow-xs shrink-0">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
           </div>
           <div class="min-w-0">
-            <div class="text-base font-bold text-slate-900 tracking-tight flex items-center gap-2">
-              <span><?= htmlspecialchars($title) ?></span>
-              <span class="text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full">S-SPARC AI</span>
+            <div class="text-sm sm:text-base font-bold text-slate-900 tracking-tight flex items-center gap-1.5 sm:gap-2">
+              <span class="truncate"><?= htmlspecialchars($title) ?></span>
+              <span class="text-[10px] sm:text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 sm:px-2 py-0.5 rounded-full shrink-0">S-SPARC AI</span>
             </div>
-            <div class="text-xs text-slate-500 truncate max-w-md">
-              User: <strong class="text-slate-800"><?= htmlspecialchars($sso_name) ?></strong> &mdash; Role: <strong class="text-slate-800"><?= htmlspecialchars(ucfirst($sso_role)) ?></strong>
+            <div class="text-[11px] sm:text-xs text-slate-500 truncate max-w-[200px] sm:max-w-md">
+              User: <strong class="text-slate-800"><?= htmlspecialchars($sso_name) ?></strong> &bull; <strong class="text-slate-800"><?= htmlspecialchars(ucfirst($sso_role)) ?></strong>
             </div>
           </div>
         </div>
-        <nav class="flex shrink-0 items-center gap-1.5 text-xs font-medium">
+
+        <!-- Desktop Navigation (hidden on mobile/tablet < lg) -->
+        <nav class="hidden lg:flex shrink-0 items-center gap-1.5 text-xs font-medium">
           <a class="inline-flex h-8 items-center rounded-lg px-3 transition <?= ($activePage === 'home') ? 'bg-[#00A0A5] text-white font-semibold shadow-xs' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' ?>" href="index.php">Home</a>
           <?php if ($sso_role === 'student'): ?>
             <a class="inline-flex h-8 items-center rounded-lg px-3 transition text-slate-600 hover:bg-slate-100 hover:text-slate-900" href="../student_submission.php">Submissions</a>
@@ -60,7 +62,51 @@ function renderSSOHeader($activePage = 'chat', $title = 'Chat Assistant') {
             <button class="inline-flex h-8 items-center rounded-lg border border-red-200 bg-red-50/50 px-3 text-red-700 hover:bg-red-100 hover:border-red-300 transition shadow-xs font-semibold" type="submit">Logout</button>
           </form>
         </nav>
+
+        <!-- Mobile Menu Toggle Button (visible on mobile < lg) -->
+        <div class="flex lg:hidden items-center gap-2">
+          <button type="button" id="sso-mobile-menu-btn" onclick="toggleSSOMobileMenu()" class="inline-flex items-center justify-center p-2 rounded-xl text-slate-700 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 focus:outline-none transition shadow-2xs" aria-label="Toggle navigation">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+          </button>
+        </div>
       </div>
+
+      <!-- Mobile Dropdown Navigation Drawer -->
+      <div id="sso-mobile-menu" class="hidden lg:hidden border-t border-slate-200 bg-white/95 px-4 py-3 space-y-2 shadow-md">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs font-medium">
+          <a class="flex h-9 items-center rounded-lg px-3 transition <?= ($activePage === 'home') ? 'bg-[#00A0A5] text-white font-semibold' : 'text-slate-700 hover:bg-slate-100' ?>" href="index.php">🏠 Home</a>
+          <?php if ($sso_role === 'student'): ?>
+            <a class="flex h-9 items-center rounded-lg px-3 transition text-slate-700 hover:bg-slate-100" href="../student_submission.php">📝 Submissions</a>
+            <a class="flex h-9 items-center rounded-lg px-3 transition <?= ($activePage === 'courses') ? 'bg-[#00A0A5] text-white font-semibold' : 'text-slate-700 hover:bg-slate-100' ?>" href="courses.php">📚 Courses</a>
+            <?php if (!empty($_SESSION['assessment_id']) && !empty($_SESSION['current_course_id'])): ?>
+              <a class="flex h-9 items-center rounded-lg px-3 transition <?= ($activePage === 'chat') ? 'bg-[#00A0A5] text-white font-semibold' : 'text-slate-700 hover:bg-slate-100' ?>" href="chat.php">💬 Chat Assistant</a>
+            <?php endif; ?>
+            <a class="flex h-9 items-center rounded-lg px-3 transition <?= ($activePage === 'student_analytics' || $activePage === 'wrapped') ? 'bg-[#00A0A5] text-white font-semibold' : 'text-slate-700 hover:bg-slate-100' ?>" href="student_analytics.php">🎁 Prompt Wrapped</a>
+            <a class="flex h-9 items-center rounded-lg px-3 transition <?= ($activePage === 'environmental_impact') ? 'bg-[#00A0A5] text-white font-semibold' : 'text-slate-700 hover:bg-slate-100' ?>" href="environmental_impact.php">🌱 Eco-Metrics</a>
+          <?php else: ?>
+            <?php if ($sso_role === 'admin'): ?>
+              <a class="flex h-9 items-center rounded-lg px-3 transition text-slate-700 hover:bg-slate-100" href="../admin_ssparc_config.php">⚙️ AI Config</a>
+            <?php endif; ?>
+            <a class="flex h-9 items-center rounded-lg px-3 transition <?= ($activePage === 'lecturer_analytics') ? 'bg-[#00A0A5] text-white font-semibold' : 'text-slate-700 hover:bg-slate-100' ?>" href="lecturer_analytics.php">📊 Research Telemetry</a>
+            <a class="flex h-9 items-center rounded-lg px-3 transition <?= ($activePage === 'environmental_impact') ? 'bg-[#00A0A5] text-white font-semibold' : 'text-slate-700 hover:bg-slate-100' ?>" href="environmental_impact.php">🌱 Eco-Metrics</a>
+          <?php endif; ?>
+        </div>
+        <div class="pt-2 border-t border-slate-100 flex flex-col sm:flex-row gap-2">
+          <a class="flex-1 flex h-9 items-center justify-center rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 transition text-xs font-semibold" href="<?= $backLink ?>">⬅️ Back to E-STRANGE</a>
+          <form class="m-0 flex-1" action="../index.php" method="post">
+            <input type="hidden" name="logout" value="logout">
+            <button class="w-full flex h-9 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 transition text-xs font-semibold" type="submit">🚪 Logout</button>
+          </form>
+        </div>
+      </div>
+      <script>
+        function toggleSSOMobileMenu() {
+          var el = document.getElementById('sso-mobile-menu');
+          if (el) {
+            el.classList.toggle('hidden');
+          }
+        }
+      </script>
     </header>
     <?php
 }

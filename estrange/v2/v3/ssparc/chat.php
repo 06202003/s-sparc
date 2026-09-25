@@ -349,7 +349,7 @@ select.select2-hidden-accessible {
 
   <!-- Academic Context Sub-Header (Verified from E-STRANGE) -->
   <div class="shrink-0 border-b border-slate-200/80 bg-white/70 backdrop-blur z-10">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex flex-wrap items-center justify-between gap-2.5 text-xs">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
       <div class="flex items-center gap-2 flex-wrap">
         <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-[#00A0A5] text-white">
           Verified Context
@@ -362,18 +362,18 @@ select.select2-hidden-accessible {
           Assessment: <strong class="text-slate-900"><?= htmlspecialchars($currentAssessment) ?></strong>
         </span>
       </div>
-      <div class="flex items-center gap-2 flex-wrap ml-auto">
-        <button id="manage-api-key-btn" type="button" onclick="openApiKeyModal()" class="inline-flex h-7 items-center gap-1 rounded-md border border-teal-300 bg-teal-50 px-2.5 text-[11px] font-semibold text-teal-800 hover:bg-teal-100 transition shadow-2xs">
+      <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap w-full sm:w-auto justify-start sm:justify-end pt-1 sm:pt-0">
+        <button id="manage-api-key-btn" type="button" onclick="openApiKeyModal()" class="inline-flex h-7 items-center gap-1 rounded-md border border-teal-300 bg-teal-50 px-2 text-[11px] font-semibold text-teal-800 hover:bg-teal-100 transition shadow-2xs">
           <span>🔑</span>
           <span id="api-key-btn-text">API Key</span>
         </button>
-        <a href="courses.php" class="inline-flex h-7 items-center rounded-md border border-slate-300 bg-white px-2.5 text-[11px] font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-400 no-underline transition">
+        <a href="courses.php" class="inline-flex h-7 items-center rounded-md border border-slate-300 bg-white px-2 text-[11px] font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-400 no-underline transition">
           Change Context
         </a>
-        <button id="new-chat" type="button" class="inline-flex h-7 items-center rounded-md bg-[#00A0A5] text-white px-2.5 text-[11px] font-medium hover:bg-slate-800 transition">
+        <button id="new-chat" type="button" class="inline-flex h-7 items-center rounded-md bg-[#00A0A5] text-white px-2 text-[11px] font-medium hover:bg-slate-800 transition">
           New Chat
         </button>
-        <button id="clear-chat" type="button" class="inline-flex h-7 items-center rounded-md border border-slate-300 bg-white px-2.5 text-[11px] font-medium text-slate-700 hover:bg-slate-50 transition">
+        <button id="clear-chat" type="button" class="inline-flex h-7 items-center rounded-md border border-slate-300 bg-white px-2 text-[11px] font-medium text-slate-700 hover:bg-slate-50 transition">
           Clear History
         </button>
       </div>
