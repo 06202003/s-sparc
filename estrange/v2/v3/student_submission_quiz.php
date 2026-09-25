@@ -28,7 +28,7 @@ if (!$quiz) {
 }
 
 if ($quiz['status'] === 'failed' && isset($_GET['retry']) && $_GET['retry'] === '1' && empty($quiz['answered_at'])) {
-    $retryStmt = $db->prepare("UPDATE generated_quizzes SET status = 'pending', error_message = NULL WHERE quiz_id = ? AND student_id = ? AND answered_at IS NULL");
+    $retryStmt = $db->prepare("UPDATE generated_quizzes SET status = 'pending', error_message = NULL, quiz_started_at = NULL, quiz_expires_at = NULL, answered_at = NULL, score_points = NULL WHERE quiz_id = ? AND student_id = ?");
     $retryStmt->bind_param('ii', $quiz['quiz_id'], $_SESSION['user_id']);
     $retryStmt->execute();
     $retryStmt->close();
@@ -50,11 +50,19 @@ if ($quiz['status'] === 'ready' && empty($quiz['answered_at']) && empty($quiz['q
     $quiz['quiz_expires_at'] = $expiresAtStr;
 }
 
+$remainingSeconds = $duration;
+if (!empty($quiz['quiz_expires_at'])) {
+    $expiresAtUnix = strtotime($quiz['quiz_expires_at']);
+    if ($expiresAtUnix !== false) {
+        $remainingSeconds = max(0, $expiresAtUnix - $nowUnix);
+    }
+}
+
 $message = '';
-// Check if quiz has genuinely expired
+// Check if quiz has genuinely expired (with 10s grace tolerance to avoid false triggers on page load)
 if ($quiz['status'] === 'ready' && empty($quiz['answered_at']) && !empty($quiz['quiz_expires_at'])) {
     $expiresAtUnix = strtotime($quiz['quiz_expires_at']);
-    if ($expiresAtUnix !== false && $expiresAtUnix <= $nowUnix) {
+    if ($expiresAtUnix !== false && $expiresAtUnix < ($nowUnix - 10)) {
         $message = 'Waktu menjawab sudah habis. Nilai quiz: 0/3.';
         $nowStr = date('Y-m-d H:i:s', $nowUnix);
         $expiredStmt = $db->prepare('UPDATE generated_quizzes SET answered_at = ?, score_points = 0 WHERE quiz_id = ? AND answered_at IS NULL');
@@ -63,6 +71,7 @@ if ($quiz['status'] === 'ready' && empty($quiz['answered_at']) && !empty($quiz['
         $expiredStmt->close();
         $quiz['answered_at'] = $nowStr;
         $quiz['score_points'] = 0;
+        $remainingSeconds = 0;
     }
 }
 
@@ -232,7 +241,8 @@ document.addEventListener('DOMContentLoaded', function() {
 </form>
 <script>
 (function () {
-    var expiresAt = <?= (int)$expiresAtMs ?>;
+    var remainingSeconds = <?= (int)$remainingSeconds ?>;
+    var startTime = performance.now();
     var timer = document.getElementById('quiz-timer');
     var isExpiredHandled = false;
 
@@ -271,7 +281,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateTimer() {
-        var remaining = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
+        var elapsed = Math.floor((performance.now() - startTime) / 1000);
+        var remaining = Math.max(0, remainingSeconds - elapsed);
         var minutes = Math.floor(remaining / 60);
         var seconds = remaining % 60;
         if (timer) {

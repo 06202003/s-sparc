@@ -345,7 +345,7 @@ function generate_submission_quiz($db, $submissionId, $studentId)
             }
             $insert->close();
 
-            $update = $db->prepare("UPDATE generated_quizzes SET status = 'ready', error_message = NULL WHERE submission_id = ?");
+            $update = $db->prepare("UPDATE generated_quizzes SET status = 'ready', error_message = NULL, quiz_started_at = NULL, quiz_expires_at = NULL, answered_at = NULL, score_points = NULL WHERE submission_id = ?");
             $update->bind_param('i', $submissionId);
             $update->execute();
             $update->close();
@@ -368,7 +368,7 @@ function generate_submission_quiz($db, $submissionId, $studentId)
 function create_submission_quiz($db, $submissionId, $studentId)
 {
     $penalty = (float)get_quiz_env('QUIZ_PENALTY_POINTS', '0');
-    $stmt = $db->prepare('INSERT INTO generated_quizzes (submission_id, student_id, penalty_points) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE student_id = VALUES(student_id), status = \'pending\', penalty_points = VALUES(penalty_points), error_message = NULL');
+    $stmt = $db->prepare('INSERT INTO generated_quizzes (submission_id, student_id, penalty_points) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE student_id = VALUES(student_id), status = \'pending\', penalty_points = VALUES(penalty_points), error_message = NULL, quiz_started_at = NULL, quiz_expires_at = NULL, answered_at = NULL, score_points = NULL');
     if (!$stmt) {
         return false;
     }

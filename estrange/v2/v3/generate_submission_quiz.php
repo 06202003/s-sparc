@@ -31,7 +31,7 @@ if (!$quiz) {
 }
 
 if ($quiz['status'] === 'failed' && isset($_GET['retry']) && $_GET['retry'] === '1') {
-    $retryStmt = $db->prepare("UPDATE generated_quizzes SET status = 'pending', error_message = NULL WHERE submission_id = ? AND student_id = ? AND answered_at IS NULL");
+    $retryStmt = $db->prepare("UPDATE generated_quizzes SET status = 'pending', error_message = NULL, quiz_started_at = NULL, quiz_expires_at = NULL, answered_at = NULL, score_points = NULL WHERE submission_id = ? AND student_id = ?");
     $retryStmt->bind_param('ii', $submissionId, $_SESSION['user_id']);
     $retryStmt->execute();
     $retryStmt->close();
