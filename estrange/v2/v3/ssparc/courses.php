@@ -304,7 +304,8 @@ select.select2-hidden-accessible {
               </span>
             </div>
             <button type="button" onclick="openApiKeyFlow(!userHasApiKey)" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-50 border border-teal-200 text-teal-800 text-xs font-bold hover:bg-teal-100 transition shadow-xs shrink-0">
-              <span>🔑</span> Gemini API Key
+              <svg class="w-3.5 h-3.5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+              <span>Gemini API Key</span>
             </button>
           </div>
           <h1 class="text-xl font-bold text-slate-900 mt-2">Select S-SPARC Academic Context</h1>
@@ -324,7 +325,9 @@ select.select2-hidden-accessible {
         <div id="apiKeyNotice" class="rounded-xl border border-amber-200 bg-amber-50 text-amber-900 p-4 text-xs space-y-2 shadow-xs transition-all">
           <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div class="flex items-start gap-2.5">
-              <span id="apiKeyNoticeIcon" class="text-xl shrink-0 mt-0.5">⚠️</span>
+              <span id="apiKeyNoticeIcon" class="w-5 h-5 flex items-center justify-center shrink-0 mt-0.5 text-amber-600 font-bold">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+              </span>
               <div>
                 <strong id="apiKeyNoticeTitle" class="font-bold block text-sm">Google Gemini API Key Required</strong>
                 <span id="apiKeyNoticeDesc" class="block text-xs mt-0.5 text-slate-700">You have not registered your personal API Key. Please accept the Terms &amp; Conditions and register your API key before launching the S-SPARC AI Assistant.</span>
@@ -434,14 +437,14 @@ select.select2-hidden-accessible {
 
       if (data && data.has_key) {
         banner.addClass('border-emerald-200 bg-emerald-50/80 text-emerald-900');
-        icon.text('✅');
+        icon.html('<svg class="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>');
         title.text('Google Gemini API Key Active');
         desc.html(`Active Key: <strong class="font-mono text-teal-800">${data.masked_key || 'Saved'}</strong>. You are ready to launch S-SPARC AI Assistant.`);
         btn.text('Manage API Key').removeClass('hidden bg-amber-600 hover:bg-amber-700').addClass('bg-teal-700 hover:bg-teal-800 text-white');
         btn.attr('onclick', 'openApiKeyFlow(false)');
       } else {
         banner.addClass('border-amber-200 bg-amber-50 text-amber-900');
-        icon.text('⚠️');
+        icon.html('<svg class="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>');
         title.text('Google Gemini API Key Required');
         desc.text('You have not registered your personal API Key. Please accept the Terms & Conditions and register your API key before launching the S-SPARC AI Assistant.');
         btn.text('Set API Key Now').removeClass('hidden bg-teal-700 hover:bg-teal-800').addClass('bg-amber-600 hover:bg-amber-700 text-white');
@@ -451,7 +454,7 @@ select.select2-hidden-accessible {
 
     function showTermsAndConditionsModal(onAcceptCallback) {
       Swal.fire({
-        title: '📜 Terms & Conditions — Personal API Key Usage',
+        title: 'Terms & Conditions — Personal API Key Usage',
         html: `
           <div class="text-left text-xs leading-relaxed space-y-3.5 text-slate-700 max-h-[220px] overflow-y-auto pr-2 border border-slate-200 rounded-xl p-3.5 bg-slate-50/50" id="termsScrollBox">
             <div class="p-3 bg-teal-50/90 border border-teal-200 rounded-xl text-[11px] text-teal-900 font-medium">
@@ -508,7 +511,7 @@ select.select2-hidden-accessible {
 
           <div id="readingProgressNotice" class="mt-3 p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-900 flex items-center gap-2 font-medium">
             <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-            <span>📜 <strong>Scroll Required:</strong> Please scroll down to the bottom of the Terms box to read all terms and enable agreement.</span>
+            <span><strong>Scroll Required:</strong> Please scroll down to the bottom of the Terms box to read all terms and enable agreement.</span>
           </div>
 
           <div class="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-left">
@@ -548,7 +551,7 @@ select.select2-hidden-accessible {
                 }
                 if (notice) {
                   notice.className = 'mt-3 p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-[11px] text-emerald-900 flex items-center gap-2 font-medium';
-                  notice.innerHTML = '<svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span>✅ Terms & Conditions read! Check the box below to accept.</span>';
+                  notice.innerHTML = '<svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span>Terms & Conditions read. Check the box below to accept.</span>';
                 }
               }
             }
@@ -581,11 +584,11 @@ select.select2-hidden-accessible {
           const checked = document.getElementById('swal-terms-read-checkbox')?.checked;
 
           if (!hasScrolled) {
-            Swal.showValidationMessage('📜 Please scroll down to the bottom of the Terms & Conditions before agreeing.');
+            Swal.showValidationMessage('Please scroll down to the bottom of the Terms & Conditions before agreeing.');
             return false;
           }
           if (!checked) {
-            Swal.showValidationMessage('⚠️ You must check the agreement box to accept the Terms & Conditions before proceeding.');
+            Swal.showValidationMessage('You must check the agreement box to accept the Terms & Conditions before proceeding.');
             return false;
           }
           return true;
@@ -612,7 +615,7 @@ select.select2-hidden-accessible {
         }
       } catch (e) {}
 
-      const titleText = isFirstTime ? '🔑 Register Google Gemini API Key' : '⚙️ Manage Google Gemini API Key';
+      const titleText = isFirstTime ? 'Register Google Gemini API Key' : 'Manage Google Gemini API Key';
       const introText = isFirstTime 
         ? 'Please enter your personal Google Gemini API Key below. This key will be securely saved for all your coding sessions in S-SPARC AI.'
         : 'Your active Google Gemini API Key: <strong class="font-mono text-teal-700">' + (currentMasked || 'Not set') + '</strong>.';
@@ -693,7 +696,7 @@ select.select2-hidden-accessible {
           const isSslErr = saveErr.message && (saveErr.message.includes('Failed to fetch') || saveErr.message.includes('ERR_CERT'));
           Swal.fire({
             icon: 'error',
-            title: isSslErr ? '🔒 Untrusted SSL Certificate' : 'Failed to Save API Key',
+            title: isSslErr ? 'Untrusted SSL Certificate' : 'Failed to Save API Key',
             html: isSslErr 
               ? `<div class="text-left text-xs space-y-2 text-slate-700">
                   <p>Browser Anda memblokir koneksi ke <strong>${FASTAPI_URL}</strong> karena sertifikat SSL belum disetujui (Self-Signed SSL).</p>

@@ -74,28 +74,28 @@ function renderSSOHeader($activePage = 'chat', $title = 'Chat Assistant') {
       <!-- Mobile Dropdown Navigation Drawer -->
       <div id="sso-mobile-menu" class="hidden lg:hidden border-t border-slate-200 bg-white/95 px-4 py-3 space-y-2 shadow-md">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs font-medium">
-          <a class="flex h-9 items-center rounded-lg px-3 transition <?= ($activePage === 'home') ? 'bg-[#00A0A5] text-white font-semibold' : 'text-slate-700 hover:bg-slate-100' ?>" href="index.php">🏠 Home</a>
+          <a class="flex h-9 items-center rounded-lg px-3 transition <?= ($activePage === 'home') ? 'bg-[#00A0A5] text-white font-semibold' : 'text-slate-700 hover:bg-slate-100' ?>" href="index.php">Home</a>
           <?php if ($sso_role === 'student'): ?>
-            <a class="flex h-9 items-center rounded-lg px-3 transition text-slate-700 hover:bg-slate-100" href="../student_submission.php">📝 Submissions</a>
-            <a class="flex h-9 items-center rounded-lg px-3 transition <?= ($activePage === 'courses') ? 'bg-[#00A0A5] text-white font-semibold' : 'text-slate-700 hover:bg-slate-100' ?>" href="courses.php">📚 Courses</a>
+            <a class="flex h-9 items-center rounded-lg px-3 transition text-slate-700 hover:bg-slate-100" href="../student_submission.php">Submissions</a>
+            <a class="flex h-9 items-center rounded-lg px-3 transition <?= ($activePage === 'courses') ? 'bg-[#00A0A5] text-white font-semibold' : 'text-slate-700 hover:bg-slate-100' ?>" href="courses.php">Courses</a>
             <?php if (!empty($_SESSION['assessment_id']) && !empty($_SESSION['current_course_id'])): ?>
-              <a class="flex h-9 items-center rounded-lg px-3 transition <?= ($activePage === 'chat') ? 'bg-[#00A0A5] text-white font-semibold' : 'text-slate-700 hover:bg-slate-100' ?>" href="chat.php">💬 Chat Assistant</a>
+              <a class="flex h-9 items-center rounded-lg px-3 transition <?= ($activePage === 'chat') ? 'bg-[#00A0A5] text-white font-semibold' : 'text-slate-700 hover:bg-slate-100' ?>" href="chat.php">Chat Assistant</a>
             <?php endif; ?>
-            <a class="flex h-9 items-center rounded-lg px-3 transition <?= ($activePage === 'student_analytics' || $activePage === 'wrapped') ? 'bg-[#00A0A5] text-white font-semibold' : 'text-slate-700 hover:bg-slate-100' ?>" href="student_analytics.php">🎁 Prompt Wrapped</a>
-            <a class="flex h-9 items-center rounded-lg px-3 transition <?= ($activePage === 'environmental_impact') ? 'bg-[#00A0A5] text-white font-semibold' : 'text-slate-700 hover:bg-slate-100' ?>" href="environmental_impact.php">🌱 Eco-Metrics</a>
+            <a class="flex h-9 items-center rounded-lg px-3 transition <?= ($activePage === 'student_analytics' || $activePage === 'wrapped') ? 'bg-[#00A0A5] text-white font-semibold' : 'text-slate-700 hover:bg-slate-100' ?>" href="student_analytics.php">Prompt Wrapped</a>
+            <a class="flex h-9 items-center rounded-lg px-3 transition <?= ($activePage === 'environmental_impact') ? 'bg-[#00A0A5] text-white font-semibold' : 'text-slate-700 hover:bg-slate-100' ?>" href="environmental_impact.php">Eco-Metrics</a>
           <?php else: ?>
             <?php if ($sso_role === 'admin'): ?>
-              <a class="flex h-9 items-center rounded-lg px-3 transition text-slate-700 hover:bg-slate-100" href="../admin_ssparc_config.php">⚙️ AI Config</a>
+              <a class="flex h-9 items-center rounded-lg px-3 transition text-slate-700 hover:bg-slate-100" href="../admin_ssparc_config.php">AI Config</a>
             <?php endif; ?>
-            <a class="flex h-9 items-center rounded-lg px-3 transition <?= ($activePage === 'lecturer_analytics') ? 'bg-[#00A0A5] text-white font-semibold' : 'text-slate-700 hover:bg-slate-100' ?>" href="lecturer_analytics.php">📊 Research Telemetry</a>
-            <a class="flex h-9 items-center rounded-lg px-3 transition <?= ($activePage === 'environmental_impact') ? 'bg-[#00A0A5] text-white font-semibold' : 'text-slate-700 hover:bg-slate-100' ?>" href="environmental_impact.php">🌱 Eco-Metrics</a>
+            <a class="flex h-9 items-center rounded-lg px-3 transition <?= ($activePage === 'lecturer_analytics') ? 'bg-[#00A0A5] text-white font-semibold' : 'text-slate-700 hover:bg-slate-100' ?>" href="lecturer_analytics.php">Research Telemetry</a>
+            <a class="flex h-9 items-center rounded-lg px-3 transition <?= ($activePage === 'environmental_impact') ? 'bg-[#00A0A5] text-white font-semibold' : 'text-slate-700 hover:bg-slate-100' ?>" href="environmental_impact.php">Eco-Metrics</a>
           <?php endif; ?>
         </div>
         <div class="pt-2 border-t border-slate-100 flex flex-col sm:flex-row gap-2">
-          <a class="flex-1 flex h-9 items-center justify-center rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 transition text-xs font-semibold" href="<?= $backLink ?>">⬅️ Back to E-STRANGE</a>
+          <a class="flex-1 flex h-9 items-center justify-center rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 transition text-xs font-semibold" href="<?= $backLink ?>">Back to E-STRANGE</a>
           <form class="m-0 flex-1" action="../index.php" method="post">
             <input type="hidden" name="logout" value="logout">
-            <button class="w-full flex h-9 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 transition text-xs font-semibold" type="submit">🚪 Logout</button>
+            <button class="w-full flex h-9 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 transition text-xs font-semibold" type="submit">Logout</button>
           </form>
         </div>
       </div>

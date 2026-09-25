@@ -34,14 +34,30 @@ $assessmentId = $_SESSION['assessment_id'] ?? '';
   <link href="../strange_html_layout_additional_files/vendor/select2.min.css" rel="stylesheet" />
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
   <script src="../strange_html_layout_additional_files/vendor/select2.min.js"></script>
-  <!-- Markdown & HTML Sanitizer & Highlight.js & KaTeX -->
-  <script src="../strange_html_layout_additional_files/vendor/marked.min.js"></script>
-  <script src="../strange_html_layout_additional_files/vendor/purify.min.js"></script>
-  <link rel="stylesheet" href="../strange_html_layout_additional_files/vendor/atom-one-dark.min.css">
-  <script src="../strange_html_layout_additional_files/vendor/highlight.min.js"></script>
-  <link rel="stylesheet" href="../strange_html_layout_additional_files/vendor/katex.min.css">
-  <script src="../strange_html_layout_additional_files/vendor/katex.min.js"></script>
-  <script src="../strange_html_layout_additional_files/vendor/auto-render.min.js"></script>
+  <!-- Markdown & HTML Sanitizer & Highlight.js & KaTeX (CDN + Local Fallback) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/common.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <!-- Local Fallback Scripts -->
+  <script>
+    if (typeof marked === 'undefined') {
+      document.write('<script src="../strange_html_layout_additional_files/vendor/marked.min.js"><\/script>');
+    }
+    if (typeof DOMPurify === 'undefined') {
+      document.write('<script src="../strange_html_layout_additional_files/vendor/purify.min.js"><\/script>');
+    }
+    if (typeof hljs === 'undefined') {
+      document.write('<script src="../strange_html_layout_additional_files/vendor/highlight.min.js"><\/script>');
+    }
+    if (typeof katex === 'undefined') {
+      document.write('<script src="../strange_html_layout_additional_files/vendor/katex.min.js"><\/script>');
+      document.write('<script src="../strange_html_layout_additional_files/vendor/auto-render.min.js"><\/script>');
+    }
+  </script>
   <style>
     :root { color-scheme: light; }
     body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
@@ -364,7 +380,7 @@ select.select2-hidden-accessible {
       </div>
       <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap w-full sm:w-auto justify-start sm:justify-end pt-1 sm:pt-0">
         <button id="manage-api-key-btn" type="button" onclick="openApiKeyModal()" class="inline-flex h-7 items-center gap-1 rounded-md border border-teal-300 bg-teal-50 px-2 text-[11px] font-semibold text-teal-800 hover:bg-teal-100 transition shadow-2xs">
-          <span>🔑</span>
+          <svg class="w-3.5 h-3.5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
           <span id="api-key-btn-text">API Key</span>
         </button>
         <a href="courses.php" class="inline-flex h-7 items-center rounded-md border border-slate-300 bg-white px-2 text-[11px] font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-400 no-underline transition">
@@ -416,7 +432,7 @@ select.select2-hidden-accessible {
             <div class="mb-2 pb-2 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2 text-[11px]">
               <div class="flex items-center gap-1.5 flex-wrap">
                 <span class="font-bold text-slate-700 flex items-center gap-1">
-                  <span class="text-[#00A0A5]">★</span> C-I-O-E Protocol:
+                  <span class="text-[#00A0A5] font-bold">C-I-O-E Protocol:</span>
                 </span>
                 <span id="cioe-badge-c" class="px-2 py-0.5 rounded-md font-mono font-semibold bg-slate-100 text-slate-400 border border-slate-200 transition duration-200 flex items-center gap-1 cursor-help" title="Context: Latar belakang & deskripsi tugas">
                   <span>[C]</span> Context
@@ -432,8 +448,8 @@ select.select2-hidden-accessible {
                 </span>
               </div>
               <button type="button" onclick="insertCIOETemplate()" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200/80 font-bold text-[10px] transition shadow-2xs cursor-pointer whitespace-nowrap" title="Isi otomatis template C-I-O-E">
-                <span>✨</span>
-                <span>+ Template C-I-O-E</span>
+                <svg class="w-3 h-3 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                <span>Template C-I-O-E</span>
               </button>
             </div>
 
@@ -584,14 +600,14 @@ select.select2-hidden-accessible {
           <!-- Sleek Highlights Banner -->
           <div class="p-2.5 rounded-xl border border-emerald-200/90 bg-emerald-50/60 text-[11px] space-y-1.5">
             <div class="flex items-center gap-1.5 font-bold text-emerald-900">
-              <span>🏆</span>
+              <svg class="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
               <span>Leaderboard Points Protected</span>
             </div>
             <p class="text-slate-600 text-[11px] leading-snug">
               BYOK uses 0 pts. Your assignment &amp; peer review points are 100% safe for ranking!
             </p>
             <div class="text-[10px] text-teal-800 flex items-center gap-1 pt-1 border-t border-emerald-200/50">
-              <span class="font-bold">⚡ Failover:</span>
+              <span class="font-bold">Failover:</span>
               <span>Auto-switches to System Pool / Ollama if limit hit.</span>
             </div>
           </div>
@@ -599,11 +615,11 @@ select.select2-hidden-accessible {
           <!-- Action Buttons -->
           <div class="pt-0.5 space-y-1.5">
             <button type="button" onclick="openApiKeyFlow(false)" class="w-full py-1.5 px-3 rounded-xl border border-teal-300 bg-white hover:bg-teal-50 text-teal-800 text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-2xs">
-              <span>🔑</span>
+              <svg class="w-3.5 h-3.5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
               <span>Manage Gemini API Key</span>
             </button>
             <button type="button" onclick="showTermsModal()" class="w-full py-1 px-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-900 text-[11px] font-medium flex items-center justify-center gap-1.5 transition">
-              <span>📜</span>
+              <svg class="w-3.5 h-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
               <span>Terms &amp; Policy Details</span>
             </button>
           </div>
@@ -734,22 +750,27 @@ select.select2-hidden-accessible {
         const textContent = document.createElement('div');
         textContent.className = 'chat-bubble-content';
         textContent.innerHTML = formatMessageContent(msg.text, isUser);
-        if (typeof renderMathInElement === 'function') {
-          try {
-            renderMathInElement(textContent, {
-              delimiters: [
-                { left: '$$', right: '$$', display: true },
-                { left: '$', right: '$', display: false },
-                { left: '\\(', right: '\\)', display: false },
-                { left: '\\[', right: '\\]', display: true }
-              ],
-              throwOnError: false
-            });
-          } catch (eKaTeX) {
-            console.warn('KaTeX render error:', eKaTeX);
-          }
-        }
         bubble.appendChild(textContent);
+
+        // Attach copy button events
+        textContent.querySelectorAll('.copy-code-btn').forEach(btn => {
+          btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const pre = this.closest('.code-block-container')?.querySelector('pre code');
+            if (pre) {
+              const code = pre.textContent || pre.innerText || '';
+              navigator.clipboard.writeText(code).then(() => {
+                const originalText = this.innerHTML;
+                this.classList.add('copied');
+                this.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span>Copied!</span>';
+                setTimeout(() => {
+                  this.classList.remove('copied');
+                  this.innerHTML = originalText;
+                }, 2000);
+              }).catch(() => {});
+            }
+          });
+        });
 
         if (isDb) {
           const promptText = msg.prompt || (state.messages[idx - 1] && state.messages[idx - 1].sender === 'user' ? state.messages[idx - 1].text : '');
@@ -786,14 +807,6 @@ select.select2-hidden-accessible {
     function formatMessageContent(rawText, isUser = false) {
       if (!rawText) return '';
       let textToParse = String(rawText).trim();
-      
-      if (isUser) {
-        if (!textToParse.includes('```')) {
-          return escapeHtml(textToParse)
-            .replace(/\n/g, '<br/>')
-            .replace(/`([^`]+)`/g, '<code class="bg-slate-800 text-teal-300 px-2 py-0.5 rounded text-xs font-mono font-bold border border-slate-700 shadow-2xs">$1</code>');
-        }
-      }
 
       if (!isUser && !textToParse.includes('```')) {
         const isPureCode = (textToParse.startsWith('def ') || textToParse.startsWith('import ') || textToParse.startsWith('#include ') || textToParse.startsWith('public class ') || textToParse.startsWith('class ')) && !textToParse.includes('?') && !textToParse.toLowerCase().startsWith('buatkan') && !textToParse.toLowerCase().startsWith('jelaskan');
@@ -802,6 +815,39 @@ select.select2-hidden-accessible {
         }
       }
 
+      // Step 1: Extract Math Formulas to placeholders before Markdown parse
+      const mathTokens = [];
+
+      // Block math $$ ... $$
+      textToParse = textToParse.replace(/\$\$([\s\S]+?)\$\$/g, (match, formula) => {
+        const placeholder = `%%%MATHBLOCK_${mathTokens.length}%%%`;
+        mathTokens.push({ placeholder, formula: formula.trim(), display: true });
+        return placeholder;
+      });
+
+      // Block math \[ ... \]
+      textToParse = textToParse.replace(/\\\[([\s\S]+?)\\\]/g, (match, formula) => {
+        const placeholder = `%%%MATHBLOCK_${mathTokens.length}%%%`;
+        mathTokens.push({ placeholder, formula: formula.trim(), display: true });
+        return placeholder;
+      });
+
+      // Inline math \( ... \)
+      textToParse = textToParse.replace(/\\\(([\s\S]+?)\\\)/g, (match, formula) => {
+        const placeholder = `%%%MATHINLINE_${mathTokens.length}%%%`;
+        mathTokens.push({ placeholder, formula: formula.trim(), display: false });
+        return placeholder;
+      });
+
+      // Inline math $ ... $ (ignore escaped \$ and ensure non-empty)
+      textToParse = textToParse.replace(/(^|[^\\])\$([^\$\n\r]+?)\$/g, (match, prefix, formula) => {
+        if (!formula.trim()) return match;
+        const placeholder = `%%%MATHINLINE_${mathTokens.length}%%%`;
+        mathTokens.push({ placeholder, formula: formula.trim(), display: false });
+        return prefix + placeholder;
+      });
+
+      // Step 2: Markdown Parsing
       let html = '';
       if (typeof marked !== 'undefined') {
         try {
@@ -824,17 +870,45 @@ select.select2-hidden-accessible {
         html = escapeHtml(textToParse).replace(/\n/g, '<br/>');
       }
 
+      // Step 3: Restore Math Placeholders with KaTeX rendered HTML
+      mathTokens.forEach(token => {
+        let renderedMath = '';
+        if (typeof katex !== 'undefined' && typeof katex.renderToString === 'function') {
+          try {
+            renderedMath = katex.renderToString(token.formula, {
+              displayMode: token.display,
+              throwOnError: false
+            });
+          } catch (eKaTeX) {
+            renderedMath = `<span class="katex-error font-mono text-rose-500">${escapeHtml(token.formula)}</span>`;
+          }
+        } else {
+          renderedMath = `<span class="font-mono font-semibold">${escapeHtml(token.formula)}</span>`;
+        }
+        html = html.split(token.placeholder).join(renderedMath);
+      });
+
+      // Step 4: Sanitize HTML with DOMPurify allowing KaTeX and code structures
       if (typeof DOMPurify !== 'undefined' && typeof DOMPurify.sanitize === 'function') {
         try {
           html = DOMPurify.sanitize(html, {
-            ADD_TAGS: ['button', 'code', 'pre', 'svg', 'path', 'strong', 'em', 'h1', 'h2', 'h3', 'h4', 'ul', 'ol', 'li', 'blockquote', 'p', 'br', 'hr', 'div', 'span', 'mark'],
-            ADD_ATTR: ['class', 'style', 'viewBox', 'fill', 'stroke', 'd', 'stroke-width', 'stroke-linecap', 'stroke-linejoin', 'data-lang']
+            ADD_TAGS: [
+              'math', 'semantics', 'mrow', 'mi', 'mo', 'mn', 'ms', 'mtext', 'msup', 'msub', 'msubsup',
+              'mfrac', 'msqrt', 'mroot', 'mtable', 'mtr', 'mtd', 'annotation', 'annotation-xml',
+              'button', 'code', 'pre', 'svg', 'path', 'strong', 'em', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+              'ul', 'ol', 'li', 'blockquote', 'p', 'br', 'hr', 'div', 'span', 'mark', 'table', 'thead', 'tbody', 'tr', 'th', 'td'
+            ],
+            ADD_ATTR: [
+              'class', 'style', 'viewBox', 'fill', 'stroke', 'd', 'stroke-width', 'stroke-linecap',
+              'stroke-linejoin', 'data-lang', 'xmlns', 'display', 'aria-hidden', 'role', 'tabindex'
+            ]
           });
         } catch (ePurify) {
           console.warn('DOMPurify sanitize error:', ePurify);
         }
       }
 
+      // Step 5: Post-process code blocks for beautiful syntax highlighting & copy headers
       if (html.includes('<pre><code')) {
         try {
           const tempDiv = document.createElement('div');
@@ -1019,7 +1093,7 @@ Kode saya mengalami infinite loop saat 'left == right'. Mohon jelaskan logika pe
     // Terms and Conditions Modal Dialog (Step 1)
     function showTermsAndConditionsModal(onAcceptCallback) {
       Swal.fire({
-        title: '📜 Terms & Conditions — Personal API Key Usage',
+        title: 'Terms & Conditions — Personal API Key Usage',
         html: `
           <div class="text-left text-xs leading-relaxed space-y-3.5 text-slate-700 max-h-[55vh] overflow-y-auto pr-2 border border-slate-200 rounded-xl p-3.5 bg-slate-50/50" id="termsScrollBox">
             <div class="p-3 bg-teal-50/90 border border-teal-200 rounded-xl text-[11px] text-teal-900 font-medium">
@@ -1074,7 +1148,7 @@ Kode saya mengalami infinite loop saat 'left == right'. Mohon jelaskan logika pe
             </div>
           <div id="readingProgressNotice" class="mt-3 p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-900 flex items-center gap-2 font-medium">
             <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-            <span>📜 <strong>Scroll Required:</strong> Please scroll down to the bottom of the Terms box to read all terms and enable agreement.</span>
+            <span><strong>Scroll Required:</strong> Please scroll down to the bottom of the Terms box to read all terms and enable agreement.</span>
           </div>
 
           <div class="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-left">
@@ -1114,7 +1188,7 @@ Kode saya mengalami infinite loop saat 'left == right'. Mohon jelaskan logika pe
                 }
                 if (notice) {
                   notice.className = 'mt-3 p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-[11px] text-emerald-900 flex items-center gap-2 font-medium';
-                  notice.innerHTML = '<svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span>✅ Terms & Conditions read! Check the box below to accept.</span>';
+                  notice.innerHTML = '<svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span>Terms & Conditions read. Check the box below to accept.</span>';
                 }
               }
             }
@@ -1147,11 +1221,11 @@ Kode saya mengalami infinite loop saat 'left == right'. Mohon jelaskan logika pe
           const checked = document.getElementById('swal-terms-read-checkbox')?.checked;
 
           if (!hasScrolled) {
-            Swal.showValidationMessage('📜 Please scroll down to the bottom of the Terms & Conditions before agreeing.');
+            Swal.showValidationMessage('Please scroll down to the bottom of the Terms & Conditions before agreeing.');
             return false;
           }
           if (!checked) {
-            Swal.showValidationMessage('⚠️ You must check the agreement box to accept the Terms & Conditions before proceeding.');
+            Swal.showValidationMessage('You must check the agreement box to accept the Terms & Conditions before proceeding.');
             return false;
           }
           return true;
@@ -1199,7 +1273,7 @@ Kode saya mengalami infinite loop saat 'left == right'. Mohon jelaskan logika pe
       if (badgeEl) {
         if (!quota.has_key) {
           badgeEl.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-50 border border-rose-200 text-[11px] font-semibold text-rose-800 shadow-2xs cursor-pointer hover:bg-rose-100 transition";
-          badgeEl.innerHTML = `<span class="text-rose-600">⚠️</span><span>Set Gemini API Key</span>`;
+          badgeEl.innerHTML = `<svg class="w-3.5 h-3.5 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg><span>Set Gemini API Key</span>`;
           badgeEl.onclick = () => openApiKeyFlow(true);
         } else if (remaining < 50) {
           badgeEl.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-50 border border-rose-200 text-[11px] font-semibold text-rose-800 shadow-2xs cursor-pointer hover:bg-rose-100 transition";
@@ -1232,7 +1306,7 @@ Kode saya mengalami infinite loop saat 'left == right'. Mohon jelaskan logika pe
         console.debug('Failed to fetch API key info:', e);
       }
 
-      const titleText = isFirstTime ? '🔑 Register Google Gemini API Key' : '⚙️ Manage Google Gemini API Key';
+      const titleText = isFirstTime ? 'Register Google Gemini API Key' : 'Manage Google Gemini API Key';
       const introText = isFirstTime 
         ? 'Please enter your personal Google Gemini API Key below. This key will be securely saved for all your coding sessions in S-SPARC AI.'
         : 'Your active Google Gemini API Key: <strong class="font-mono text-teal-700">' + (currentMasked || 'Not set') + '</strong>.';
@@ -1352,7 +1426,7 @@ Kode saya mengalami infinite loop saat 'left == right'. Mohon jelaskan logika pe
             if (apiKeyBtnText) apiKeyBtnText.textContent = 'Set API Key';
             if (chatInput) {
               chatInput.disabled = true;
-              chatInput.placeholder = "⚠️ AI Feature Locked: Please accept Terms & Conditions and register your personal Google Gemini API Key first...";
+              chatInput.placeholder = "AI Feature Locked: Please accept Terms & Conditions and register your personal Google Gemini API Key first...";
             }
             if (sendBtn) sendBtn.disabled = true;
 
