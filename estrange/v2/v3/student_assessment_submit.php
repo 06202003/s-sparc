@@ -88,6 +88,56 @@
 		header('Location: student_dashboard.php');
 		exit;
 	}
+
+	// Determine accepted file formats dynamically from lecturer setting
+	$rawExt = strtolower(trim($row['ext'] ?? ''));
+	$acceptAttr = '';
+	$formatLabel = '';
+	$allowedExts = [];
+
+	if ($rawExt == 'java') {
+		$formatLabel = 'Java Source File (.java)';
+		$acceptAttr = '.java';
+		$allowedExts = ['java'];
+	} elseif ($rawExt == 'py') {
+		$formatLabel = 'Python Source File (.py)';
+		$acceptAttr = '.py';
+		$allowedExts = ['py'];
+	} elseif ($rawExt == 'zip_java') {
+		$formatLabel = 'Java Project Archive (.zip)';
+		$acceptAttr = '.zip';
+		$allowedExts = ['zip'];
+	} elseif ($rawExt == 'zip_py') {
+		$formatLabel = 'Python Project Archive (.zip)';
+		$acceptAttr = '.zip';
+		$allowedExts = ['zip'];
+	} elseif ($rawExt == 'zip') {
+		$formatLabel = 'ZIP Archive (.zip)';
+		$acceptAttr = '.zip';
+		$allowedExts = ['zip'];
+	} elseif ($rawExt == 'cpp' || $rawExt == 'c') {
+		$formatLabel = 'C/C++ Source File (.cpp, .c)';
+		$acceptAttr = '.cpp,.c';
+		$allowedExts = ['cpp', 'c'];
+	} elseif (!empty($rawExt)) {
+		$parts = explode(',', str_replace(' ', '', $rawExt));
+		$acceptList = [];
+		foreach ($parts as $p) {
+			$clean = ltrim($p, '.');
+			$base = explode('_', $clean)[0];
+			if (!empty($base)) {
+				$allowedExts[] = $base;
+				$acceptList[] = '.' . $base;
+			}
+		}
+		$allowedExts = array_unique($allowedExts);
+		$formatLabel = implode(', ', array_map(function($e){ return strtoupper($e) . ' (.' . $e . ')'; }, $allowedExts));
+		$acceptAttr = implode(',', array_unique($acceptList));
+	} else {
+		$formatLabel = 'Any Source Code (.zip, .java, .py, .cpp)';
+		$acceptAttr = '.zip,.java,.py,.cpp,.c,.cs,.js,.ts';
+		$allowedExts = ['zip', 'java', 'py', 'cpp', 'c', 'cs', 'js', 'ts'];
+	}
 	
 	// this code block aims to show how many submission attempts have been made
 	$myassessmentid = mysqli_real_escape_string($db,$_GET['id']);
@@ -152,14 +202,14 @@
 					 $errorMessage .= "The file name should be shorter or equal to 100 characters. <br />";
 				}
 
-				// for dealing with 'zip_java' and 'zip_py'
-				$row['ext'] = explode('_',$row['ext'])[0];
-				if($file_ext != $row['ext']) {
-					$errorMessage .= "The uploaded file's extension should be '".$row['ext']."'! <br />";
+				// check allowed extension based on lecturer configuration
+				$expectedExt = explode('_', $row['ext'])[0];
+				if (!empty($allowedExts) && !in_array($file_ext, $allowedExts) && $file_ext != $expectedExt) {
+					$errorMessage .= "The uploaded file's extension must be '." . $expectedExt . "' as configured for this assessment! <br />";
 				}
 
-				if($file_size > 5000000){
-					$errorMessage .= 'The file size must be lower or equal to 5 MB';
+				if($file_size > 5242880){
+					$errorMessage .= 'The file size must be lower or equal to 5 MB.<br />';
 				}
 
 				if($errorMessage == ""){
@@ -360,11 +410,16 @@ select.select2-hidden-accessible {
 							type="file" 
 							id="code" 
 							name="code" 
+							accept="<?= htmlspecialchars($acceptAttr) ?>"
 							required
 							class="w-full text-sm font-semibold text-slate-600 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-900 file:text-white hover:file:bg-slate-800 file:cursor-pointer border border-slate-200 rounded-xl bg-slate-50 p-2 cursor-pointer transition"
 						/>
 					</div>
-					<p class="text-[11px] text-slate-400 mt-1">Accepted formats: .zip, .java, .py, etc. Max file size: 5 MB.</p>
+					<p class="text-[11px] text-slate-500 mt-1 flex flex-wrap items-center gap-1.5">
+						<span class="inline-flex items-center px-2 py-0.5 rounded-md bg-teal-50 border border-teal-200 text-teal-800 font-semibold">Accepted: <?= htmlspecialchars($formatLabel) ?></span>
+						<span class="text-slate-400">&bull;</span>
+						<span class="text-slate-500 font-medium">Max file size: 5 MB</span>
+					</p>
 				</div>
 
 				<div>
