@@ -56,21 +56,11 @@ if ($sso_role === 'lecturer') {
 }
 
 // 2. Fetch assessments for courses
-if ($sso_role === 'lecturer' || $sso_role === 'admin') {
-    $assessmentsQuery = "SELECT a.assessment_id, a.course_id, a.name, a.description, a.submission_close_time, a.submission_file_extension
-                         FROM assessment a
-                         INNER JOIN course c ON c.course_id = a.course_id
-                         WHERE c.is_active = 1
-                         ORDER BY a.course_id ASC, a.submission_close_time DESC, a.assessment_id ASC";
-} else {
-    $assessmentsQuery = "SELECT a.assessment_id, a.course_id, a.name, a.description, a.submission_close_time, a.submission_file_extension
-                         FROM assessment a
-                         INNER JOIN course c ON c.course_id = a.course_id
-                         WHERE (a.submission_close_time > CURRENT_TIMESTAMP OR a.allow_late_submission = 1)
-                           AND a.submission_open_time < CURRENT_TIMESTAMP
-                           AND c.is_active = 1
-                         ORDER BY a.course_id ASC, a.submission_close_time ASC, a.assessment_id ASC";
-}
+$assessmentsQuery = "SELECT a.assessment_id, a.course_id, a.name, a.description, a.submission_close_time, a.submission_file_extension
+                     FROM assessment a
+                     INNER JOIN course c ON c.course_id = a.course_id
+                     WHERE c.is_active = 1
+                     ORDER BY a.course_id ASC, a.assessment_id DESC";
 $assessmentsRes = $db->query($assessmentsQuery);
 
 if ($assessmentsRes) {
@@ -146,141 +136,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     :root { color-scheme: light; }
     body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
     .glass { backdrop-filter: blur(10px); background: rgba(255,255,255,0.95); }
-    /* Select2 Tailwind Light Styling */
-    .select2-container--default .select2-selection--single {
-      height: 44px;
-      border: 1px solid #cbd5e1;
-      border-radius: 0.75rem;
-      display: flex;
-      align-items: center;
-      background-color: #ffffff;
-      padding-left: 0.5rem;
-      outline: none;
+
+    /* Premium Custom Select Styling */
+    select.form-select, select.custom-select {
+      appearance: none !important;
+      -webkit-appearance: none !important;
+      -moz-appearance: none !important;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2300A0A5' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
+      background-repeat: no-repeat !important;
+      background-position: right 1rem center !important;
+      background-size: 1.15rem 1.15rem !important;
+      padding-left: 1rem !important;
+      padding-right: 2.75rem !important;
+      padding-top: 0.65rem !important;
+      padding-bottom: 0.65rem !important;
+      min-height: 46px !important;
+      border-radius: 0.75rem !important;
+      border: 1.5px solid #cbd5e1 !important;
+      background-color: #ffffff !important;
+      color: #0f172a !important;
+      font-weight: 600 !important;
+      font-size: 0.875rem !important;
+      line-height: 1.25rem !important;
+      transition: all 0.2s ease-in-out !important;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+      cursor: pointer !important;
+      width: 100% !important;
+      display: block !important;
+      box-sizing: border-box !important;
     }
-    .select2-container--default .select2-selection--single .select2-selection__rendered {
-      color: #0f172a;
-      font-size: 0.875rem;
-      line-height: 42px;
-      padding-left: 0.25rem;
-      font-weight: 500;
+
+    select.form-select:hover, select.custom-select:hover {
+      border-color: #00A0A5 !important;
+      background-color: #f8fafc !important;
+      box-shadow: 0 4px 12px rgba(0, 160, 165, 0.08) !important;
     }
-    .select2-container--default .select2-selection--single .select2-selection__arrow {
-      height: 42px;
-      right: 10px;
-    }
-    .select2-dropdown {
-      border: 1px solid #cbd5e1;
-      border-radius: 0.75rem;
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
-      background-color: #ffffff;
-      font-size: 0.875rem;
-      z-index: 9999;
-    }
-    .select2-results__option--highlighted[aria-selected] {
-      background-color: #0f172a !important;
-      color: #ffffff !important;
-    }
-    .select2-container--default .select2-search--dropdown .select2-search__field {
-      border: 1px solid #cbd5e1;
-      border-radius: 0.5rem;
-      padding: 0.4rem 0.6rem;
-      font-size: 0.85rem;
-      outline: none;
-    }
+
+    select.form-select:focus, select.custom-select:focus {
+      outline: none !important;
+      border-color: #00A0A5 !important;
+      box-shadow: 0 0 0 3px rgba(0, 160, 165, 0.2) !important;
+      background-color: #ffffff !important;
   </style>
-  <style>
-/* Premium Teal Dropdown Styling for E-STRANGE & S-SPARC */
-/* Ensure SweetAlert2 hidden select is never displayed */
-.swal2-container select,
-.swal2-popup select,
-.swal2-select {
-  display: none !important;
-}
-
-select:not(.select2-hidden-accessible):not(.swal2-select), .form-select, .custom-select {
-  appearance: none !important;
-  -webkit-appearance: none !important;
-  -moz-appearance: none !important;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2300A0A5' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
-  background-repeat: no-repeat !important;
-  background-position: right 0.85rem center !important;
-  background-size: 1.15rem 1.15rem !important;
-  padding-left: 1rem !important;
-  padding-right: 2.5rem !important;
-  padding-top: 0.5rem !important;
-  padding-bottom: 0.5rem !important;
-  min-width: 130px !important;
-  min-height: 40px !important;
-  border-radius: 0.75rem !important;
-  border: 1.5px solid #cbd5e1 !important;
-  background-color: #ffffff !important;
-  color: #0f172a !important;
-  font-weight: 600 !important;
-  font-size: 0.875rem !important;
-  line-height: 1.25rem !important;
-  transition: all 0.2s ease-in-out !important;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
-  cursor: pointer !important;
-  flex-shrink: 0 !important;
-  display: inline-block !important;
-  box-sizing: border-box !important;
-}
-
-select:not(.select2-hidden-accessible):not(.swal2-select):hover, .form-select:hover {
-  border-color: #00A0A5 !important;
-  background-color: #f8fafc !important;
-  box-shadow: 0 4px 12px rgba(0, 160, 165, 0.08) !important;
-}
-
-select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:focus {
-  outline: none !important;
-  border-color: #00A0A5 !important;
-  box-shadow: 0 0 0 3px rgba(0, 160, 165, 0.2) !important;
-  background-color: #ffffff !important;
-}
-
-/* Ensure Select2 Native Input Remains Completely Hidden */
-select.select2-hidden-accessible {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  border: 0 !important;
-  opacity: 0 !important;
-  position: absolute !important;
-  pointer-events: none !important;
-}
-
-/* Select2 Plugin Custom Teal Enhancements */
-.select2-container--default .select2-selection--single {
-  border-radius: 0.75rem !important;
-  border: 1.5px solid #cbd5e1 !important;
-  height: 42px !important;
-  min-width: 140px !important;
-  padding: 6px 12px !important;
-  font-weight: 600 !important;
-  font-size: 0.875rem !important;
-  transition: all 0.2s ease-in-out !important;
-}
-
-.select2-container--default .select2-selection--single:hover {
-  border-color: #00A0A5 !important;
-}
-
-.select2-container--default.select2-container--open .select2-selection--single,
-.select2-container--default.select2-container--focus .select2-selection--single {
-  border-color: #00A0A5 !important;
-  box-shadow: 0 0 0 3px rgba(0, 160, 165, 0.2) !important;
-}
-
-.select2-container--default .select2-results__option--highlighted[aria-selected] {
-  background-color: #00A0A5 !important;
-  color: #ffffff !important;
-}
-
-</style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 text-slate-900 flex flex-col">
   
@@ -348,12 +245,12 @@ select.select2-hidden-accessible {
           <!-- Form Selection -->
           <form method="POST" action="courses.php" class="space-y-5">
             
-            <!-- Step 1: Course Select with Select2 -->
+            <!-- Step 1: Course Select -->
             <div>
               <label for="course_id" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
                 1. Select Course / Class
               </label>
-              <select id="course_id" name="course_id" class="min-w-[200px] shrink-0 select2 w-full">
+              <select id="course_id" name="course_id" class="form-select" required>
                 <option value="">-- Choose Course from E-STRANGE --</option>
                 <?php foreach ($courses as $c): ?>
                   <option value="<?= htmlspecialchars($c['course_id']) ?>" <?= (isset($_SESSION['current_course_id']) && $_SESSION['current_course_id'] == $c['course_id']) ? 'selected' : '' ?>>
@@ -363,12 +260,12 @@ select.select2-hidden-accessible {
               </select>
             </div>
 
-            <!-- Step 2: Assessment Select with Select2 -->
+            <!-- Step 2: Assessment Select -->
             <div>
               <label for="assessment_id" class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
                 2. Select Active Assessment Assignment
               </label>
-              <select id="assessment_id" name="assessment_id" class="min-w-[200px] shrink-0 select2 w-full">
+              <select id="assessment_id" name="assessment_id" class="form-select" required>
                 <option value="">-- Select Course First --</option>
               </select>
             </div>
@@ -725,38 +622,37 @@ select.select2-hidden-accessible {
       // Check API Key status
       checkUserApiKey();
 
-      // Initialize Select2 on both dropdowns
-      $('#course_id').select2({
-        width: '100%',
-        placeholder: '-- Choose Course from E-STRANGE --'
-      });
-
-      $('#assessment_id').select2({
-        width: '100%',
-        placeholder: '-- Select Assessment --'
-      });
-
       function updateAssessments() {
         const selectedCourseId = $('#course_id').val();
         const $asmtSelect = $('#assessment_id');
         $asmtSelect.empty();
 
-        if (!selectedCourseId || !assessmentsByCourse[selectedCourseId] || assessmentsByCourse[selectedCourseId].length === 0) {
-          $asmtSelect.append('<option value="">-- No active assessments found for this course --</option>');
+        if (!selectedCourseId) {
+          $asmtSelect.append('<option value="">-- Select Course First --</option>');
           $('#assessmentPreview').addClass('hidden');
-          $asmtSelect.trigger('change.select2');
           return;
         }
 
-        $asmtSelect.append('<option value="">-- Select Active Assessment --</option>');
-        const list = assessmentsByCourse[selectedCourseId];
-        const activeDefaultAsmtId = (typeof defaultAssessmentId !== 'undefined') ? defaultAssessmentId : '';
+        const list = assessmentsByCourse[selectedCourseId] || [];
+        if (list.length === 0) {
+          $asmtSelect.append('<option value="">-- No assessments found in this course --</option>');
+          $('#assessmentPreview').addClass('hidden');
+          return;
+        }
+
+        $asmtSelect.append('<option value="">-- Choose Assessment Assignment --</option>');
+        const activeDefaultAsmtId = (typeof defaultAssessmentId !== 'undefined') ? String(defaultAssessmentId) : '';
+        
         list.forEach(a => {
-          const isSelected = (activeDefaultAsmtId && String(a.assessment_id) === String(activeDefaultAsmtId)) ? 'selected' : '';
+          const isSelected = (activeDefaultAsmtId && String(a.assessment_id) === activeDefaultAsmtId) ? 'selected' : '';
           $asmtSelect.append(`<option value="${a.assessment_id}" ${isSelected}>#${a.assessment_id}: ${a.name} (${a.submission_file_extension || 'file'})</option>`);
         });
 
-        $asmtSelect.trigger('change.select2');
+        // If only 1 assessment exists, auto select it!
+        if (!activeDefaultAsmtId && list.length === 1) {
+          $asmtSelect.val(list[0].assessment_id);
+        }
+
         updatePreview();
       }
 
@@ -789,18 +685,32 @@ select.select2-hidden-accessible {
         updatePreview();
       });
 
-      // Intercept form submit if API key is not configured
+      // Intercept form submit if API key is not configured or fields empty
       $('form').on('submit', function(e) {
+        const cid = $('#course_id').val();
+        const aid = $('#assessment_id').val();
+
+        if (!cid || !aid) {
+          e.preventDefault();
+          Swal.fire({
+            icon: 'warning',
+            title: 'Select Course & Assessment',
+            text: 'Please select both a course and an assessment before launching the AI assistant.',
+            confirmButtonColor: '#00A0A5'
+          });
+          return false;
+        }
+
         if (!userHasApiKey) {
           e.preventDefault();
           Swal.fire({
             icon: 'warning',
-            title: 'Google Gemini API Key Diperlukan',
-            text: 'Anda belum memasukkan Google Gemini API Key pribadi. Anda tidak dapat meluncurkan S-SPARC AI Assistant sebelum memasukkan API Key yang valid.',
-            confirmButtonText: 'Atur API Key Sekarang',
+            title: 'Google Gemini API Key Required',
+            text: 'You have not registered your personal Google Gemini API Key. Please accept the Terms & Conditions and register your API key to access S-SPARC AI Assistant.',
+            confirmButtonText: 'Set API Key Now',
             confirmButtonColor: '#00A0A5',
             showCancelButton: true,
-            cancelButtonText: 'Batal'
+            cancelButtonText: 'Cancel'
           }).then((result) => {
             if (result.isConfirmed) {
               openApiKeyFlow(true);
