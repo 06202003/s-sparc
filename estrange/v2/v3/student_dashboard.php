@@ -250,9 +250,12 @@ select.select2-hidden-accessible {
 				$sqlDue = "SELECT assessment.assessment_id, assessment.public_assessment_id, assessment.name AS assessment_name, assessment.submission_close_time, course.name AS course_name,
 							TIMESTAMPDIFF(HOUR, CURRENT_TIMESTAMP, assessment.submission_close_time) AS hours_left
 							FROM assessment 
-							INNER JOIN enrollment ON enrollment.course_id = assessment.course_id
-							INNER JOIN course ON course.course_id = enrollment.course_id
-							WHERE enrollment.student_id = '".$_SESSION['user_id']."'
+							INNER JOIN course ON course.course_id = assessment.course_id
+							LEFT JOIN enrollment ON enrollment.course_id = assessment.course_id AND enrollment.student_id = '".$_SESSION['user_id']."'
+							LEFT JOIN game_student_course ON game_student_course.course_id = assessment.course_id AND game_student_course.student_id = '".$_SESSION['user_id']."'
+							LEFT JOIN submission ON submission.assessment_id = assessment.assessment_id AND submission.submitter_id = '".$_SESSION['user_id']."'
+							WHERE (enrollment.student_id IS NOT NULL OR game_student_course.student_id IS NOT NULL)
+							AND submission.submission_id IS NULL
 							AND assessment.submission_close_time > CURRENT_TIMESTAMP
 							AND assessment.submission_open_time <= CURRENT_TIMESTAMP
 							AND course.is_active = 1
