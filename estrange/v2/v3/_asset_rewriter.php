@@ -59,6 +59,7 @@ if (!function_exists('rewrite_offline_assets')) {
             '#https?://fonts\.googleapis\.com/css2\?[^"\']+#i' => $baseAssets . 'fonts.css',
             '#https?://fonts\.googleapis\.com/css\?[^"\']+#i' => $baseAssets . 'fonts.css',
             '#https?://cdn\.tailwindcss\.com#i' => $baseAssets . 'tailwindcss.js',
+            '#(?:\.\./)*strange_html_layout_additional_files/vendor/tailwind\.cdn\.js#i' => $baseAssets . 'tailwindcss.js',
             '#https?://code\.jquery\.com/jquery-[^"\']+\.js#i' => $baseAssets . 'jquery.min.js',
             '#https?://cdn\.jsdelivr\.net/npm/sweetalert2@[^/]+/dist/sweetalert2\.min\.css#i' => $baseAssets . 'sweetalert2.min.css',
             '#https?://cdn\.jsdelivr\.net/npm/sweetalert2@[^"\']+#i' => $baseAssets . 'sweetalert2.all.min.js',
