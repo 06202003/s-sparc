@@ -51,11 +51,11 @@ if ($quiz['status'] === 'ready' && empty($quiz['answered_at']) && empty($quiz['q
 }
 
 $message = '';
-// Check if quiz has genuinely expired (with 10s grace tolerance)
+// Check if quiz has genuinely expired
 if ($quiz['status'] === 'ready' && empty($quiz['answered_at']) && !empty($quiz['quiz_expires_at'])) {
     $expiresAtUnix = strtotime($quiz['quiz_expires_at']);
-    if ($expiresAtUnix !== false && $expiresAtUnix < ($nowUnix - 10)) {
-        $message = 'Waktu menjawab sudah habis. Jawaban tidak dapat dikirim.';
+    if ($expiresAtUnix !== false && $expiresAtUnix <= $nowUnix) {
+        $message = 'Waktu menjawab sudah habis. Nilai quiz: 0/3.';
         $nowStr = date('Y-m-d H:i:s', $nowUnix);
         $expiredStmt = $db->prepare('UPDATE generated_quizzes SET answered_at = ?, score_points = 0 WHERE quiz_id = ? AND answered_at IS NULL');
         $expiredStmt->bind_param('si', $nowStr, $quiz['quiz_id']);
@@ -77,14 +77,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $quiz['status'] === 'ready' && empt
             echo json_encode(['ok' => true]);
             exit;
         }
-    } elseif (empty($quiz['quiz_expires_at']) || (strtotime($quiz['quiz_expires_at']) < ($nowUnix - 10))) {
-        $message = 'Waktu menjawab sudah habis. Jawaban tidak dapat dikirim.';
+    } elseif (isset($_POST['expire_quiz']) && $_POST['expire_quiz'] === '1') {
         $nowStr = date('Y-m-d H:i:s', $nowUnix);
         $expiredStmt = $db->prepare('UPDATE generated_quizzes SET answered_at = ?, score_points = 0 WHERE quiz_id = ? AND answered_at IS NULL');
         $expiredStmt->bind_param('si', $nowStr, $quiz['quiz_id']);
         $expiredStmt->execute();
         $expiredStmt->close();
         $quiz['answered_at'] = $nowStr;
+        $quiz['score_points'] = 0;
+        $message = 'Waktu menjawab sudah habis. Jawaban tidak dapat dikirim. Nilai: 0/3.';
+        if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
+            header('Content-Type: application/json');
+            echo json_encode(['ok' => true]);
+            exit;
+        }
+    } elseif (empty($quiz['quiz_expires_at']) || (strtotime($quiz['quiz_expires_at']) < ($nowUnix - 10))) {
+        $message = 'Waktu menjawab sudah habis. Jawaban tidak dapat dikirim. Nilai: 0/3.';
+        $nowStr = date('Y-m-d H:i:s', $nowUnix);
+        $expiredStmt = $db->prepare('UPDATE generated_quizzes SET answered_at = ?, score_points = 0 WHERE quiz_id = ? AND answered_at IS NULL');
+        $expiredStmt->bind_param('si', $nowStr, $quiz['quiz_id']);
+        $expiredStmt->execute();
+        $expiredStmt->close();
+        $quiz['answered_at'] = $nowStr;
+        $quiz['score_points'] = 0;
     } else {
         $answers = $_POST['answers'] ?? [];
         $questionStmt = $db->prepare('SELECT question_id, correct_option FROM generated_quiz_questions WHERE quiz_id = ? ORDER BY question_id');
@@ -133,9 +148,6 @@ if (!empty($quiz['quiz_expires_at'])) {
     if ($expiresAtUnix !== false) {
         $expiresAtMs = (int)($expiresAtUnix * 1000);
     }
-}
-if ($expiresAtMs <= ($nowUnix * 1000) && empty($quiz['answered_at'])) {
-    $expiresAtMs = ($nowUnix + $duration) * 1000;
 }
 ?>
 <!DOCTYPE html>
@@ -224,6 +236,40 @@ document.addEventListener('DOMContentLoaded', function() {
     var timer = document.getElementById('quiz-timer');
     var isExpiredHandled = false;
 
+    function handleTimeExpired() {
+        if (isExpiredHandled || quizSubmitted) return;
+        isExpiredHandled = true;
+        quizSubmitted = true;
+        if (timer) timer.textContent = '00:00';
+
+        var formData = new FormData();
+        formData.append('expire_quiz', '1');
+        formData.append('ajax', '1');
+
+        if (navigator.sendBeacon) {
+            navigator.sendBeacon(window.location.href, formData);
+        } else {
+            fetch(window.location.href, { method: 'POST', body: formData, keepalive: true }).catch(function(){});
+        }
+
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Waktu Habis!',
+                text: 'Waktu menjawab sudah habis. Quiz otomatis diselesaikan (Nilai: 0/3).',
+                confirmButtonColor: '#0d9488',
+                confirmButtonText: 'Lihat Hasil',
+                allowOutsideClick: false,
+                allowEscapeKey: false
+            }).then(function () {
+                window.location.reload();
+            });
+        } else {
+            alert('Waktu menjawab sudah habis. Nilai quiz: 0/3.');
+            window.location.reload();
+        }
+    }
+
     function updateTimer() {
         var remaining = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
         var minutes = Math.floor(remaining / 60);
@@ -232,25 +278,8 @@ document.addEventListener('DOMContentLoaded', function() {
             timer.textContent = String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
         }
 
-        if (remaining <= 0 && !isExpiredHandled) {
-            isExpiredHandled = true;
-            if (timer) timer.textContent = '00:00';
-            if (typeof Swal !== 'undefined') {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Waktu Habis!',
-                    text: 'Waktu menjawab sudah habis. Quiz otomatis diselesaikan.',
-                    confirmButtonColor: '#0d9488',
-                    confirmButtonText: 'Lihat Hasil',
-                    allowOutsideClick: false,
-                    allowEscapeKey: false
-                }).then(function () {
-                    window.location.reload();
-                });
-            } else {
-                alert('Waktu menjawab sudah habis.');
-                window.location.reload();
-            }
+        if (remaining <= 0) {
+            handleTimeExpired();
         }
     }
 
