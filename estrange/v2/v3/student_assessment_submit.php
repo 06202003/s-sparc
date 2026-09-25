@@ -16,8 +16,9 @@
 	  }
 	}
 
-	// if the assessment id does not exist
-	if(isset($_GET['id']) == false || $_GET['id'] == ''){
+	// Check for assessment id in GET or POST
+	$rawId = $_GET['id'] ?? $_POST['id'] ?? '';
+	if(empty($rawId)){
 		header('Location: student_dashboard.php');
 		exit;
 	}
@@ -25,7 +26,7 @@
 	// part of sessionchecker pasted here due to unique behaviour of this page
 	// redirect if it is not logged in
 	if(isset($_SESSION['name']) == false){
-	  header('Location: student_assessment_submit_without_login.php?id='.$_GET['id']);
+	  header('Location: student_assessment_submit_without_login.php?id='.urlencode($rawId));
 	  exit;
 	}else{
 	  // check whether the role is similar to the opened pages
@@ -55,33 +56,34 @@
 	include("_config.php");
 	include_once("_ai_quiz.php");
 
-	// get the real assessment_id
-	$sql = "SELECT assessment_id FROM assessment
-		WHERE public_assessment_id = '".$_GET['id']."'";
-	$result = mysqli_query($db,$sql);
-	$row = $result->fetch_assoc();
+	// get the real assessment_id (supporting both public_assessment_id and numeric assessment_id)
+	$safeId = mysqli_real_escape_string($db, $rawId);
+	$sql = "SELECT assessment_id, public_assessment_id FROM assessment
+		WHERE public_assessment_id = '$safeId' OR assessment_id = '$safeId' LIMIT 1";
+	$result = mysqli_query($db, $sql);
+	$row = ($result) ? $result->fetch_assoc() : null;
 	if(is_null($row)){
 		// if no such id exists, redirect to student dashboard
 		header('Location: student_dashboard.php');
 		exit;
 	}
 	// store the public assessment id as variable
-	$publicAssessmentId = 	$_GET['id'];
-	// set the id with the 'real' one
+	$publicAssessmentId = !empty($row['public_assessment_id']) ? $row['public_assessment_id'] : $row['assessment_id'];
+	// set the id with the 'real' numeric one
 	$_GET['id'] = $row['assessment_id'];
 
 	$errorMessage = "";
 
-	// check whether the assessment id is listed to a course and the submission is still open
+	// check whether the assessment id is listed to a course and the submission is open / late allowed
 	$sql = "SELECT assessment.name AS assessment_name, course.name AS course_name, assessment.submission_file_extension AS ext, assessment.description as assessment_description 
 		 FROM assessment INNER JOIN course ON course.course_id = assessment.course_id
 		 WHERE assessment.assessment_id = '".$_GET['id']."'
-		 AND (assessment.submission_close_time > CURRENT_TIMESTAMP OR assessment.allow_late_submission = '1')
-		 AND assessment.submission_open_time < CURRENT_TIMESTAMP";
-	$result = mysqli_query($db,$sql);
-	$row = $result->fetch_assoc();
+		 AND (assessment.submission_close_time > CURRENT_TIMESTAMP OR assessment.allow_late_submission = '1' OR assessment.allow_late_submission = 1)
+		 AND assessment.submission_open_time <= CURRENT_TIMESTAMP";
+	$result = mysqli_query($db, $sql);
+	$row = ($result) ? $result->fetch_assoc() : null;
 
-	// if the given assessment id is not listed, redirect to login
+	// if the given assessment is not currently submittable, redirect to dashboard
 	if(is_null($row)){
 		header('Location: student_dashboard.php');
 		exit;

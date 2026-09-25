@@ -247,7 +247,7 @@ select.select2-hidden-accessible {
 
 			<!-- Priority Due Assessments Section -->
 			<?php
-				$sqlDue = "SELECT assessment.assessment_id, assessment.name AS assessment_name, assessment.submission_close_time, course.name AS course_name,
+				$sqlDue = "SELECT assessment.assessment_id, assessment.public_assessment_id, assessment.name AS assessment_name, assessment.submission_close_time, course.name AS course_name,
 							TIMESTAMPDIFF(HOUR, CURRENT_TIMESTAMP, assessment.submission_close_time) AS hours_left
 							FROM assessment 
 							INNER JOIN enrollment ON enrollment.course_id = assessment.course_id
@@ -282,6 +282,7 @@ select.select2-hidden-accessible {
 							$hours = (int)$rowDue['hours_left'];
 							$timeLabel = ($hours <= 24) ? ($hours . 'h left') : (ceil($hours / 24) . ' days left');
 							$badgeColor = ($hours <= 24) ? 'bg-rose-100 text-rose-800 border-rose-200 font-bold' : 'bg-amber-100 text-amber-800 border-amber-200';
+							$targetSubId = !empty($rowDue['public_assessment_id']) ? $rowDue['public_assessment_id'] : $rowDue['assessment_id'];
 						?>
 							<div class="bg-white rounded-xl border border-amber-200/70 p-3.5 flex flex-col justify-between space-y-2 shadow-2xs">
 								<div>
@@ -292,14 +293,12 @@ select.select2-hidden-accessible {
 									<h3 class="text-xs font-bold text-slate-900 line-clamp-1"><?= htmlspecialchars($rowDue['assessment_name']); ?></h3>
 									<p class="text-[11px] font-mono text-slate-500 mt-1">Due: <?= htmlspecialchars($rowDue['submission_close_time']); ?></p>
 								</div>
-								<form action="student_assessment_submit.php" method="POST" class="pt-1">
-									<input type="hidden" name="id" value="<?= htmlspecialchars($rowDue['assessment_id']); ?>">
-									<input type="hidden" name="name" value="<?= htmlspecialchars($rowDue['assessment_name']); ?>">
-									<button type="submit" class="w-full py-1.5 px-3 bg-[#00A0A5] hover:bg-[#008488] text-white text-sm font-semibold rounded-lg shadow-2xs transition flex items-center justify-center gap-1.5">
+								<div class="pt-1">
+									<a href="student_assessment_submit.php?id=<?= htmlspecialchars($targetSubId); ?>" class="w-full py-1.5 px-3 bg-[#00A0A5] hover:bg-[#008488] text-white text-sm font-semibold rounded-lg shadow-2xs transition flex items-center justify-center gap-1.5">
 										<span>Submit Task</span>
 										<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-									</button>
-								</form>
+									</a>
+								</div>
 							</div>
 						<?php endwhile; ?>
 					</div>

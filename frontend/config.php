@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/_asset_rewriter.php';
+
 // Shared config for frontend PHP.
 // Hardens session cookie and provides backend base URL helper.
 

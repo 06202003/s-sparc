@@ -2,9 +2,9 @@
 /**
  * E-STRANGE & S-SPARC Dynamic Asset & AI Proxy Rewriter
  * 
- * Automatically detects whether the client/server is in an offline lab environment.
- * When in an offline environment (or when ?offline=1 is passed), rewrites CDN links to local
- * assets. When online, preserves standard high-speed CDN assets.
+ * Intercepts HTML output and rewrites external CDN dependencies to local vendor assets,
+ * removing blocking external preconnects so the entire application loads instantly
+ * without 4-5 minute network timeouts when offline.
  */
 
 if (session_status() === PHP_SESSION_NONE && php_sapi_name() !== 'cli' && !headers_sent()) {
@@ -34,7 +34,7 @@ if (!function_exists('get_offline_assets_base')) {
 }
 
 /**
- * Core rewrite function that transforms CDN links into local vendor assets only when offline
+ * Core rewrite function that transforms CDN links into local vendor assets
  */
 if (!function_exists('rewrite_offline_assets')) {
     function rewrite_offline_assets($html) {
@@ -42,25 +42,19 @@ if (!function_exists('rewrite_offline_assets')) {
             return $html;
         }
 
-        // Check if offline mode is explicitly requested or enabled
-        $isOffline = false;
-        if (isset($_GET['offline']) && ($_GET['offline'] === '1' || $_GET['offline'] === 'true')) {
-            $isOffline = true;
-        } elseif (getenv('OFFLINE_MODE') === '1' || getenv('OFFLINE_MODE') === 'true') {
-            $isOffline = true;
-        } elseif (!empty($_SESSION['is_lab_offline'])) {
-            $isOffline = true;
-        }
-
-        // If online, do not rewrite CDN assets
-        if (!$isOffline) {
+        // Only skip rewrite if user explicitly requested online CDN mode
+        if (isset($_GET['online']) && ($_GET['online'] === '1' || $_GET['online'] === 'true')) {
             return $html;
         }
 
         $baseAssets = get_offline_assets_base();
         $proxyPath = ($baseAssets === '../assets/vendor/') ? 'api_proxy.php' : 'ssparc/api_proxy.php';
 
-        // Mapping CDN URLs to Local Vendor Assets
+        // 1. Remove blocking preconnect & dns-prefetch tags for external CDNs
+        $preconnectPattern = '#<link\s+[^>]*rel=["\'](?:preconnect|dns-prefetch)["\'][^>]*>#i';
+        $html = preg_replace($preconnectPattern, '', $html);
+
+        // 2. Mapping CDN URLs to Local Vendor Assets
         $replacements = [
             '#https?://fonts\.googleapis\.com/css2\?[^"\']+#i' => $baseAssets . 'fonts.css',
             '#https?://fonts\.googleapis\.com/css\?[^"\']+#i' => $baseAssets . 'fonts.css',
@@ -75,10 +69,19 @@ if (!function_exists('rewrite_offline_assets')) {
             '#https?://cdn\.jsdelivr\.net/npm/select2@[^/]+/dist/css/select2\.min\.css#i' => $baseAssets . 'select2.min.css',
             '#https?://cdn\.jsdelivr\.net/npm/select2@[^/]+/dist/js/select2\.min\.js#i' => $baseAssets . 'select2.min.js',
             '#https?://cdn\.jsdelivr\.net/npm/chart\.js(/dist/chart\.umd\.js)?#i' => $baseAssets . 'chart.umd.js',
+            '#https?://cdn\.jsdelivr\.net/npm/particles\.js@[^/]+/particles\.min\.js#i' => $baseAssets . 'particles.min.js',
             '#(https?:)?//cdn\.datatables\.net/[^/]+/css/jquery\.dataTables\.min\.css#i' => $baseAssets . 'jquery.dataTables.min.css',
             '#(https?:)?//cdn\.datatables\.net/responsive/[^/]+/css/responsive\.dataTables\.min\.css#i' => $baseAssets . 'responsive.dataTables.min.css',
             '#(https?:)?//cdn\.datatables\.net/[^/]+/js/jquery\.dataTables\.min\.js#i' => $baseAssets . 'jquery.dataTables.min.js',
             '#(https?:)?//cdn\.datatables\.net/responsive/[^/]+/js/dataTables\.responsive\.min\.js#i' => $baseAssets . 'dataTables.responsive.min.js',
+            '#https?://cdn\.jsdelivr\.net/npm/katex@[^/]+/dist/katex\.min\.css#i' => $baseAssets . 'katex.min.css',
+            '#https?://cdn\.jsdelivr\.net/npm/katex@[^/]+/dist/katex\.min\.js#i' => $baseAssets . 'katex.min.js',
+            '#https?://cdn\.jsdelivr\.net/npm/katex@[^/]+/dist/contrib/auto-render\.min\.js#i' => $baseAssets . 'auto-render.min.js',
+            '#https?://cdn\.jsdelivr\.net/npm/marked@[^/]+/marked\.min\.js#i' => $baseAssets . 'marked.min.js',
+            '#https?://cdn\.jsdelivr\.net/npm/marked/marked\.min\.js#i' => $baseAssets . 'marked.min.js',
+            '#https?://cdn\.jsdelivr\.net/npm/dompurify@[^/]+/dist/purify\.min\.js#i' => $baseAssets . 'purify.min.js',
+            '#https?://cdnjs\.cloudflare\.com/ajax/libs/highlight\.js/[^/]+/highlight\.min\.js#i' => $baseAssets . 'highlight.min.js',
+            '#https?://cdnjs\.cloudflare\.com/ajax/libs/highlight\.js/[^/]+/styles/atom-one-dark\.min\.css#i' => $baseAssets . 'atom-one-dark.min.css',
             '#const FASTAPI_URL = ["\']https://estrangeinternal\.itmaranatha\.org["\'];#i' => 'const FASTAPI_URL = "' . $proxyPath . '";'
         ];
 
@@ -86,10 +89,8 @@ if (!function_exists('rewrite_offline_assets')) {
     }
 }
 
-// Register buffer rewriter only when offline parameter or offline mode is requested
-if ((isset($_GET['offline']) && ($_GET['offline'] === '1' || $_GET['offline'] === 'true')) || getenv('OFFLINE_MODE') === '1') {
-    if (!defined('ESTRANGE_ASSET_REWRITER_ACTIVE')) {
-        define('ESTRANGE_ASSET_REWRITER_ACTIVE', true);
-        ob_start('rewrite_offline_assets');
-    }
+// Automatically start output buffering to rewrite all output by default
+if (!defined('ESTRANGE_ASSET_REWRITER_ACTIVE')) {
+    define('ESTRANGE_ASSET_REWRITER_ACTIVE', true);
+    ob_start('rewrite_offline_assets');
 }
