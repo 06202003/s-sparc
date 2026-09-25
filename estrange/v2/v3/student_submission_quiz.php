@@ -146,6 +146,9 @@ if ($expiresAtMs <= ($nowUnix * 1000) && empty($quiz['answered_at'])) {
 <title>E-STRANGE: Quiz Submission</title>
 <link rel="icon" href="strange_html_layout_additional_files/icon.png">
 <script src="https://cdn.tailwindcss.com"></script>
+<!-- SweetAlert2 -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>body { font-family: Inter, system-ui, sans-serif; }</style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 text-slate-900">
@@ -172,24 +175,48 @@ setInterval(function () {
 </script>
 <?php elseif ($quiz['status'] === 'failed'): ?>
 <div class="mt-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">Soal tidak dapat dibuat: <?= htmlspecialchars($quiz['error_message'] ?: 'Kesalahan tidak diketahui.') ?></div>
-<a href="student_submission_quiz.php?submission_id=<?= (int)$submissionId ?>&retry=1" class="mt-6 block rounded-xl bg-teal-600 px-4 py-3 text-center text-sm font-semibold text-white">Coba Generate Lagi</a>
-<a href="student_submission.php" class="mt-6 block rounded-xl bg-slate-900 px-4 py-3 text-center text-sm font-semibold text-white">Kembali ke Submission</a>
+<a href="student_submission_quiz.php?submission_id=<?= (int)$submissionId ?>&retry=1" class="mt-6 block rounded-xl bg-teal-600 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-teal-700 transition">Coba Generate Lagi</a>
+<a href="student_submission.php" class="mt-6 block rounded-xl bg-slate-900 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-slate-800 transition">Kembali ke Submission</a>
 <?php elseif (!empty($quiz['answered_at'])): ?>
-<div class="mt-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800"><?= htmlspecialchars($message ?: 'Quiz sudah diselesaikan.') ?> Nilai quiz: <?= htmlspecialchars((string)$quiz['score_points']) ?>/3.</div>
-<a href="student_submission.php" class="mt-6 block rounded-xl bg-teal-600 px-4 py-3 text-center text-sm font-semibold text-white">Kembali ke Submission</a>
+<div class="mt-6 rounded-xl border <?= (float)$quiz['score_points'] >= 2 ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-amber-200 bg-amber-50 text-amber-800' ?> p-4 text-sm font-medium">
+<div class="font-bold text-base mb-1"><?= (float)$quiz['score_points'] >= 2 ? '🎉 Quiz Berhasil Diselesaikan!' : '⚠️ Quiz Selesai' ?></div>
+<?= htmlspecialchars($message ?: 'Sesi quiz telah selesai.') ?> Nilai quiz Anda: <span class="font-bold text-lg"><?= htmlspecialchars((string)$quiz['score_points']) ?>/3</span>.
+</div>
+<a href="student_submission.php" class="mt-6 block rounded-xl bg-teal-600 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-teal-700 transition">Kembali ke Submission</a>
+<?php if (!empty($message)): ?>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof Swal !== 'undefined') {
+        Swal.fire({
+            icon: '<?= (float)$quiz['score_points'] >= 2 ? 'success' : 'info' ?>',
+            title: 'Hasil Quiz',
+            text: <?= json_encode($message . ' (Nilai: ' . $quiz['score_points'] . '/3)') ?>,
+            confirmButtonColor: '#0d9488',
+            confirmButtonText: 'OK'
+        });
+    }
+});
+</script>
+<?php endif; ?>
 <?php else: ?>
 <form method="post" id="quiz-form" class="mt-6 space-y-6">
-<div class="sticky top-3 z-10 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-bold text-amber-900"><span>Waktu tersisa</span><span id="quiz-timer">01:00</span></div>
+<div class="sticky top-3 z-10 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-bold text-amber-900 shadow-sm">
+  <span class="flex items-center gap-2">
+    <svg class="w-4 h-4 text-amber-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+    Waktu Tersisa
+  </span>
+  <span id="quiz-timer" class="font-mono text-base font-extrabold text-amber-800">01:00</span>
+</div>
 <?php foreach ($questions as $index => $question): ?>
 <fieldset class="space-y-3">
-<legend class="font-semibold"><?= $index + 1 ?>. <?= htmlspecialchars($question['question_text']) ?></legend>
+<legend class="font-semibold text-slate-800"><?= $index + 1 ?>. <?= htmlspecialchars($question['question_text']) ?></legend>
 <?php foreach (['A' => 'option_a', 'B' => 'option_b', 'C' => 'option_c', 'D' => 'option_d'] as $option => $column): ?>
-<label class="flex cursor-pointer gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm hover:bg-slate-100"><input required type="radio" name="answers[<?= (int)$question['question_id'] ?>]" value="<?= $option ?>"><span><strong><?= $option ?>.</strong> <?= htmlspecialchars($question[$column]) ?></span></label>
+<label class="flex cursor-pointer gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm hover:bg-teal-50 hover:border-teal-300 transition"><input required type="radio" name="answers[<?= (int)$question['question_id'] ?>]" value="<?= $option ?>" class="text-teal-600 focus:ring-teal-500"><span><strong><?= $option ?>.</strong> <?= htmlspecialchars($question[$column]) ?></span></label>
 <?php endforeach; ?>
 </fieldset>
 <?php endforeach; ?>
 <?php if ($message): ?><p class="text-sm font-semibold text-rose-700"><?= htmlspecialchars($message) ?></p><?php endif; ?>
-<button class="w-full rounded-xl bg-teal-600 px-4 py-3 text-sm font-bold text-white hover:bg-teal-700" type="submit">Kirim Jawaban</button>
+<button class="w-full rounded-xl bg-teal-600 px-4 py-3 text-sm font-bold text-white hover:bg-teal-700 shadow-md transition" type="submit">Kirim Jawaban</button>
 </form>
 <script>
 (function () {
@@ -208,8 +235,22 @@ setInterval(function () {
         if (remaining <= 0 && !isExpiredHandled) {
             isExpiredHandled = true;
             if (timer) timer.textContent = '00:00';
-            alert('Waktu menjawab sudah habis.');
-            window.location.reload();
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Waktu Habis!',
+                    text: 'Waktu menjawab sudah habis. Quiz otomatis diselesaikan.',
+                    confirmButtonColor: '#0d9488',
+                    confirmButtonText: 'Lihat Hasil',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                }).then(function () {
+                    window.location.reload();
+                });
+            } else {
+                alert('Waktu menjawab sudah habis.');
+                window.location.reload();
+            }
         }
     }
 
@@ -223,14 +264,64 @@ setInterval(function () {
 
     var quizForm = document.getElementById('quiz-form');
     if (quizForm) {
-        quizForm.addEventListener('submit', function () {
-            quizSubmitted = true;
+        quizForm.addEventListener('submit', function (e) {
+            if (quizSubmitted) return;
+            e.preventDefault();
+
+            // Validasi kelengkapan jawaban
+            var totalQuestions = <?= count($questions) ?>;
+            var checkedRadios = quizForm.querySelectorAll('input[type="radio"]:checked');
+            if (checkedRadios.length < totalQuestions) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Jawaban Belum Lengkap',
+                        text: 'Harap jawab semua ' + totalQuestions + ' pertanyaan sebelum mengirim!',
+                        confirmButtonColor: '#0d9488',
+                        confirmButtonText: 'Mengerti'
+                    });
+                } else {
+                    alert('Harap jawab semua pertanyaan terlebih dahulu.');
+                }
+                return;
+            }
+
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Kirim Jawaban?',
+                    text: 'Apakah Anda yakin ingin menyelesaikan quiz ini sekarang?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#0d9488',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: 'Ya, Kirim Sekarang',
+                    cancelButtonText: 'Periksa Lagi'
+                }).then(function (result) {
+                    if (result.isConfirmed) {
+                        quizSubmitted = true;
+                        Swal.fire({
+                            title: 'Memproses Jawaban...',
+                            text: 'Mohon tunggu sebentar',
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            didOpen: function () {
+                                Swal.showLoading();
+                            }
+                        });
+                        quizForm.submit();
+                    }
+                });
+            } else {
+                quizSubmitted = true;
+                quizForm.submit();
+            }
         });
     }
 
     function handleQuizAbort() {
         if (!isReady || quizSubmitted || isExpiredHandled) return;
         quizSubmitted = true;
+        isExpiredHandled = true;
 
         var formData = new FormData();
         formData.append('abort_quiz', '1');
@@ -242,8 +333,22 @@ setInterval(function () {
             fetch(window.location.href, { method: 'POST', body: formData, keepalive: true }).catch(function(){});
         }
 
-        alert('Anda berpindah tab browser! Sesi quiz dihentikan dan nilai Anda 0/3.');
-        window.location.reload();
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Sesi Dibatalkan!',
+                text: 'Anda berpindah tab browser. Sesi quiz dihentikan dan nilai Anda 0/3.',
+                confirmButtonColor: '#e11d48',
+                confirmButtonText: 'Tutup',
+                allowOutsideClick: false,
+                allowEscapeKey: false
+            }).then(function () {
+                window.location.reload();
+            });
+        } else {
+            alert('Anda berpindah tab browser! Sesi quiz dihentikan dan nilai Anda 0/3.');
+            window.location.reload();
+        }
     }
 
     document.addEventListener('visibilitychange', function () {
