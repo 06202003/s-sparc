@@ -9,7 +9,7 @@ include '_config.php';
 include '_ai_quiz.php';
 
 $nowUnix = time();
-$duration = 180; // 3 menit waktu pengerjaan quiz
+$duration = 60; // 1 menit waktu pengerjaan quiz
 
 $submissionId = filter_input(INPUT_GET, 'submission_id', FILTER_VALIDATE_INT);
 if (!$submissionId) {
@@ -179,7 +179,7 @@ setInterval(function () {
 <a href="student_submission.php" class="mt-6 block rounded-xl bg-teal-600 px-4 py-3 text-center text-sm font-semibold text-white">Kembali ke Submission</a>
 <?php else: ?>
 <form method="post" id="quiz-form" class="mt-6 space-y-6">
-<div class="sticky top-3 z-10 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-bold text-amber-900"><span>Waktu tersisa</span><span id="quiz-timer">03:00</span></div>
+<div class="sticky top-3 z-10 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-bold text-amber-900"><span>Waktu tersisa</span><span id="quiz-timer">01:00</span></div>
 <?php foreach ($questions as $index => $question): ?>
 <fieldset class="space-y-3">
 <legend class="font-semibold"><?= $index + 1 ?>. <?= htmlspecialchars($question['question_text']) ?></legend>
