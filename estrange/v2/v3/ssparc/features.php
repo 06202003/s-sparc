@@ -128,6 +128,58 @@ $sso_role = $_SESSION['role'] ?? 'student';
         border-color: rgba(0, 160, 165, 0.4);
         box-shadow: 0 16px 36px -10px rgba(15, 23, 42, 0.08);
       }
+      @media (max-width: 991.98px) {
+        .navbar-brand img {
+          height: 40px !important;
+          max-width: 140px;
+        }
+        .navbar-collapse {
+          background: #ffffff;
+          padding: 1.25rem;
+          border-radius: 1rem;
+          margin-top: 0.75rem;
+          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+          border: 1px solid #e2e8f0;
+        }
+        .navbar-nav {
+          margin-bottom: 1rem !important;
+        }
+        .navbar-nav .nav-link {
+          padding: 0.65rem 1rem !important;
+        }
+        .navbar-nav-cta {
+          flex-direction: column !important;
+          width: 100% !important;
+          gap: 0.65rem !important;
+        }
+        .navbar-nav-cta .btn {
+          width: 100% !important;
+          text-align: center;
+          padding: 0.75rem 1rem !important;
+        }
+      }
+      @media (max-width: 576px) {
+        .navbar-brand img {
+          height: 36px !important;
+          max-width: 120px;
+        }
+        .display-5 {
+          font-size: 1.75rem !important;
+          line-height: 1.25 !important;
+        }
+        .hero-pill {
+          font-size: 0.7rem;
+          padding: 0.3rem 0.75rem;
+          max-width: 100%;
+          white-space: normal;
+        }
+        .btn-lg {
+          font-size: 0.95rem;
+          padding: 0.75rem 1.25rem !important;
+          width: 100%;
+          text-align: center;
+        }
+      }
     </style>
   </head>
   <body>
@@ -140,7 +192,7 @@ $sso_role = $_SESSION['role'] ?? 'student';
         <a class="navbar-brand d-flex align-items-center" href="index.php">
           <img src="logo.png" alt="S-SPARC" />
         </a>
-        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+        <button class="navbar-toggler border-0 shadow-none p-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
         
@@ -160,7 +212,7 @@ $sso_role = $_SESSION['role'] ?? 'student';
             </li>
           </ul>
           
-          <div class="d-flex align-items-center gap-2">
+          <div class="d-flex align-items-center gap-2 navbar-nav-cta">
             <?php if ($isLoggedIn): ?>
               <span class="d-none d-lg-inline-block px-3 py-1.5 rounded-3 border font-mono" style="background-color: #f1f5f9; border-color: #cbd5e1; color: #0f172a !important; font-size: 0.825rem; font-weight: 700;"><?= htmlspecialchars($sso_name) ?></span>
               <a href="courses.php" class="btn btn-teal">
@@ -183,9 +235,9 @@ $sso_role = $_SESSION['role'] ?? 'student';
     </nav>
 
     <!-- Header Intro Section -->
-    <section class="py-5">
+    <section class="py-4 py-lg-5 overflow-hidden">
       <div class="container">
-        <div class="row align-items-center justify-content-between g-4 py-3">
+        <div class="row align-items-center justify-content-between g-4 py-2 py-lg-3">
           <div class="col-12 col-lg-7 mb-4 mb-lg-0">
             <div class="mb-3">
               <div class="hero-pill font-mono">
@@ -193,13 +245,13 @@ $sso_role = $_SESSION['role'] ?? 'student';
                 Platform Capabilities
               </div>
             </div>
-            <h1 class="display-5 fw-extrabold text-slate-900 mb-3" style="letter-spacing: -0.03em; line-height: 1.25;">
-              Discover What S-SPARC <span class="text-nowrap">Can Do</span>
+            <h1 class="display-5 fw-extrabold text-slate-900 mb-3 text-break" style="letter-spacing: -0.03em; line-height: 1.25;">
+              Discover What S-SPARC Can Do
             </h1>
             <p class="lead text-slate-600 mb-4" style="font-size: 1.05rem; line-height: 1.7;">
               S-SPARC combines generative code synthesis with vector semantic search to repurpose verified solutions, minimize redundant GPU compute, and deliver sub-second assistance.
             </p>
-            <div class="d-flex flex-wrap gap-3">
+            <div class="d-flex flex-column flex-sm-row flex-wrap gap-3">
               <a href="<?php echo $isLoggedIn ? 'courses.php' : '../index.php'; ?>" class="btn btn-teal">
                 Launch Workspace &rarr;
               </a>
