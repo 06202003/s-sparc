@@ -645,7 +645,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         list.forEach(a => {
           const isSelected = (activeDefaultAsmtId && String(a.assessment_id) === activeDefaultAsmtId) ? 'selected' : '';
-          $asmtSelect.append(`<option value="${a.assessment_id}" ${isSelected}>#${a.assessment_id}: ${a.name} (${a.submission_file_extension || 'file'})</option>`);
+          const opt = $('<option></option>').val(a.assessment_id).text(a.name);
+          if (isSelected) opt.prop('selected', true);
+          $asmtSelect.append(opt);
         });
 
         // If only 1 assessment exists, auto select it!

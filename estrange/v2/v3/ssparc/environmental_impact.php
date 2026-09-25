@@ -216,7 +216,7 @@ select.select2-hidden-accessible {
             <select id="filterAsmt" class="min-w-[200px] shrink-0 select2 w-full">
               <option value="">All Assessments</option>
               <?php foreach ($assessments as $a): ?>
-                <option value="<?= htmlspecialchars($a['assessment_id']) ?>">#<?= htmlspecialchars($a['assessment_id']) ?>: <?= htmlspecialchars($a['name']) ?></option>
+                <option value="<?= htmlspecialchars($a['assessment_id']) ?>"><?= htmlspecialchars($a['name']) ?></option>
               <?php endforeach; ?>
             </select>
           </div>
