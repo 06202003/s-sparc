@@ -471,10 +471,22 @@ function ssparc_get_student_aggregated_profile($mydb, $userId) {
     $c3c4Count = 0;
     $c5c6Count = 0;
 
+    $contextCount = 0;
+    $inputCount = 0;
+    $outputCount = 0;
+    $errorCount = 0;
+    $sumTech = 0;
+
     foreach ($prompts as $p) {
         $sumCioe += $p['cioe_score'];
         $sumQuality += $p['prompt_quality_score'];
         $sumEntropy += $p['shannon_entropy'];
+        $sumTech += $p['technical_token_density'];
+
+        if ($p['cioe_breakdown']['has_context']) $contextCount++;
+        if ($p['cioe_breakdown']['has_input']) $inputCount++;
+        if ($p['cioe_breakdown']['has_output']) $outputCount++;
+        if ($p['cioe_breakdown']['has_error']) $errorCount++;
 
         if ($p['cioe_breakdown']['has_context'] && !$p['cioe_breakdown']['has_error']) {
             $c1c2Count++;
@@ -488,6 +500,13 @@ function ssparc_get_student_aggregated_profile($mydb, $userId) {
     $avgCioe = round($sumCioe / $total, 3);
     $avgQuality = round($sumQuality / $total, 3);
     $avgEntropy = round($sumEntropy / $total, 2);
+    $avgTech = round($sumTech / $total, 2);
+
+    $contextPct = round(($contextCount / $total) * 100);
+    $inputPct = round(($inputCount / $total) * 100);
+    $outputPct = round(($outputCount / $total) * 100);
+    $errorPct = round(($errorCount / $total) * 100);
+    $vocabPct = min(100, round($avgEntropy * 100));
 
     if ($avgQuality >= 0.75) {
         $tier = 'Tier A (Prompt Architect)';
@@ -510,11 +529,13 @@ function ssparc_get_student_aggregated_profile($mydb, $userId) {
     return [
         'status' => 'success',
         'user_id' => $userId,
+        'total_prompts' => $total,
         'literacy_level' => $tier,
         'persona_title' => $personaTitle,
         'cognitive_independence_index' => $independenceIndex,
         'average_cioe_score' => $avgCioe,
         'average_entropy' => $avgEntropy,
+        'average_tech_density' => $avgTech,
         'average_prompt_quality' => $avgQuality,
         'conceptual_mode_ratio' => $conceptualRatio,
         'fast_path_utilization_rate' => $fastPathRate,
@@ -522,6 +543,13 @@ function ssparc_get_student_aggregated_profile($mydb, $userId) {
             max(0, $c1c2Count),
             max(0, $c3c4Count),
             max(0, $c5c6Count)
+        ],
+        'radar_dimensions' => [
+            'Context' => $contextPct,
+            'Input' => $inputPct,
+            'Output' => $outputPct,
+            'Error' => $errorPct,
+            'Vocabulary' => $vocabPct
         ]
     ];
 }

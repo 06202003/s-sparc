@@ -91,64 +91,78 @@ $userId = $_SESSION['user_id'] ?? 'student_demo';
 
     </div>
 
-    <!-- Charts & Badges Row -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Dual Visual Analytics Row: Bloom's Taxonomy & 5-Axis C-I-O-E Metacognitive Radar -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       
-      <!-- Chart: Cognitive Mode Distribution -->
-      <div class="lg:col-span-2 metric-card space-y-4">
+      <!-- Chart 1: Cognitive Mode Distribution (Bloom's Taxonomy) -->
+      <div class="metric-card space-y-4 flex flex-col justify-between">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
           <div>
-            <h3 class="text-base font-bold text-slate-900">Cognitive Mode Distribution (Bloom's Taxonomy)</h3>
-            <p class="text-xs text-slate-500">Transition from instant code extraction toward higher-order conceptual scaffolding</p>
+            <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+              <span>Cognitive Mode Distribution</span>
+              <span class="text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full">Bloom's Taxonomy</span>
+            </h3>
+            <p class="text-xs text-slate-500 mt-0.5">Transition from raw code extraction to higher-order conceptual scaffolding</p>
           </div>
-          <span class="text-xs bg-slate-100 px-2.5 py-1 rounded-lg font-semibold text-slate-700">Learning History</span>
         </div>
-        <div class="h-64">
+        
+        <div class="h-64 relative">
           <canvas id="bloomDistributionChart"></canvas>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-100 text-center text-[11px]">
+          <div class="p-2 rounded-xl bg-amber-50/70 border border-amber-200/60">
+            <span class="text-amber-800 font-bold block">C1–C2 Understand</span>
+            <span class="text-[10px] text-amber-600">Conceptual Inquiries</span>
+          </div>
+          <div class="p-2 rounded-xl bg-teal-50/70 border border-teal-200/60">
+            <span class="text-teal-800 font-bold block">C3–C4 Apply</span>
+            <span class="text-[10px] text-teal-600">Code Synthesis</span>
+          </div>
+          <div class="p-2 rounded-xl bg-indigo-50/70 border border-indigo-200/60">
+            <span class="text-indigo-800 font-bold block">C5–C6 Evaluate</span>
+            <span class="text-[10px] text-indigo-600">Refactoring &amp; Scaffolding</span>
+          </div>
         </div>
       </div>
 
-      <!-- Earned AI Literacy Badges -->
-      <div class="metric-card space-y-4">
-        <div class="border-b border-slate-100 pb-3">
-          <h3 class="text-base font-bold text-slate-900">AI Literacy Milestones</h3>
-          <p class="text-xs text-slate-500">Problem formulation discipline &amp; ethical AI interaction</p>
+      <!-- Chart 2: 5-Axis C-I-O-E Protocol & Technical Mastery Radar -->
+      <div class="metric-card space-y-4 flex flex-col justify-between">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div>
+            <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+              <span>Metacognitive &amp; C-I-O-E Radar</span>
+              <span class="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full">5 Dimensions</span>
+            </h3>
+            <p class="text-xs text-slate-500 mt-0.5">Decomposition proficiency across Context, Input, Output, Debugging &amp; Entropy</p>
+          </div>
         </div>
-        <div id="badges-container" class="space-y-2.5">
-          <div class="p-3 bg-teal-50/80 border border-teal-200 rounded-xl flex items-center gap-3 transition hover:shadow-2xs">
-            <div class="w-9 h-9 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center shrink-0 shadow-2xs">
-              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
-            </div>
-            <div>
-              <div class="font-bold text-xs text-teal-900">C-I-O-E Protocol Master</div>
-              <div class="text-[11px] text-teal-700">Consistently supplies pre-conditions &amp; error traces</div>
-            </div>
-          </div>
 
-          <div class="p-3 bg-emerald-50/80 border border-emerald-200 rounded-xl flex items-center gap-3 transition hover:shadow-2xs">
-            <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 shadow-2xs">
-              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-            <div>
-              <div class="font-bold text-xs text-emerald-900">Zero-Waste Compute Champion</div>
-              <div class="text-[11px] text-emerald-700">Leverages 0-token vector caching &gt; 40%</div>
-            </div>
-          </div>
+        <div class="h-64 relative flex items-center justify-center">
+          <canvas id="metacognitiveRadarChart"></canvas>
+        </div>
 
-          <div class="p-3 bg-indigo-50/80 border border-indigo-200 rounded-xl flex items-center gap-3 transition hover:shadow-2xs">
-            <div class="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0 shadow-2xs">
-              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-            </div>
-            <div>
-              <div class="font-bold text-xs text-indigo-900">Prompt Architect</div>
-              <div class="text-[11px] text-indigo-700">High information density score &ge; 0.80</div>
-            </div>
+        <!-- 5 Dimension Live Status Badges -->
+        <div class="grid grid-cols-5 gap-1.5 pt-2 border-t border-slate-100 text-center">
+          <div class="p-1.5 rounded-xl bg-slate-50 border border-slate-200/80">
+            <span class="text-[10px] text-slate-500 block">Context</span>
+            <span id="radar-val-context" class="text-xs font-bold text-teal-700 mt-0.5 block">0%</span>
+          </div>
+          <div class="p-1.5 rounded-xl bg-slate-50 border border-slate-200/80">
+            <span class="text-[10px] text-slate-500 block">Input</span>
+            <span id="radar-val-input" class="text-xs font-bold text-teal-700 mt-0.5 block">0%</span>
+          </div>
+          <div class="p-1.5 rounded-xl bg-slate-50 border border-slate-200/80">
+            <span class="text-[10px] text-slate-500 block">Output</span>
+            <span id="radar-val-output" class="text-xs font-bold text-teal-700 mt-0.5 block">0%</span>
+          </div>
+          <div class="p-1.5 rounded-xl bg-slate-50 border border-slate-200/80">
+            <span class="text-[10px] text-slate-500 block">Debugging</span>
+            <span id="radar-val-error" class="text-xs font-bold text-teal-700 mt-0.5 block">0%</span>
+          </div>
+          <div class="p-1.5 rounded-xl bg-slate-50 border border-slate-200/80">
+            <span class="text-[10px] text-slate-500 block">Vocabulary</span>
+            <span id="radar-val-vocab" class="text-xs font-bold text-teal-700 mt-0.5 block">0%</span>
           </div>
         </div>
       </div>
@@ -361,7 +375,9 @@ $userId = $_SESSION['user_id'] ?? 'student_demo';
     }
 
     async function loadStudentProfile() {
-      let bloomData = [35, 48, 22];
+      let bloomData = [0, 0, 0];
+      let radarData = [0, 0, 0, 0, 0];
+
       try {
         let res = await fetch(`api_proxy.php?endpoint=/api/educational/student-profile/${USER_ID}`);
         if (!res.ok) {
@@ -370,39 +386,114 @@ $userId = $_SESSION['user_id'] ?? 'student_demo';
         if (res.ok) {
           const profile = await res.json();
           document.getElementById('profile-literacy-level').textContent = profile.persona_title || profile.literacy_level || 'The Algorithmic Synthesizer';
-          document.getElementById('profile-independence-index').textContent = `Independence: ${profile.cognitive_independence_index || 0.88} / 1.0`;
-          document.getElementById('stat-cioe-adherence').textContent = `${(((profile.average_cioe_score ?? 0.583) * 100)).toFixed(1)}%`;
-          document.getElementById('stat-prompt-quality').textContent = `${(profile.average_entropy ?? 0.61)} / 1.0`;
-          document.getElementById('stat-conceptual-ratio').textContent = `${(((profile.conceptual_mode_ratio ?? 0.333) * 100)).toFixed(1)}%`;
-          document.getElementById('stat-fast-path-rate').textContent = `${(((profile.fast_path_utilization_rate ?? 0.35) * 100)).toFixed(1)}%`;
+          document.getElementById('profile-independence-index').textContent = `Independence: ${(profile.cognitive_independence_index ?? 1.0).toFixed(2)} / 1.0`;
+          document.getElementById('stat-cioe-adherence').textContent = `${(((profile.average_cioe_score ?? 0) * 100)).toFixed(1)}%`;
+          document.getElementById('stat-prompt-quality').textContent = `${(profile.average_entropy ?? 0).toFixed(2)} / 1.0`;
+          document.getElementById('stat-conceptual-ratio').textContent = `${(((profile.conceptual_mode_ratio ?? 0) * 100)).toFixed(1)}%`;
+          document.getElementById('stat-fast-path-rate').textContent = `${(((profile.fast_path_utilization_rate ?? 0) * 100)).toFixed(1)}%`;
+          
           if (profile.bloom_distribution && Array.isArray(profile.bloom_distribution)) {
             bloomData = profile.bloom_distribution;
           }
+
+          if (profile.radar_dimensions) {
+            const rd = profile.radar_dimensions;
+            radarData = [
+              rd.Context ?? 0,
+              rd.Input ?? 0,
+              rd.Output ?? 0,
+              rd.Error ?? 0,
+              rd.Vocabulary ?? 0
+            ];
+            document.getElementById('radar-val-context').innerText = `${rd.Context ?? 0}%`;
+            document.getElementById('radar-val-input').innerText = `${rd.Input ?? 0}%`;
+            document.getElementById('radar-val-output').innerText = `${rd.Output ?? 0}%`;
+            document.getElementById('radar-val-error').innerText = `${rd.Error ?? 0}%`;
+            document.getElementById('radar-val-vocab').innerText = `${rd.Vocabulary ?? 0}%`;
+          }
         }
       } catch (e) {
-        console.debug('Failed to fetch profile, using verified baseline:', e);
+        console.debug('Failed to fetch profile:', e);
       }
 
-      // Render Chart
-      const ctx = document.getElementById('bloomDistributionChart').getContext('2d');
-      new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: ['C1-C2: Understand (Summary)', 'C3-C4: Apply (Pure Code)', 'C5-C6: Evaluate (Scaffolding Triad)'],
-          datasets: [{
-            label: 'Interaction Frequency',
-            data: bloomData,
-            backgroundColor: ['#f59e0b', '#00A0A5', '#6366f1'],
-            borderRadius: 8
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: { y: { beginAtZero: true, grid: { color: '#f1f5f9' } }, x: { grid: { display: false } } }
-        }
-      });
+      // 1. Render Bloom Cognitive Mode Bar Chart
+      const ctxBloom = document.getElementById('bloomDistributionChart')?.getContext('2d');
+      if (ctxBloom) {
+        new Chart(ctxBloom, {
+          type: 'bar',
+          data: {
+            labels: ['C1–C2 (Understand)', 'C3–C4 (Apply/Code)', 'C5–C6 (Evaluate/Design)'],
+            datasets: [{
+              label: 'Interaction Count',
+              data: bloomData,
+              backgroundColor: ['#f59e0b', '#00A0A5', '#6366f1'],
+              borderRadius: 8
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { stepSize: 1, precision: 0 } },
+              x: { grid: { display: false }, ticks: { font: { size: 11, weight: 'bold' } } }
+            }
+          }
+        });
+      }
+
+      // 2. Render 5-Axis Metacognitive & C-I-O-E Radar Chart
+      const ctxRadar = document.getElementById('metacognitiveRadarChart')?.getContext('2d');
+      if (ctxRadar) {
+        new Chart(ctxRadar, {
+          type: 'radar',
+          data: {
+            labels: ['Context [C]', 'Input [I]', 'Output [O]', 'Debugging [E]', 'Vocabulary H(X)'],
+            datasets: [{
+              label: 'Mastery Score (%)',
+              data: radarData,
+              backgroundColor: 'rgba(0, 160, 165, 0.25)',
+              borderColor: '#00A0A5',
+              pointBackgroundColor: '#0f766e',
+              pointBorderColor: '#ffffff',
+              pointHoverBackgroundColor: '#ffffff',
+              pointHoverBorderColor: '#00A0A5',
+              borderWidth: 2,
+              pointRadius: 4
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              r: {
+                angleLines: { color: '#e2e8f0' },
+                grid: { color: '#f1f5f9' },
+                pointLabels: {
+                  color: '#334155',
+                  font: { size: 10, weight: '600' }
+                },
+                ticks: {
+                  display: false,
+                  min: 0,
+                  max: 100,
+                  stepSize: 20
+                }
+              }
+            },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    return `${context.label}: ${context.raw}%`;
+                  }
+                }
+              }
+            }
+          }
+        });
+      }
     }
 
     document.addEventListener('DOMContentLoaded', () => {
