@@ -72,8 +72,8 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
     
     <!-- Top Progress Bar & Header Controls -->
     <div class="relative z-30 space-y-3">
-      <!-- 6-Segment Progress Bars -->
-      <div class="flex items-center gap-1.5 w-full">
+      <!-- Dynamic Segment Progress Bars Container -->
+      <div id="progress-bars-container" class="flex items-center gap-1.5 w-full">
         <div class="progress-bar-segment"><div id="fill-0" class="progress-bar-fill"></div></div>
         <div class="progress-bar-segment"><div id="fill-1" class="progress-bar-fill"></div></div>
         <div class="progress-bar-segment"><div id="fill-2" class="progress-bar-fill"></div></div>
@@ -106,13 +106,13 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
     </div>
 
     <!-- Bottom Navigation / Instructions -->
-    <div class="relative z-30 flex items-center justify-between text-[11px] text-slate-400 border-t border-white/10 pt-3">
+    <div id="bottom-nav-bar" class="relative z-30 flex items-center justify-between text-[11px] text-slate-400 border-t border-white/10 pt-3">
       <span class="flex items-center gap-1.5">
         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
         <span id="slide-indicator">Slide 1 of 6</span>
       </span>
-      <span class="hidden sm:inline text-slate-400">Tap left/right to navigate</span>
-      <div class="flex items-center gap-2">
+      <span id="tap-hint" class="hidden sm:inline text-slate-400">Tap left/right to navigate</span>
+      <div id="nav-controls" class="flex items-center gap-2">
         <button id="btn-prev" class="p-1.5 rounded-lg bg-white/5 hover:bg-white/15 text-white transition" title="Previous">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
         </button>
@@ -123,7 +123,7 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
     </div>
 
     <!-- Invisible Touch / Click Overlay for Tap Navigation -->
-    <div class="absolute inset-0 z-10 flex">
+    <div id="tap-overlay" class="absolute inset-0 z-10 flex">
       <div id="tap-left" class="w-1/2 h-full cursor-pointer"></div>
       <div id="tap-right" class="w-1/2 h-full cursor-pointer"></div>
     </div>
@@ -136,7 +136,8 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
     
     let wrappedData = null;
     let currentSlide = 0;
-    const TOTAL_SLIDES = 6;
+    let totalSlides = 6;
+    let isSingleSlideMode = false;
     const SLIDE_DURATION = 6500; // 6.5s per slide
     let slideTimer = null;
     let progressInterval = null;
@@ -184,51 +185,111 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
       }
     }
 
+    function cleanupNavigationForSingleView() {
+      isSingleSlideMode = true;
+      totalSlides = 1;
+      clearInterval(progressInterval);
+      clearTimeout(slideTimer);
+      
+      const tapOverlay = document.getElementById('tap-overlay');
+      if (tapOverlay) tapOverlay.style.display = 'none';
+      
+      const tapHint = document.getElementById('tap-hint');
+      if (tapHint) tapHint.style.display = 'none';
+      
+      const navControls = document.getElementById('nav-controls');
+      if (navControls) navControls.style.display = 'none';
+    }
+
     function renderNoInteractionsState(data) {
+      cleanupNavigationForSingleView();
       const spinner = document.getElementById('loading-spinner');
       if (spinner) spinner.remove();
+
       document.getElementById('header-assessment-title').innerText = data.assessment_title || `Assessment #${ASSESSMENT_ID}`;
       
+      // Update top bar to single completed segment
+      document.getElementById('progress-bars-container').innerHTML = `
+        <div class="progress-bar-segment"><div class="progress-bar-fill completed" style="width: 100%!important; background: #10B981;"></div></div>
+      `;
+      
+      // Update bottom indicator
+      document.getElementById('slide-indicator').innerText = 'Slide 1 of 1 • 100% Autonomous';
+      
       document.getElementById('slide-viewport').innerHTML = `
-        <div class="text-center space-y-5 my-auto px-4 slide-content">
-          <div class="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto text-emerald-400 text-2xl font-bold shadow-inner">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-          </div>
-          <div class="space-y-2">
-            <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase tracking-wide">
-              100% Independent Coding
+        <div class="space-y-4 my-auto text-center slide-content px-1">
+          <!-- Top Badge -->
+          <div>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[11px] font-bold tracking-wide uppercase shadow-inner">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>100% Independent Cognition</span>
             </span>
-            <h2 class="text-xl font-bold text-white tracking-tight">${data.assessment_title}</h2>
-            <p class="text-xs text-slate-300 leading-relaxed max-w-sm mx-auto">
-              ${data.message || 'No S-SPARC AI prompts were recorded for this assessment. You completed this assignment independently without AI assistance!'}
+          </div>
+
+          <!-- Title & Course -->
+          <div class="space-y-1">
+            <h1 class="text-xl sm:text-2xl font-black text-white tracking-tight leading-snug">${data.assessment_title}</h1>
+            <p class="text-xs text-slate-400 font-medium">${data.course_name}</p>
+          </div>
+
+          <!-- Hero Persona Box -->
+          <div class="p-4 sm:p-5 rounded-2xl bg-gradient-to-b from-emerald-950/40 via-slate-900 to-slate-900 border border-emerald-500/30 text-center space-y-2.5 shadow-xl">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-teal-500/20 border border-emerald-400/30 flex items-center justify-center mx-auto text-emerald-300 shadow-inner">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+              </svg>
+            </div>
+            <div>
+              <h2 class="text-lg sm:text-xl font-extrabold text-white tracking-tight">The Autonomous Architect</h2>
+              <p class="text-[11px] font-semibold text-emerald-300 mt-0.5">Pure Human Algorithmic Reasoning</p>
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed max-w-xs mx-auto">
+              ${data.message || 'Tugas ini Anda selesaikan secara mandiri tanpa bantuan AI S-SPARC. Menunjukkan pemahaman computational logic dan integritas akademik yang tinggi!'}
             </p>
           </div>
-          <div class="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2 text-left max-w-xs mx-auto">
-            <div class="flex justify-between items-center text-xs">
-              <span class="text-slate-400">Course:</span>
-              <span class="text-white font-medium truncate max-w-[170px]">${data.course_name}</span>
+
+          <!-- 3 Stats Matrix -->
+          <div class="grid grid-cols-3 gap-2 text-left">
+            <div class="p-2.5 rounded-xl bg-white/5 border border-white/10 text-center">
+              <span class="text-[10px] text-slate-400 block">AI Queries</span>
+              <span class="text-sm font-bold text-white mt-0.5 block">0 Prompts</span>
             </div>
-            <div class="flex justify-between items-center text-xs">
-              <span class="text-slate-400">AI Prompt Usage:</span>
-              <span class="text-emerald-400 font-bold">0 Queries (0 Tokens)</span>
+            <div class="p-2.5 rounded-xl bg-white/5 border border-white/10 text-center">
+              <span class="text-[10px] text-slate-400 block">Energy Used</span>
+              <span class="text-sm font-bold text-emerald-400 mt-0.5 block">0.00 Wh</span>
             </div>
-            <div class="flex justify-between items-center text-xs">
-              <span class="text-slate-400">Literacy Standing:</span>
-              <span class="text-emerald-300 font-semibold">Pure Human Mastery</span>
+            <div class="p-2.5 rounded-xl bg-white/5 border border-white/10 text-center">
+              <span class="text-[10px] text-slate-400 block">Autonomy</span>
+              <span class="text-sm font-bold text-teal-300 mt-0.5 block">100%</span>
             </div>
           </div>
-          <div>
-            <a href="student_analytics.php" class="inline-block px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-xs font-bold text-slate-950 transition shadow-md">
+
+          <!-- CTA Buttons -->
+          <div class="pt-1 space-y-2">
+            <button id="btn-export-card" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 font-bold text-xs text-slate-950 transition shadow-md flex items-center justify-center gap-1.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+              <span>Download Achievement Card</span>
+            </button>
+            <a href="student_analytics.php" class="block w-full py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-slate-300 transition">
               Back to Analytics Hub
             </a>
           </div>
         </div>
       `;
+
+      document.getElementById('btn-export-card')?.addEventListener('click', exportSummaryCard);
     }
 
     function renderUnauthorizedState(data) {
+      cleanupNavigationForSingleView();
       const spinner = document.getElementById('loading-spinner');
       if (spinner) spinner.remove();
+
+      document.getElementById('progress-bars-container').innerHTML = `
+        <div class="progress-bar-segment"><div class="progress-bar-fill completed" style="width: 100%!important; background: #EF4444;"></div></div>
+      `;
+      document.getElementById('slide-indicator').innerText = 'Access Denied';
+
       document.getElementById('slide-viewport').innerHTML = `
         <div class="text-center space-y-5 my-auto px-4 slide-content">
           <div class="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center mx-auto text-rose-400 text-xl font-bold">
@@ -250,7 +311,15 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
     }
 
     function renderLockedState(data) {
-      document.getElementById('loading-spinner').remove();
+      cleanupNavigationForSingleView();
+      const spinner = document.getElementById('loading-spinner');
+      if (spinner) spinner.remove();
+
+      document.getElementById('progress-bars-container').innerHTML = `
+        <div class="progress-bar-segment"><div class="progress-bar-fill completed" style="width: 100%!important; background: #F59E0B;"></div></div>
+      `;
+      document.getElementById('slide-indicator').innerText = 'Story Locked';
+
       document.getElementById('slide-viewport').innerHTML = `
         <div class="text-center space-y-5 my-auto px-4 slide-content">
           <div class="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-400 text-xl font-bold">
@@ -290,12 +359,14 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
     }
 
     function renderSlide(index) {
+      if (isSingleSlideMode) return;
       currentSlide = index;
-      document.getElementById('slide-indicator').innerText = `Slide ${index + 1} of ${TOTAL_SLIDES}`;
+      document.getElementById('slide-indicator').innerText = `Slide ${index + 1} of ${totalSlides}`;
       
       // Update Progress Bar Fills
-      for (let i = 0; i < TOTAL_SLIDES; i++) {
+      for (let i = 0; i < totalSlides; i++) {
         const fill = document.getElementById(`fill-${i}`);
+        if (!fill) continue;
         if (i < index) {
           fill.className = 'progress-bar-fill completed';
         } else if (i === index) {
@@ -601,6 +672,7 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
 
     // Story Timer & Pause Controls
     function resetTimer() {
+      if (isSingleSlideMode || totalSlides <= 1) return;
       clearInterval(progressInterval);
       clearTimeout(slideTimer);
       
@@ -616,7 +688,7 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
 
         if (elapsed >= SLIDE_DURATION) {
           clearInterval(progressInterval);
-          if (currentSlide < TOTAL_SLIDES - 1) {
+          if (currentSlide < totalSlides - 1) {
             renderSlide(currentSlide + 1);
           }
         }
@@ -624,12 +696,14 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
     }
 
     function nextSlide() {
-      if (currentSlide < TOTAL_SLIDES - 1) {
+      if (isSingleSlideMode || totalSlides <= 1) return;
+      if (currentSlide < totalSlides - 1) {
         renderSlide(currentSlide + 1);
       }
     }
 
     function prevSlide() {
+      if (isSingleSlideMode || totalSlides <= 1) return;
       if (currentSlide > 0) {
         renderSlide(currentSlide - 1);
       }
