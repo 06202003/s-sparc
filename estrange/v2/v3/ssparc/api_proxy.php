@@ -39,45 +39,6 @@ if (!empty($_GET['path'])) {
     }
 }
 
-if (isset($_GET['action']) && $_GET['action'] === 'sync_chat_history') {
-    require_once __DIR__ . '/../_config.php';
-    require_once __DIR__ . '/_wrapped_service.php';
-    ssparc_ensure_chat_tables($db);
-    
-    $rawInput = file_get_contents('php://input');
-    $data = json_decode($rawInput, true) ?: [];
-    
-    $sessUserId = $_SESSION['user_id'] ?? ($_GET['user_id'] ?? '218');
-    $messages = $data['messages'] ?? [];
-    $assessmentId = $data['assessment_id'] ?? ($_SESSION['assessment_id'] ?? '248');
-    $insertedCount = 0;
-    
-    if (!empty($messages) && is_array($messages)) {
-        foreach ($messages as $msg) {
-            $sender = strtolower(trim($msg['sender'] ?? ''));
-            $content = trim($msg['text'] ?? ($msg['prompt'] ?? ''));
-            if ($sender === 'user' && !empty($content)) {
-                $contentEsc = $db->real_escape_string($content);
-                $uidEsc = $db->real_escape_string($sessUserId);
-                $aidEsc = $db->real_escape_string($assessmentId);
-                $timeEsc = !empty($msg['timestamp']) ? date('Y-m-d H:i:s', strtotime($msg['timestamp'])) : date('Y-m-d H:i:s');
-                
-                // Check if duplicate already exists
-                $chk = $db->query("SELECT id FROM chat_history WHERE user_id = '$uidEsc' AND content = '$contentEsc' LIMIT 1");
-                if (!$chk || $chk->num_rows == 0) {
-                    $newId = 'sync_' . substr(md5($uidEsc . $content . microtime()), 0, 24);
-                    $db->query("INSERT INTO chat_history (id, user_id, session_id, assessment_id, role, content, created_at) VALUES ('$newId', '$uidEsc', 'synced_session', '$aidEsc', 'user', '$contentEsc', '$timeEsc')");
-                    $insertedCount++;
-                }
-            }
-        }
-    }
-    
-    header('Content-Type: application/json; charset=utf-8');
-    echo json_encode(['status' => 'success', 'synced' => $insertedCount]);
-    exit;
-}
-
 if (isset($_GET['debug']) || (isset($_GET['action']) && $_GET['action'] === 'debug_user')) {
     require_once __DIR__ . '/../_config.php';
     require_once __DIR__ . '/_wrapped_service.php';
@@ -202,33 +163,9 @@ if (isset($_GET['debug']) || (isset($_GET['action']) && $_GET['action'] === 'deb
     exit;
 }
 
-// Intercept Wrapped endpoints to guarantee 100% accurate assessment metadata from live DB
-if (preg_match('#^/api/(?:domain/)?assessments/([^/]+)/wrapped#i', $path, $m)) {
-    require_once __DIR__ . '/../_config.php';
-    require_once __DIR__ . '/_wrapped_service.php';
-    $assessmentId = trim(urldecode($m[1]));
-    $userId = $_SESSION['user_id'] ?? ($_GET['user_id'] ?? 'student_demo');
-    $wrappedResult = ssparc_get_wrapped_for_assessment($db, $userId, $assessmentId);
-    header('Content-Type: application/json; charset=utf-8');
-    echo json_encode($wrappedResult, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-    exit;
-}
-
-// Intercept Educational Student Profile to sync with live prompt telemetry
-if (preg_match('#^/api/educational/student-profile(?:/(.+))?#i', $path, $m)) {
-    require_once __DIR__ . '/../_config.php';
-    require_once __DIR__ . '/_wrapped_service.php';
-    $reqUid = !empty($m[1]) ? trim(urldecode($m[1])) : '';
-    $userId = $_SESSION['user_id'] ?? (!empty($reqUid) ? $reqUid : ($_GET['user_id'] ?? 'student_demo'));
-    $profileResult = ssparc_get_student_aggregated_profile($db, $userId);
-    header('Content-Type: application/json; charset=utf-8');
-    echo json_encode($profileResult, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-    exit;
-}
-
-// Build query string if any (excluding 'path' or 'endpoint' param)
+// Clean debug parameter if present
 $queryParams = $_GET;
-unset($queryParams['path'], $queryParams['endpoint']);
+unset($queryParams['path'], $queryParams['endpoint'], $queryParams['debug'], $queryParams['action']);
 $queryString = http_build_query($queryParams);
 
 $targetUrl = rtrim($backendBaseUrl, '/') . $path . ($queryString ? ('?' . $queryString) : '');
