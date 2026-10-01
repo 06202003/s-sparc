@@ -672,6 +672,28 @@ select.select2-hidden-accessible {
       };
     }
 
+    async function syncLocalStorageToServer() {
+      try {
+        const keys = Object.keys(localStorage).filter(k => k.startsWith('ssparc_chat_'));
+        for (const key of keys) {
+          const raw = localStorage.getItem(key);
+          if (!raw) continue;
+          const parts = key.split('_');
+          const aid = parts[3] || CURRENT_ASSESSMENT_ID || '248';
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            await fetch('api_proxy.php?action=sync_chat_history', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ assessment_id: aid, messages: parsed })
+            });
+          }
+        }
+      } catch (e) {
+        console.debug('Background sync notice:', e);
+      }
+    }
+
     function loadMessages() {
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
@@ -695,11 +717,13 @@ select.select2-hidden-accessible {
       }
 
       renderMessages();
+      syncLocalStorageToServer();
     }
 
     function persistMessages() {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state.messages.slice(-200)));
+        syncLocalStorageToServer();
       } catch (e) {
         console.warn('Failed to persist messages', e);
       }

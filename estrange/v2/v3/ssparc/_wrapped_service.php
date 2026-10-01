@@ -165,6 +165,20 @@ function ssparc_resolve_all_user_identifiers($mydb, $userId) {
     return implode(',', $finalEscaped);
 }
 
+function ssparc_ensure_chat_tables($mydb) {
+    if (!$mydb) return;
+    $mydb->query("CREATE TABLE IF NOT EXISTS `chat_history` (
+        `id` varchar(64) NOT NULL PRIMARY KEY,
+        `user_id` varchar(64) NOT NULL,
+        `session_id` varchar(128) DEFAULT NULL,
+        `assessment_id` varchar(64) DEFAULT NULL,
+        `role` varchar(32) NOT NULL DEFAULT 'user',
+        `content` longtext NOT NULL,
+        `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        INDEX `idx_user_asmt` (`user_id`, `assessment_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;");
+}
+
 function ssparc_fetch_all_student_prompts($mydb, $userInStr, $assessmentId = null) {
     $prompts = [];
     $seenContent = [];
@@ -172,6 +186,8 @@ function ssparc_fetch_all_student_prompts($mydb, $userInStr, $assessmentId = nul
     if (!$mydb || empty($userInStr) || $userInStr === "''") {
         return $prompts;
     }
+
+    ssparc_ensure_chat_tables($mydb);
 
     $aidFilter = "";
     if (!empty($assessmentId)) {
