@@ -39,7 +39,70 @@ if (!empty($_GET['path'])) {
     }
 }
 
-$path = '/' . ltrim($path, '/');
+if (isset($_GET['debug']) || (isset($_GET['action']) && $_GET['action'] === 'debug_user')) {
+    require_once __DIR__ . '/../_config.php';
+    require_once __DIR__ . '/_wrapped_service.php';
+    header('Content-Type: application/json; charset=utf-8');
+    
+    $sessUserId = $_SESSION['user_id'] ?? ($_GET['user_id'] ?? '');
+    $sessUname = $_SESSION['username'] ?? '';
+    $sessName = $_SESSION['name'] ?? '';
+    
+    $out = [
+        'session' => [
+            'user_id' => $sessUserId,
+            'username' => $sessUname,
+            'name' => $sessName,
+            'all' => $_SESSION ?? []
+        ],
+        'user_table_matches' => [],
+        'users_table_matches' => [],
+        'resolved_identifiers_sql' => ssparc_resolve_all_user_identifiers($db, $sessUserId),
+        'chat_history_latest' => [],
+        'gpt_jobs_latest' => [],
+        'fetched_prompts' => []
+    ];
+    
+    // 1. Matches in user
+    $qUser = $db->query("SELECT user_id, username, name, email, role FROM user WHERE name LIKE '%YEHEZKIEL%' OR username LIKE '%yehezkiel%' OR name LIKE '%SETIAWAN%' OR user_id = '$sessUserId' OR username = '$sessUname' LIMIT 10");
+    if ($qUser) {
+        while ($r = $qUser->fetch_assoc()) $out['user_table_matches'][] = $r;
+    }
+    
+    // 2. Matches in users
+    $hasUsers = $db->query("SHOW TABLES LIKE 'users'");
+    if ($hasUsers && $hasUsers->num_rows > 0) {
+        $qUsers = $db->query("SELECT * FROM users WHERE username LIKE '%yehezkiel%' OR email LIKE '%yehezkiel%' OR username LIKE '%setiawan%' OR user_id = '$sessUserId' LIMIT 10");
+        if ($qUsers) {
+            while ($r = $qUsers->fetch_assoc()) $out['users_table_matches'][] = $r;
+        }
+    }
+    
+    // 3. chat_history latest 20 rows
+    $hasChat = $db->query("SHOW TABLES LIKE 'chat_history'");
+    if ($hasChat && $hasChat->num_rows > 0) {
+        $qChat = $db->query("SELECT id, user_id, session_id, assessment_id, role, LEFT(content, 80) AS content_preview, created_at FROM chat_history ORDER BY created_at DESC LIMIT 20");
+        if ($qChat) {
+            while ($r = $qChat->fetch_assoc()) $out['chat_history_latest'][] = $r;
+        }
+    }
+
+    // 4. gpt_jobs latest 20 rows
+    $hasJobs = $db->query("SHOW TABLES LIKE 'gpt_jobs'");
+    if ($hasJobs && $hasJobs->num_rows > 0) {
+        $qJobs = $db->query("SELECT id, user_id, LEFT(prompt, 80) AS prompt_preview, status, created_at FROM gpt_jobs ORDER BY created_at DESC LIMIT 20");
+        if ($qJobs) {
+            while ($r = $qJobs->fetch_assoc()) $out['gpt_jobs_latest'][] = $r;
+        }
+    }
+
+    // 5. Fetched prompts via resolver
+    $resolvedSql = ssparc_resolve_all_user_identifiers($db, $sessUserId);
+    $out['fetched_prompts'] = ssparc_fetch_all_student_prompts($db, $resolvedSql, null);
+    
+    echo json_encode($out, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 // Intercept Wrapped endpoints to guarantee 100% accurate assessment metadata from live DB
 if (preg_match('#^/api/(?:domain/)?assessments/([^/]+)/wrapped#i', $path, $m)) {
