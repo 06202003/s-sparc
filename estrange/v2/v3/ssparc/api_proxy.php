@@ -63,13 +63,49 @@ if (isset($_GET['debug']) || (isset($_GET['action']) && $_GET['action'] === 'deb
         'fetched_prompts' => []
     ];
     
-    // 1. Matches in user
+    // 1. Database name and list of databases on server
+    $dbNameRes = $db->query("SELECT DATABASE() AS cur_db");
+    $out['current_database'] = $dbNameRes ? $dbNameRes->fetch_assoc()['cur_db'] : 'unknown';
+    
+    $dbsRes = $db->query("SHOW DATABASES");
+    $out['server_databases'] = [];
+    if ($dbsRes) {
+        while ($dbr = $dbsRes->fetch_assoc()) {
+            $out['server_databases'][] = reset($dbr);
+        }
+    }
+
+    // 2. Table row counts for all AI & activity tables
+    $out['table_row_counts'] = [];
+    $candidateTables = ['chat_history', 'gpt_jobs', 'educational_learning_logs', 'code_embeddings', 'session_tokens', 'submission', 'suspicion', 'code_clarity_suggestion', 'user', 'users', 'game_student_course', 'enrollment', 'assessment', 'course'];
+    foreach ($candidateTables as $tbl) {
+        $chk = $db->query("SHOW TABLES LIKE '$tbl'");
+        if ($chk && $chk->num_rows > 0) {
+            $cntRes = $db->query("SELECT COUNT(*) AS total FROM $tbl");
+            $out['table_row_counts'][$tbl] = $cntRes ? (int)$cntRes->fetch_assoc()['total'] : 0;
+        } else {
+            $out['table_row_counts'][$tbl] = 'TABLE_NOT_FOUND';
+        }
+    }
+
+    // 3. User submissions history for account 218
+    $out['user_submissions'] = [];
+    $subRes = $db->query("SELECT s.submission_id, s.assessment_id, a.name AS assessment_name, s.attempt, s.submitted_time, s.filename 
+                          FROM submission s 
+                          LEFT JOIN assessment a ON s.assessment_id = a.assessment_id 
+                          WHERE s.submitter_id = '$sessUserId' 
+                          ORDER BY s.submitted_time DESC LIMIT 10");
+    if ($subRes) {
+        while ($sr = $subRes->fetch_assoc()) $out['user_submissions'][] = $sr;
+    }
+
+    // 4. Matches in user
     $qUser = $db->query("SELECT user_id, username, name, email, role FROM user WHERE name LIKE '%YEHEZKIEL%' OR username LIKE '%yehezkiel%' OR name LIKE '%SETIAWAN%' OR user_id = '$sessUserId' OR username = '$sessUname' LIMIT 10");
     if ($qUser) {
         while ($r = $qUser->fetch_assoc()) $out['user_table_matches'][] = $r;
     }
     
-    // 2. Matches in users
+    // 5. Matches in users
     $hasUsers = $db->query("SHOW TABLES LIKE 'users'");
     if ($hasUsers && $hasUsers->num_rows > 0) {
         $qUsers = $db->query("SELECT * FROM users WHERE username LIKE '%yehezkiel%' OR email LIKE '%yehezkiel%' OR username LIKE '%setiawan%' OR user_id = '$sessUserId' LIMIT 10");
@@ -78,7 +114,7 @@ if (isset($_GET['debug']) || (isset($_GET['action']) && $_GET['action'] === 'deb
         }
     }
     
-    // 3. chat_history latest 20 rows
+    // 6. chat_history latest 20 rows
     $hasChat = $db->query("SHOW TABLES LIKE 'chat_history'");
     if ($hasChat && $hasChat->num_rows > 0) {
         $qChat = $db->query("SELECT id, user_id, session_id, assessment_id, role, LEFT(content, 80) AS content_preview, created_at FROM chat_history ORDER BY created_at DESC LIMIT 20");
@@ -87,7 +123,7 @@ if (isset($_GET['debug']) || (isset($_GET['action']) && $_GET['action'] === 'deb
         }
     }
 
-    // 4. gpt_jobs latest 20 rows
+    // 7. gpt_jobs latest 20 rows
     $hasJobs = $db->query("SHOW TABLES LIKE 'gpt_jobs'");
     if ($hasJobs && $hasJobs->num_rows > 0) {
         $qJobs = $db->query("SELECT id, user_id, LEFT(prompt, 80) AS prompt_preview, status, created_at FROM gpt_jobs ORDER BY created_at DESC LIMIT 20");
@@ -96,7 +132,7 @@ if (isset($_GET['debug']) || (isset($_GET['action']) && $_GET['action'] === 'deb
         }
     }
 
-    // 5. Fetched prompts via resolver
+    // 8. Fetched prompts via resolver
     $resolvedSql = ssparc_resolve_all_user_identifiers($db, $sessUserId);
     $out['fetched_prompts'] = ssparc_fetch_all_student_prompts($db, $resolvedSql, null);
     
