@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Quantifying AI Over-Reliance in Programming Education: A Telemetry-Driven Behavioral Metric with Productive Friction in S-SPARC</title>
+<style>
+  @page {
+    size: A4 portrait;
+    margin: 18mm 14mm 18mm 14mm;
+    @bottom-center {
+      content: counter(page);
+      font-family: "Times New Roman", Times, serif;
+      font-size: 9pt;
+    }
+  }
+  * {
+    box-sizing: border-box;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: "Times New Roman", Times, "Nimbus Roman No9 L", Georgia, serif;
+    color: #000000;
+    background-color: #ffffff;
+    font-size: 9.5pt;
+    line-height: 1.22;
+  }
+
+  /* IEEE Header & Title Block (Single Column spanning full width) */
+  .ieee-header {
+    font-size: 8pt;
+    font-style: italic;
+    color: #333333;
+    border-bottom: 0.5pt solid #000000;
+    padding-bottom: 3px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .title-block {
+    text-align: center;
+    margin-bottom: 14px;
+    padding: 0 10px;
+  }
+  h1.paper-title {
+    font-size: 18pt;
+    font-weight: bold;
+    margin: 0 0 8px 0;
+    line-height: 1.2;
+    text-transform: none;
+  }
+  .author-block {
+    font-size: 9.5pt;
+    margin-bottom: 12px;
+    line-height: 1.35;
+  }
+  .author-name {
+    font-weight: bold;
+    font-size: 10pt;
+  }
+  .author-affil {
+    font-style: italic;
+    font-size: 9pt;
+    color: #222222;
+  }
+
+  /* Abstract & Index Terms (Full width block) */
+  .abstract-container {
+    width: 92%;
+    margin: 0 auto 14px auto;
+    font-size: 8.5pt;
+    text-align: justify;
+    line-height: 1.25;
+  }
+  .abstract-heading {
+    font-weight: bold;
+    font-style: italic;
+  }
+  .index-terms {
+    margin-top: 5px;
+    font-size: 8.5pt;
+  }
+  .index-terms-heading {
+    font-weight: bold;
+    font-style: italic;
+  }
+
+  /* Two Column Body Layout */
+  .two-column {
+    column-count: 2;
+    column-gap: 5mm;
+    text-align: justify;
+    text-justify: inter-word;
+  }
+
+  /* Section Headings */
+  h2.ieee-sec {
+    font-size: 9.5pt;
+    font-weight: bold;
+    text-align: center;
+    text-transform: uppercase;
+    margin: 10px 0 4px 0;
+    letter-spacing: 0.05em;
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+  h3.ieee-subsec {
+    font-size: 9.5pt;
+    font-weight: bold;
+    font-style: italic;
+    text-align: left;
+    margin: 7px 0 3px 0;
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  p {
+    margin: 0 0 5px 0;
+    text-indent: 1.2em;
+  }
+  p.no-indent {
+    text-indent: 0;
+  }
+
+  /* Equation formatting */
+  .equation-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 6px 0;
+    padding: 0 4px;
+    font-family: "Times New Roman", Times, serif;
+    font-style: italic;
+    font-size: 9.5pt;
+    break-inside: avoid;
+  }
+  .equation-math {
+    flex: 1;
+    text-align: center;
+  }
+  .equation-num {
+    font-style: normal;
+    font-size: 9pt;
+  }
+
+  /* Standard Booktabs Academic Tables */
+  table.ieee-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 7.8pt;
+    line-height: 1.2;
+    margin: 8px 0;
+    break-inside: avoid;
+  }
+  table.ieee-table caption {
+    font-size: 8pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    text-align: center;
+    caption-side: top;
+  }
+  table.ieee-table th {
+    border-top: 1pt solid #000000;
+    border-bottom: 0.5pt solid #000000;
+    padding: 4px 3px;
+    font-weight: bold;
+    text-align: left;
+  }
+  table.ieee-table td {
+    padding: 3px 3px;
+    border-bottom: 0.25pt solid #e0e0e0;
+    vertical-align: top;
+  }
+  table.ieee-table tr.bottom-rule td {
+    border-bottom: 1pt solid #000000;
+  }
+
+  /* Lists */
+  ul, ol {
+    margin: 3px 0 5px 0;
+    padding-left: 1.4em;
+  }
+  li {
+    margin-bottom: 2px;
+  }
+
+  /* References */
+  .ref-sec {
+    font-size: 7.8pt;
+    line-height: 1.2;
+    text-align: justify;
+  }
+  .ref-sec p {
+    margin: 0 0 3px 0;
+    text-indent: -1.4em;
+    padding-left: 1.4em;
+  }
+</style>
+</head>
+<body>
+
+<!-- IEEE RUNNING HEADER -->
+<div class="ieee-header">
+  <span>FACULTY OF INFORMATION TECHNOLOGY &bull; UNIVERSITAS KRISTEN MARANATHA</span>
+  <span>RESEARCH PROPOSAL & PRE-PRINT MANUSCRIPT (SEPTEMBER 2026)</span>
+</div>
+
+<!-- TITLE & AUTHOR BLOCK -->
+<div class="title-block">
+  <h1 class="paper-title">Quantifying AI Over-Reliance in Programming Education: A Telemetry-Driven Behavioral Metric with Productive Friction in S-SPARC</h1>
+  
+  <div class="author-block">
+    <div class="author-name">S-SPARC & E-STRANGE Research Initiative</div>
+    <div class="author-affil">
+      Department of Informatics, Faculty of Information Technology, Universitas Kristen Maranatha<br>
+      Bandung 40164, West Java, Indonesia &bull; Corresponding Email: research.fit@maranatha.edu
+    </div>
+  </div>
+</div>
+
+<!-- ABSTRACT BLOCK -->
+<div class="abstract-container">
+  <p class="no-indent">
+    <span class="abstract-heading">Abstract:</span> While generative artificial intelligence enables students to produce functional code instantly, unconstrained access fosters cognitive offloading, surface-level self-regulation, and epistemic dependence. This paper presents an empirical framework to quantify, diagnose, and mitigate AI over-reliance in computing education. We formulate the <strong>AI Over-Reliance Index (ORI)</strong>, a composite behavioral metric synthesizing four unobtrusive telemetry streams: Shannon information entropy ($Q_{\text{prompt}}$), structured problem-framing completeness ($S_{\text{CIOE}}$), conceptual inquiry ratio ($R_{\text{concept}}$), and keystroke-verified productive friction adherence ($F_{\text{reflect}}$). Operating natively within the S-SPARC engine and E-STRANGE auto-grader, the system records continuous millisecond-level telemetry with zero survey administration overhead. To establish construct validity while circumventing circular estimation, we detail a two-phase psychometric roadmap: Phase 1 ($N = 35 - 50$) conducts Exploratory Factor Analysis (EFA) to discover latent factor structures, while Phase 2 ($N \ge 80$) conducts independent Confirmatory Factor Analysis (CFA) and convergent validation against the standardized GenAI Reliance Scale. Key threats to validity, including maturation confound, entropy inversion, classifier error propagation, and Pygmalion bias, are formally analyzed and mitigated.
+  </p>
+  <div class="index-terms">
+    <span class="index-terms-heading">Index Terms:</span> Artificial intelligence in education, cognitive offloading, educational data mining, information entropy, learning analytics, productive friction, programming pedagogy.
+  </div>
+</div>
+
+<!-- TWO COLUMN BODY -->
+<div class="two-column">
+
+  <!-- SECTION I -->
+  <h2 class="ieee-sec">I. Introduction</h2>
+  <p>
+    The widespread availability of Large Language Models (LLMs) has fundamentally altered software engineering pedagogy. Students increasingly leverage automated conversational assistants to write, debug, and optimize programming exercises. However, emergent computing education research reveals a growing pedagogical paradox: while automated code generation elevates short-term task completion rates, unassisted problem-solving ability deteriorates substantially [2], [3].
+  </p>
+  <p>
+    In computing laboratories, unconstrained AI access frequently produces a passive behavioral cycle: students copy problem specifications directly into the model, extract generated code without cognitive verification, and submit the output to automated graders. Because test suites evaluate only functional correctness, students receive unearned credit while bypassing the critical cognitive processes of mental tracing, syntax structuring, and edge-case synthesis. This phenomenon, termed <em>cognitive atrophy</em>, severely impairs independent programming capability during unassisted examinations [2], [6].
+  </p>
+  <p>
+    To resolve this challenge, educators require quantitative, real-time diagnostic instruments that can differentiate productive AI-assisted inquiry from epistemic over-reliance. This paper details the mathematical formulation, system architecture, and empirical validation design of the AI Over-Reliance Index (ORI) implemented within the S-SPARC pedagogical framework.
+  </p>
+
+  <!-- SECTION II -->
+  <h2 class="ieee-sec">II. Related Work & Research Gap</h2>
+  <p>
+    Prior literature evaluating student-AI interaction primarily relies on three distinct paradigms:
+  </p>
+  <p>
+    <em>A. Post-Hoc Self-Report Surveys:</em> Standardized instruments, such as Likert-scale questionnaires [2], [7], evaluate student perceptions of AI reliance. While psychometrically valuable, self-reports suffer from recall bias, social desirability, and a fundamental disconnect from active coding behavior during laboratory tasks.
+  </p>
+  <p>
+    <em>B. Binary Plagiarism Detection:</em> Machine learning text classifiers attempt to identify AI-generated submissions. However, these tools exhibit high false-positive rates and operate with a purely punitive objective, providing zero diagnostic feedback regarding student reasoning processes.
+  </p>
+  <p>
+    <em>C. Controlled Laboratory Studies:</em> Recent investigations have utilized eye-tracking and qualitative dialogue coding to characterize reliance taxonomies [15], [16]. Although empirically rigorous, these methods cannot be computed continuously in live classroom deployments.
+  </p>
+  <p>
+    As summarized in Table I, S-SPARC bridges this gap by computing an unobtrusive, continuous composite metric directly coupled with LMS unit-test execution.
+  </p>
+
+  <!-- TABLE I -->
+  <table class="ieee-table">
+    <caption>Table I: Comparative Paradigm Analysis</caption>
+    <thead>
+      <tr>
+        <th>Methodology</th>
+        <th>Primary Limitation</th>
+        <th>S-SPARC Advantage</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Likert Surveys [2], [7]</td>
+        <td>Recall bias; subjective perception</td>
+        <td>Live millisecond telemetry</td>
+      </tr>
+      <tr>
+        <td>AI Text Detectors</td>
+        <td>High error; punitive only</td>
+        <td>Cognitive inquiry profiling</td>
+      </tr>
+      <tr>
+        <td>Eye-Tracking [16]</td>
+        <td>Post-hoc; lab only</td>
+        <td>Real-time live metric (ORI)</td>
+      </tr>
+      <tr>
+        <td>Commercial AI [5]</td>
+        <td>Unchecked prompt spam</td>
+        <td>Productive friction (60s)</td>
+      </tr>
+      <tr class="bottom-rule">
+        <td colspan="3"><em>Comparison of reliance assessment paradigms in higher CS education.</em></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- SECTION III -->
+  <h2 class="ieee-sec">III. Mathematical Metric Formulation</h2>
+  <p>
+    The AI Over-Reliance Index ($\text{ORI}$) is formulated as an inverse composite index bound on the domain $[0, 1]$, where values approaching $1.0$ denote severe cognitive dependence, and values approaching $0.0$ denote autonomous, reflective inquiry:
+  </p>
+
+  <!-- EQUATION 1 -->
+  <div class="equation-row">
+    <div class="equation-math">
+      $\text{ORI} = 1 - \sum_{i=1}^{4} w_i \cdot X_i$
+    </div>
+    <div class="equation-num">(1)</div>
+  </div>
+
+  <p class="no-indent">
+    subject to $\sum w_i = 1.0$ and $X_i \in [0, 1]$. The four indicator components are operationalized as follows:
+  </p>
+
+  <p>
+    <em>1) Shannon Information Entropy ($Q_{\text{prompt}}$):</em> Adapting information theory [11], we evaluate the lexical diversity and technical syntax density of student prompts:
+  </p>
+
+  <!-- EQUATION 2 -->
+  <div class="equation-row">
+    <div class="equation-math">
+      $H(X) = - \sum_{j=1}^{n} p(x_j) \log_2 p(x_j)$
+    </div>
+    <div class="equation-num">(2)</div>
+  </div>
+
+  <p class="no-indent">
+    where $p(x_j)$ represents the relative frequency of programming keywords, variable identifiers, and logic tokens. High entropy reflects granular, context-rich problem specification, penalizing generic queries (e.g., "why code error") [13], [17]. Initial baseline weight: $w_1 = 0.30$.
+  </p>
+
+  <p>
+    <em>2) Context Completeness Score ($S_{\text{CIOE}}$):</em> Evaluates prompt structural rigor across four dimensions: Context ($\mathcal{C}$), Input constraints ($\mathcal{I}$), Expected Output ($\mathcal{O}$), and Error Trace ($\mathcal{E}$) [12]. Normalization follows:
+  </p>
+
+  <!-- EQUATION 3 -->
+  <div class="equation-row">
+    <div class="equation-math">
+      $S_{\text{CIOE}} = \frac{1}{4} (\mathcal{C} + \mathcal{I} + \mathcal{O} + \mathcal{E})$
+    </div>
+    <div class="equation-num">(3)</div>
+  </div>
+
+  <p class="no-indent">
+    where each dimension is evaluated as a boolean indicator. Initial baseline weight: $w_2 = 0.25$.
+  </p>
+
+  <p>
+    <em>3) Conceptual Inquiry Ratio ($R_{\text{concept}}$):</em> Quantifies the proportion of queries targeting algorithmic logic and mental models (Bloom Levels C2-C4) versus direct code generation requests (Bloom C1):
+  </p>
+
+  <!-- EQUATION 4 -->
+  <div class="equation-row">
+    <div class="equation-math">
+      $R_{\text{concept}} = \frac{N_{\text{conceptual}}}{N_{\text{conceptual}} + N_{\text{direct\_code}}}$
+    </div>
+    <div class="equation-num">(4)</div>
+  </div>
+
+  <p class="no-indent">
+    Initial baseline weight: $w_3 = 0.20$.
+  </p>
+
+  <p>
+    <em>4) Productive Friction Adherence ($F_{\text{reflect}}$):</em> Enforces a mandatory 60-second reflection interval [9] between AI responses and code compilation attempts. To prevent meta-gaming via external LLMs, $F_{\text{reflect}}$ integrates keystroke cadence verification ($\Delta t_{\text{dwell}}$):
+  </p>
+
+  <!-- EQUATION 5 -->
+  <div class="equation-row">
+    <div class="equation-math">
+      $F_{\text{reflect}} = \min\left(1.0, \frac{t_{\text{pause}}}{60}\right) \cdot \mathbb{I}(\text{Cadence}_{\text{manual}})$
+    </div>
+    <div class="equation-num">(5)</div>
+  </div>
+
+  <p class="no-indent">
+    Initial baseline weight: $w_4 = 0.25$.
+  </p>
+
+  <!-- SECTION IV -->
+  <h2 class="ieee-sec">IV. Data Architecture & Operational Pipeline</h2>
+  <p>
+    The telemetric logging subsystem is natively integrated into the MySQL backend of S-SPARC and E-STRANGE. Table II summarizes the core telemetry schema captured passively per student interaction.
+  </p>
+
+  <!-- TABLE II -->
+  <table class="ieee-table">
+    <caption>Table II: Relational Telemetry Schema</caption>
+    <thead>
+      <tr>
+        <th>Variable</th>
+        <th>Measurement Granularity</th>
+        <th>Construct</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>prompt_raw_text</code></td>
+        <td>UTF-8 text, timestamp (ms)</td>
+        <td>Query Formulation</td>
+      </tr>
+      <tr>
+        <td><code>entropy_score</code></td>
+        <td>Float $[0.0, 5.0]$, token frequency</td>
+        <td>$Q_{\text{prompt}}$</td>
+      </tr>
+      <tr>
+        <td><code>cioe_vector</code></td>
+        <td>Bitmask $\langle\mathcal{C},\mathcal{I},\mathcal{O},\mathcal{E}\rangle \in \{0,1\}^4$</td>
+        <td>$S_{\text{CIOE}}$</td>
+      </tr>
+      <tr>
+        <td><code>keystroke_dwell</code></td>
+        <td>Inter-keystroke variance (ms)</td>
+        <td>$F_{\text{reflect}}$</td>
+      </tr>
+      <tr>
+        <td><code>test_pass_rate</code></td>
+        <td>Passed test ratio $[0.0, 1.0]$</td>
+        <td>Code Mastery</td>
+      </tr>
+      <tr class="bottom-rule">
+        <td><code>carbon_grams</code></td>
+        <td>Model token compute estimation</td>
+        <td>Compute Cost</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- SECTION V -->
+  <h2 class="ieee-sec">V. Methodological Defenses & Threats to Validity</h2>
+
+  <p>
+    <em>A. Reactivity and Maturation Confound:</em> A single-cohort A-B intervention (Baseline Modules 1-2 without friction vs. Intervention Modules 3-4 with friction) introduces a potential maturation confound, wherein temporal learning coincides with system intervention. In our manuscript, this limitation is formally acknowledged. When two parallel laboratory sections are available, a counterbalanced crossover design (Section 1: A-B; Section 2: B-A) is executed to isolate temporal maturation from intervention efficacy.
+  </p>
+
+  <p>
+    <em>B. Two-Phase Psychometric Roadmap:</em> Validating latent dimensionality across 4 indicators requires distinct samples to avoid structural overfitting:
+  </p>
+  <ul>
+    <li><strong>Phase 1 (Cohort 1, $N = 35 - 50$):</strong> Exploratory Factor Analysis (EFA) to discover factor loading structures and calibrate empirical regression weights.</li>
+    <li><strong>Phase 2 (Cohort 2, $N \ge 80$):</strong> Confirmatory Factor Analysis (CFA) to confirm unidimensionality and convergent validity against the standardized GenAI Reliance Scale (Hou et al. 2025 [1]).</li>
+  </ul>
+
+  <p>
+    <em>C. Entropy Inversion Paradox:</em> Expert programmers frequently author concise, highly specific prompts with low lexical redundancy, whereas struggling novices may generate rambling, unfocused text. To prevent expert conciseness from being misclassified as novice over-reliance, we model an explicit interaction term ($\text{Entropy} \times \text{Baseline Ability}$) using pre-test scores and GPA as covariates.
+  </p>
+
+  <p>
+    <em>D. NLP Classifier Validation:</em> Automated classification of $R_{\text{concept}}$ intent is subjected to a formal validation sub-study. Double annotation by two independent domain experts across $\ge 100$ prompt samples must achieve an inter-rater agreement of Cohen's Kappa $\kappa \ge 0.80$ prior to metric integration.
+  </p>
+
+  <p>
+    <em>E. Pygmalion Effect & Ethical Governance:</em> To prevent algorithmic labeling from biasing instructor grading, individual ORI scores are strictly blind-masked from instructors during Phase 1. Full dashboard analytics unlock in Phase 2 only after psychometric validation is complete.
+  </p>
+
+  <!-- SECTION VI -->
+  <h2 class="ieee-sec">VI. Statistical Integrity & Open Science</h2>
+  <p>
+    To eliminate researcher degrees of freedom and circularity, the research protocol enforces:
+  </p>
+  <p>
+    <em>1) 5-Fold Cross-Validation:</em> Regression weights are calibrated on training folds and evaluated on held-out validation folds.
+  </p>
+  <p>
+    <em>2) Multicollinearity Testing:</em> Predictor variance inflation factors are verified ($\text{VIF} < 5.0$) to prevent parameter instability.
+  </p>
+  <p>
+    <em>3) OSF Pre-Registration:</em> Analysis scripts and confirmatory hypotheses are locked on the Open Science Framework (OSF.io) prior to data collection.
+  </p>
+  <p>
+    <em>4) Family-Wise Error Control:</em> Four secondary exploratory hypotheses (Green AI volume paradox, AST distance delta, reflexive pause pass rates, and semantic cache maturity) are evaluated under Bonferroni-adjusted significance ($\alpha_{\text{adjusted}} = 0.05 / 4 = 0.0125$).
+  </p>
+
+  <!-- SECTION VII -->
+  <h2 class="ieee-sec">VII. Implementation Timeline & Roadmap</h2>
+  <p>
+    The implementation timeline spans two academic semesters:
+  </p>
+
+  <!-- TABLE III -->
+  <table class="ieee-table">
+    <caption>Table III: Implementation Timeline</caption>
+    <thead>
+      <tr>
+        <th>Phase / Period</th>
+        <th>Key Research Activities</th>
+        <th>Deliverable</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Phase 1 (W1-2)</td>
+        <td>OSF Pre-Registration, Baseline logging</td>
+        <td>Locked protocol</td>
+      </tr>
+      <tr>
+        <td>Phase 1 (W3-4)</td>
+        <td>Intervention Phase (60s friction)</td>
+        <td>Telemetry dataset</td>
+      </tr>
+      <tr>
+        <td>Phase 1 (W5-6)</td>
+        <td>NLP annotation ($\kappa \ge 0.80$), EFA</td>
+        <td>Factor report</td>
+      </tr>
+      <tr>
+        <td>Phase 1 (W7-8)</td>
+        <td>Conference drafting (IEEE TALE)</td>
+        <td>Submitted paper</td>
+      </tr>
+      <tr class="bottom-rule">
+        <td>Phase 2 (Sem 2)</td>
+        <td>CFA replication ($N \ge 80$), Scopus Q1</td>
+        <td>IEEE TLT Paper</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- SECTION VIII -->
+  <h2 class="ieee-sec">VIII. Conclusion & Scope Boundary</h2>
+  <p>
+    The S-SPARC AI Over-Reliance framework provides an empirical, telemetry-driven methodology to diagnose and mitigate cognitive offloading in programming education. The scope of this metric is formally bounded to deterministic unit-testing environments (Computer Science); generalization to non-computing disciplines represents future work.
+  </p>
+
+  <!-- REFERENCES -->
+  <h2 class="ieee-sec">References</h2>
+  <div class="ref-sec">
+    <p>[1] Y. Hou, X. Zhu, P. Sudarshan, C. P. Lim, and Y. S. Ong, "Measuring undergraduate students' reliance on Generative AI during problem-solving: Scale development and validation," <em>Comput. Educ.</em>, vol. 234, Art. no. 105329, 2025.</p>
+    <p>[2] C. Zhai, S. Wibowo, and L. D. Li, "The effects of over-reliance on AI dialogue systems on students' cognitive abilities: A systematic review," <em>Smart Learn. Environ.</em>, vol. 11, no. 1, Art. no. 28, 2024.</p>
+    <p>[3] S. Li, J. Liu, and Q. Dong, "Generative artificial intelligence-supported programming education: Effects on learning performance, self-efficacy and processes," <em>Australas. J. Educ. Technol.</em>, vol. 41, no. 1, pp. 45-62, 2025.</p>
+    <p>[4] G. Jo&scaron;t, V. Taneski, and S. Karakati&#269;, "The impact of large language models on programming education and student learning outcomes," <em>Appl. Sci.</em>, vol. 14, no. 10, Art. no. 4115, 2024.</p>
+    <p>[5] S. L&oacute;pez-Pernas, K. Misiejuk, E. Oliveira, and M. Saqr, "The dynamics of the self-regulation process in student-AI interactions: The case of problem-solving in programming education," in <em>Proc. 25th Koli Calling Int. Conf. Comput. Educ. Res.</em>, 2025, pp. 1-12.</p>
+    <p>[6] D. Kohen-Vacs, M. Usher, and M. Jansen, "Integrating generative AI into programming education: Student perceptions and the challenge of correcting AI errors," <em>Int. J. Artif. Intell. Educ.</em>, vol. 35, no. 4, pp. 3166-3184, 2025.</p>
+    <p>[7] J. Prather et al., "The robots are here: Navigating the generative AI revolution in computing education," in <em>Proc. 2023 Work. Group Rep. Innov. Technol. Comput. Sci. Educ.</em>, 2023, pp. 108-159.</p>
+    <p>[8] A. Kharrufa, S. Alghamdi, A. Aziz, and C. Bull, "LLMs integration in software engineering team projects: Roles, impact, and a pedagogical design space," <em>ACM Trans. Comput. Educ.</em>, vol. 26, no. 1, pp. 1-27, 2024.</p>
+    <p>[9] P. Denny et al., "Prompt Problems: A new programming exercise for the generative AI era," in <em>Proc. 55th ACM Tech. Symp. Comput. Sci. Educ.</em>, 2024, pp. 296-302.</p>
+    <p>[10] C. Vieira, J. L. De La Hoz, A. J. Magana, and D. Restrepo, "Engineering students' experiences with ChatGPT to generate code," <em>Comput. Appl. Eng. Educ.</em>, vol. 33, no. 1, Art. no. e70090, 2025.</p>
+    <p>[11] C. E. Shannon, "A mathematical theory of communication," <em>Bell Syst. Tech. J.</em>, vol. 27, no. 3, pp. 379-423, 1948.</p>
+    <p>[12] P. Yang et al., "Large language models for software testing education: An experience report," in <em>Proc. 34th ACM Int. Conf. Found. Softw. Eng.</em>, 2026, pp. 1-12.</p>
+    <p>[13] X. Gong, W. Xu, and A.-L. Qiao, "Exploring undergraduates' computational thinking in progressive prompt-assisted programming learning," <em>Int. J. Educ. Technol. High. Educ.</em>, vol. 22, no. 1, Art. no. 14, 2025.</p>
+    <p>[14] G. Pitts, N. Rani, W. Mildort, and E.-M. Cook, "Students' reliance on AI in higher education: Identifying contributing factors," <em>arXiv preprint</em> arXiv:2506.13845, 2025.</p>
+    <p>[15] J. Zheng et al., "Do students rely on AI? Analysis of student-ChatGPT conversations from a field study," in <em>Proc. 8th AAAI/ACM Conf. AI, Ethics, and Society (AIES)</em>, 2025.</p>
+    <p>[16] G. Salib and Z. Sharafi, "AI or ally? Understanding student reliance on GitHub Copilot and human peers through eye tracking," <em>IEEE Trans. Softw. Eng.</em>, pp. 1-13, 2026, doi: 10.1109/TSE.2026.3705249.</p>
+    <p>[17] T.-Y. Yang et al., "Leveraging LLMs for automated extraction and structuring of educational concepts," <em>Mach. Learn. Knowl. Extr.</em>, vol. 7, no. 3, p. 103, 2025.</p>
+  </div>
+
+</div>
+
+</body>
+</html>

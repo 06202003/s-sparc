@@ -99,20 +99,60 @@ function ssparc_get_wrapped_for_assessment($mydb, $userId, $assessmentId) {
         $asmtQuery = $mydb->query("SELECT assessment_id, title AS assessment_name, course_id, '2026-09-08 16:45:00' AS submission_close_time, 'Pemrograman Komputer' AS course_name, 1 AS is_closed FROM assessments WHERE assessment_id = '$aid' LIMIT 1");
     }
     
-    $assessmentTitle = "Assessment #$assessmentId";
-    $courseName = "Computer Science & Programming";
-    $dueDateStr = "";
-    $isExpired = true; // default to open if no date set
-    
-    if ($asmtQuery && $asmtQuery->num_rows > 0) {
-        $row = $asmtQuery->fetch_assoc();
-        $assessmentTitle = $row['assessment_name'] ?: $assessmentTitle;
-        $courseName = $row['course_name'] ?: $courseName;
-        $dueDateStr = $row['submission_close_time'] ?: "";
-        $isExpired = (bool)($row['is_closed'] ?? true);
+    if (!$asmtQuery || $asmtQuery->num_rows == 0) {
+        return [
+            'status' => 'error',
+            'message' => "Assessment #$assessmentId was not found in the system."
+        ];
     }
     
-    // If not expired and due date exists, return locked status
+    $row = $asmtQuery->fetch_assoc();
+    $courseId = $row['course_id'] ?? '';
+    $assessmentTitle = $row['assessment_name'] ?: "Assessment #$assessmentId";
+    $courseName = $row['course_name'] ?: "Computer Science & Programming";
+    $dueDateStr = $row['submission_close_time'] ?: "";
+    $isExpired = (bool)($row['is_closed'] ?? true);
+    
+    // 2. Guard Course Enrollment & User Access
+    $sessionRole = $_SESSION['role'] ?? 'student';
+    $isAuthorized = false;
+    
+    if ($sessionRole === 'admin') {
+        $isAuthorized = true;
+    } elseif ($sessionRole === 'lecturer') {
+        $lecCheck = $mydb->query("SELECT 1 FROM course WHERE course_id = '$courseId' AND (creator_id = '$uid' OR '$uid' IN (SELECT lecturer_id FROM colecturer WHERE course_id = '$courseId')) LIMIT 1");
+        if ($lecCheck && $lecCheck->num_rows > 0) {
+            $isAuthorized = true;
+        }
+    }
+    
+    if (!$isAuthorized && !empty($courseId)) {
+        // Check student enrollment in this course
+        $enrCheck = $mydb->query("SELECT 1 FROM enrollment WHERE course_id = '$courseId' AND student_id = '$uid'
+                                  UNION
+                                  SELECT 1 FROM game_student_course WHERE course_id = '$courseId' AND student_id = '$uid'
+                                  LIMIT 1");
+        if ($enrCheck && $enrCheck->num_rows > 0) {
+            $isAuthorized = true;
+        }
+    }
+    
+    // Allow demo student if running in demo environment
+    if (!$isAuthorized && $userId === 'student_demo') {
+        $isAuthorized = true;
+    }
+    
+    if (!$isAuthorized) {
+        return [
+            'status' => 'unauthorized',
+            'assessment_id' => (string)$assessmentId,
+            'assessment_title' => $assessmentTitle,
+            'course_name' => $courseName,
+            'message' => "Access denied. You are not enrolled in the course '$courseName' for this assessment."
+        ];
+    }
+    
+    // 3. If not expired and due date exists, return locked status
     if (!$isExpired && !empty($dueDateStr)) {
         return [
             'status' => 'locked',
@@ -125,7 +165,22 @@ function ssparc_get_wrapped_for_assessment($mydb, $userId, $assessmentId) {
         ];
     }
     
-    // 2. Fetch Chat History / Prompts for this user & assessment
+    // 4. Resolve exact user IDs / username to prevent cross-account pollution
+    $userInClauses = ["'$uid'"];
+    $uQuery = $mydb->query("SELECT username FROM user WHERE user_id = '$uid' LIMIT 1");
+    if ($uQuery && $uQuery->num_rows > 0) {
+        $uRow = $uQuery->fetch_assoc();
+        $uname = $mydb->real_escape_string($uRow['username']);
+        $userInClauses[] = "'$uname'";
+        $uuQuery = $mydb->query("SELECT user_id FROM users WHERE username = '$uname' LIMIT 1");
+        if ($uuQuery && $uuQuery->num_rows > 0) {
+            $uuRow = $uuQuery->fetch_assoc();
+            $userInClauses[] = "'" . $mydb->real_escape_string($uuRow['user_id']) . "'";
+        }
+    }
+    $userInStr = implode(',', array_unique($userInClauses));
+    
+    // 5. Fetch Chat History / Prompts STRICTLY for this user & assessment
     $prompts = [];
     $hasTableChat = false;
     $tblCheck = $mydb->query("SHOW TABLES LIKE 'chat_history'");
@@ -135,8 +190,8 @@ function ssparc_get_wrapped_for_assessment($mydb, $userId, $assessmentId) {
     
     if ($hasTableChat) {
         $chatQuery = $mydb->query("SELECT id, role, content, created_at FROM chat_history 
-                                   WHERE (user_id = '$uid' OR user_id = '218' OR user_id = 'student_demo')
-                                     AND (assessment_id = '$aid' OR assessment_id = '248' OR assessment_id = '247')
+                                   WHERE user_id IN ($userInStr)
+                                     AND assessment_id = '$aid'
                                      AND role = 'user'
                                    ORDER BY created_at ASC");
         if ($chatQuery && $chatQuery->num_rows > 0) {
@@ -154,22 +209,26 @@ function ssparc_get_wrapped_for_assessment($mydb, $userId, $assessmentId) {
         }
     }
     
-    // Fallback realistic prompt telemetry if no prompts exist yet in db
+    // 6. Handle No Interactions Case (100% Human Independent Solved, No Fake Dummy Data)
     if (empty($prompts)) {
-        $sampleTexts = [
-            "[CONTEXT: {$assessmentTitle}] How do we construct a recursive helper function in Python to solve {$assessmentTitle} with optimal base cases and O(N) stack depth?",
-            "Given input list[int] and target parameter n, how should the recursive step transition between subproblems without duplicate state calculations?",
-            "IndexError or RecursionError when test cases exceed recursion depth limit of 1000, please explain how to add boundary validation."
+        return [
+            'status' => 'no_interactions',
+            'is_expired' => true,
+            'assessment_id' => (string)$assessmentId,
+            'assessment_title' => $assessmentTitle,
+            'course_name' => $courseName,
+            'message' => 'No S-SPARC AI prompts were recorded for this assessment. This assignment was solved 100% independently without AI assistance.',
+            'summary' => [
+                'total_prompts' => 0,
+                'total_tokens_used' => 0,
+                'tokens_saved_fastpath' => 0,
+                'fast_path_hits' => 0,
+                'overall_score' => 100,
+                'literacy_tier' => 'Independent Scholar (Human-Only)',
+                'tier_badge' => 'Pure Human',
+                'badge_color' => '#10B981'
+            ]
         ];
-        
-        foreach ($sampleTexts as $idx => $st) {
-            $prompts[] = [
-                'id' => (string)($idx + 1),
-                'prompt' => $st,
-                'timestamp' => date('Y-m-d H:i:s'),
-                'analysis' => ssparc_analyze_prompt($st)
-            ];
-        }
     }
     
     $totalPrompts = count($prompts);
@@ -337,17 +396,35 @@ function ssparc_get_student_aggregated_profile($mydb, $userId) {
         return [
             'status' => 'success',
             'user_id' => $userId,
-            'literacy_level' => 'Tier A (Prompt Architect)',
-            'cognitive_independence_index' => 0.88,
-            'average_cioe_score' => 0.85,
-            'average_prompt_quality' => 0.82,
-            'conceptual_mode_ratio' => 0.35,
-            'fast_path_utilization_rate' => 0.42,
-            'bloom_distribution' => [35, 48, 22]
+            'literacy_level' => 'Independent Scholar (Human-Only)',
+            'persona_title' => 'The Independent Scholar',
+            'cognitive_independence_index' => 1.0,
+            'average_cioe_score' => 0.0,
+            'average_entropy' => 0.0,
+            'average_prompt_quality' => 0.0,
+            'conceptual_mode_ratio' => 0.0,
+            'fast_path_utilization_rate' => 0.0,
+            'bloom_distribution' => [0, 0, 0]
         ];
     }
 
     $uid = $mydb->real_escape_string($userId);
+    
+    // Resolve user identifiers (user_id, username, uuid)
+    $userInClauses = ["'$uid'"];
+    $uQuery = $mydb->query("SELECT username FROM user WHERE user_id = '$uid' LIMIT 1");
+    if ($uQuery && $uQuery->num_rows > 0) {
+        $uRow = $uQuery->fetch_assoc();
+        $uname = $mydb->real_escape_string($uRow['username']);
+        $userInClauses[] = "'$uname'";
+        $uuQuery = $mydb->query("SELECT user_id FROM users WHERE username = '$uname' LIMIT 1");
+        if ($uuQuery && $uuQuery->num_rows > 0) {
+            $uuRow = $uuQuery->fetch_assoc();
+            $userInClauses[] = "'" . $mydb->real_escape_string($uuRow['user_id']) . "'";
+        }
+    }
+    $userInStr = implode(',', array_unique($userInClauses));
+
     $prompts = [];
     $hasTableChat = false;
     $tblCheck = $mydb->query("SHOW TABLES LIKE 'chat_history'");
@@ -357,7 +434,7 @@ function ssparc_get_student_aggregated_profile($mydb, $userId) {
 
     if ($hasTableChat) {
         $chatQuery = $mydb->query("SELECT id, role, content, created_at FROM chat_history 
-                                   WHERE (user_id = '$uid' OR user_id = '218' OR user_id = 'student_demo')
+                                   WHERE user_id IN ($userInStr)
                                      AND role = 'user'
                                    ORDER BY created_at ASC");
         if ($chatQuery && $chatQuery->num_rows > 0) {
@@ -371,14 +448,19 @@ function ssparc_get_student_aggregated_profile($mydb, $userId) {
     }
 
     if (empty($prompts)) {
-        $sampleTexts = [
-            "[CONTEXT: Problem Formulation] How do we construct a recursive helper function in Python with optimal base cases and O(N) stack depth?",
-            "Given input list[int] and target parameter n, how should the recursive step transition between subproblems without duplicate state calculations?",
-            "IndexError or RecursionError when test cases exceed recursion depth limit of 1000, please explain how to add boundary validation."
+        return [
+            'status' => 'success',
+            'user_id' => $userId,
+            'literacy_level' => 'Independent Scholar (Human-Only)',
+            'persona_title' => 'The Independent Scholar',
+            'cognitive_independence_index' => 1.0,
+            'average_cioe_score' => 0.0,
+            'average_entropy' => 0.0,
+            'average_prompt_quality' => 0.0,
+            'conceptual_mode_ratio' => 0.0,
+            'fast_path_utilization_rate' => 0.0,
+            'bloom_distribution' => [0, 0, 0]
         ];
-        foreach ($sampleTexts as $st) {
-            $prompts[] = ssparc_analyze_prompt($st);
-        }
     }
 
     $total = count($prompts);
@@ -437,9 +519,9 @@ function ssparc_get_student_aggregated_profile($mydb, $userId) {
         'conceptual_mode_ratio' => $conceptualRatio,
         'fast_path_utilization_rate' => $fastPathRate,
         'bloom_distribution' => [
-            max(1, $c1c2Count),
-            max(1, $c3c4Count),
-            max(1, $c5c6Count)
+            max(0, $c1c2Count),
+            max(0, $c3c4Count),
+            max(0, $c5c6Count)
         ]
     ];
 }

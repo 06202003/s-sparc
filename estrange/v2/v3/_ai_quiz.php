@@ -160,7 +160,8 @@ function extract_gemini_text($response)
     $decoded = json_decode($response, true);
     $text = $decoded['candidates'][0]['content']['parts'][0]['text'] ?? '';
     $text = trim($text);
-    $text = preg_replace('/^```(?:json)?\s*/i', '', $text);$text = preg_replace('/\s*```$/i', '', $text);
+    $text = preg_replace('/^```(?:json)?\s*/i', '', $text);
+    $text = preg_replace('/\s*```$/i', '', $text);
     return trim($text);
 }
 
@@ -183,9 +184,72 @@ function validate_quiz_payload($payload)
     return true;
 }
 
+function detect_quiz_language($submission = [], $rawCode = '')
+{
+    // 1. Deteksi Negara dari Cloudflare / GeoIP cPanel
+    $countryCode = strtoupper(trim(
+        $_SERVER['HTTP_CF_IPCOUNTRY'] ?? 
+        $_SERVER['GEOIP_COUNTRY_CODE'] ?? 
+        $_SERVER['HTTP_X_COUNTRY_CODE'] ?? 
+        $_SERVER['HTTP_X_GEOIP_COUNTRY'] ?? 
+        ''
+    ));
+
+    if (!empty($countryCode) && $countryCode !== 'XX') {
+        // Jika IP berasal dari Indonesia, gunakan Bahasa Indonesia
+        if ($countryCode === 'ID') {
+            return 'id';
+        }
+        // Jika IP berasal dari luar negeri (US, SG, AU, dll), gunakan Bahasa Inggris
+        return 'en';
+    }
+
+    // 2. Deteksi dari Locale / Bahasa Browser Mahasiswa (HTTP_ACCEPT_LANGUAGE)
+    $acceptLang = strtolower(trim($_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? ''));
+    if (!empty($acceptLang)) {
+        if (preg_match('/(^|,|\s)(id|id-id|in-id|in)(;|,|$)/i', $acceptLang)) {
+            return 'id';
+        }
+    }
+
+    // 3. Deteksi dari Konteks Tugas/Kode jika ada penanda kuat
+    $contextText = ($submission['course_name'] ?? '') . ' ' . ($submission['assessment_name'] ?? '');
+    if (!empty($rawCode)) {
+        $contextText .= ' ' . substr($rawCode, 0, 500);
+    }
+    $lowerText = strtolower($contextText);
+    if (preg_match('/\b(tugas|praktikum|pertemuan|fungsi|variabel|struktur data|algoritma)\b/i', $lowerText)) {
+        return 'id';
+    }
+
+    // 4. Fallback: Baca settingan $human_language dari _config.php tanpa memodifikasi global
+    global $human_language;
+    if (!empty($human_language)) {
+        return strtolower(trim($human_language));
+    }
+    if (!empty($GLOBALS['human_language'])) {
+        return strtolower(trim($GLOBALS['human_language']));
+    }
+
+    $configPath = __DIR__ . DIRECTORY_SEPARATOR . '_config.php';
+    if (file_exists($configPath) && is_readable($configPath)) {
+        $content = file_get_contents($configPath);
+        if ($content !== false && preg_match('/\$human_language\s*=\s*["\']([^"\']+)["\']/i', $content, $matches)) {
+            return strtolower(trim($matches[1]));
+        }
+    }
+
+    $envLang = getenv('HUMAN_LANGUAGE');
+    if (!empty($envLang)) {
+        return strtolower(trim($envLang));
+    }
+
+    return 'en';
+}
+
 function generate_submission_quiz($db, $submissionId, $studentId)
 {
-    $stmt = $db->prepare('SELECT s.file_path, s.filename, a.name AS assessment_name, c.name AS course_name, u.username FROM submission s INNER JOIN assessment a ON a.assessment_id = s.assessment_id INNER JOIN course c ON c.course_id = a.course_id INNER JOIN user u ON u.user_id = s.submitter_id WHERE s.submission_id = ? AND s.submitter_id = ?');
+    $stmt = $db->prepare('SELECT s.file_path, s.filename, a.name AS assessment_name, a.description AS assessment_description, c.name AS course_name, u.username FROM submission s INNER JOIN assessment a ON a.assessment_id = s.assessment_id INNER JOIN course c ON c.course_id = a.course_id INNER JOIN user u ON u.user_id = s.submitter_id WHERE s.submission_id = ? AND s.submitter_id = ?');
     if (!$stmt) {
         $err = 'Database query failed.';
         set_quiz_failed($db, $submissionId, $err);
@@ -198,6 +262,7 @@ function generate_submission_quiz($db, $submissionId, $studentId)
 
     $codePath = $submission ? $submission['file_path'] : '';
     $foundPath = null;
+
     if ($codePath !== '') {
         $candidates = [
             $codePath,
@@ -233,8 +298,12 @@ function generate_submission_quiz($db, $submissionId, $studentId)
     }
 
     $rawCode = read_submission_source_code($foundPath, $submission['filename']);
+
+    // Deteksi bahasa khusus AI Quiz: negara -> browser locale -> konteks tugas -> config fallback
+    $quizLanguage = detect_quiz_language($submission, $rawCode);
+    $isEnglish = ($quizLanguage === 'en');
     if ($rawCode === '') {
-        $err = 'File submission tidak berisi source code yang dapat dibaca.';
+        $err = $isEnglish ? 'Submission file does not contain readable source code.' : 'File submission tidak berisi source code yang dapat dibaca.';
         set_quiz_failed($db, $submissionId, $err);
         return ['ok' => false, 'error' => $err];
     }
@@ -242,40 +311,67 @@ function generate_submission_quiz($db, $submissionId, $studentId)
     $code = mb_convert_encoding($rawCode, 'UTF-8', 'UTF-8');
     $code = substr($code, 0, 50000);
 
+    // Pre-prompt / System Instruction untuk AI
+    if ($isEnglish) {
+        $systemPreprompt = "You are an expert Computer Science educator and automated assessment verification assistant.\n"
+            . "Your goal is to verify that the student actually wrote and understands the code they submitted.\n\n"
+            . "STRICT INSTRUCTIONS:\n"
+            . "1. LANGUAGE: You MUST write all questions, options, and text strictly in ENGLISH.\n"
+            . "2. CODE GROUNDING: Generate exactly 3 multiple-choice questions that can ONLY be answered by carefully inspecting the provided student code. Every question must refer to actual variables, functions, loop bounds, conditions, recursion logic, or state flows present in the code.\n"
+            . "3. NO GENERIC THEORY: Never ask generic programming questions, syntax definitions, or theoretical textbook questions.\n"
+            . "4. OPTIONS: Each question must have exactly 4 options (A, B, C, D) with 1 correct option and 3 plausible but incorrect distractors.\n"
+            . "5. FORMAT: Return strictly valid JSON adhering to the specified schema with no markdown or additional conversational text.";
 
-    $prompt = "Buatkan tepat 3 pertanyaan pilihan ganda dalam bahasa Indonesia yang sangat spesifik dan hanya dapat dijawab dengan membaca kode yang dibuat mahasiswa berikut.\n"
-        . "Jangan membuat pertanyaan umum tentang materi atau konsep teori; semua pertanyaan harus berakar pada kode yang diberikan.\n"
-        . "Mata kuliah: " . $submission['course_name'] . "\n"
-        . "Tugas: " . $submission['assessment_name'] . "\n"
-        . "Pengirim: " . $submission['username'] . "\n\n"
-        . "Aturan penting:\n"
-        . "1. Pertanyaan harus merujuk pada variabel, fungsi, kondisi, perulangan, input/output, state, atau alur logika yang benar-benar ada di kode mahasiswa.\n"
-        . "2. Pilihan jawaban harus dibuat berdasarkan detail kode yang terlihat, bukan definisi umum.\n"
-        . "3. Hindari pertanyaan tentang pengertian umum bahasa pemrograman, konsep teori, atau materi kuliah secara luas.\n"
-        . "4. Fokus pada apa yang dilakukan kode, mengapa kondisi tertentu ada, hasil dari sebuah fungsi, atau dampak dari pernyataan tertentu.\n"
-        . "5. Setiap soal harus memiliki 4 opsi (A, B, C, D) dan hanya 1 opsi benar.\n"
-        . "6. Opsi yang salah harus masuk akal jika seseorang tidak membaca kode dengan teliti, tetapi jelas keliru saat dibandingkan dengan kode asli.\n"
-        . "7. Gunakan nama variabel, fungsi, dan struktur yang ada di kode agar soal terasa spesifik terhadap karya mahasiswa tersebut.\n"
-        . "8. Jangan gunakan teks tambahan, jangan beri penjelasan, dan jangan sertakan markdown.\n"
-        . "Kembalikan format JSON persis seperti contoh berikut:\n"
-        . "{\n"
-        . '  "questions": [' . "\n"
-        . '    {"question": "...", "options": {"A": "...", "B": "...", "C": "...", "D": "..."}, "correct_option": "A"}' . "\n"
-        . "  ]\n"
-        . "}\n\n"
-        . "Kode Tugas Mahasiswa:\n" . $code;
+        $userPrompt = "Course: " . $submission['course_name'] . "\n"
+            . "Assignment: " . $submission['assessment_name'] . "\n"
+            . "Submitter: " . $submission['username'] . "\n\n"
+            . "Generate 3 verification multiple-choice questions in English based exclusively on this student code:\n\n"
+            . "```\n" . $code . "\n```\n\n"
+            . "Return strictly the following JSON structure:\n"
+            . "{\n"
+            . '  "questions": [' . "\n"
+            . '    {"question": "...", "options": {"A": "...", "B": "...", "C": "...", "D": "..."}, "correct_option": "A"}' . "\n"
+            . "  ]\n"
+            . "}";
+    } else {
+        $systemPreprompt = "Anda adalah asisten dosen Ilmu Komputer dan validator otomatis kode tugas mahasiswa.\n"
+            . "Tujuan Anda adalah memverifikasi bahwa mahasiswa benar-benar menulis dan memahami kode yang mereka kumpulkan.\n\n"
+            . "PETUNJUK KRUSIAL:\n"
+            . "1. BAHASA: Anda WAJIB menyusun seluruh pertanyaan, pilihan jawaban, dan teks dalam BAHASA INDONESIA.\n"
+            . "2. BERAKAR PADA KODE: Buatkan tepat 3 pertanyaan pilihan ganda yang HANYA dapat dijawab dengan membaca kode mahasiswa yang dilampirkan. Setiap soal harus merujuk langsung pada nama variabel, fungsi, kondisi logika, batas perulangan, rekursi, atau alur instruksi asli di kode.\n"
+            . "3. HINDARI TEORI UMUM: Jangan menanyakan pengertian umum bahasa pemrograman, teori buku, atau konsep materi di luar konteks kode.\n"
+            . "4. OPSI: Setiap soal harus memiliki 4 opsi (A, B, C, D) dengan 1 jawaban benar dan 3 opsi pengecoh yang masuk akal namun salah.\n"
+            . "5. FORMAT: Kembalikan murni format JSON sesuai skema yang diminta tanpa pembungkus markdown atau teks tambahan.";
 
-    // Tambahkan opsi penanganan UTF-8 invalid saat encode JSON
+        $userPrompt = "Mata kuliah: " . $submission['course_name'] . "\n"
+            . "Tugas: " . $submission['assessment_name'] . "\n"
+            . "Pengirim: " . $submission['username'] . "\n\n"
+            . "Buatkan 3 pertanyaan verifikasi pilihan ganda dalam Bahasa Indonesia yang berakar langsung pada kode mahasiswa berikut:\n\n"
+            . "```\n" . $code . "\n```\n\n"
+            . "Kembalikan format JSON persis seperti berikut:\n"
+            . "{\n"
+            . '  "questions": [' . "\n"
+            . '    {"question": "...", "options": {"A": "...", "B": "...", "C": "...", "D": "..."}, "correct_option": "A"}' . "\n"
+            . "  ]\n"
+            . "}";
+    }
+
+    // Susun payload dengan system_instruction (preprompt) dan contents
     $bodyData = [
+        'system_instruction' => [
+            'parts' => [
+                ['text' => $systemPreprompt]
+            ]
+        ],
         'contents' => [
             [
                 'parts' => [
-                    ['text' => $prompt]
+                    ['text' => $userPrompt]
                 ]
             ]
         ],
         'generationConfig' => [
-            'temperature' => 0.3,
+            'temperature' => 0.2,
             'responseMimeType' => 'application/json'
         ]
     ];
@@ -283,13 +379,13 @@ function generate_submission_quiz($db, $submissionId, $studentId)
     $body = json_encode($bodyData, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE);
 
     if (!$body) {
-        $err = 'Gagal menyusun payload JSON untuk AI API.';
+        $err = $isEnglish ? 'Failed to construct JSON payload for AI API.' : 'Gagal menyusun payload JSON untuk AI API.';
         set_quiz_failed($db, $submissionId, $err);
         return ['ok' => false, 'error' => $err];
     }
 
     $model = get_quiz_env('GEMINI_MODEL', 'gemini-3.1-flash-lite');
-    $lastError = 'Gemini request failed.';
+    $lastError = $isEnglish ? 'Gemini request failed.' : 'Permintaan ke Gemini gagal.';
 
     foreach ($keys as $key) {
         $url = 'https://generativelanguage.googleapis.com/v1beta/models/' . rawurlencode($model) . ':generateContent?key=' . rawurlencode($key);
@@ -309,14 +405,14 @@ function generate_submission_quiz($db, $submissionId, $studentId)
         curl_close($curl);
 
         if ($response === false) {
-            $lastError = 'cURL Error: ' . ($curlError ?: 'Gagal terhubung ke Gemini API.');
+            $lastError = 'cURL Error: ' . ($curlError ?: ($isEnglish ? 'Failed to connect to Gemini API.' : 'Gagal terhubung ke Gemini API.'));
             continue;
         }
 
         if ($httpCode < 200 || $httpCode >= 300) {
             $errorResponse = json_decode((string)$response, true);
             $apiMessage = $errorResponse['error']['message'] ?? '';
-            $lastError = 'Gemini API Error (' . $httpCode . '): ' . ($apiMessage ?: 'Permintaan ditolak.');
+            $lastError = 'Gemini API Error (' . $httpCode . '): ' . ($apiMessage ?: ($isEnglish ? 'Request rejected.' : 'Permintaan ditolak.'));
             continue;
         }
 
@@ -324,7 +420,7 @@ function generate_submission_quiz($db, $submissionId, $studentId)
         $payload = json_decode($extractedText, true);
 
         if (!validate_quiz_payload($payload)) {
-            $lastError = 'Format JSON dari Gemini tidak sesuai spesifikasi.';
+            $lastError = $isEnglish ? 'JSON format from Gemini does not match specification.' : 'Format JSON dari Gemini tidak sesuai spesifikasi.';
             continue;
         }
 
@@ -354,7 +450,7 @@ function generate_submission_quiz($db, $submissionId, $studentId)
             return ['ok' => true];
         } catch (Throwable $exception) {
             $db->rollback();
-            return ['ok' => false, 'error' => 'Gagal menyimpan quiz ke database: ' . $exception->getMessage()];
+            return ['ok' => false, 'error' => ($isEnglish ? 'Failed to save quiz to database: ' : 'Gagal menyimpan quiz ke database: ') . $exception->getMessage()];
         }
     }
 
@@ -387,4 +483,3 @@ function abort_submission_quiz($db, $quizId)
         $stmt->close();
     }
 }
- 

@@ -223,10 +223,6 @@ select.select2-hidden-accessible {
       
       <div class="relative z-10">
         <div class="mb-5">
-          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/80 text-[11px] font-bold mb-3 shadow-2xs">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>Student Learning Portal</span>
-          </div>
           <div>
             <img src="strange_html_layout_additional_files/logo.png" alt="E-STRANGE Logo" class="h-14 sm:h-16 w-auto object-contain drop-shadow-xs">
           </div>
@@ -272,9 +268,9 @@ select.select2-hidden-accessible {
       <div class="pt-4 border-t border-slate-200/80 text-[11px] text-slate-500 font-semibold relative z-10 flex items-center justify-between">
         <span class="flex items-center gap-1.5">
           <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
-          <span>Maranatha Christian University</span>
+          <span>Smart Technology &amp; Engineering Faculty - Maranatha Christian University</span>
         </span>
-        <span class="font-mono text-slate-400">v2.0</span>
+        <span class="font-mono text-slate-400">v3.0.1</span>
       </div>
     </div>
 
@@ -339,11 +335,11 @@ select.select2-hidden-accessible {
         </form>
       </div>
 
-      <div class="mt-6 pt-4 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-        <span class="text-slate-500 font-medium">Need a student account?</span>
-        <a href="student_registration.php" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-indigo-50 to-sky-50 hover:from-indigo-100 hover:to-sky-100 border border-indigo-200/70 text-indigo-950 font-bold transition shadow-2xs">
+      <div class="mt-6 pt-4 border-t border-slate-200/80 text-center text-xs text-slate-500">
+        <span>Don't have an account?</span>
+        <a href="student_registration.php" class="ml-1.5 inline-flex items-center gap-1 text-[#00A0A5] hover:text-[#008488] font-bold transition hover:underline">
           <span>Register as Student</span>
-          <svg class="w-3.5 h-3.5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
         </a>
       </div>
     </div>

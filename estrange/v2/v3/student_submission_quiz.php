@@ -58,12 +58,14 @@ if (!empty($quiz['quiz_expires_at'])) {
     }
 }
 
+$isEnglish = (($human_language ?? 'en') === 'en');
+
 $message = '';
 // Check if quiz has genuinely expired (with 10s grace tolerance to avoid false triggers on page load)
 if ($quiz['status'] === 'ready' && empty($quiz['answered_at']) && !empty($quiz['quiz_expires_at'])) {
     $expiresAtUnix = strtotime($quiz['quiz_expires_at']);
     if ($expiresAtUnix !== false && $expiresAtUnix < ($nowUnix - 10)) {
-        $message = 'Waktu menjawab sudah habis. Nilai quiz: 0/3.';
+        $message = $isEnglish ? 'Time is up. Quiz score: 0/3.' : 'Waktu menjawab sudah habis. Nilai quiz: 0/3.';
         $nowStr = date('Y-m-d H:i:s', $nowUnix);
         $expiredStmt = $db->prepare('UPDATE generated_quizzes SET answered_at = ?, score_points = 0 WHERE quiz_id = ? AND answered_at IS NULL');
         $expiredStmt->bind_param('si', $nowStr, $quiz['quiz_id']);
@@ -80,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $quiz['status'] === 'ready' && empt
         abort_submission_quiz($db, (int)$quiz['quiz_id']);
         $quiz['answered_at'] = date('Y-m-d H:i:s', $nowUnix);
         $quiz['score_points'] = 0;
-        $message = 'Sesi quiz dibatalkan karena Anda berpindah tab. Nilai: 0/3.';
+        $message = $isEnglish ? 'Quiz session cancelled because you switched tabs. Score: 0/3.' : 'Sesi quiz dibatalkan karena Anda berpindah tab. Nilai: 0/3.';
         if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
             header('Content-Type: application/json');
             echo json_encode(['ok' => true]);
@@ -94,14 +96,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $quiz['status'] === 'ready' && empt
         $expiredStmt->close();
         $quiz['answered_at'] = $nowStr;
         $quiz['score_points'] = 0;
-        $message = 'Waktu menjawab sudah habis. Jawaban tidak dapat dikirim. Nilai: 0/3.';
+        $message = $isEnglish ? 'Time is up. Answers cannot be submitted. Score: 0/3.' : 'Waktu menjawab sudah habis. Jawaban tidak dapat dikirim. Nilai: 0/3.';
         if (isset($_POST['ajax']) && $_POST['ajax'] === '1') {
             header('Content-Type: application/json');
             echo json_encode(['ok' => true]);
             exit;
         }
     } elseif (empty($quiz['quiz_expires_at']) || (strtotime($quiz['quiz_expires_at']) < ($nowUnix - 10))) {
-        $message = 'Waktu menjawab sudah habis. Jawaban tidak dapat dikirim. Nilai: 0/3.';
+        $message = $isEnglish ? 'Time is up. Answers cannot be submitted. Score: 0/3.' : 'Waktu menjawab sudah habis. Jawaban tidak dapat dikirim. Nilai: 0/3.';
         $nowStr = date('Y-m-d H:i:s', $nowUnix);
         $expiredStmt = $db->prepare('UPDATE generated_quizzes SET answered_at = ?, score_points = 0 WHERE quiz_id = ? AND answered_at IS NULL');
         $expiredStmt->bind_param('si', $nowStr, $quiz['quiz_id']);
@@ -135,9 +137,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $quiz['status'] === 'ready' && empt
             $updateQuiz->close();
             $quiz['answered_at'] = $nowStr;
             $quiz['score_points'] = $score;
-            $message = 'Quiz selesai. Jawaban benar: ' . $correctCount . ' dari 3.';
+            $message = $isEnglish ? ('Quiz completed. Correct answers: ' . $correctCount . ' of 3.') : ('Quiz selesai. Jawaban benar: ' . $correctCount . ' dari 3.');
         } else {
-            $message = 'Jawab semua pertanyaan terlebih dahulu.';
+            $message = $isEnglish ? 'Please answer all questions first.' : 'Jawab semua pertanyaan terlebih dahulu.';
         }
     }
 }
@@ -160,11 +162,11 @@ if (!empty($quiz['quiz_expires_at'])) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="id">
+<html lang="<?= $isEnglish ? 'en' : 'id' ?>">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>E-STRANGE: Quiz Submission</title>
+<title>E-STRANGE: <?= $isEnglish ? 'Submission Quiz' : 'Quiz Submission' ?></title>
 <link rel="icon" href="strange_html_layout_additional_files/icon.png">
 <script src="https://cdn.tailwindcss.com"></script>
 <!-- SweetAlert2 -->
@@ -175,13 +177,13 @@ if (!empty($quiz['quiz_expires_at'])) {
 <body class="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 text-slate-900">
 <main class="min-h-screen flex items-center justify-center p-4">
 <div class="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white p-6 shadow-xl sm:p-8">
-<h1 class="text-xl font-bold">Verifikasi Kode Submission</h1>
-<p class="mt-2 text-sm text-slate-500">Jawab tiga pertanyaan singkat berdasarkan kode yang baru Anda kirim.</p>
+<h1 class="text-xl font-bold"><?= $isEnglish ? 'Submission Code Verification' : 'Verifikasi Kode Submission' ?></h1>
+<p class="mt-2 text-sm text-slate-500"><?= $isEnglish ? 'Answer three short questions based on the code you just submitted.' : 'Jawab tiga pertanyaan singkat berdasarkan kode yang baru Anda kirim.' ?></p>
 <?php if ($quiz['status'] === 'pending'): ?>
 <div class="mt-8 rounded-xl border border-teal-200 bg-teal-50 p-6 text-center">
 <div class="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-teal-200 border-t-teal-600"></div>
-<p class="font-semibold text-teal-900">Soal sedang dibuat...</p>
-<p class="mt-2 text-sm text-teal-700">Mohon tetap berada di halaman ini sampai soal muncul.</p>
+<p class="font-semibold text-teal-900"><?= $isEnglish ? 'Generating questions...' : 'Soal sedang dibuat...' ?></p>
+<p class="mt-2 text-sm text-teal-700"><?= $isEnglish ? 'Please remain on this page until the questions appear.' : 'Mohon tetap berada di halaman ini sampai soal muncul.' ?></p>
 </div>
 <script>
 setInterval(function () {
@@ -195,23 +197,23 @@ setInterval(function () {
 }, 2000);
 </script>
 <?php elseif ($quiz['status'] === 'failed'): ?>
-<div class="mt-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">Soal tidak dapat dibuat: <?= htmlspecialchars($quiz['error_message'] ?: 'Kesalahan tidak diketahui.') ?></div>
-<a href="student_submission_quiz.php?submission_id=<?= (int)$submissionId ?>&retry=1" class="mt-6 block rounded-xl bg-teal-600 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-teal-700 transition">Coba Generate Lagi</a>
-<a href="student_submission.php" class="mt-6 block rounded-xl bg-slate-900 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-slate-800 transition">Kembali ke Submission</a>
+<div class="mt-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800"><?= $isEnglish ? 'Questions could not be generated: ' : 'Soal tidak dapat dibuat: ' ?><?= htmlspecialchars($quiz['error_message'] ?: ($isEnglish ? 'Unknown error.' : 'Kesalahan tidak diketahui.')) ?></div>
+<a href="student_submission_quiz.php?submission_id=<?= (int)$submissionId ?>&retry=1" class="mt-6 block rounded-xl bg-teal-600 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-teal-700 transition"><?= $isEnglish ? 'Try Generating Again' : 'Coba Generate Lagi' ?></a>
+<a href="student_submission.php" class="mt-6 block rounded-xl bg-slate-900 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-slate-800 transition"><?= $isEnglish ? 'Back to Submission' : 'Kembali ke Submission' ?></a>
 <?php elseif (!empty($quiz['answered_at'])): ?>
 <div class="mt-6 rounded-xl border <?= (float)$quiz['score_points'] >= 2 ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-amber-200 bg-amber-50 text-amber-800' ?> p-4 text-sm font-medium">
-<div class="font-bold text-base mb-1"><?= (float)$quiz['score_points'] >= 2 ? '🎉 Quiz Berhasil Diselesaikan!' : '⚠️ Quiz Selesai' ?></div>
-<?= htmlspecialchars($message ?: 'Sesi quiz telah selesai.') ?> Nilai quiz Anda: <span class="font-bold text-lg"><?= htmlspecialchars((string)$quiz['score_points']) ?>/3</span>.
+<div class="font-bold text-base mb-1"><?= (float)$quiz['score_points'] >= 2 ? ($isEnglish ? '🎉 Quiz Completed Successfully!' : '🎉 Quiz Berhasil Diselesaikan!') : ($isEnglish ? '⚠️ Quiz Finished' : '⚠️ Quiz Selesai') ?></div>
+<?= htmlspecialchars($message ?: ($isEnglish ? 'Quiz session has ended.' : 'Sesi quiz telah selesai.')) ?> <?= $isEnglish ? 'Your quiz score:' : 'Nilai quiz Anda:' ?> <span class="font-bold text-lg"><?= htmlspecialchars((string)$quiz['score_points']) ?>/3</span>.
 </div>
-<a href="student_submission.php" class="mt-6 block rounded-xl bg-teal-600 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-teal-700 transition">Kembali ke Submission</a>
+<a href="student_submission.php" class="mt-6 block rounded-xl bg-teal-600 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-teal-700 transition"><?= $isEnglish ? 'Back to Submission' : 'Kembali ke Submission' ?></a>
 <?php if (!empty($message)): ?>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     if (typeof Swal !== 'undefined') {
         Swal.fire({
             icon: '<?= (float)$quiz['score_points'] >= 2 ? 'success' : 'info' ?>',
-            title: 'Hasil Quiz',
-            text: <?= json_encode($message . ' (Nilai: ' . $quiz['score_points'] . '/3)') ?>,
+            title: '<?= $isEnglish ? 'Quiz Result' : 'Hasil Quiz' ?>',
+            text: <?= json_encode($message . ($isEnglish ? ' (Score: ' : ' (Nilai: ') . $quiz['score_points'] . '/3)') ?>,
             confirmButtonColor: '#0d9488',
             confirmButtonText: 'OK'
         });
@@ -221,10 +223,10 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php endif; ?>
 <?php else: ?>
 <form method="post" id="quiz-form" class="mt-6 space-y-6">
-<div class="sticky top-3 z-10 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-bold text-amber-900 shadow-sm">
+<div id="quiz-timer-box" class="sticky top-3 z-10 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm font-bold text-amber-900 shadow-sm transition-all duration-300">
   <span class="flex items-center gap-2">
-    <svg class="w-4 h-4 text-amber-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-    Waktu Tersisa
+    <svg id="quiz-timer-icon" class="w-4 h-4 text-amber-600 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+    <span id="quiz-timer-label"><?= $isEnglish ? 'Time Remaining' : 'Waktu Tersisa' ?></span>
   </span>
   <span id="quiz-timer" class="font-mono text-base font-extrabold text-amber-800">01:00</span>
 </div>
@@ -237,14 +239,37 @@ document.addEventListener('DOMContentLoaded', function() {
 </fieldset>
 <?php endforeach; ?>
 <?php if ($message): ?><p class="text-sm font-semibold text-rose-700"><?= htmlspecialchars($message) ?></p><?php endif; ?>
-<button class="w-full rounded-xl bg-teal-600 px-4 py-3 text-sm font-bold text-white hover:bg-teal-700 shadow-md transition" type="submit">Kirim Jawaban</button>
+<button class="w-full rounded-xl bg-teal-600 px-4 py-3 text-sm font-bold text-white hover:bg-teal-700 shadow-md transition" type="submit"><?= $isEnglish ? 'Submit Answers' : 'Kirim Jawaban' ?></button>
 </form>
 <script>
 (function () {
+    var isEnglish = <?= $isEnglish ? 'true' : 'false' ?>;
     var remainingSeconds = <?= (int)$remainingSeconds ?>;
     var startTime = performance.now();
     var timer = document.getElementById('quiz-timer');
+    var timerBox = document.getElementById('quiz-timer-box');
     var isExpiredHandled = false;
+    var is10sAlertTriggered = false;
+
+    function trigger10sAlert() {
+        if (typeof Swal !== 'undefined') {
+            var Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 4500,
+                timerProgressBar: true,
+                didOpen: function(toast) {
+                    toast.addEventListener('mouseenter', Swal.stopTimer);
+                    toast.addEventListener('mouseleave', Swal.resumeTimer);
+                }
+            });
+            Toast.fire({
+                icon: 'warning',
+                title: isEnglish ? '⚠️ Only 10 seconds remaining! Submit your answers soon.' : '⚠️ Waktu tinggal 10 detik lagi! Segera kirim jawaban Anda.'
+            });
+        }
+    }
 
     function handleTimeExpired() {
         if (isExpiredHandled || quizSubmitted) return;
@@ -265,17 +290,17 @@ document.addEventListener('DOMContentLoaded', function() {
         if (typeof Swal !== 'undefined') {
             Swal.fire({
                 icon: 'warning',
-                title: 'Waktu Habis!',
-                text: 'Waktu menjawab sudah habis. Quiz otomatis diselesaikan (Nilai: 0/3).',
+                title: isEnglish ? "Time's Up!" : "Waktu Habis!",
+                text: isEnglish ? "Time has expired. Quiz automatically completed (Score: 0/3)." : "Waktu menjawab sudah habis. Quiz otomatis diselesaikan (Nilai: 0/3).",
                 confirmButtonColor: '#0d9488',
-                confirmButtonText: 'Lihat Hasil',
+                confirmButtonText: isEnglish ? "View Result" : "Lihat Hasil",
                 allowOutsideClick: false,
                 allowEscapeKey: false
             }).then(function () {
                 window.location.reload();
             });
         } else {
-            alert('Waktu menjawab sudah habis. Nilai quiz: 0/3.');
+            alert(isEnglish ? 'Time has expired. Quiz score: 0/3.' : 'Waktu menjawab sudah habis. Nilai quiz: 0/3.');
             window.location.reload();
         }
     }
@@ -287,6 +312,21 @@ document.addEventListener('DOMContentLoaded', function() {
         var seconds = remaining % 60;
         if (timer) {
             timer.textContent = String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
+        }
+
+        if (remaining <= 10 && remaining > 0) {
+            if (!is10sAlertTriggered) {
+                is10sAlertTriggered = true;
+                trigger10sAlert();
+            }
+            if (timerBox) {
+                timerBox.classList.remove('border-amber-200', 'bg-amber-50', 'text-amber-900');
+                timerBox.classList.add('border-rose-400', 'bg-rose-50', 'text-rose-900', 'animate-pulse');
+            }
+            if (timer) {
+                timer.classList.remove('text-amber-800');
+                timer.classList.add('text-rose-600');
+            }
         }
 
         if (remaining <= 0) {
@@ -315,33 +355,33 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (typeof Swal !== 'undefined') {
                     Swal.fire({
                         icon: 'warning',
-                        title: 'Jawaban Belum Lengkap',
-                        text: 'Harap jawab semua ' + totalQuestions + ' pertanyaan sebelum mengirim!',
+                        title: isEnglish ? 'Incomplete Answers' : 'Jawaban Belum Lengkap',
+                        text: (isEnglish ? 'Please answer all ' : 'Harap jawab semua ') + totalQuestions + (isEnglish ? ' questions before submitting!' : ' pertanyaan sebelum mengirim!'),
                         confirmButtonColor: '#0d9488',
-                        confirmButtonText: 'Mengerti'
+                        confirmButtonText: isEnglish ? 'Understood' : 'Mengerti'
                     });
                 } else {
-                    alert('Harap jawab semua pertanyaan terlebih dahulu.');
+                    alert(isEnglish ? 'Please answer all questions first.' : 'Harap jawab semua pertanyaan terlebih dahulu.');
                 }
                 return;
             }
 
             if (typeof Swal !== 'undefined') {
                 Swal.fire({
-                    title: 'Kirim Jawaban?',
-                    text: 'Apakah Anda yakin ingin menyelesaikan quiz ini sekarang?',
+                    title: isEnglish ? 'Submit Answers?' : 'Kirim Jawaban?',
+                    text: isEnglish ? 'Are you sure you want to finish this quiz now?' : 'Apakah Anda yakin ingin menyelesaikan quiz ini sekarang?',
                     icon: 'question',
                     showCancelButton: true,
                     confirmButtonColor: '#0d9488',
                     cancelButtonColor: '#64748b',
-                    confirmButtonText: 'Ya, Kirim Sekarang',
-                    cancelButtonText: 'Periksa Lagi'
+                    confirmButtonText: isEnglish ? 'Yes, Submit Now' : 'Ya, Kirim Sekarang',
+                    cancelButtonText: isEnglish ? 'Review Again' : 'Periksa Lagi'
                 }).then(function (result) {
                     if (result.isConfirmed) {
                         quizSubmitted = true;
                         Swal.fire({
-                            title: 'Memproses Jawaban...',
-                            text: 'Mohon tunggu sebentar',
+                            title: isEnglish ? 'Processing Answers...' : 'Memproses Jawaban...',
+                            text: isEnglish ? 'Please wait a moment' : 'Mohon tunggu sebentar',
                             allowOutsideClick: false,
                             allowEscapeKey: false,
                             didOpen: function () {
@@ -376,17 +416,17 @@ document.addEventListener('DOMContentLoaded', function() {
         if (typeof Swal !== 'undefined') {
             Swal.fire({
                 icon: 'error',
-                title: 'Sesi Dibatalkan!',
-                text: 'Anda berpindah tab browser. Sesi quiz dihentikan dan nilai Anda 0/3.',
+                title: isEnglish ? 'Session Cancelled!' : 'Sesi Dibatalkan!',
+                text: isEnglish ? 'You switched browser tabs. Quiz session ended and your score is 0/3.' : 'Anda berpindah tab browser. Sesi quiz dihentikan dan nilai Anda 0/3.',
                 confirmButtonColor: '#e11d48',
-                confirmButtonText: 'Tutup',
+                confirmButtonText: isEnglish ? 'Close' : 'Tutup',
                 allowOutsideClick: false,
                 allowEscapeKey: false
             }).then(function () {
                 window.location.reload();
             });
         } else {
-            alert('Anda berpindah tab browser! Sesi quiz dihentikan dan nilai Anda 0/3.');
+            alert(isEnglish ? 'You switched browser tabs! Quiz session ended and your score is 0/3.' : 'Anda berpindah tab browser! Sesi quiz dihentikan dan nilai Anda 0/3.');
             window.location.reload();
         }
     }

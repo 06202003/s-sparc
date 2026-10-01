@@ -23,34 +23,11 @@
 		exit;
 	}
 
-	// part of sessionchecker pasted here due to unique behaviour of this page
-	// redirect if it is not logged in
-	if(isset($_SESSION['name']) == false){
-	  header('Location: student_assessment_submit_without_login.php?id='.urlencode($rawId));
-	  exit;
-	}else{
-	  // check whether the role is similar to the opened pages
-
-	  // get the page role
-	  $pagerole = htmlentities($_SERVER['PHP_SELF']);
-	  $pagerole = substr($pagerole, strrpos($pagerole,'/')+1);
-	  $pagerole = substr($pagerole, 0, strpos($pagerole,'_'));
-
-	  // check whether the page is user specific
-	  if($pagerole != 'user'){
-	    // if it is in different role
-	    if($pagerole != $_SESSION['role']){
-	      // redirect to its dashboard
-	      if ($_SESSION['role'] == 'admin'){
-	        header('Location: admin_dashboard.php');
-	      } else if ($_SESSION['role'] == 'lecturer'){
-	        header('Location: lecturer_dashboard.php');
-	      } else if ($_SESSION['role'] == 'student'){
-	        header('Location: student_dashboard.php');
-	      }
-	      exit;
-	    }
-	  }
+	// Check whether student is properly logged in
+	$isLoggedInStudent = (!empty($_SESSION['name']) && !empty($_SESSION['user_id']) && ($_SESSION['role'] ?? '') === 'student');
+	if (!$isLoggedInStudent) {
+		header('Location: student_assessment_submit_without_login.php?id=' . urlencode($rawId));
+		exit;
 	}
 
 	include("_config.php");
@@ -74,19 +51,33 @@
 
 	$errorMessage = "";
 
-	// check whether the assessment id is listed to a course and the submission is open / late allowed
-	$sql = "SELECT assessment.name AS assessment_name, course.name AS course_name, assessment.submission_file_extension AS ext, assessment.description as assessment_description 
+	// check whether the assessment id is listed to a course and its status
+	$sql = "SELECT assessment.name AS assessment_name, course.name AS course_name, assessment.submission_file_extension AS ext, assessment.description as assessment_description,
+	               assessment.submission_close_time, assessment.submission_open_time, assessment.allow_late_submission
 		 FROM assessment INNER JOIN course ON course.course_id = assessment.course_id
-		 WHERE assessment.assessment_id = '".$_GET['id']."'
-		 AND (assessment.submission_close_time > CURRENT_TIMESTAMP OR assessment.allow_late_submission = '1' OR assessment.allow_late_submission = 1)
-		 AND assessment.submission_open_time <= CURRENT_TIMESTAMP";
+		 WHERE assessment.assessment_id = '".$_GET['id']."' LIMIT 1";
 	$result = mysqli_query($db, $sql);
 	$row = ($result) ? $result->fetch_assoc() : null;
 
-	// if the given assessment is not currently submittable, redirect to dashboard
+	// if no such assessment exists
 	if(is_null($row)){
 		header('Location: student_dashboard.php');
 		exit;
+	}
+
+	$now = time();
+	$closeTime = strtotime($row['submission_close_time'] ?? '');
+	$openTime = strtotime($row['submission_open_time'] ?? '');
+	$allowLate = (!empty($row['allow_late_submission']) && ($row['allow_late_submission'] == '1' || $row['allow_late_submission'] == 1));
+
+	$isClosed = false;
+	$closedReason = "";
+	if ($openTime && $openTime > $now) {
+		$isClosed = true;
+		$closedReason = "This assessment is not open yet. It will open on " . date('d M Y, H:i', $openTime) . " WIB.";
+	} elseif ($closeTime && $closeTime < $now && !$allowLate) {
+		$isClosed = true;
+		$closedReason = "The submission deadline was " . date('d M Y, H:i', $closeTime) . " WIB. Late submissions are closed by the instructor.";
 	}
 
 	// Determine accepted file formats dynamically from lecturer setting
@@ -190,12 +181,17 @@
 				$attempt = ((int) $rowt['max_att'] + 1);
 
 				// get the metadata of the uploaded code
-				$file_name = $_FILES['code']['name'];
-				$file_size =$_FILES['code']['size'];
-				$file_tmp =$_FILES['code']['tmp_name'];
-				$file_type=$_FILES['code']['type'];
-				$tmp = explode('.',$_FILES['code']['name']);
-				$file_ext=strtolower(end($tmp));
+				$raw_file_name = basename($_FILES['code']['name']);
+				// Normalize spaces and special characters in filename to prevent submission failures
+				$clean_file_name = preg_replace('/[^\w\.\-]/', '_', $raw_file_name);
+				if (empty($clean_file_name) || $clean_file_name === '.') {
+					$clean_file_name = 'submission_' . time() . '.code';
+				}
+				$file_name = mysqli_real_escape_string($db, $clean_file_name);
+				$file_size = $_FILES['code']['size'];
+				$file_tmp = $_FILES['code']['tmp_name'];
+				$file_type = $_FILES['code']['type'];
+				$file_ext = strtolower(trim(pathinfo($raw_file_name, PATHINFO_EXTENSION)));
 
 				// check file name size
 				if(strlen($file_name) >= 100){
@@ -393,67 +389,82 @@ select.select2-hidden-accessible {
 			<!-- Assessment Brief -->
 			<?php if (!empty($row['assessment_description'])): ?>
 				<div class="bg-slate-50 rounded-xl p-4 border border-slate-200/80">
-					<span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Instructions &amp; Description</span>
-					<div class="text-xs text-slate-700 leading-relaxed whitespace-pre-line max-h-48 overflow-y-auto">
+					<span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Instructions &amp; Description</span>
+					<div class="text-xs text-slate-700 leading-relaxed max-h-48 overflow-y-auto bg-white p-3 rounded-lg border border-slate-200/60 prose prose-slate max-w-none">
 						<?= $row['assessment_description'] ?>
 					</div>
 				</div>
 			<?php endif; ?>
 
-			<form action="<?= htmlentities($_SERVER['PHP_SELF']). "?id=".$publicAssessmentId; ?>" method="post" enctype="multipart/form-data" class="space-y-5">
-				<div>
-					<label for="code" class="block text-xs font-semibold text-slate-700 mb-1.5">
-						Source Code Archive / File <span class="text-rose-500">*</span>
-					</label>
-					<div class="relative">
-						<input 
-							type="file" 
-							id="code" 
-							name="code" 
-							accept="<?= htmlspecialchars($acceptAttr) ?>"
-							required
-							class="w-full text-sm font-semibold text-slate-600 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-900 file:text-white hover:file:bg-slate-800 file:cursor-pointer border border-slate-200 rounded-xl bg-slate-50 p-2 cursor-pointer transition"
-						/>
+			<?php if ($isClosed): ?>
+				<div class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900 space-y-2">
+					<div class="flex items-center gap-2 font-bold text-amber-800">
+						<svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+						<span>Submission Window Closed</span>
 					</div>
-					<p class="text-[11px] text-slate-500 mt-1 flex flex-wrap items-center gap-1.5">
-						<span class="inline-flex items-center px-2 py-0.5 rounded-md bg-teal-50 border border-teal-200 text-teal-800 font-semibold">Accepted: <?= htmlspecialchars($formatLabel) ?></span>
-						<span class="text-slate-400">&bull;</span>
-						<span class="text-slate-500 font-medium">Max file size: 5 MB</span>
-					</p>
+					<p class="leading-relaxed"><?= htmlspecialchars($closedReason) ?></p>
 				</div>
-
-				<div>
-					<label for="desc" class="block text-xs font-semibold text-slate-700 mb-1.5">Submission Notes &amp; Comments (Optional)</label>
-					<textarea 
-						id="desc"
-						name="desc" 
-						rows="3" 
-						placeholder="Add any context, runtime notes, or special instructions for review..."
-						class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00A0A5] focus:border-slate-900 transition leading-relaxed resize-none"
-					><?php if(isset($mydesc) && $mydesc != ''){ echo htmlspecialchars($mydesc); } ?></textarea>
-				</div>
-
-				<div class="flex items-center gap-3 pt-2">
-					<?php
-						$cancelUrl = (isset($_GET['game']) && $_GET['game'] != '') 
-							? 'student_incomplete_assessment_goals.php?id='.urlencode($_GET['game']) 
-							: 'student_dashboard.php';
-					?>
-					<a 
-						href="<?= $cancelUrl ?>" 
-						class="w-1/3 py-2.5 px-4 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-xs font-semibold rounded-xl transition text-center shadow-2xs"
-					>
-						Cancel
+				<div class="pt-2">
+					<a href="student_dashboard.php" class="block w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl text-center transition">
+						Return to Student Dashboard
 					</a>
-					<button 
-						type="submit" 
-						class="w-2/3 py-2.5 px-4 bg-[#00A0A5] hover:bg-[#008488] text-white text-sm font-semibold rounded-xl shadow-xs transition duration-150 flex items-center justify-center gap-2"
-					>
-						<span>Upload &amp; Submit Solution</span>
-						<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-					</button>
 				</div>
-			</form>
+			<?php else: ?>
+				<form action="<?= htmlentities($_SERVER['PHP_SELF']). "?id=".$publicAssessmentId; ?>" method="post" enctype="multipart/form-data" class="space-y-5">
+					<div>
+						<label for="code" class="block text-xs font-semibold text-slate-700 mb-1.5">
+							Source Code Archive / File <span class="text-rose-500">*</span>
+						</label>
+						<div class="relative">
+							<input 
+								type="file" 
+								id="code" 
+								name="code" 
+								accept="<?= htmlspecialchars($acceptAttr) ?>"
+								required
+								class="w-full text-sm font-semibold text-slate-600 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-900 file:text-white hover:file:bg-slate-800 file:cursor-pointer border border-slate-200 rounded-xl bg-slate-50 p-2 cursor-pointer transition"
+							/>
+						</div>
+						<p class="text-[11px] text-slate-500 mt-1 flex flex-wrap items-center gap-1.5">
+							<span class="inline-flex items-center px-2 py-0.5 rounded-md bg-teal-50 border border-teal-200 text-teal-800 font-semibold">Accepted: <?= htmlspecialchars($formatLabel) ?></span>
+							<span class="text-slate-400">&bull;</span>
+							<span class="text-slate-500 font-medium">Max file size: 5 MB</span>
+						</p>
+					</div>
+
+					<div>
+						<label for="desc" class="block text-xs font-semibold text-slate-700 mb-1.5">Submission Notes &amp; Comments (Optional)</label>
+						<textarea 
+							id="desc" 
+							name="desc" 
+							rows="3" 
+							placeholder="Add any context, runtime notes, or special instructions for review..."
+							class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00A0A5] focus:border-slate-900 transition leading-relaxed resize-none"
+						><?php if(isset($mydesc) && $mydesc != ''){ echo htmlspecialchars($mydesc); } ?></textarea>
+					</div>
+
+					<div class="flex items-center gap-3 pt-2">
+						<?php
+							$cancelUrl = (isset($_GET['game']) && $_GET['game'] != '') 
+								? 'student_incomplete_assessment_goals.php?id='.urlencode($_GET['game']) 
+								: 'student_dashboard.php';
+						?>
+						<a 
+							href="<?= $cancelUrl ?>" 
+							class="w-1/3 py-2.5 px-4 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-xs font-semibold rounded-xl transition text-center shadow-2xs"
+						>
+							Cancel
+						</a>
+						<button 
+							type="submit" 
+							class="w-2/3 py-2.5 px-4 bg-[#00A0A5] hover:bg-[#008488] text-white text-sm font-semibold rounded-xl shadow-xs transition duration-150 flex items-center justify-center gap-2"
+						>
+							<span>Upload &amp; Submit Solution</span>
+							<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+						</button>
+					</div>
+				</form>
+			<?php endif; ?>
 
 		</div>
 	</main>

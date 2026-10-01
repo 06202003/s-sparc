@@ -2,44 +2,74 @@
 	session_start();
 
 	// if the assessment id does not exist, redirect to login
-	if(isset($_GET['id']) == false || $_GET['id'] == ''){
+	$rawId = $_GET['id'] ?? $_POST['id'] ?? '';
+	if (empty($rawId)) {
 		header('Location: index.php');
 		exit;
 	}
 
-	// redirect if the role is set (logged in already)
-	// this automatically handles login check in _nosessionchecker.php
-	if(isset($_SESSION['role']) == true){
-		header('Location: student_assessment_submit.php?id='.$_GET['id']);
+	// redirect to main submit page if properly logged in as student
+	$isLoggedInStudent = (!empty($_SESSION['name']) && !empty($_SESSION['user_id']) && ($_SESSION['role'] ?? '') === 'student');
+	if ($isLoggedInStudent) {
+		header('Location: student_assessment_submit.php?id=' . urlencode($rawId));
 		exit;
 	}
 
 	include("_config.php");
+	include_once("_ai_quiz.php");
 
 	// escape sql injection
-	$_GET['id'] = mysqli_real_escape_string($db,$_GET['id']);
+	$safeId = mysqli_real_escape_string($db, $rawId);
 
-	// check whether the assessment id is listed to a course and the submission is still open (either the current date is before the due date or the course allow late submission
-	$sql = "SELECT assessment.name AS assessment_name, assessment.assessment_id, course.name AS course_name, assessment.description as assessment_description 
-		 FROM assessment INNER JOIN course ON course.course_id = assessment.course_id
-		 WHERE assessment.public_assessment_id = '".$_GET['id']."'
-		 AND (assessment.submission_close_time > CURRENT_TIMESTAMP OR assessment.allow_late_submission = '1')
-		 AND assessment.submission_open_time < CURRENT_TIMESTAMP";
-	$result = mysqli_query($db,$sql);
-	$row = $result->fetch_assoc();
+	// check whether the assessment id is listed to a course and the submission is open / late allowed
+	$sql = "SELECT assessment.name AS assessment_name, assessment.assessment_id, assessment.public_assessment_id, 
+	               course.name AS course_name, assessment.description AS assessment_description, 
+	               assessment.submission_file_extension AS ext 
+	        FROM assessment 
+	        INNER JOIN course ON course.course_id = assessment.course_id
+	        WHERE (assessment.public_assessment_id = '$safeId' OR assessment.assessment_id = '$safeId')
+	        AND (assessment.submission_close_time > CURRENT_TIMESTAMP OR assessment.allow_late_submission = '1' OR assessment.allow_late_submission = 1)
+	        AND assessment.submission_open_time <= CURRENT_TIMESTAMP LIMIT 1";
+	$result = mysqli_query($db, $sql);
+	$row = ($result) ? $result->fetch_assoc() : null;
 
-		// if the given assessment id is not listed, redirect to login
-	if(is_null($row)){
-		header('Location: index.php');
+	// if the given assessment id is not submittable, redirect to index
+	if (is_null($row)) {
+		header('Location: index.php?status=closed');
 		exit;
 	}
 
 	// set the temporary variables
-	$publicAssessmentId = $_GET['id'];
-	$_GET['id'] = $row['assessment_id'];
+	$publicAssessmentId = !empty($row['public_assessment_id']) ? $row['public_assessment_id'] : $row['assessment_id'];
+	$numericAssessmentId = $row['assessment_id'];
+	$_GET['id'] = $numericAssessmentId;
 	$course_name = $row['course_name'];
 	$assessment_name = $row['assessment_name'];
 	$assessment_description = $row['assessment_description'];
+
+	// Determine accepted file formats dynamically from lecturer setting
+	$rawExt = strtolower(trim($row['ext'] ?? ''));
+	$acceptAttr = '';
+	$formatLabel = 'Any Code File';
+	$allowedExts = [];
+
+	if ($rawExt == 'java') {
+		$formatLabel = 'Java Source File (.java)';
+		$acceptAttr = '.java';
+		$allowedExts = ['java'];
+	} elseif ($rawExt == 'py') {
+		$formatLabel = 'Python Source File (.py)';
+		$acceptAttr = '.py';
+		$allowedExts = ['py'];
+	} elseif ($rawExt == 'zip_java') {
+		$formatLabel = 'Java Project Archive (.zip)';
+		$acceptAttr = '.zip';
+		$allowedExts = ['zip'];
+	} elseif ($rawExt == 'zip_py') {
+		$formatLabel = 'Python Project Archive (.zip)';
+		$acceptAttr = '.zip';
+		$allowedExts = ['zip'];
+	}
 
 	// for generating random string
 	function random_str(
@@ -53,475 +83,300 @@
 	    return $str;
 	}
 
-	// file handling copied and modified from https://stackoverflow.com/questions/5593473/how-to-upload-and-parse-a-csv-file-in-php
-	if($_SERVER["REQUEST_METHOD"] == "POST") {
-		if ( isset($_FILES["code"])) {
-			 // if there was an error uploading the file
-			if ($_FILES["code"]["error"] > 0) {
-				echo "Return Code: " . $_FILES["ufile"]["error"] . "<br />";
-			}
-			else {
-				$errorMessage = "";
+	$errorMessage = "";
 
+	if ($_SERVER["REQUEST_METHOD"] == "POST") {
+		if (isset($_FILES["code"])) {
+			if ($_FILES["code"]["error"] > 0) {
+				$errorMessage .= "Return Code: " . $_FILES["code"]["error"] . "<br />";
+			} else {
 				// get the data from form
-				$myusername = mysqli_real_escape_string($db,$_POST['uname']);
-				$mypassword = mysqli_real_escape_string($db,$_POST['upass']);
-				$mydesc = mysqli_real_escape_string($db,$_POST['desc']);
-				$myassessmentid = mysqli_real_escape_string($db,$_GET['id']);
+				$myusername = mysqli_real_escape_string($db, $_POST['uname'] ?? '');
+				$mypassword = mysqli_real_escape_string($db, $_POST['upass'] ?? '');
+				$mydesc = mysqli_real_escape_string($db, $_POST['desc'] ?? '');
 
 				// for checking username and password
-				$sql = "SELECT user_id, password, role FROM user WHERE username = '$myusername'";
-				$result = mysqli_query($db,$sql);
-				$row = mysqli_fetch_array($result,MYSQLI_ASSOC);
-				$count = mysqli_num_rows($result);
+				$sql = "SELECT user_id, password, role FROM user WHERE username = '$myusername' LIMIT 1";
+				$result = mysqli_query($db, $sql);
+				$uRow = ($result) ? mysqli_fetch_array($result, MYSQLI_ASSOC) : null;
+				$count = ($result) ? mysqli_num_rows($result) : 0;
 
-				// set the user id as empty, which will be filled later
 				$user_id = "";
 
-		    // If result is zero or password does not match, error
-		    if(($count == 1 && password_verify($mypassword,$row['password'])) == false) {
-					$errorMessage .= "The username and/or the password are incorrect! <br />";
-				}else{
-					// set user id
-					$user_id = $row['user_id'];
-					// if the role is not student, error
-					if($row['role'] != 'student'){
+				if ($count != 1 || !password_verify($mypassword, $uRow['password'])) {
+					$errorMessage .= "The username and/or password are incorrect! <br />";
+				} else {
+					$user_id = $uRow['user_id'];
+					if ($uRow['role'] != 'student') {
 						$errorMessage .= "The username is not registered as a student! <br />";
-					}else{
-						// check whether the account is registered to the course in which the assessment is listed
-						$sql = "SELECT enrollment.course_id, enrollment.student_id,
-							assessment.submission_file_extension AS ext FROM enrollment
-							INNER JOIN course ON course.course_id = enrollment.course_id
-							INNER JOIN assessment ON course.course_id = assessment.course_id
-							WHERE enrollment.student_id = '".$user_id."'
-							AND assessment.assessment_id = '".$myassessmentid."'";
-				    $result = mysqli_query($db,$sql);
-				    $row = mysqli_fetch_array($result,MYSQLI_ASSOC);
-						$count = mysqli_num_rows($result);
-						if($count == 0){
-							// not listed, show error
-							$errorMessage .= "The username is not enrolled to the course! <br />";
-						}else{
-							// for dealing with 'zip_java' and 'zip_py'
-							$row['ext'] = explode('_',$row['ext'])[0];
-							// set the file extension
-							$accepted_ext = $row['ext'];
-
+					} else {
+						// check enrollment
+						$sql = "SELECT enrollment.course_id, enrollment.student_id
+								FROM enrollment
+								INNER JOIN course ON course.course_id = enrollment.course_id
+								INNER JOIN assessment ON course.course_id = assessment.course_id
+								WHERE enrollment.student_id = '$user_id'
+								AND assessment.assessment_id = '$numericAssessmentId' LIMIT 1";
+						$eResult = mysqli_query($db, $sql);
+						$eCount = ($eResult) ? mysqli_num_rows($eResult) : 0;
+						if ($eCount == 0) {
+							$errorMessage .= "You are not enrolled in the course for this assessment! <br />";
 						}
 					}
 				}
 
-				// get the highest attempt
-				$sqlt = "SELECT MAX(attempt) as max_att FROM submission
-					WHERE submitter_id = '".$user_id."' AND assessment_id = '".$myassessmentid."'";
-				$resultt = mysqli_query($db,$sqlt);
-				$rowt = $resultt->fetch_assoc();
+				if ($errorMessage == "") {
+					// get the highest attempt
+					$sqlt = "SELECT MAX(attempt) as max_att FROM submission
+							 WHERE submitter_id = '$user_id' AND assessment_id = '$numericAssessmentId'";
+					$resultt = mysqli_query($db, $sqlt);
+					$rowt = ($resultt) ? $resultt->fetch_assoc() : null;
+					$attempt = ((int)($rowt['max_att'] ?? 0) + 1);
 
-				// set the attempt
-				if($rowt['max_att'] == ''){
-					$rowt['max_att'] = 0;
-				}
-				$attempt = ((int) $rowt['max_att'] + 1);
-
-				// get the metadata of the uploaded code
-				$file_name = $_FILES['code']['name'];
-				$file_size =$_FILES['code']['size'];
-				$file_tmp =$_FILES['code']['tmp_name'];
-				$file_type=$_FILES['code']['type'];
-				$tmp = explode('.',$_FILES['code']['name']);
-				$file_ext = strtolower(end($tmp));
-
-				// check file name size
-				if(strlen($file_name) >= 100){
-					 $errorMessage .= "The file name should be shorter or equal to 100 characters. <br />";
-				}
-
-				// file extension check
-				if(isset($accepted_ext) && $file_ext != $accepted_ext) {
-					$errorMessage .= "The uploaded file's extension should be '".$accepted_ext."'! <br />";
-				}
-
-				// file size check
-				if($file_size > 5000000){
-					 $errorMessage .= 'The file size must be lower or equal to 5 MB';
-				}
-
-				if($errorMessage == ""){
-					// add a path to upload folder and make a new name to avoid filename conflict
-					$uploadDirectory = __DIR__ . DIRECTORY_SEPARATOR . 'uploads';
-					if (!is_dir($uploadDirectory) && !mkdir($uploadDirectory, 0755, true)) {
-						echo "The upload directory could not be created.";
-						exit;
+					// metadata of uploaded file
+					$raw_file_name = basename($_FILES['code']['name']);
+					// Normalize spaces and special characters in filename to prevent submission failures
+					$clean_file_name = preg_replace('/[^\w\.\-]/', '_', $raw_file_name);
+					if (empty($clean_file_name) || $clean_file_name === '.') {
+						$clean_file_name = 'submission_' . time() . '.code';
 					}
-					$new_file_name = "uploads/".microtime(true) . ".code";
-					$new_file_path = __DIR__ . DIRECTORY_SEPARATOR . $new_file_name;
-					// if the new name is still in conflict (unlikely though)
-					while (file_exists($new_file_path)) {
-						$counter = random_str(3);
-						$new_file_name = "uploads/".microtime(true) . $counter . ".code";
-						$new_file_path = __DIR__ . DIRECTORY_SEPARATOR . $new_file_name;
+					$file_name = mysqli_real_escape_string($db, $clean_file_name);
+					$file_size = $_FILES['code']['size'];
+					$file_tmp = $_FILES['code']['tmp_name'];
+					$file_ext = strtolower(trim(pathinfo($raw_file_name, PATHINFO_EXTENSION)));
+
+					if (strlen($file_name) >= 100) {
+						$errorMessage .= "The file name should be shorter than or equal to 100 characters. <br />";
 					}
-					// no error, proceed to storing the data
-					$sql = "INSERT INTO submission (description, filename, file_path, attempt, submitter_id, assessment_id)
-					 VALUES ('".$mydesc."', '".$file_name."', '".$new_file_name."', '".$attempt."', '".$user_id."', '".$myassessmentid."')";
-					if ($db->query($sql) === TRUE) {
-						$submissionId = $db->insert_id;
-						// if updated well, move the file to uploads and redirect to dashboard
-						move_uploaded_file($file_tmp,$new_file_path);
-						ensure_submission_metrics($db, $submissionId);
-						
-						// move to login page or dashboard
-						header('Location: index.php?submit=true');
-						exit;
-					} else {
-						echo "Error adding record: " . $db->error;
+
+					// file extension check
+					$expectedExt = explode('_', $row['ext'])[0];
+					if (!empty($allowedExts) && !in_array($file_ext, $allowedExts) && $file_ext != $expectedExt) {
+						$errorMessage .= "The uploaded file's extension must be '." . $expectedExt . "' as required for this assessment! <br />";
+					}
+
+					if ($file_size > 5242880) {
+						$errorMessage .= 'The file size must be lower than or equal to 5 MB.<br />';
+					}
+
+					if ($errorMessage == "") {
+						$uploadDirectory = __DIR__ . DIRECTORY_SEPARATOR . 'uploads';
+						if (!is_dir($uploadDirectory) && !mkdir($uploadDirectory, 0755, true)) {
+							$errorMessage .= "The upload directory could not be created.";
+						} else {
+							$new_file_name = "uploads/" . microtime(true) . ".code";
+							$new_file_path = __DIR__ . DIRECTORY_SEPARATOR . $new_file_name;
+							while (file_exists($new_file_path)) {
+								$counter = random_str(3);
+								$new_file_name = "uploads/" . microtime(true) . $counter . ".code";
+								$new_file_path = __DIR__ . DIRECTORY_SEPARATOR . $new_file_name;
+							}
+
+							$insertSql = "INSERT INTO submission (description, filename, file_path, attempt, submitter_id, assessment_id)
+										  VALUES ('$mydesc', '$file_name', '$new_file_name', '$attempt', '$user_id', '$numericAssessmentId')";
+							if ($db->query($insertSql) === TRUE) {
+								$submissionId = $db->insert_id;
+								move_uploaded_file($file_tmp, $new_file_path);
+								ensure_submission_metrics($db, $submissionId);
+								
+								// Set session for immediate quiz if student wants to continue
+								$_SESSION['user_id'] = $user_id;
+								$_SESSION['name'] = $myusername;
+								$_SESSION['role'] = 'student';
+								create_submission_quiz($db, $submissionId, (int)$user_id);
+
+								header('Location: student_instant_quiz.php?submission_id=' . $submissionId);
+								exit;
+							} else {
+								$errorMessage .= "Database error: " . $db->error;
+							}
+						}
 					}
 				}
 			}
 		}
 	}
-
 ?>
-<html>
-	<head>
-	<meta name="viewport" content="width=device-width, initial-scale=1">		
-		<title> E-STRANGE: Submit assessment</title>
-    <link rel="icon" href="strange_html_layout_additional_files/icon.png">
-	<!-- Untuk Icon -->
-	<link rel="stylesheet" href="strange_html_layout_additional_files/vendor/fontawesome.all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-	<link href="bootstrap-5.3.3-dist/css/bootstrap.min.css" rel="stylesheet">
-
-
-    <script>
-    </script>
-    <style>
-			body { font-family: 'Inter', system-ui, -apple-system, sans-serif;
-				font-size: 12px;
-				background-color: rgba(250,250,250,1);
-			}
-			div{
-				float:left;
-			}
-
-			/* copied and modified from https://www.w3schools.com/css/css3_buttons.asp */
-			button {
-				background-color: rgba(0,140,186,1);
-				border: none;
-				color: white;
-				padding: 2px 4px;
-				text-align: center;
-				text-decoration: none;
-				display: inline-block;
-				cursor: pointer;
-			}
-
-			/* for tabbed view. copied and modified from https://www.w3schools.com/howto/howto_js_tabs.asp */
-			.tab {
-			  float:left;
-				width:100%;
-				background-color: rgba(0,140,186,1);
-			}
-			button.tablinks {
-				border:none;
-				outline: none;
-			  float: left;
-			  cursor: pointer;
-			  padding: 6px 20px;
-				height:30px;
-			  transition: 0.3s;
-			}
-			.tab button:hover {
-			  background-color: rgba(20,160,206,1);
-			}
-			.tab button.active {
-			  background-color: rgba(40,180,226,1);
-			}
-			div.tabcontent {
-				float:left;
-				width:99%;
-				height:80%;
-				display: none;
-				border-top: none;
-			}
-
-			/* for header */
-			div.header{
-				width:100%;
-				height:8%;
-				margin-bottom:10px;
-			}
-			img{
-				float:left;
-				height:100%;
-				margin-right:10px;
-			}
-			div.headertitle{
-				font-weight: bold;
-				font-size: 22px;
-				height:100%;
-				padding-top:20px;
-				color: rgba(0,65,111,1);
-			}
-
-			button.actionbutton, a.actionbutton{
-				float:right;
-				margin-top:10px;
-				margin-left:10px;
-				padding: 6px 20px;
-				height:30px;
-			}
-			a.actionbutton{
-				height:18px;
-				padding-top:8px;
-				padding-bottom:4px;
-				background-color: rgba(0,140,186,1);
-				border: none;
-				color: white;
-				text-align: center;
-				text-decoration: none;
-				cursor: pointer;
-			}
-
-			<!-- copied and modified from https://www.w3schools.com/howto/howto_css_login_form.asp -->
-			form{
-				float:left;
-				width:100%;
-			}
-			div.formbody{
-				width:58%;
-				height:50%;
-				padding: 1%;
-				margin-top:30px;
-				margin-left:20%;
-				margin-right:20%;
-				border: 1px solid #dddddd;
-				overflow-y: scroll;
-			}
-			div.formrow {
-				float:left;
-				width:100%;
-			}
-			div.formrowaction{
-				float:left;
-				width:60%;
-				margin-left:20%;
-				margin-right:20%;
-			}
-			label, div.infolabel{
-				float:left;
-				width:20%;
-				font-size: 16px;
-				text-align: left;
-				padding: 12px 20px;
-			  margin: 8px 0;
-			}
-			input, textarea, div.infovalue{
-				float:right;
-			  width: 70%;
-			  border: 1px solid #ccc;
-				box-sizing: border-box;
-				padding: 12px 20px;
-			  margin: 8px 0;
-			}
-			div.infovalue{
-				padding-top:14px;
-				padding-bottom:10px;
-				padding-left:0px;
-				padding-right:0px;
-				border: 0px;
-				font-family: inherit;
-				font-size: inherit;
-			}
-			textarea{
-				margin-top:15px;
-				font-family: inherit;
-				font-size: inherit;
-				resize: none;
-			}
-
-			div.warning{
-				float:left;
-				width:95%;
-				font-size: 16px;
-				font-weight:bold;
-				text-align:left;
-				color:red;
-				margin:2%;
-			}
-			
-			div.information{
-				float:left;
-				width:95%;
-				font-size: 16px;
-				text-align:left;
-				margin:2%;
-			}
-			
-			#asmt_desc{
-				float:right;
-				width: 70%;
-				min-height: 50px;
-				padding-left: 6px;
-				padding-right: 6px;
-				border: 1px solid #ccc;
-				box-sizing: border-box;
-				margin-top:10px;
-				margin-bottom:8px;
-			}
-
-		}
-    </style>
-    <style>
-/* Premium Teal Dropdown Styling for E-STRANGE & S-SPARC */
-/* Ensure SweetAlert2 hidden select is never displayed */
-.swal2-container select,
-.swal2-popup select,
-.swal2-select {
-  display: none !important;
-}
-
-select:not(.select2-hidden-accessible):not(.swal2-select), .form-select, .custom-select {
-  appearance: none !important;
-  -webkit-appearance: none !important;
-  -moz-appearance: none !important;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2300A0A5' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
-  background-repeat: no-repeat !important;
-  background-position: right 0.85rem center !important;
-  background-size: 1.15rem 1.15rem !important;
-  padding-left: 1rem !important;
-  padding-right: 2.5rem !important;
-  padding-top: 0.5rem !important;
-  padding-bottom: 0.5rem !important;
-  min-width: 130px !important;
-  min-height: 40px !important;
-  border-radius: 0.75rem !important;
-  border: 1.5px solid #cbd5e1 !important;
-  background-color: #ffffff !important;
-  color: #0f172a !important;
-  font-weight: 600 !important;
-  font-size: 0.875rem !important;
-  line-height: 1.25rem !important;
-  transition: all 0.2s ease-in-out !important;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
-  cursor: pointer !important;
-  flex-shrink: 0 !important;
-  display: inline-block !important;
-  box-sizing: border-box !important;
-}
-
-select:not(.select2-hidden-accessible):not(.swal2-select):hover, .form-select:hover {
-  border-color: #00A0A5 !important;
-  background-color: #f8fafc !important;
-  box-shadow: 0 4px 12px rgba(0, 160, 165, 0.08) !important;
-}
-
-select:not(.select2-hidden-accessible):not(.swal2-select):focus, .form-select:focus {
-  outline: none !important;
-  border-color: #00A0A5 !important;
-  box-shadow: 0 0 0 3px rgba(0, 160, 165, 0.2) !important;
-  background-color: #ffffff !important;
-}
-
-/* Ensure Select2 Native Input Remains Completely Hidden */
-select.select2-hidden-accessible {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  border: 0 !important;
-  opacity: 0 !important;
-  position: absolute !important;
-  pointer-events: none !important;
-}
-
-/* Select2 Plugin Custom Teal Enhancements */
-.select2-container--default .select2-selection--single {
-  border-radius: 0.75rem !important;
-  border: 1.5px solid #cbd5e1 !important;
-  height: 42px !important;
-  min-width: 140px !important;
-  padding: 6px 12px !important;
-  font-weight: 600 !important;
-  font-size: 0.875rem !important;
-  transition: all 0.2s ease-in-out !important;
-}
-
-.select2-container--default .select2-selection--single:hover {
-  border-color: #00A0A5 !important;
-}
-
-.select2-container--default.select2-container--open .select2-selection--single,
-.select2-container--default.select2-container--focus .select2-selection--single {
-  border-color: #00A0A5 !important;
-  box-shadow: 0 0 0 3px rgba(0, 160, 165, 0.2) !important;
-}
-
-.select2-container--default .select2-results__option--highlighted[aria-selected] {
-  background-color: #00A0A5 !important;
-  color: #ffffff !important;
-}
-
-</style>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">		
+	<title>E-STRANGE: Submit Assessment</title>
+	<link rel="icon" href="strange_html_layout_additional_files/icon.png">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+	<!-- Tailwind CSS -->
+	<script src="https://cdn.tailwindcss.com"></script>
+	<!-- FontAwesome -->
+	<link rel="stylesheet" href="assets/vendor/fontawesome/all.min.css" />
+	<!-- SweetAlert2 -->
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+	<style>
+		:root { color-scheme: light; }
+		body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+	</style>
 </head>
-  <body>
-		<div class="header">
-			<img src="strange_html_layout_additional_files/logo.png" alt="logo" />
-			<div class="headertitle">Submit assessment</div>
-		</div>
-
-		<div class="tab">
-			<button class="tablinks" onclick="window.open('index.php', '_self');">Login</button>
-		</div>
-
-		<!-- copied and modified from https://www.w3schools.com/howto/howto_css_login_form.asp -->
-		<form action="<?php echo htmlentities($_SERVER['PHP_SELF']). "?id=".$publicAssessmentId; ?>" method="post" enctype="multipart/form-data">
-			<div class="formbody">
-				<?php
-					// if error message exist, show it
-					if(isset($errorMessage) && $errorMessage != ""){
-						// show the message
-						echo "<div class='warning'>Error(s):<br />".$errorMessage."</div>";
-						// unset afterward
-						$errorMessage = "";
-					}else{
-						  echo "<div class='information'>
-					 <b>Pemberitahuan:</b><br /> 
-					 1) Jangan lupa laporan kualitas kodenya dicek juga yaa <br />
-					 2) Tutorial penggunaan e-strange dapat dilihat di <a href=\"https://youtu.be/iC3VT7QG2Dc\" target=\"_blank\">sini</a>
-						 </div>";
-					 }
-				 ?>
-				 <div class="formrow">
- 					<div class="infolabel"><b>Course / assessment:</b></div>
- 					<div class="infovalue"><?php echo $course_name." / ".$assessment_name;?></div>
- 				</div>
-				<div class="formrow">
-					<label><b>Assessment desc:</b></label>
-					<div id="asmt_desc"><?php echo $assessment_description; ?></div>
-				</div>
-				<div class="formrow">
-					<label for="uname"><b>Username:</b></label>
-					<input type="text" id="uname" name="uname" required <?php if(isset($myusername) && $myusername != ''){ echo "value=\"".$myusername."\"";}?>>
-				</div>
-				<div class="formrow">
-					<label for="upass"><b>Password:</b></label>
-					<input type="password" id="upass" name="upass" required>
-				</div>
-				<div class="formrow">
-					<label for="code"><b>Code:</b></label>
-					<input type="file" id="code" name="code" required>
-				</div>
-				<div class="formrow">
-					<label for="desc"><b>Submission desc:</b></label>
-					<textarea rows=5 placeholder="Enter submission description" name="desc" ><?php if(isset($mydesc) && $mydesc != ''){ echo $mydesc;}?></textarea>
+<body class="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 text-slate-900 flex flex-col justify-between">
+	
+	<!-- Top Navigation Bar -->
+	<header class="w-full bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30 px-4 py-3 sm:px-6">
+		<div class="max-w-4xl mx-auto flex items-center justify-between">
+			<div class="flex items-center gap-3">
+				<img src="strange_html_layout_additional_files/icon.png" alt="E-STRANGE Logo" class="w-8 h-8 rounded-lg shadow-xs" onerror="this.style.display='none'" />
+				<div>
+					<span class="text-sm font-bold text-slate-900 tracking-tight block">E-STRANGE</span>
+					<span class="text-[10px] font-semibold text-[#00A0A5] tracking-wider uppercase block">Assessment Portal</span>
 				</div>
 			</div>
-			<div class="formrowaction">
-				<button class="actionbutton" type="submit">Submit</button>
-			</div>
-		</form>
+			<a href="index.php" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg transition">
+				<svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+				<span>Login to LMS</span>
+			</a>
+		</div>
+	</header>
 
-		<script src="bootstrap-5.3.3-dist/js/bootstrap.bundle.min.js"></script>
-  </body>
+	<!-- Main Form Content -->
+	<main class="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8">
+		<div class="w-full max-w-xl bg-white rounded-2xl border border-slate-200/90 shadow-xl p-6 sm:p-8 space-y-6">
+			
+			<!-- Assessment Header Banner -->
+			<div class="border-b border-slate-100 pb-4">
+				<div class="flex items-center gap-2 mb-2">
+					<span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-[#00A0A5] text-white">
+						Direct Submission
+					</span>
+					<span class="text-xs font-semibold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-100">
+						<?= htmlspecialchars($formatLabel) ?>
+					</span>
+				</div>
+				<h1 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight leading-snug">
+					<?= htmlspecialchars($assessment_name) ?>
+				</h1>
+				<p class="text-xs font-semibold text-slate-500 mt-1 flex items-center gap-1.5">
+					<svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+					<span><?= htmlspecialchars($course_name) ?></span>
+				</p>
+			</div>
+
+			<!-- Error Notification Banner -->
+			<?php if (!empty($errorMessage)): ?>
+				<div class="rounded-xl border border-rose-200 bg-rose-50 p-4 text-xs text-rose-700 flex items-start gap-2.5 shadow-2xs">
+					<svg class="w-4 h-4 text-rose-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+					<div class="leading-relaxed font-medium"><?= $errorMessage ?></div>
+				</div>
+			<?php endif; ?>
+
+			<!-- Assessment Instructions -->
+			<?php if (!empty($assessment_description)): ?>
+				<div class="bg-slate-50 rounded-xl p-4 border border-slate-200/80">
+					<span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+						Instructions &amp; Problem Constraints
+					</span>
+					<div class="text-xs text-slate-700 leading-relaxed max-h-48 overflow-y-auto bg-white p-3 rounded-lg border border-slate-200/60 prose prose-slate max-w-none">
+						<?= $assessment_description ?>
+					</div>
+				</div>
+			<?php endif; ?>
+
+			<!-- Submission Form -->
+			<form action="<?= htmlentities($_SERVER['PHP_SELF']) . '?id=' . urlencode($publicAssessmentId); ?>" method="post" enctype="multipart/form-data" class="space-y-4">
+				
+				<!-- Student Credentials -->
+				<div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+					<div>
+						<label for="uname" class="block text-xs font-bold text-slate-700 mb-1">
+							Student NRP / Username <span class="text-rose-500">*</span>
+						</label>
+						<input 
+							type="text" 
+							id="uname" 
+							name="uname" 
+							required 
+							value="<?= htmlspecialchars($_POST['uname'] ?? '') ?>"
+							placeholder="e.g. 2172001"
+							class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00A0A5] focus:border-transparent transition"
+						/>
+					</div>
+					<div>
+						<label for="upass" class="block text-xs font-bold text-slate-700 mb-1">
+							Password <span class="text-rose-500">*</span>
+						</label>
+						<input 
+							type="password" 
+							id="upass" 
+							name="upass" 
+							required 
+							placeholder="Enter LMS password"
+							class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00A0A5] focus:border-transparent transition"
+						/>
+					</div>
+				</div>
+
+				<!-- File Upload Field -->
+				<div>
+					<label for="code" class="block text-xs font-bold text-slate-700 mb-1">
+						Upload Source Code File <span class="text-rose-500">*</span>
+					</label>
+					<div class="relative">
+						<input 
+							type="file" 
+							id="code" 
+							name="code" 
+							accept="<?= htmlspecialchars($acceptAttr) ?>"
+							required
+							class="w-full text-xs font-semibold text-slate-600 file:mr-3 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-slate-900 file:text-white hover:file:bg-slate-800 file:cursor-pointer border border-slate-200 rounded-xl bg-slate-50 p-2 cursor-pointer transition"
+						/>
+					</div>
+					<div class="flex items-center justify-between text-[11px] text-slate-500 mt-1.5 px-0.5">
+						<span>Format: <strong class="text-teal-700"><?= htmlspecialchars($formatLabel) ?></strong></span>
+						<span>Max size: <strong>5 MB</strong></span>
+					</div>
+				</div>
+
+				<!-- Notes / Description -->
+				<div>
+					<label for="desc" class="block text-xs font-bold text-slate-700 mb-1">
+						Submission Notes <span class="text-slate-400 font-normal">(Optional)</span>
+					</label>
+					<textarea 
+						id="desc" 
+						name="desc" 
+						rows="2" 
+						placeholder="Add any execution notes or details..."
+						class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00A0A5] focus:border-transparent transition resize-none"
+					><?= htmlspecialchars($_POST['desc'] ?? '') ?></textarea>
+				</div>
+
+				<!-- Action Buttons -->
+				<div class="pt-2">
+					<button 
+						type="submit" 
+						class="w-full py-3 px-4 bg-[#00A0A5] hover:bg-[#008488] active:scale-[0.99] text-white text-xs sm:text-sm font-bold rounded-xl shadow-md transition duration-150 flex items-center justify-center gap-2"
+					>
+						<span>Submit Code &amp; Proceed to Verification</span>
+						<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+					</button>
+				</div>
+			</form>
+
+			<!-- Quality Assurance Tip -->
+			<div class="border-t border-slate-100 pt-3 text-[11px] text-slate-500 flex items-center justify-between">
+				<span>Powered by <strong>E-STRANGE</strong></span>
+				<a href="https://youtu.be/iC3VT7QG2Dc" target="_blank" class="text-[#00A0A5] hover:underline font-semibold flex items-center gap-1">
+					<span>User Tutorial Video</span>
+					<svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+				</a>
+			</div>
+
+		</div>
+	</main>
+
+	<!-- Footer -->
+	<footer class="w-full text-center py-3 text-[11px] text-slate-400 border-t border-slate-200/60">
+		&copy; 2026 E-STRANGE &bull; Smart Technology &amp; Engineering Faculty - Maranatha Christian University
+	</footer>
+
+</body>
 </html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8'>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 11pt; line-height: 1.6; }
+  math { font-size: 12pt; }
+</style>
+</head>
+<body>
+<h1>MathML Test</h1>
+<math display='block'>
+  <msub><mi>BORI</mi><mrow><mi>m</mi><mo>,</mo><mi>i</mi></mrow></msub>
+  <mo>=</mo>
+  <mrow>
+    <mo>{</mo>
+    <mtable columnalign='left left'>
+      <mtr>
+        <mtd><mtext>undefined (missing),</mtext></mtd>
+        <mtd><mrow><mtext>&nbsp;&nbsp;if&nbsp;</mtext><msub><mi>N</mi><mrow><mi>m</mi><mo>,</mo><mi>i</mi></mrow></msub><mo>=</mo><mn>0</mn></mrow></mtd>
+      </mtr>
+      <mtr>
+        <mtd>
+          <mrow>
+            <mfrac><mn>1</mn><msub><mi>N</mi><mrow><mi>m</mi><mo>,</mo><mi>i</mi></mrow></msub></mfrac>
+            <munderover><mo>&sum;</mo><mrow><mi>j</mi><mo>=</mo><mn>1</mn></mrow><msub><mi>N</mi><mrow><mi>m</mi><mo>,</mo><mi>i</mi></mrow></msub></munderover>
+            <mrow>
+              <mo>[</mo>
+              <mfrac>
+                <mrow>
+                  <msub><mi>w</mi><mn>1</mn></msub><msub><mi>E</mi><mrow><mi>exec</mi><mo>,</mo><mi>j</mi></mrow></msub>
+                  <mo>+</mo>
+                  <msub><mi>w</mi><mn>2</mn></msub><msub><mi>S</mi><mrow><mi>overlap</mi><mo>,</mo><mi>j</mi></mrow></msub>
+                  <mo>+</mo>
+                  <msub><mi>w</mi><mn>3</mn></msub><msub><mi>I</mi><mrow><mi>code</mi><mo>,</mo><mi>j</mi></mrow></msub><mo>(</mo><mn>1</mn><mo>-</mo><msub><mi>D</mi><mrow><mi>edit</mi><mo>,</mo><mi>j</mi></mrow></msub><mo>)</mo>
+                  <mo>+</mo>
+                  <msub><mi>w</mi><mn>4</mn></msub><msub><mi>I</mi><mrow><mi>code</mi><mo>,</mo><mi>j</mi></mrow></msub><mo>(</mo><mn>1</mn><mo>-</mo><msub><mi>T</mi><mrow><mi>norm_delib</mi><mo>,</mo><mi>j</mi></mrow></msub><mo>)</mo>
+                </mrow>
+                <mrow>
+                  <msub><mi>w</mi><mn>1</mn></msub><mo>+</mo><msub><mi>w</mi><mn>2</mn></msub><mo>+</mo><msub><mi>w</mi><mn>3</mn></msub><msub><mi>I</mi><mrow><mi>code</mi><mo>,</mo><mi>j</mi></mrow></msub><mo>+</mo><msub><mi>w</mi><mn>4</mn></msub><msub><mi>I</mi><mrow><mi>code</mi><mo>,</mo><mi>j</mi></mrow></msub>
+                </mrow>
+              </mfrac>
+              <mo>]</mo>
+            </mrow>
+          </mrow>
+        </mtd>
+        <mtd><mrow><mtext>&nbsp;&nbsp;if&nbsp;</mtext><msub><mi>N</mi><mrow><mi>m</mi><mo>,</mo><mi>i</mi></mrow></msub><mo>&gt;</mo><mn>0</mn></mrow></mtd>
+      </mtr>
+    </mtable>
+  </mrow>
+</math>
+</body>
+</html>

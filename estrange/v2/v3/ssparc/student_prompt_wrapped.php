@@ -161,6 +161,16 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
           return;
         }
 
+        if (data.status === 'unauthorized') {
+          renderUnauthorizedState(data);
+          return;
+        }
+
+        if (data.status === 'no_interactions') {
+          renderNoInteractionsState(data);
+          return;
+        }
+
         if (data.status === 'success') {
           wrappedData = data;
           document.getElementById('header-assessment-title').innerText = data.assessment_title || `Assessment #${ASSESSMENT_ID}`;
@@ -172,6 +182,71 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
         console.error("Fetch wrapped error:", err);
         showError('Unable to connect to AI analytics backend. Please verify your connection.');
       }
+    }
+
+    function renderNoInteractionsState(data) {
+      const spinner = document.getElementById('loading-spinner');
+      if (spinner) spinner.remove();
+      document.getElementById('header-assessment-title').innerText = data.assessment_title || `Assessment #${ASSESSMENT_ID}`;
+      
+      document.getElementById('slide-viewport').innerHTML = `
+        <div class="text-center space-y-5 my-auto px-4 slide-content">
+          <div class="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto text-emerald-400 text-2xl font-bold shadow-inner">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          </div>
+          <div class="space-y-2">
+            <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase tracking-wide">
+              100% Independent Coding
+            </span>
+            <h2 class="text-xl font-bold text-white tracking-tight">${data.assessment_title}</h2>
+            <p class="text-xs text-slate-300 leading-relaxed max-w-sm mx-auto">
+              ${data.message || 'No S-SPARC AI prompts were recorded for this assessment. You completed this assignment independently without AI assistance!'}
+            </p>
+          </div>
+          <div class="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2 text-left max-w-xs mx-auto">
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-slate-400">Course:</span>
+              <span class="text-white font-medium truncate max-w-[170px]">${data.course_name}</span>
+            </div>
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-slate-400">AI Prompt Usage:</span>
+              <span class="text-emerald-400 font-bold">0 Queries (0 Tokens)</span>
+            </div>
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-slate-400">Literacy Standing:</span>
+              <span class="text-emerald-300 font-semibold">Pure Human Mastery</span>
+            </div>
+          </div>
+          <div>
+            <a href="student_analytics.php" class="inline-block px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-xs font-bold text-slate-950 transition shadow-md">
+              Back to Analytics Hub
+            </a>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderUnauthorizedState(data) {
+      const spinner = document.getElementById('loading-spinner');
+      if (spinner) spinner.remove();
+      document.getElementById('slide-viewport').innerHTML = `
+        <div class="text-center space-y-5 my-auto px-4 slide-content">
+          <div class="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center mx-auto text-rose-400 text-xl font-bold">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+          </div>
+          <div class="space-y-2">
+            <h2 class="text-xl font-bold text-white tracking-tight">Access Restricted</h2>
+            <p class="text-xs text-rose-300 leading-relaxed max-w-sm mx-auto">
+              ${data.message || 'You are not enrolled in the course associated with this assessment.'}
+            </p>
+          </div>
+          <div>
+            <a href="student_analytics.php" class="inline-block px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-white transition">
+              Return to My Courses
+            </a>
+          </div>
+        </div>
+      `;
     }
 
     function renderLockedState(data) {

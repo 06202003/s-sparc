@@ -71,7 +71,7 @@ class PromptCriticService:
                         "message": "S-SPARC Wrapped is locked while the assessment is active. It automatically unlocks once the assessment submission window officially closes."
                     }
 
-                # 2. Fetch Prompts & Chats for this Assessment
+                # 2. Fetch Prompts & Chats strictly for this Assessment
                 cur.execute(
                     """
                     SELECT id, role, content, created_at 
@@ -83,20 +83,6 @@ class PromptCriticService:
                     (user_id, resolved_uid, assessment_id, resolved_aid)
                 )
                 chat_rows = cur.fetchall() or []
-
-                # Fallback to recent user prompts if assessment_id tagging was empty
-                if not chat_rows:
-                    cur.execute(
-                        """
-                        SELECT id, role, content, created_at 
-                        FROM chat_history 
-                        WHERE (user_id=%s OR user_id=%s) 
-                        ORDER BY created_at DESC LIMIT 20
-                        """,
-                        (user_id, resolved_uid)
-                    )
-                    chat_rows = cur.fetchall() or []
-                    chat_rows.reverse()
 
                 # Extract user prompts
                 user_prompts: List[Dict[str, Any]] = []

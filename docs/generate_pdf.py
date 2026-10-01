@@ -1,0 +1,1185 @@
+# -*- coding: utf-8 -*-
+import subprocess
+import os
+import re
+
+html_content = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>S-SPARC AI: Quantifying AI Over-Reliance in Programming Education</title>
+<style>
+  @page {
+    size: 297mm 210mm; /* A4 Landscape Widescreen Slide Format */
+    margin: 0;
+  }
+  * {
+    box-sizing: border-box;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 297mm;
+    height: 210mm;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: #0f172a;
+    background-color: #ffffff;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .slide {
+    width: 297mm;
+    height: 210mm;
+    max-height: 210mm;
+    page-break-after: always;
+    break-after: page;
+    padding: 14mm 18mm 12mm 18mm;
+    background-color: #ffffff;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .slide:last-child {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+  
+  /* Header */
+  .slide-header {
+    border-bottom: 2.5px solid #0f172a;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-shrink: 0;
+  }
+  .slide-title-group {
+    display: flex;
+    flex-direction: column;
+  }
+  .slide-category {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #1d4ed8;
+  }
+  .slide-title {
+    font-size: 21px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 2px 0 0 0;
+    letter-spacing: -0.01em;
+  }
+  .slide-badge {
+    font-size: 11px;
+    font-weight: 700;
+    color: #334155;
+    background-color: #f1f5f9;
+    padding: 4px 10px;
+    border-radius: 5px;
+    border: 1px solid #cbd5e1;
+    letter-spacing: 0.02em;
+  }
+
+  /* Footer */
+  .slide-footer {
+    border-top: 1.5px solid #e2e8f0;
+    padding-top: 8px;
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 10.5px;
+    color: #64748b;
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+
+  /* Content area: fills remaining vertical space perfectly */
+  .slide-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  /* Grids with full vertical expansion */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    flex: 1;
+  }
+  .grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+    flex: 1;
+  }
+  .grid-4 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 12px;
+    flex: 1;
+  }
+
+  /* Cards & Boxes */
+  .card {
+    background-color: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+  }
+  .card.fill {
+    height: 100%;
+    justify-content: space-between;
+  }
+  .card.accent {
+    border-left: 5px solid #1d4ed8;
+    background-color: #f8fafc;
+  }
+  .card.warning {
+    border-left: 5px solid #b45309;
+    background-color: #fffbeb;
+  }
+  .card.success {
+    border-left: 5px solid #047857;
+    background-color: #f0fdf4;
+  }
+  .card.navy {
+    background-color: #0f172a;
+    color: #ffffff;
+    border: none;
+  }
+  .card.navy h3, .card.navy h4, .card.navy strong {
+    color: #93c5fd;
+  }
+  .card-title {
+    font-size: 13.5px;
+    font-weight: 800;
+    margin: 0 0 6px 0;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Tables */
+  table.academic-table {
+    width: 100%;
+    height: 100%;
+    border-collapse: collapse;
+    font-size: 11.5px;
+    margin: 0;
+  }
+  table.academic-table th {
+    background-color: #0f172a;
+    color: #ffffff;
+    text-align: left;
+    padding: 8px 10px;
+    font-weight: 700;
+    border: 1px solid #0f172a;
+    font-size: 11.5px;
+  }
+  table.academic-table td {
+    padding: 7px 10px;
+    border: 1px solid #cbd5e1;
+    vertical-align: top;
+    background-color: #ffffff;
+    line-height: 1.45;
+  }
+  table.academic-table tr:nth-child(even) td {
+    background-color: #f8fafc;
+  }
+
+  /* Typography & Chips */
+  p {
+    margin: 0 0 6px 0;
+  }
+  p:last-child {
+    margin-bottom: 0;
+  }
+  ul {
+    margin: 0;
+    padding-left: 18px;
+  }
+  li {
+    margin-bottom: 5px;
+  }
+  li:last-child {
+    margin-bottom: 0;
+  }
+  .math-block {
+    background-color: #0f172a;
+    color: #38bdf8;
+    padding: 14px 18px;
+    border-radius: 8px;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 15px;
+    font-weight: 800;
+    text-align: center;
+    letter-spacing: 0.03em;
+    margin: 0;
+    border: 1px solid #1e293b;
+    flex-shrink: 0;
+  }
+  .math-sub {
+    font-size: 11.5px;
+    color: #94a3b8;
+    margin-top: 4px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-weight: 500;
+  }
+  .chip {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 2px 7px;
+    border-radius: 4px;
+    background-color: #e2e8f0;
+    color: #334155;
+    margin-bottom: 4px;
+  }
+  .chip.blue {
+    background-color: #dbeafe;
+    color: #1e40af;
+  }
+  .chip.amber {
+    background-color: #fef3c7;
+    color: #92400e;
+  }
+  .chip.green {
+    background-color: #d1fae5;
+    color: #065f46;
+  }
+
+  /* Title Slide Specifics */
+  .title-hero {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 16px;
+  }
+  .title-badge-top {
+    display: inline-block;
+    font-size: 11.5px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #1d4ed8;
+    background-color: #eff6ff;
+    border: 1.5px solid #bfdbfe;
+    padding: 5px 14px;
+    border-radius: 6px;
+    align-self: flex-start;
+  }
+  .main-title {
+    font-size: 26px;
+    font-weight: 900;
+    color: #0f172a;
+    line-height: 1.25;
+    margin: 0;
+    letter-spacing: -0.02em;
+  }
+  .sub-title {
+    font-size: 15.5px;
+    font-weight: 500;
+    color: #475569;
+    line-height: 1.45;
+    margin: 0;
+  }
+  .meta-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  .meta-card {
+    background-color: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+  .meta-label {
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #64748b;
+    letter-spacing: 0.06em;
+    margin-bottom: 3px;
+  }
+  .meta-value {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.35;
+  }
+</style>
+</head>
+<body>
+
+<!-- SLIDE 1: TITLE & EXECUTIVE SUMMARY -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="slide-title-group">
+      <div class="slide-category">Executive Research Pitch Deck 2026</div>
+      <div class="slide-title">Faculty of Information Technology, Maranatha Christian University</div>
+    </div>
+    <div class="slide-badge">Academic Proposal Brief</div>
+  </div>
+
+  <div class="title-hero">
+    <div class="title-badge-top">Empirical AIED & Learning Analytics Research</div>
+    <div class="main-title">Quantifying AI Over-Reliance in Programming Education: A Telemetry-Driven Behavioral Metric with Productive Friction in S-SPARC</div>
+    <div class="sub-title">An Empirical Framework for Diagnosing Epistemic Dependence, Latent Construct Modeling, and Closed-Loop Scaffolding on the E-STRANGE Learning Platform</div>
+    
+    <div class="card accent" style="padding: 14px 18px;">
+      <div class="card-title">Core Research Thesis</div>
+      <p style="font-size: 12.5px; color: #334155; line-height: 1.5;">
+        Generative AI generates executable code in seconds, but unconstrained access fosters severe cognitive offloading and epistemic dependence. This research formulates a real-time, telemetry-driven composite metric: the <strong>AI Over-Reliance Index (ORI)</strong>. Through empirical validation, latent factor modeling (EFA/CFA), and structured productive friction in S-SPARC, this study establishes a defensible paradigm to diagnose, quantify, and remediate cognitive atrophy in higher computer science education.
+      </p>
+    </div>
+
+    <div class="meta-grid">
+      <div class="meta-card">
+        <div class="meta-label">Institution & Faculty</div>
+        <div class="meta-value">Maranatha Christian University<br>Faculty of Information Technology</div>
+      </div>
+      <div class="meta-card">
+        <div class="meta-label">Research Domains</div>
+        <div class="meta-value">AI in Education (AIED)<br>Learning Analytics & EDM</div>
+      </div>
+      <div class="meta-card">
+        <div class="meta-label">Operational Testbed</div>
+        <div class="meta-value">S-SPARC AI Engine<br>E-STRANGE Auto-Grader</div>
+      </div>
+      <div class="meta-card">
+        <div class="meta-label">Publication Targets</div>
+        <div class="meta-value">IEEE TALE / EDUCON / SIGCSE<br>Scopus Q1 (IEEE TLT / C&E: AI)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <span>S-SPARC / E-STRANGE Research Initiative &bull; Faculty of Information Technology</span>
+    <span>Slide 1 / 14</span>
+  </div>
+</div>
+
+<!-- SLIDE 2: THE PROBLEM -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="slide-title-group">
+      <div class="slide-category">Problem Formulation & Pedagogical Urgency</div>
+      <div class="slide-title">Cognitive Atrophy & Epistemic Dependence in Programming Labs</div>
+    </div>
+    <div class="slide-badge">Problem Formulation</div>
+  </div>
+
+  <div class="slide-body">
+    <div class="grid-2" style="flex: 1.2;">
+      <div class="card warning fill">
+        <div>
+          <span class="chip amber">Classroom Reality</span>
+          <div class="card-title">The Passive Behavioral Feedback Loop</div>
+          <p style="font-size: 12px; color: #78350f;">
+            Students routinely bypass mental reasoning through an automated copy-paste loop:
+          </p>
+          <div style="background: #ffffff; border: 1.5px solid #fde68a; border-radius: 6px; padding: 10px; margin: 10px 0; font-family: monospace; font-size: 11.5px; text-align: center; color: #92400e; font-weight: 700;">
+            Copy Problem Statement &rarr; Prompt AI &rarr; Copy Generated Code &rarr; Submit to Auto-Grader
+          </div>
+          <p style="font-size: 11.5px; color: #78350f; line-height: 1.45;">
+            This cycle produces artificial success on automated unit test cases while masking critical cognitive deficits that lead to severe failure during unassisted, closed-book evaluations.
+          </p>
+        </div>
+        <div style="background: #fef3c7; border-radius: 4px; padding: 6px 10px; font-size: 11px; font-weight: 600; color: #92400e;">
+          Result: High lab assignment scores mask complete inability to code independently.
+        </div>
+      </div>
+
+      <div class="card accent fill">
+        <div>
+          <span class="chip blue">Empirical Literature</span>
+          <div class="card-title">Evidence from Peer-Reviewed Research</div>
+          <ul style="font-size: 11.5px; line-height: 1.45;">
+            <li><strong>Critical Thinking Degradation:</strong> Systematic review shows excessive reliance on conversational AI impairs analytical reasoning, problem decomposition, and self-debugging [2].</li>
+            <li><strong>Lack of Cognitive Transfer:</strong> Instant AI code generation exhibits near-zero correlation with independent conceptual mastery [3], [14].</li>
+            <li><strong>Negative Final Grade Impact:</strong> High frequency of LLM dependence correlates negatively with summative exam scores [4].</li>
+            <li><strong>Surface-Level Regulation:</strong> Analysis of 2,376 ChatGPT interactions proves students rarely engage in metacognitive reflection [5].</li>
+          </ul>
+        </div>
+        <div style="background: #eff6ff; border-radius: 4px; padding: 6px 10px; font-size: 11px; font-weight: 600; color: #1e40af;">
+          Literature Consensus: AI assistance without structured friction damages skill acquisition.
+        </div>
+      </div>
+    </div>
+
+    <div class="card navy" style="flex: 0.8; justify-content: center; padding: 12px 18px;">
+      <div class="card-title" style="color: #93c5fd; margin-bottom: 4px;">Pedagogical Diagnosis: The Mechanism of Cognitive Atrophy</div>
+      <p style="font-size: 12px; color: #e2e8f0; line-height: 1.5;">
+        Cognitive offloading eliminates the essential struggle of mental trace execution, edge-case debugging, and syntax structuring. When learners no longer grapple with syntax and logic errors independently, their foundational mental schema for algorithmic problem-solving atrophies [2], [6].
+      </p>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <span>S-SPARC AI Over-Reliance Study &bull; Maranatha Christian University</span>
+    <span>Slide 2 / 14</span>
+  </div>
+</div>
+
+<!-- SLIDE 3: RESEARCH GAP -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="slide-title-group">
+      <div class="slide-category">Literature Review & State of the Art</div>
+      <div class="slide-title">Research Gap: Why Current Solutions Fall Short</div>
+    </div>
+    <div class="slide-badge">Comparative Analysis</div>
+  </div>
+
+  <div class="slide-body">
+    <div style="flex: 1.3; display: flex;">
+      <table class="academic-table">
+        <thead>
+          <tr>
+            <th style="width: 23%;">Current Paradigms (2022-2026)</th>
+            <th style="width: 38%;">Inherent Methodological Limitations</th>
+            <th style="width: 39%;">S-SPARC Novel Research Approach</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Subjective Surveys</strong><br>[2], [7]</td>
+            <td>Likert scales suffer from recall bias and social desirability; cannot capture real-time typing dynamics during problem-solving.</td>
+            <td><strong>Continuous Telemetry Analytics:</strong> Millisecond-level event logging (keystroke cadence, reflection pauses, prompt entropy) with zero survey overhead.</td>
+          </tr>
+          <tr>
+            <td><strong>Binary Plagiarisme Detectors</strong><br>(AI Text Classifiers)</td>
+            <td>High false-positive rates; purely punitive without providing diagnostic feedback on student problem-solving strategies.</td>
+            <td><strong>Cognitive Inquiry Profiling:</strong> Longitudinally maps problem decomposition, prompt sophistication, and epistemic autonomy [5].</td>
+          </tr>
+          <tr>
+            <td><strong>Post-Hoc Lab / Eye-Tracking</strong><br>[15], [16]</td>
+            <td>Rigorous but confined to artificial lab environments; cannot provide a computable metric for live classroom intervention.</td>
+            <td><strong>Real-Time Composite Index (ORI):</strong> Computes live over-reliance scores to trigger dynamic, adaptive pedagogical scaffolding in real time.</td>
+          </tr>
+          <tr>
+            <td><strong>Frictionless Commercial AI</strong><br>[5], [8]</td>
+            <td>Commercial chatbots encourage rapid prompt spamming and full-code generation without enforcing metacognitive reflection.</td>
+            <td><strong>Tiered Productive Friction:</strong> Enforces mandatory 60-second reflection pauses and multi-stage Socratic guidance [9], [10].</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card accent" style="flex: 0.4; justify-content: center; padding: 10px 16px;">
+      <div class="card-title">Scientific Synthesis of Research Gap</div>
+      <p style="font-size: 11.5px; color: #334155; line-height: 1.45;">
+        The academic literature currently lacks a unified framework that combines unobtrusive telemetry, information-theoretic prompt evaluation, and closed-loop productive friction directly integrated into an institutional LMS auto-grader.
+      </p>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <span>S-SPARC AI Over-Reliance Study &bull; Maranatha Christian University</span>
+    <span>Slide 3 / 14</span>
+  </div>
+</div>
+
+<!-- SLIDE 4: THE SOLUTION (MATHEMATICAL FORMULATION) -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="slide-title-group">
+      <div class="slide-category">Mathematical Modeling & Latent Metrics</div>
+      <div class="slide-title">AI Over-Reliance Index (ORI): Mathematical Formulation</div>
+    </div>
+    <div class="slide-badge">Mathematical Model</div>
+  </div>
+
+  <div class="slide-body">
+    <div class="math-block">
+      ORI = 1 - (w1 &middot; Q_prompt + w2 &middot; S_CIOE + w3 &middot; R_concept + w4 &middot; F_reflect)
+      <div class="math-sub">All component indicators normalized to [0, 1] &bull; Total weight constraint: w1 + w2 + w3 + w4 = 1.0</div>
+    </div>
+
+    <div class="grid-4" style="flex: 1;">
+      <div class="card fill">
+        <div>
+          <span class="chip blue">Indicator 1</span>
+          <div class="card-title">Q_prompt (w1 = 0.30)</div>
+          <p style="font-size: 11px; font-weight: 700; color: #1d4ed8;">Shannon Information Entropy</p>
+          <p style="font-size: 11px; color: #475569; line-height: 1.4;">
+            H(X) = -&sum; p(x) log2 p(x) [11]. Measures lexical richness and technical syntax token density within coding prompts [13], [17].
+          </p>
+        </div>
+        <div style="font-size: 10px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 4px;">
+          Penalizes generic, low-effort queries like "fix code".
+        </div>
+      </div>
+
+      <div class="card fill">
+        <div>
+          <span class="chip blue">Indicator 2</span>
+          <div class="card-title">S_CIOE (w2 = 0.25)</div>
+          <p style="font-size: 11px; font-weight: 700; color: #1d4ed8;">Context Completeness</p>
+          <p style="font-size: 11px; color: #475569; line-height: 1.4;">
+            Measures compliance across 4 structured dimensions: Context, Input specs, Expected Output, and Error Trace [12].
+          </p>
+        </div>
+        <div style="font-size: 10px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 4px;">
+          Rewards rigorous problem specification.
+        </div>
+      </div>
+
+      <div class="card fill">
+        <div>
+          <span class="chip blue">Indicator 3</span>
+          <div class="card-title">R_concept (w3 = 0.20)</div>
+          <p style="font-size: 11px; font-weight: 700; color: #1d4ed8;">Conceptual Ratio</p>
+          <p style="font-size: 11px; color: #475569; line-height: 1.4;">
+            Ratio of conceptual/logic inquiries versus requests for direct code generation (Bloom Levels C2-C4 vs C1).
+          </p>
+        </div>
+        <div style="font-size: 10px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 4px;">
+          Differentiates learning from direct outsourcing.
+        </div>
+      </div>
+
+      <div class="card fill">
+        <div>
+          <span class="chip blue">Indicator 4</span>
+          <div class="card-title">F_reflect (w4 = 0.25)</div>
+          <p style="font-size: 11px; font-weight: 700; color: #1d4ed8;">Friction Adherence</p>
+          <p style="font-size: 11px; color: #475569; line-height: 1.4;">
+            Adherence to the 60s reflection window [9] coupled with keystroke cadence analysis to detect external copy-paste.
+          </p>
+        </div>
+        <div style="font-size: 10px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 4px;">
+          Prevents meta-gaming via external LLMs.
+        </div>
+      </div>
+    </div>
+
+    <div class="card warning" style="flex: 0.35; justify-content: center; padding: 10px 16px;">
+      <p style="font-size: 11px; color: #92400e; line-height: 1.45;">
+        <strong>Psychometric Rigor Disclosure:</strong> The component weights above represent an exploratory baseline. Structural dimensionality and final weights are empirically calibrated via Exploratory Factor Analysis (EFA) and Confirmatory Factor Analysis (CFA) across distinct student cohorts.
+      </p>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <span>S-SPARC AI Over-Reliance Study &bull; Maranatha Christian University</span>
+    <span>Slide 4 / 14</span>
+  </div>
+</div>
+
+<!-- SLIDE 5: CORE NOVELTIES -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="slide-title-group">
+      <div class="slide-category">Scientific Contributions & Novelties</div>
+      <div class="slide-title">Four Pillars of Scientific Innovation</div>
+    </div>
+    <div class="slide-badge">Original Contributions</div>
+  </div>
+
+  <div class="slide-body">
+    <div class="grid-2" style="flex: 1;">
+      <div class="card accent fill">
+        <div>
+          <span class="chip blue">Contribution I</span>
+          <div class="card-title">Real-Time Composite Metric for Adaptive Scaffolding</div>
+          <p style="font-size: 12px; color: #334155; line-height: 1.5;">
+            Unlike post-hoc reliance taxonomies [15] or eye-tracking setups [16] analyzed after lab sessions, S-SPARC computes ORI scores dynamically during active coding. This enables the platform to throttle AI assistance dynamically and activate Socratic scaffolding when over-reliance is detected.
+          </p>
+        </div>
+        <div style="background: #eff6ff; border-radius: 4px; padding: 6px 10px; font-size: 11px; font-weight: 600; color: #1e40af;">
+          Impact: First real-time pedagogical intervention engine for Generative AI in CS.
+        </div>
+      </div>
+
+      <div class="card accent fill">
+        <div>
+          <span class="chip blue">Contribution II</span>
+          <div class="card-title">Information-Theoretic Evaluation of Coding Prompts</div>
+          <p style="font-size: 12px; color: #334155; line-height: 1.5;">
+            Adapts Shannon Information Entropy H(X) [11] to quantify lexical diversity, structural complexity, and technical token density in student programming prompts, advancing significantly beyond naive character-count or word-length metrics [13], [17].
+          </p>
+        </div>
+        <div style="background: #eff6ff; border-radius: 4px; padding: 6px 10px; font-size: 11px; font-weight: 600; color: #1e40af;">
+          Impact: Objective mathematical quantification of prompt engineering depth.
+        </div>
+      </div>
+
+      <div class="card accent fill">
+        <div>
+          <span class="chip blue">Contribution III</span>
+          <div class="card-title">Empirical Productive Friction & Anti Meta-Gaming</div>
+          <p style="font-size: 12px; color: #334155; line-height: 1.5;">
+            Empirically tests the pedagogical efficacy of mandatory 60-second reflection pauses [9], [10] reinforced by keystroke dwell-time analytics to verify human typing cadence and prevent students from bypassing the intervention via external LLMs.
+          </p>
+        </div>
+        <div style="background: #eff6ff; border-radius: 4px; padding: 6px 10px; font-size: 11px; font-weight: 600; color: #1e40af;">
+          Impact: Enforces authentic cognitive engagement rather than superficial compliance.
+        </div>
+      </div>
+
+      <div class="card accent fill">
+        <div>
+          <span class="chip blue">Contribution IV</span>
+          <div class="card-title">Closed-Loop AI Tutor & LMS Auto-Grader Integration</div>
+          <p style="font-size: 12px; color: #334155; line-height: 1.5;">
+            Directly correlates continuous AI conversational telemetry with deterministic unit-test outcomes on E-STRANGE (pass rates, execution runtime, debugging iterations) and unassisted exam performance to establish learning transfer.
+          </p>
+        </div>
+        <div style="background: #eff6ff; border-radius: 4px; padding: 6px 10px; font-size: 11px; font-weight: 600; color: #1e40af;">
+          Impact: Connects AI dialog quality directly to measurable code execution rigor.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <span>S-SPARC AI Over-Reliance Study &bull; Maranatha Christian University</span>
+    <span>Slide 5 / 14</span>
+  </div>
+</div>
+
+<!-- SLIDE 6: DATA INFRASTRUCTURE -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="slide-title-group">
+      <div class="slide-category">System Architecture & Pipeline</div>
+      <div class="slide-title">Active Telemetry Pipeline (Zero-Friction Collection)</div>
+    </div>
+    <div class="slide-badge">Operational Testbed</div>
+  </div>
+
+  <div class="slide-body">
+    <div class="grid-2" style="flex: 1;">
+      <div class="card success fill">
+        <div>
+          <span class="chip green">Infrastructure Live</span>
+          <div class="card-title">Operational System Readiness</div>
+          <ul style="font-size: 12px; line-height: 1.55;">
+            <li><strong>Active Backend Logging:</strong> Relational MySQL tables in S-SPARC and E-STRANGE record student interaction telemetry automatically with zero manual configuration.</li>
+            <li><strong>Zero Operational Overhead:</strong> Telemetry capture operates passively in the background without interrupting lab sessions or inducing survey fatigue.</li>
+            <li><strong>Automated Export Pipeline:</strong> Pre-built ETL scripts extract, sanitize, and structure raw data directly into Pandas DataFrames for statistical modeling.</li>
+          </ul>
+        </div>
+        <div style="background: #d1fae5; border-radius: 4px; padding: 8px 12px; font-size: 11.5px; font-weight: 700; color: #065f46;">
+          Effort for Instructors: ZERO manual data entry or paper surveys required.
+        </div>
+      </div>
+
+      <div class="card fill" style="padding: 10px;">
+        <span class="chip blue" style="margin-left: 6px;">Telemetry Schema</span>
+        <table class="academic-table" style="font-size: 11px;">
+          <thead>
+            <tr>
+              <th style="width: 35%;">Telemetry Field</th>
+              <th style="width: 65%;">Data Definition & Granularity</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>prompt_raw_text</code></td>
+              <td>Raw query string and millisecond timestamp</td>
+            </tr>
+            <tr>
+              <td><code>entropy_score</code></td>
+              <td>Shannon Information Entropy H(X) score</td>
+            </tr>
+            <tr>
+              <td><code>cioe_compliance</code></td>
+              <td>4-factor boolean vector (Context, Input, Output, Error)</td>
+            </tr>
+            <tr>
+              <td><code>keystroke_dwell</code></td>
+              <td>Typing cadence & anti-paste verification metrics</td>
+            </tr>
+            <tr>
+              <td><code>execution_metrics</code></td>
+              <td>Unit test pass rate, runtime errors, attempt cycles</td>
+            </tr>
+            <tr>
+              <td><code>compute_footprint</code></td>
+              <td>Inference token consumption & estimated CO2 (g)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <span>S-SPARC AI Over-Reliance Study &bull; Maranatha Christian University</span>
+    <span>Slide 6 / 14</span>
+  </div>
+</div>
+
+<!-- SLIDE 7: ETHICS & DATA GOVERNANCE -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="slide-title-group">
+      <div class="slide-category">Research Ethics & Data Governance</div>
+      <div class="slide-title">Data Privacy & Mitigation of Pygmalion / Labeling Bias</div>
+    </div>
+    <div class="slide-badge">Research Ethics</div>
+  </div>
+
+  <div class="slide-body">
+    <div class="grid-3" style="flex: 1.1;">
+      <div class="card accent fill">
+        <span class="chip blue">Pillar 1</span>
+        <div class="card-title">Informed Consent & Opt-Out</div>
+        <p style="font-size: 12px; color: #334155; line-height: 1.45;">
+          Students receive full transparency regarding aggregated data analytics for curriculum improvement, with guaranteed penalty-free opt-out options that do not affect academic grading.
+        </p>
+      </div>
+
+      <div class="card accent fill">
+        <span class="chip blue">Pillar 2</span>
+        <div class="card-title">De-Identification & Encryption</div>
+        <p style="font-size: 12px; color: #334155; line-height: 1.45;">
+          All personal identifiable information (Student ID, Name) is cryptographically hashed into unique random research identifiers prior to analysis. Datasets are stored on secure, access-controlled institutional servers.
+        </p>
+      </div>
+
+      <div class="card warning fill">
+        <span class="chip amber">Pillar 3</span>
+        <div class="card-title">Preventing Pygmalion Effect</div>
+        <p style="font-size: 12px; color: #78350f; line-height: 1.45;">
+          Individual ORI scores and behavioral personas are strictly blind-masked from course instructors during the semester to prevent algorithmic labeling from biasing subjective grading or teaching behavior.
+        </p>
+      </div>
+    </div>
+
+    <div class="card navy" style="flex: 0.9; justify-content: center; padding: 12px 18px;">
+      <div class="card-title" style="color: #93c5fd; margin-bottom: 4px;">Instructor Dashboard Harmonization: Phase-Gated Deployment</div>
+      <p style="font-size: 12px; color: #e2e8f0; line-height: 1.5;">
+        The live instructor evaluation dashboard marketed in the S-SPARC product roadmap follows a phase-gated deployment: during Phase 1 (Validation Pilot), individual metrics remain blind-masked to protect internal validity. Full live dashboard access is unlocked in Phase 2 once psychometric and construct validity are rigorously established.
+      </p>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <span>S-SPARC AI Over-Reliance Study &bull; Maranatha Christian University</span>
+    <span>Slide 7 / 14</span>
+  </div>
+</div>
+
+<!-- SLIDE 8: ADVANCED METHODOLOGICAL DEFENSES -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="slide-title-group">
+      <div class="slide-category">Methodological Rigor & Psychometrics</div>
+      <div class="slide-title">Mitigating Reactivity, Confounders, and Estimation Biases</div>
+    </div>
+    <div class="slide-badge">Methodological Rigor</div>
+  </div>
+
+  <div class="slide-body">
+    <div class="grid-2" style="flex: 1;">
+      <div class="card fill">
+        <span class="chip blue">Mitigation 1</span>
+        <div class="card-title">Reactivity & Maturation Confound Mitigation</div>
+        <ul style="font-size: 11.5px; line-height: 1.45;">
+          <li><strong>A-B Phase Design:</strong> Modules 1-2 serve as an unconstrained baseline phase to record natural traits; Modules 3-4 introduce active productive friction (60s pause).</li>
+          <li><strong>Confound Disclosure:</strong> For a single-cohort design, maturation and friction effects are formally disclosed as a limitation; if &ge; 2 parallel sections are available, counterbalancing (A-B vs B-A) is implemented.</li>
+        </ul>
+      </div>
+
+      <div class="card fill">
+        <span class="chip blue">Mitigation 2</span>
+        <div class="card-title">Two-Phase Psychometric Validation Roadmap</div>
+        <ul style="font-size: 11.5px; line-height: 1.45;">
+          <li><strong>Phase 1 (Semester 1 / Cohort 1):</strong> Instrument development and Exploratory Factor Analysis (EFA) to discover latent factor loadings across the 4 ORI indicators.</li>
+          <li><strong>Phase 2 (Semester 2 / Cohort 2):</strong> Independent Confirmatory Factor Analysis (CFA) to verify construct unidimensionality and prevent model overfitting.</li>
+        </ul>
+      </div>
+
+      <div class="card fill">
+        <span class="chip blue">Mitigation 3</span>
+        <div class="card-title">Entropy Inversion Paradox (Interaction Modeling)</div>
+        <ul style="font-size: 11.5px; line-height: 1.45;">
+          <li><strong>Interaction Model:</strong> Formulates an <em>Entropy &times; Baseline Prior Ability</em> (pre-test / GPA) interaction term to ensure expert prompt conciseness is not misclassified as novice over-reliance.</li>
+        </ul>
+      </div>
+
+      <div class="card fill">
+        <span class="chip blue">Mitigation 4</span>
+        <div class="card-title">NLP Classifier Sub-Study Validation (R_concept)</div>
+        <ul style="font-size: 11.5px; line-height: 1.45;">
+          <li><strong>Double Annotation Protocol:</strong> Validates intent classification against &ge; 100 expert-annotated prompts by 2 independent raters, requiring Cohen's Kappa &kappa; &ge; 0.80 before formula deployment.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <span>S-SPARC AI Over-Reliance Study &bull; Maranatha Christian University</span>
+    <span>Slide 8 / 14</span>
+  </div>
+</div>
+
+<!-- SLIDE 9: VALIDATION STRATEGY & ANTI-CIRCULARITY -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="slide-title-group">
+      <div class="slide-category">Statistical Integrity & Open Science</div>
+      <div class="slide-title">Anti-Circularity Validation, Cross-Validation, & Pre-Registration</div>
+    </div>
+    <div class="slide-badge">Statistical Integrity</div>
+  </div>
+
+  <div class="slide-body">
+    <div class="grid-3" style="flex: 1.1;">
+      <div class="card accent fill">
+        <span class="chip blue">Protocol 1</span>
+        <div class="card-title">Anti-Circularity Cross-Validation</div>
+        <p style="font-size: 12px; color: #334155; line-height: 1.45;">
+          Eliminates circular validation by strictly separating regression weight calibration from validation testing using a rigorous <strong>5-Fold Cross-Validation</strong> protocol.
+        </p>
+      </div>
+
+      <div class="card accent fill">
+        <span class="chip blue">Protocol 2</span>
+        <div class="card-title">Standardized Convergent Validity</div>
+        <p style="font-size: 12px; color: #334155; line-height: 1.45;">
+          Cross-validates ORI scores against an internationally validated instrument: the <em>GenAI Reliance Scale</em> (Hou et al., Computers & Education 2025 [1]).
+        </p>
+      </div>
+
+      <div class="card accent fill">
+        <span class="chip blue">Protocol 3</span>
+        <div class="card-title">OSF Pre-Registration Protocol</div>
+        <p style="font-size: 12px; color: #334155; line-height: 1.45;">
+          Locks the confirmatory analysis plan on the Open Science Framework (OSF.io) prior to data collection, eliminating p-hacking and researcher degrees of freedom.
+        </p>
+      </div>
+    </div>
+
+    <div class="card navy" style="flex: 0.9; justify-content: center; padding: 14px 18px;">
+      <div class="card-title" style="color: #93c5fd; margin-bottom: 4px;">Multicollinearity Diagnostics (Variance Inflation Factor &bull; VIF &lt; 5.0)</div>
+      <p style="font-size: 12px; color: #e2e8f0; line-height: 1.5;">
+        All predictor variables in the ORI formulation are evaluated for multicollinearity to ensure component orthogonality, parameter stability, and unambiguous interpretability of calibrated regression weights.
+      </p>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <span>S-SPARC AI Over-Reliance Study &bull; Maranatha Christian University</span>
+    <span>Slide 9 / 14</span>
+  </div>
+</div>
+
+<!-- SLIDE 10: 4 EXPLORATORY HYPOTHESES -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="slide-title-group">
+      <div class="slide-category">Secondary Exploratory Analyses</div>
+      <div class="slide-title">Four Exploratory Hypotheses with Rigorous Statistical Controls</div>
+    </div>
+    <div class="slide-badge">Bonferroni Adjusted &alpha; = 0.0125</div>
+  </div>
+
+  <div class="slide-body">
+    <div class="grid-2" style="flex: 1;">
+      <div class="card fill">
+        <span class="chip blue">Hypothesis 1</span>
+        <div class="card-title">H1. Volume-Driven Green AI Paradox</div>
+        <p style="font-size: 11.5px; line-height: 1.45;"><strong>Hypothesis:</strong> Over-reliant students generate higher cumulative carbon emissions due to excessive prompt iteration volumes rather than per-query complexity.</p>
+        <p style="font-size: 11px; color: #1e40af; margin-top: 6px;"><strong>Control:</strong> Controls for Module Difficulty Fixed-Effects and isolates query volume from semantic cache hit rates.</p>
+      </div>
+
+      <div class="card fill">
+        <span class="chip blue">Hypothesis 2</span>
+        <div class="card-title">H2. AST Code Distance Delta vs Variable Renaming</div>
+        <p style="font-size: 11.5px; line-height: 1.45;"><strong>Hypothesis:</strong> Autonomous students exhibit significantly larger Abstract Syntax Tree (AST) structural distances between AI suggestions and final submissions.</p>
+        <p style="font-size: 11px; color: #1e40af; margin-top: 6px;"><strong>Control:</strong> Evaluates the final AI-suggested code block within the session against the student's submitted code.</p>
+      </div>
+
+      <div class="card fill">
+        <span class="chip blue">Hypothesis 3</span>
+        <div class="card-title">H3. Reflexive Pause vs First-Attempt Pass Rate</div>
+        <p style="font-size: 11.5px; line-height: 1.45;"><strong>Hypothesis:</strong> Active adherence to reflection pauses positively predicts first-attempt pass rates on auto-graded programming assignments.</p>
+        <p style="font-size: 11px; color: #1e40af; margin-top: 6px;"><strong>Control:</strong> Incorporates baseline prior ability as a covariate; claims remain strictly associative rather than deterministic.</p>
+      </div>
+
+      <div class="card fill">
+        <span class="chip blue">Hypothesis 4</span>
+        <div class="card-title">H4. Query Novelty & Semantic Cache Lifecycle</div>
+        <p style="font-size: 11.5px; line-height: 1.45;"><strong>Hypothesis:</strong> Semantic cache misses reflect deeper student exploratory inquiry into complex edge cases and non-standard problem boundaries.</p>
+        <p style="font-size: 11px; color: #1e40af; margin-top: 6px;"><strong>Control:</strong> Controls for cache maturity lifecycle and assignment timing to prevent cold-start artifacts.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <span>S-SPARC AI Over-Reliance Study &bull; Maranatha Christian University</span>
+    <span>Slide 10 / 14</span>
+  </div>
+</div>
+
+<!-- SLIDE 11: PUBLICATION TARGETS & SCOPE -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="slide-title-group">
+      <div class="slide-category">Research Deliverables & Scope Boundaries</div>
+      <div class="slide-title">Joint Publication Targets, Co-Authorship, & Generalization Limits</div>
+    </div>
+    <div class="slide-badge">Deliverables & Scope</div>
+  </div>
+
+  <div class="slide-body">
+    <div class="grid-2" style="flex: 1;">
+      <div class="card accent fill">
+        <span class="chip blue">Publication Pipeline</span>
+        <div class="card-title">Target Publication Venues & Authorship Model</div>
+        <ul style="font-size: 12px; line-height: 1.55;">
+          <li><strong>Phase 1: Top-Tier Peer-Reviewed International Conferences:</strong>
+            <ul>
+              <li>IEEE International Conference on Teaching, Assessment, and Learning for Engineering (IEEE TALE)</li>
+              <li>IEEE Global Engineering Education Conference (IEEE EDUCON) / ACM SIGCSE</li>
+            </ul>
+          </li>
+          <li><strong>Phase 2: Scopus Q1 / High-Impact International Journals:</strong>
+            <ul>
+              <li>IEEE Transactions on Learning Technologies (IEEE TLT)</li>
+              <li>Computers and Education: Artificial Intelligence (Elsevier)</li>
+            </ul>
+          </li>
+          <li><strong>Authorship Structure:</strong> Academic Advisor as Principal Investigator / Corresponding Author alongside Student Research Team.</li>
+        </ul>
+      </div>
+
+      <div class="card fill">
+        <span class="chip amber">Methodological Scope</span>
+        <div class="card-title">Boundary of Generalization</div>
+        <p style="font-size: 12px; color: #334155; line-height: 1.55;">
+          The ORI metric is specifically formulated for code-based problem-solving environments evaluable via <strong>deterministic unit testing</strong> within an automated grading framework.
+        </p>
+        <div style="background: #f1f5f9; border-left: 4px solid #64748b; padding: 10px 12px; border-radius: 4px; margin-top: 10px;">
+          <p style="font-size: 11.5px; color: #475569; line-height: 1.45;">
+            Generalization to non-computing disciplines (e.g., qualitative essay composition or social sciences) requires non-deterministic evaluation rubrics and is formally defined as future work.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <span>S-SPARC AI Over-Reliance Study &bull; Maranatha Christian University</span>
+    <span>Slide 11 / 14</span>
+  </div>
+</div>
+
+<!-- SLIDE 12: TWO-PHASE ROADMAP & TIMELINE -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="slide-title-group">
+      <div class="slide-category">Execution Plan & Milestones</div>
+      <div class="slide-title">Two-Phase Research Execution Roadmap</div>
+    </div>
+    <div class="slide-badge">2-Phase Execution Roadmap</div>
+  </div>
+
+  <div class="slide-body">
+    <div class="card accent" style="flex: 1.2; justify-content: space-between; padding: 12px 16px;">
+      <div>
+        <span class="chip blue">Phase 1 (Semester 1)</span>
+        <div class="card-title">PHASE 1: Instrument Development & Exploratory EFA (Current Semester &bull; 8 Weeks)</div>
+      </div>
+      <table class="academic-table" style="font-size: 11px;">
+        <thead>
+          <tr>
+            <th style="width: 18%;">Timeline</th>
+            <th style="width: 42%;">Primary Research Activities</th>
+            <th style="width: 40%;">Key Research Deliverables</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Weeks 1 - 2</strong></td>
+            <td>OSF Pre-Registration, Institutional Ethics Approval, Baseline Phase (Modules 1-2 Unconstrained)</td>
+            <td>Locked OSF protocol, baseline natural interaction telemetry</td>
+          </tr>
+          <tr>
+            <td><strong>Weeks 3 - 4</strong></td>
+            <td>Intervention Phase (Modules 3-4 with Active 60s Productive Friction)</td>
+            <td>Complete longitudinal pre/post intervention telemetry dataset</td>
+          </tr>
+          <tr>
+            <td><strong>Weeks 5 - 6</strong></td>
+            <td>MySQL ETL extraction, NLP double annotation (&kappa; &ge; 0.80), Exploratory Factor Analysis (EFA)</td>
+            <td>Psychometric factor report & calibrated regression baseline</td>
+          </tr>
+          <tr>
+            <td><strong>Weeks 7 - 8</strong></td>
+            <td>Manuscript drafting and submission to IEEE International Conference</td>
+            <td>Completed manuscript submitted to IEEE TALE / EDUCON</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card navy" style="flex: 0.8; justify-content: center; padding: 12px 18px;">
+      <div class="card-title" style="color: #93c5fd; margin-bottom: 4px;">PHASE 2: Confirmatory Validation, Independent Replication, & Scopus Q1 Journal (Next Semester)</div>
+      <p style="font-size: 11.5px; color: #e2e8f0; line-height: 1.45;">
+        Independent cohort replication (N &ge; 80), Confirmatory Factor Analysis (CFA), convergent validation against the standardized Hou et al. scale [1], testing the Entropy &times; Ability interaction model, and full manuscript submission to Scopus Q1 journals (IEEE TLT / C&E: AI) accompanied by the live instructor dashboard deployment.
+      </p>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <span>S-SPARC AI Over-Reliance Study &bull; Maranatha Christian University</span>
+    <span>Slide 12 / 14</span>
+  </div>
+</div>
+
+<!-- SLIDE 13: CALL TO ACTION -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="slide-title-group">
+      <div class="slide-category">Collaboration & Resource Requirements</div>
+      <div class="slide-title">Advisor Endorsement & Collaborative Action Items</div>
+    </div>
+    <div class="slide-badge">Call to Action</div>
+  </div>
+
+  <div class="slide-body">
+    <div class="grid-3" style="flex: 1;">
+      <div class="card accent fill">
+        <span class="chip blue">Action Item 1</span>
+        <div class="card-title">Practicum Class Deployment</div>
+        <p style="font-size: 12px; color: #334155; line-height: 1.5;">
+          Approval to deploy S-SPARC and E-STRANGE across 1 active programming lab cohort (35-50 students) during 4 practical lab modules.
+        </p>
+        <div style="font-size: 11px; color: #64748b; margin-top: 8px;">
+          Zero disruption to established course syllabus.
+        </div>
+      </div>
+
+      <div class="card accent fill">
+        <span class="chip blue">Action Item 2</span>
+        <div class="card-title">Ethics & OSF Endorsement</div>
+        <p style="font-size: 12px; color: #334155; line-height: 1.5;">
+          Institutional endorsement for the faculty ethics review and co-sponsorship of the OSF.io pre-registration protocol.
+        </p>
+        <div style="font-size: 11px; color: #64748b; margin-top: 8px;">
+          Guarantees open-science research integrity.
+        </div>
+      </div>
+
+      <div class="card accent fill">
+        <span class="chip blue">Action Item 3</span>
+        <div class="card-title">Collaborative Mentorship</div>
+        <p style="font-size: 12px; color: #334155; line-height: 1.5;">
+          Joint statistical review, pedagogical interpretation of findings, and co-authorship through publication submission.
+        </p>
+        <div style="font-size: 11px; color: #64748b; margin-top: 8px;">
+          Targeting Scopus Q1 co-authorship.
+        </div>
+      </div>
+    </div>
+
+    <div class="card navy" style="flex: 0.8; justify-content: center; text-align: center; padding: 14px 20px;">
+      <div style="font-size: 16px; font-weight: 800; color: #ffffff; margin-bottom: 4px;">
+        "The infrastructure is active, the database is live, the methodology is sound, and the research gap addresses a critical global challenge."
+      </div>
+      <div style="font-size: 12.5px; color: #93c5fd; font-weight: 500;">
+        Let us execute this empirical research into high-impact IEEE and Scopus Q1 publications for the institution.
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <span>S-SPARC AI Over-Reliance Study &bull; Maranatha Christian University</span>
+    <span>Slide 13 / 14</span>
+  </div>
+</div>
+
+<!-- SLIDE 14: IEEE REFERENCES -->
+<div class="slide">
+  <div class="slide-header">
+    <div class="slide-title-group">
+      <div class="slide-category">Academic Bibliography</div>
+      <div class="slide-title">Key References (IEEE Citation Standard)</div>
+    </div>
+    <div class="slide-badge">Key Literature</div>
+  </div>
+
+  <div class="slide-body">
+    <div class="grid-2" style="flex: 1; font-size: 8.5px; line-height: 1.38; color: #334155;">
+      <div class="card fill" style="padding: 10px 14px;">
+        <p><strong>[1]</strong> Y. Hou, X. Zhu, P. Sudarshan, C. P. Lim, and Y. S. Ong, "Measuring undergraduate students' reliance on Generative AI during problem-solving: Scale development and validation," <em>Computers & Education</em>, vol. 234, Art. no. 105329, 2025.</p>
+        <p><strong>[2]</strong> C. Zhai, S. Wibowo, and L. D. Li, "The effects of over-reliance on AI dialogue systems on students' cognitive abilities: A systematic review," <em>Smart Learning Environments</em>, vol. 11, no. 1, Art. no. 28, 2024.</p>
+        <p><strong>[3]</strong> S. Li, J. Liu, and Q. Dong, "Generative artificial intelligence-supported programming education: Effects on learning performance, self-efficacy and processes," <em>Australasian Journal of Educational Technology</em>, vol. 41, no. 1, pp. 45-62, 2025.</p>
+        <p><strong>[4]</strong> G. Jo&scaron;t, V. Taneski, and S. Karakati&#269;, "The impact of large language models on programming education and student learning outcomes," <em>Applied Sciences</em>, vol. 14, no. 10, Art. no. 4115, 2024.</p>
+        <p><strong>[5]</strong> S. L&oacute;pez-Pernas, K. Misiejuk, E. Oliveira, and M. Saqr, "The dynamics of the self-regulation process in student-AI interactions: The case of problem-solving in programming education," in <em>Proc. 25th Koli Calling Int. Conf. Comput. Educ. Res.</em>, 2025, pp. 1-12.</p>
+        <p><strong>[6]</strong> D. Kohen-Vacs, M. Usher, and M. Jansen, "Integrating generative AI into programming education: Student perceptions and the challenge of correcting AI errors," <em>Int. J. Artif. Intell. Educ.</em>, vol. 35, no. 4, pp. 3166-3184, 2025.</p>
+        <p><strong>[7]</strong> J. Prather et al., "The robots are here: Navigating the generative AI revolution in computing education," in <em>Proc. 2023 Work. Group Rep. Innov. Technol. Comput. Sci. Educ.</em>, 2023, pp. 108-159.</p>
+        <p><strong>[8]</strong> A. Kharrufa, S. Alghamdi, A. Aziz, and C. Bull, "LLMs integration in software engineering team projects: Roles, impact, and a pedagogical design space," <em>ACM Trans. Comput. Educ.</em>, vol. 26, no. 1, pp. 1-27, 2024.</p>
+        <p><strong>[9]</strong> P. Denny et al., "Prompt Problems: A new programming exercise for the generative AI era," in <em>Proc. 55th ACM Tech. Symp. Comput. Sci. Educ.</em>, 2024, pp. 296-302.</p>
+      </div>
+
+      <div class="card fill" style="padding: 10px 14px;">
+        <p><strong>[10]</strong> C. Vieira, J. L. De La Hoz, A. J. Magana, and D. Restrepo, "Engineering students' experiences with ChatGPT to generate code," <em>Comput. Appl. Eng. Educ.</em>, vol. 33, no. 1, Art. no. e70090, 2025.</p>
+        <p><strong>[11]</strong> C. E. Shannon, "A mathematical theory of communication," <em>Bell Syst. Tech. J.</em>, vol. 27, no. 3, pp. 379-423, 1948.</p>
+        <p><strong>[12]</strong> P. Yang et al., "Large language models for software testing education: An experience report," in <em>Proc. 34th ACM Int. Conf. Found. Softw. Eng.</em>, 2026, pp. 1-12.</p>
+        <p><strong>[13]</strong> X. Gong, W. Xu, and A.-L. Qiao, "Exploring undergraduates' computational thinking in progressive prompt-assisted programming learning," <em>Int. J. Educ. Technol. High. Educ.</em>, vol. 22, no. 1, Art. no. 14, 2025.</p>
+        <p><strong>[14]</strong> G. Pitts, N. Rani, W. Mildort, and E.-M. Cook, "Students' reliance on AI in higher education: Identifying contributing factors," <em>arXiv preprint</em> arXiv:2506.13845, 2025.</p>
+        <p><strong>[15]</strong> J. Zheng et al., "Do students rely on AI? Analysis of student-ChatGPT conversations from a field study," in <em>Proc. 8th AAAI/ACM Conf. AI, Ethics, and Society (AIES)</em>, 2025.</p>
+        <p><strong>[16]</strong> G. Salib and Z. Sharafi, "AI or ally? Understanding student reliance on GitHub Copilot and human peers through eye tracking," <em>IEEE Trans. Softw. Eng.</em>, pp. 1-13, 2026, doi: 10.1109/TSE.2026.3705249.</p>
+        <p><strong>[17]</strong> T.-Y. Yang et al., "Leveraging LLMs for automated extraction and structuring of educational concepts," <em>Mach. Learn. Knowl. Extr.</em>, vol. 7, no. 3, p. 103, 2025.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="slide-footer">
+    <span>S-SPARC AI Over-Reliance Study &bull; Maranatha Christian University</span>
+    <span>Slide 14 / 14</span>
+  </div>
+</div>
+
+</body>
+</html>
+"""
+
+html_path = r"c:\final_estrange\s-sparc\docs\deck_export.html"
+pdf_path = r"c:\final_estrange\s-sparc\docs\S_SPARC_AI_Over_Reliance_Research_Pitch_Deck.pdf"
+
+with open(html_path, "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+chrome_exe = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+cmd = [
+    chrome_exe,
+    "--headless=new",
+    "--disable-gpu",
+    "--no-pdf-header-footer",
+    f"--print-to-pdf={pdf_path}",
+    f"file:///{html_path.replace(os.sep, '/')}"
+]
+
+res = subprocess.run(cmd, capture_output=True, text=True)
+print("Returncode:", res.returncode)
+print("Stdout:", res.stdout)
+print("Stderr:", res.stderr)
+
+if os.path.exists(pdf_path):
+    print("PDF regenerated successfully with full vertical density! Size:", os.path.getsize(pdf_path), "bytes")
