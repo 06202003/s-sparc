@@ -75,7 +75,7 @@ if (isset($_GET['debug']) || (isset($_GET['action']) && $_GET['action'] === 'deb
         }
     }
 
-    // 2. Table row counts for all AI & activity tables
+    // 2. Table row counts across all databases on server
     $out['table_row_counts'] = [];
     $candidateTables = ['chat_history', 'gpt_jobs', 'educational_learning_logs', 'code_embeddings', 'session_tokens', 'submission', 'suspicion', 'code_clarity_suggestion', 'user', 'users', 'game_student_course', 'enrollment', 'assessment', 'course'];
     foreach ($candidateTables as $tbl) {
@@ -85,6 +85,29 @@ if (isset($_GET['debug']) || (isset($_GET['action']) && $_GET['action'] === 'deb
             $out['table_row_counts'][$tbl] = $cntRes ? (int)$cntRes->fetch_assoc()['total'] : 0;
         } else {
             $out['table_row_counts'][$tbl] = 'TABLE_NOT_FOUND';
+        }
+    }
+
+    // 2b. Check if S-SPARC tables exist in other databases on server (e.g. estrange_v7, estrange_v6)
+    $out['ssparc_tables_in_other_dbs'] = [];
+    foreach ($out['server_databases'] as $otherDb) {
+        if ($otherDb === 'information_schema' || $otherDb === 'estrange_ssparc') continue;
+        $qT = $db->query("SHOW TABLES FROM `$otherDb` LIKE 'chat_history'");
+        if ($qT && $qT->num_rows > 0) {
+            $cntChat = $db->query("SELECT COUNT(*) AS total FROM `$otherDb`.`chat_history`");
+            $cntVal = $cntChat ? (int)$cntChat->fetch_assoc()['total'] : 0;
+            $out['ssparc_tables_in_other_dbs'][$otherDb] = [
+                'has_chat_history' => true,
+                'chat_history_rows' => $cntVal
+            ];
+            
+            // Sample latest rows from this DB
+            $sampleQ = $db->query("SELECT id, user_id, session_id, assessment_id, role, LEFT(content, 60) as preview, created_at FROM `$otherDb`.`chat_history` ORDER BY created_at DESC LIMIT 5");
+            if ($sampleQ) {
+                while ($sq = $sampleQ->fetch_assoc()) {
+                    $out['ssparc_tables_in_other_dbs'][$otherDb]['sample_rows'][] = $sq;
+                }
+            }
         }
     }
 
