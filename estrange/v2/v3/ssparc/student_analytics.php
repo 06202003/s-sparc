@@ -58,7 +58,7 @@ $userId = $_SESSION['user_id'] ?? 'student_demo';
           <span class="font-bold">C-I-O-E Adherence</span>
           <span>Protocol</span>
         </div>
-        <div id="stat-cioe-adherence" class="text-2xl font-extrabold text-slate-900">58.3%</div>
+        <div id="stat-cioe-adherence" class="text-2xl font-extrabold text-slate-900">0.0%</div>
         <p class="text-[11px] text-slate-500 mt-1">Completeness rate of Context, Input, Output, and Error trace</p>
       </div>
 
@@ -67,7 +67,7 @@ $userId = $_SESSION['user_id'] ?? 'student_demo';
           <span class="font-bold">Prompt Information Density</span>
           <span>Shannon Entropy H(X)</span>
         </div>
-        <div id="stat-prompt-quality" class="text-2xl font-extrabold text-indigo-900 font-mono">0.61 / 1.0</div>
+        <div id="stat-prompt-quality" class="text-2xl font-extrabold text-indigo-900 font-mono">0.00 / 1.0</div>
         <p class="text-[11px] text-slate-500 mt-1">Average semantic density and technical specification depth</p>
       </div>
 
@@ -76,7 +76,7 @@ $userId = $_SESSION['user_id'] ?? 'student_demo';
           <span class="font-bold">Conceptual Fading Ratio</span>
           <span>Bloom C1-C2</span>
         </div>
-        <div id="stat-conceptual-ratio" class="text-2xl font-extrabold text-amber-900 font-mono">33.3%</div>
+        <div id="stat-conceptual-ratio" class="text-2xl font-extrabold text-amber-900 font-mono">0.0%</div>
         <p class="text-[11px] text-slate-500 mt-1">Ratio of conceptual guidance requests without code spoilers</p>
       </div>
 
@@ -85,7 +85,7 @@ $userId = $_SESSION['user_id'] ?? 'student_demo';
           <span class="font-bold">0-Token Fast-Path Hits</span>
           <span>Stewardship</span>
         </div>
-        <div id="stat-fast-path-rate" class="text-2xl font-extrabold text-emerald-900 font-mono">35.0%</div>
+        <div id="stat-fast-path-rate" class="text-2xl font-extrabold text-emerald-900 font-mono">0.0%</div>
         <p class="text-[11px] text-slate-500 mt-1">Repository solution reuse avoiding redundant cloud compute</p>
       </div>
 
