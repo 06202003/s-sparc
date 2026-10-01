@@ -103,23 +103,53 @@ function ssparc_resolve_all_user_identifiers($mydb, $userId) {
     }, $clean);
     $inSql = implode(',', $escapedIds);
 
-    // 1. Query E-STRANGE user table
-    $uQuery = $mydb->query("SELECT user_id, username, name FROM user WHERE user_id IN ($inSql) OR username IN ($inSql) OR name IN ($inSql)");
+    // 1. Direct query E-STRANGE user table
+    $uQuery = $mydb->query("SELECT user_id, username, name, email FROM user WHERE user_id IN ($inSql) OR username IN ($inSql) OR name IN ($inSql)");
     if ($uQuery && $uQuery->num_rows > 0) {
         while ($row = $uQuery->fetch_assoc()) {
             if (!empty($row['user_id'])) $identifiers[] = (string)$row['user_id'];
             if (!empty($row['username'])) $identifiers[] = (string)$row['username'];
+            if (!empty($row['email'])) $identifiers[] = (string)$row['email'];
         }
     }
 
-    // 2. Query S-SPARC users table (UUID mappings)
+    // 2. Keyword/Name-based search if name like 'YEHEZKIEL'
+    $nameKeywords = [];
+    foreach ($identifiers as $id) {
+        $parts = preg_split('/[\s_\-\.\@]+/', (string)$id);
+        foreach ($parts as $p) {
+            $p = trim($p);
+            if (strlen($p) >= 4 && !is_numeric($p)) {
+                $nameKeywords[] = $mydb->real_escape_string($p);
+            }
+        }
+    }
+    $nameKeywords = array_values(array_unique($nameKeywords));
+    if (!empty($nameKeywords)) {
+        $likeParts = [];
+        foreach ($nameKeywords as $kw) {
+            $likeParts[] = "name LIKE '%$kw%'";
+            $likeParts[] = "username LIKE '%$kw%'";
+        }
+        $likeSql = implode(' OR ', $likeParts);
+        $kwQuery = $mydb->query("SELECT user_id, username, name, email FROM user WHERE $likeSql LIMIT 10");
+        if ($kwQuery && $kwQuery->num_rows > 0) {
+            while ($row = $kwQuery->fetch_assoc()) {
+                if (!empty($row['user_id'])) $identifiers[] = (string)$row['user_id'];
+                if (!empty($row['username'])) $identifiers[] = (string)$row['username'];
+                if (!empty($row['email'])) $identifiers[] = (string)$row['email'];
+            }
+        }
+    }
+
+    // 3. Query S-SPARC users table (UUID mappings)
     $hasUsersTbl = $mydb->query("SHOW TABLES LIKE 'users'");
     if ($hasUsersTbl && $hasUsersTbl->num_rows > 0) {
         $escapedCurrent = array_map(function($id) use ($mydb) {
             return "'" . $mydb->real_escape_string($id) . "'";
         }, array_values(array_filter(array_unique($identifiers))));
         $inSql2 = implode(',', $escapedCurrent);
-        $uuQuery = $mydb->query("SELECT user_id, username FROM users WHERE user_id IN ($inSql2) OR username IN ($inSql2)");
+        $uuQuery = $mydb->query("SELECT user_id, username, email FROM users WHERE user_id IN ($inSql2) OR username IN ($inSql2) OR email IN ($inSql2)");
         if ($uuQuery && $uuQuery->num_rows > 0) {
             while ($row = $uuQuery->fetch_assoc()) {
                 if (!empty($row['user_id'])) $identifiers[] = (string)$row['user_id'];
@@ -133,6 +163,118 @@ function ssparc_resolve_all_user_identifiers($mydb, $userId) {
     }, array_values(array_filter(array_unique($identifiers))));
 
     return implode(',', $finalEscaped);
+}
+
+function ssparc_fetch_all_student_prompts($mydb, $userInStr, $assessmentId = null) {
+    $prompts = [];
+    $seenContent = [];
+
+    if (!$mydb || empty($userInStr) || $userInStr === "''") {
+        return $prompts;
+    }
+
+    $aidFilter = "";
+    if (!empty($assessmentId)) {
+        $aid = $mydb->real_escape_string($assessmentId);
+        $aidFilter = " AND (assessment_id = '$aid' OR assessment_id IS NULL OR assessment_id = '')";
+    }
+
+    // Source 1: chat_history table
+    $hasTbl = $mydb->query("SHOW TABLES LIKE 'chat_history'");
+    if ($hasTbl && $hasTbl->num_rows > 0) {
+        $q = $mydb->query("SELECT id, content, created_at FROM chat_history 
+                           WHERE user_id IN ($userInStr) 
+                             AND (LOWER(role) = 'user' OR role IS NULL OR role = '') 
+                             $aidFilter 
+                           ORDER BY created_at ASC");
+        if ($q && $q->num_rows > 0) {
+            while ($r = $q->fetch_assoc()) {
+                $c = trim($r['content'] ?? '');
+                if (!empty($c) && !isset($seenContent[$c])) {
+                    $seenContent[$c] = true;
+                    $prompts[] = [
+                        'id' => (string)($r['id'] ?? uniqid()),
+                        'prompt' => $c,
+                        'timestamp' => $r['created_at'] ?? date('Y-m-d H:i:s'),
+                        'analysis' => ssparc_analyze_prompt($c)
+                    ];
+                }
+            }
+        }
+    }
+
+    // Source 2: gpt_jobs table
+    $hasTbl = $mydb->query("SHOW TABLES LIKE 'gpt_jobs'");
+    if ($hasTbl && $hasTbl->num_rows > 0) {
+        $q = $mydb->query("SELECT id, prompt AS content, created_at FROM gpt_jobs 
+                           WHERE user_id IN ($userInStr) 
+                             AND prompt IS NOT NULL AND prompt != '' 
+                           ORDER BY created_at ASC");
+        if ($q && $q->num_rows > 0) {
+            while ($r = $q->fetch_assoc()) {
+                $c = trim($r['content'] ?? '');
+                if (!empty($c) && !isset($seenContent[$c])) {
+                    $seenContent[$c] = true;
+                    $prompts[] = [
+                        'id' => (string)($r['id'] ?? uniqid()),
+                        'prompt' => $c,
+                        'timestamp' => $r['created_at'] ?? date('Y-m-d H:i:s'),
+                        'analysis' => ssparc_analyze_prompt($c)
+                    ];
+                }
+            }
+        }
+    }
+
+    // Source 3: educational_learning_logs table
+    $hasTbl = $mydb->query("SHOW TABLES LIKE 'educational_learning_logs'");
+    if ($hasTbl && $hasTbl->num_rows > 0) {
+        $logAidFilter = !empty($assessmentId) ? " AND (assessment_id = '$aid' OR assessment_id IS NULL OR assessment_id = 0)" : "";
+        $q = $mydb->query("SELECT id, prompt_text AS content, timestamp AS created_at FROM educational_learning_logs 
+                           WHERE user_id IN ($userInStr) 
+                             AND prompt_text IS NOT NULL AND prompt_text != '' 
+                             $logAidFilter 
+                           ORDER BY timestamp ASC");
+        if ($q && $q->num_rows > 0) {
+            while ($r = $q->fetch_assoc()) {
+                $c = trim($r['content'] ?? '');
+                if (!empty($c) && !isset($seenContent[$c])) {
+                    $seenContent[$c] = true;
+                    $prompts[] = [
+                        'id' => (string)($r['id'] ?? uniqid()),
+                        'prompt' => $c,
+                        'timestamp' => $r['created_at'] ?? date('Y-m-d H:i:s'),
+                        'analysis' => ssparc_analyze_prompt($c)
+                    ];
+                }
+            }
+        }
+    }
+
+    // Source 4: code_embeddings table
+    $hasTbl = $mydb->query("SHOW TABLES LIKE 'code_embeddings'");
+    if ($hasTbl && $hasTbl->num_rows > 0) {
+        $q = $mydb->query("SELECT id, prompt AS content, created_at FROM code_embeddings 
+                           WHERE user_id IN ($userInStr) 
+                             AND prompt IS NOT NULL AND prompt != '' 
+                           ORDER BY created_at ASC");
+        if ($q && $q->num_rows > 0) {
+            while ($r = $q->fetch_assoc()) {
+                $c = trim($r['content'] ?? '');
+                if (!empty($c) && !isset($seenContent[$c])) {
+                    $seenContent[$c] = true;
+                    $prompts[] = [
+                        'id' => (string)($r['id'] ?? uniqid()),
+                        'prompt' => $c,
+                        'timestamp' => $r['created_at'] ?? date('Y-m-d H:i:s'),
+                        'analysis' => ssparc_analyze_prompt($c)
+                    ];
+                }
+            }
+        }
+    }
+
+    return $prompts;
 }
 
 function ssparc_get_wrapped_for_assessment($mydb, $userId, $assessmentId) {
@@ -225,34 +367,8 @@ function ssparc_get_wrapped_for_assessment($mydb, $userId, $assessmentId) {
     // 4. Resolve exact user IDs / username / UUIDs across all table variants
     $userInStr = ssparc_resolve_all_user_identifiers($mydb, $userId);
     
-    // 5. Fetch Chat History / Prompts STRICTLY for this user & assessment
-    $prompts = [];
-    $hasTableChat = false;
-    $tblCheck = $mydb->query("SHOW TABLES LIKE 'chat_history'");
-    if ($tblCheck && $tblCheck->num_rows > 0) {
-        $hasTableChat = true;
-    }
-    
-    if ($hasTableChat) {
-        $chatQuery = $mydb->query("SELECT id, role, content, created_at FROM chat_history 
-                                   WHERE user_id IN ($userInStr)
-                                     AND assessment_id = '$aid'
-                                     AND role = 'user'
-                                   ORDER BY created_at ASC");
-        if ($chatQuery && $chatQuery->num_rows > 0) {
-            while ($cr = $chatQuery->fetch_assoc()) {
-                $content = trim($cr['content'] ?? '');
-                if (!empty($content)) {
-                    $prompts[] = [
-                        'id' => (string)$cr['id'],
-                        'prompt' => $content,
-                        'timestamp' => $cr['created_at'],
-                        'analysis' => ssparc_analyze_prompt($content)
-                    ];
-                }
-            }
-        }
-    }
+    // 5. Fetch Chat History & AI Inquiries STRICTLY for this user & assessment
+    $prompts = ssparc_fetch_all_student_prompts($mydb, $userInStr, $aid);
     
     // 6. Handle No Interactions Case (100% Human Independent Solved, No Fake Dummy Data)
     if (empty($prompts)) {
@@ -456,27 +572,8 @@ function ssparc_get_student_aggregated_profile($mydb, $userId) {
     // Resolve user identifiers (user_id, username, uuid, name) across all tables
     $userInStr = ssparc_resolve_all_user_identifiers($mydb, $userId);
 
-    $prompts = [];
-    $hasTableChat = false;
-    $tblCheck = $mydb->query("SHOW TABLES LIKE 'chat_history'");
-    if ($tblCheck && $tblCheck->num_rows > 0) {
-        $hasTableChat = true;
-    }
-
-    if ($hasTableChat) {
-        $chatQuery = $mydb->query("SELECT id, role, content, created_at FROM chat_history 
-                                   WHERE user_id IN ($userInStr)
-                                     AND role = 'user'
-                                   ORDER BY created_at ASC");
-        if ($chatQuery && $chatQuery->num_rows > 0) {
-            while ($cr = $chatQuery->fetch_assoc()) {
-                $content = trim($cr['content'] ?? '');
-                if (!empty($content)) {
-                    $prompts[] = ssparc_analyze_prompt($content);
-                }
-            }
-        }
-    }
+    // Fetch all student inquiries and prompts across all tables
+    $prompts = ssparc_fetch_all_student_prompts($mydb, $userInStr, null);
 
     if (empty($prompts)) {
         return [
@@ -508,20 +605,21 @@ function ssparc_get_student_aggregated_profile($mydb, $userId) {
     $errorCount = 0;
     $sumTech = 0;
 
-    foreach ($prompts as $p) {
-        $sumCioe += $p['cioe_score'];
-        $sumQuality += $p['prompt_quality_score'];
-        $sumEntropy += $p['shannon_entropy'];
-        $sumTech += $p['technical_token_density'];
+    foreach ($prompts as $item) {
+        $p = $item['analysis'] ?? $item;
+        $sumCioe += ($p['cioe_score'] ?? 0);
+        $sumQuality += ($p['prompt_quality_score'] ?? 0);
+        $sumEntropy += ($p['shannon_entropy'] ?? 0);
+        $sumTech += ($p['technical_token_density'] ?? 0);
 
-        if ($p['cioe_breakdown']['has_context']) $contextCount++;
-        if ($p['cioe_breakdown']['has_input']) $inputCount++;
-        if ($p['cioe_breakdown']['has_output']) $outputCount++;
-        if ($p['cioe_breakdown']['has_error']) $errorCount++;
+        if (!empty($p['cioe_breakdown']['has_context'])) $contextCount++;
+        if (!empty($p['cioe_breakdown']['has_input'])) $inputCount++;
+        if (!empty($p['cioe_breakdown']['has_output'])) $outputCount++;
+        if (!empty($p['cioe_breakdown']['has_error'])) $errorCount++;
 
-        if ($p['cioe_breakdown']['has_context'] && !$p['cioe_breakdown']['has_error']) {
+        if (!empty($p['cioe_breakdown']['has_context']) && empty($p['cioe_breakdown']['has_error'])) {
             $c1c2Count++;
-        } elseif ($p['technical_token_density'] > 0.3) {
+        } elseif (($p['technical_token_density'] ?? 0) > 0.3) {
             $c3c4Count++;
         } else {
             $c5c6Count++;
