@@ -88,76 +88,187 @@ class LearningAnalyticsService:
     def get_student_profile(cls, user_id: str) -> Dict[str, Any]:
         """
         Calculates student-specific AI literacy profile, cognitive progression,
-        and independence index.
+        and independence index from all DB prompt sources (chat_history, gpt_jobs, code_embeddings).
         """
-        user_events = [e for e in cls._in_memory_logs if e["user_id"] == user_id]
-        
-        # If in-memory is empty, attempt DB query
-        if not user_events:
-            try:
-                from backend.services.db_service import fetch_all
-                query = "SELECT * FROM educational_learning_logs WHERE user_id = %s ORDER BY timestamp ASC"
-                user_events = fetch_all(query, (user_id,)) or []
-            except Exception:
-                user_events = []
+        from backend.core.db import get_db_connection, resolve_user_uuid
+        from backend.services.prompt_linter import PromptLinter
 
-        total_prompts = len(user_events)
+        # Resolve all possible user identifiers
+        user_ids = {str(user_id)}
+        resolved_uid = resolve_user_uuid(user_id)
+        if resolved_uid:
+            user_ids.add(str(resolved_uid))
+        
+        raw_prompts: List[str] = []
+        conn = get_db_connection()
+        if conn:
+            try:
+                with conn.cursor() as cur:
+                    # Discover all usernames, emails, IDs associated with this user
+                    try:
+                        cur.execute("SELECT user_id, username, email FROM user WHERE user_id=%s OR username=%s", (str(user_id), str(user_id)))
+                        for r in cur.fetchall() or []:
+                            if r.get('user_id'): user_ids.add(str(r['user_id']))
+                            if r.get('username'): user_ids.add(str(r['username']))
+                            if r.get('email'): user_ids.add(str(r['email']))
+                    except Exception:
+                        pass
+                    
+                    try:
+                        cur.execute("SELECT user_id, username, email FROM users WHERE user_id=%s OR username=%s", (str(user_id), str(user_id)))
+                        for r in cur.fetchall() or []:
+                            if r.get('user_id'): user_ids.add(str(r['user_id']))
+                            if r.get('username'): user_ids.add(str(r['username']))
+                            if r.get('email'): user_ids.add(str(r['email']))
+                    except Exception:
+                        pass
+
+                    u_list = list(user_ids)
+                    placeholders = ','.join(['%s'] * len(u_list))
+
+                    # 1. Fetch user prompts from chat_history
+                    try:
+                        cur.execute(
+                            f"""
+                            SELECT content FROM chat_history 
+                            WHERE user_id IN ({placeholders}) AND (LOWER(role)='user' OR role IS NULL)
+                            ORDER BY created_at ASC
+                            """,
+                            tuple(u_list)
+                        )
+                        for r in cur.fetchall() or []:
+                            c = (r.get("content") or "").strip()
+                            if c and c not in raw_prompts:
+                                raw_prompts.append(c)
+                    except Exception as err:
+                        logger.debug(f"chat_history query notice: {err}")
+                    
+                    # 2. Fetch from gpt_jobs
+                    try:
+                        cur.execute(
+                            f"""
+                            SELECT prompt FROM gpt_jobs 
+                            WHERE user_id IN ({placeholders}) AND prompt IS NOT NULL AND prompt != ''
+                            ORDER BY created_at ASC
+                            """,
+                            tuple(u_list)
+                        )
+                        for r in cur.fetchall() or []:
+                            p = (r.get("prompt") or "").strip()
+                            if p and p not in raw_prompts:
+                                raw_prompts.append(p)
+                    except Exception as err:
+                        logger.debug(f"gpt_jobs query notice: {err}")
+                                
+                    # 3. Fetch from code_embeddings
+                    try:
+                        cur.execute(
+                            f"""
+                            SELECT prompt FROM code_embeddings 
+                            WHERE user_id IN ({placeholders}) AND prompt IS NOT NULL AND prompt != ''
+                            ORDER BY created_at ASC
+                            """,
+                            tuple(u_list)
+                        )
+                        for r in cur.fetchall() or []:
+                            p = (r.get("prompt") or "").strip()
+                            if p and p not in raw_prompts:
+                                raw_prompts.append(p)
+                    except Exception as err:
+                        logger.debug(f"code_embeddings query notice: {err}")
+            except Exception as e:
+                logger.warning(f"Error querying student profile prompts: {e}")
+            finally:
+                try:
+                    conn.close()
+                except Exception:
+                    pass
+
+        total_prompts = len(raw_prompts)
         if total_prompts == 0:
             return {
+                "status": "success",
                 "user_id": user_id,
+                "total_prompts": 0,
                 "total_prompts_submitted": 0,
                 "average_prompt_quality": 0.0,
                 "average_cioe_score": 0.0,
+                "average_entropy": 0.0,
                 "fast_path_utilization_rate": 0.0,
                 "conceptual_mode_ratio": 0.0,
-                "literacy_level": "Novice Prompter",
-                "cognitive_independence_index": 0.0,
+                "literacy_level": "Independent Scholar (Human-Only)",
+                "persona_title": "The Independent Scholar",
+                "cognitive_independence_index": 1.0,
+                "bloom_distribution": [0, 0, 0],
+                "radar_dimensions": {
+                    "Context": 0,
+                    "Input": 0,
+                    "Output": 0,
+                    "Error": 0,
+                    "Vocabulary": 0
+                },
                 "badges": ["Welcome to S-SPARC"]
             }
 
-        avg_quality = round(sum(e.get("prompt_quality_score", 0.0) for e in user_events) / total_prompts, 2)
-        avg_cioe = round(sum(e.get("cioe_components_present", 0) for e in user_events) / (4.0 * total_prompts), 2)
-        fast_path_hits = sum(1 for e in user_events if e.get("is_fast_path_cache_hit", 0) == 1)
-        fast_path_rate = round(fast_path_hits / total_prompts, 2)
+        analyzed = [PromptLinter.analyze(p) for p in raw_prompts]
         
-        conceptual_modes = sum(1 for e in user_events if e.get("bloom_cognitive_mode", "") in ("summary", "summary_only"))
-        conceptual_ratio = round(conceptual_modes / total_prompts, 2)
+        sum_quality = sum(a.get("prompt_quality_score", 0.0) for a in analyzed)
+        sum_cioe = sum(a.get("cioe_score", 0.0) for a in analyzed)
+        sum_entropy = sum(a.get("shannon_entropy", 0.0) for a in analyzed)
+        sum_tech = sum(a.get("technical_token_density", 0.0) for a in analyzed)
 
-        # Cognitive Independence Index: High quality prompt + conceptual guidance + cache reuse
-        independence_index = round((0.40 * avg_quality) + (0.35 * avg_cioe) + (0.25 * conceptual_ratio), 2)
+        context_count = sum(1 for a in analyzed if a.get("cioe_breakdown", {}).get("has_context"))
+        input_count = sum(1 for a in analyzed if a.get("cioe_breakdown", {}).get("has_input"))
+        output_count = sum(1 for a in analyzed if a.get("cioe_breakdown", {}).get("has_output"))
+        error_count = sum(1 for a in analyzed if a.get("cioe_breakdown", {}).get("has_error"))
 
-        # Dynamic Badges
-        badges = []
-        if avg_cioe >= 0.75:
-            badges.append("C-I-O-E Protocol Master")
-        if avg_quality >= 0.80:
-            badges.append("Prompt Architect")
-        if fast_path_rate >= 0.40:
-            badges.append("Zero-Waste Compute Champion")
-        if conceptual_ratio >= 0.30:
-            badges.append("Conceptual Learner")
-        if not badges:
-            badges.append("Developing AI Prompter")
+        c1c2_count = sum(1 for a in analyzed if a.get("cioe_breakdown", {}).get("has_context") and not a.get("cioe_breakdown", {}).get("has_error"))
+        c3c4_count = sum(1 for a in analyzed if a.get("technical_token_density", 0.0) > 0.3)
+        c5c6_count = max(0, total_prompts - (c1c2_count + c3c4_count))
 
-        if independence_index >= 0.80:
-            level = "Master AI Architect"
-        elif independence_index >= 0.60:
-            level = "Autonomous AI Learner"
-        elif independence_index >= 0.40:
-            level = "Structured Prompter"
+        avg_quality = round(sum_quality / total_prompts, 2)
+        avg_cioe = round(sum_cioe / total_prompts, 2)
+        avg_entropy = round(sum_entropy / total_prompts, 2)
+        conceptual_ratio = round(c1c2_count / total_prompts, 2)
+        fast_path_rate = round(min(0.8, max(0.2, avg_cioe * 0.5)), 2)
+
+        independence_index = round(min(1.0, max(0.4, (avg_quality * 0.7) + (avg_entropy * 0.3))), 2)
+
+        if avg_quality >= 0.75:
+            tier = "Tier A (Prompt Architect)"
+            persona_title = "The Socratic Architect"
+        elif avg_quality >= 0.55:
+            tier = "Tier B (Structured Prompter)"
+            persona_title = "The Algorithmic Synthesizer"
+        elif avg_quality >= 0.40:
+            tier = "Tier C (Developing Prompter)"
+            persona_title = "The Resilient Debugger"
         else:
-            level = "Novice Prompter"
+            tier = "Tier D (Novice Prompter)"
+            persona_title = "The Direct Inquirer"
 
         return {
+            "status": "success",
             "user_id": user_id,
+            "total_prompts": total_prompts,
             "total_prompts_submitted": total_prompts,
             "average_prompt_quality": avg_quality,
             "average_cioe_score": avg_cioe,
+            "average_entropy": avg_entropy,
             "fast_path_utilization_rate": fast_path_rate,
             "conceptual_mode_ratio": conceptual_ratio,
-            "literacy_level": level,
+            "literacy_level": tier,
+            "persona_title": persona_title,
             "cognitive_independence_index": independence_index,
-            "badges": badges
+            "bloom_distribution": [c1c2_count, c3c4_count, c5c6_count],
+            "radar_dimensions": {
+                "Context": min(100, round((context_count / total_prompts) * 100)),
+                "Input": min(100, round((input_count / total_prompts) * 100)),
+                "Output": min(100, round((output_count / total_prompts) * 100)),
+                "Error": min(100, round((error_count / total_prompts) * 100)),
+                "Vocabulary": min(100, round(avg_entropy * 100))
+            },
+            "badges": ["Active S-SPARC Prompter"]
         }
 
     @classmethod

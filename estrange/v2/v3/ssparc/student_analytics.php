@@ -387,33 +387,9 @@ $userId = $_SESSION['user_id'] ?? 'student_demo';
       });
     }
 
-    async function syncLocalStorageToServer() {
-      try {
-        const keys = Object.keys(localStorage).filter(k => k.startsWith('ssparc_chat_'));
-        for (const key of keys) {
-          const raw = localStorage.getItem(key);
-          if (!raw) continue;
-          const parts = key.split('_');
-          const aid = parts[3] || '248';
-          const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            await fetch('api_proxy.php?action=sync_chat_history', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ assessment_id: aid, messages: parsed })
-            });
-          }
-        }
-      } catch (e) {
-        console.debug('Sync notice:', e);
-      }
-    }
-
     async function loadStudentProfile() {
       let bloomData = [0, 0, 0];
       let radarData = [0, 0, 0, 0, 0];
-
-      await syncLocalStorageToServer();
 
       try {
         let res = await fetch(`api_proxy.php?endpoint=/api/educational/student-profile/${USER_ID}`);

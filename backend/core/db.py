@@ -27,9 +27,7 @@ def get_db_connection():
     port = int(os.getenv("MYSQL_PORT", 3306))
     user = os.getenv("MYSQL_USER", "root")
     password = os.getenv("MYSQL_PASSWORD", "")
-    db = os.getenv("MYSQL_DB", "estrange_v7")
-    if db == "db_semantic_final":
-        db = "estrange_v7"
+    db = os.getenv("MYSQL_DB", "db_semantic_final")
     
     try:
         connection = pymysql.connect(
