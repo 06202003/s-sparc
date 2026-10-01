@@ -217,6 +217,9 @@ $userId = $_SESSION['user_id'] ?? 'student_demo';
 
       <!-- PHP Data Collector for Client-Side Pagination & Filtering -->
       <?php
+      require_once __DIR__ . '/_wrapped_service.php';
+      $userInStrResolved = ssparc_resolve_all_user_identifiers($db, $sso_user_id);
+
       $expiredAssessmentsList = [];
       $expiredAssessmentsQuery = "
           SELECT DISTINCT a.assessment_id, a.name AS assessment_name, a.course_id, c.name AS course_name, a.submission_close_time
@@ -231,11 +234,15 @@ $userId = $_SESSION['user_id'] ?? 'student_demo';
       $expiredRes = $db->query($expiredAssessmentsQuery);
       if ($expiredRes && $expiredRes->num_rows > 0) {
           while ($row = $expiredRes->fetch_assoc()) {
+              $asmtPrompts = ssparc_fetch_all_student_prompts($db, $userInStrResolved, $row['assessment_id']);
+              $pCount = count($asmtPrompts);
               $expiredAssessmentsList[] = [
                   'assessment_id' => (string)$row['assessment_id'],
                   'assessment_name' => (string)$row['assessment_name'],
                   'course_id' => (string)$row['course_id'],
                   'course_name' => (string)($row['course_name'] ?: 'Course'),
+                  'prompt_count' => $pCount,
+                  'is_human_only' => ($pCount === 0),
                   'submission_close_time' => (string)$row['submission_close_time'],
                   'formatted_date' => date('d M Y, H:i', strtotime($row['submission_close_time']))
               ];
@@ -296,8 +303,14 @@ $userId = $_SESSION['user_id'] ?? 'student_demo';
 
       grid.innerHTML = pageItems.map(item => `
         <div class="p-4 rounded-2xl bg-slate-900 text-white flex flex-col justify-between space-y-3 shadow-md border border-slate-800 transition hover:border-slate-700 hover:shadow-lg">
-          <div class="space-y-1">
-            <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block truncate">${escapeHtml(item.course_name)}</span>
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block truncate max-w-[170px]">${escapeHtml(item.course_name)}</span>
+              ${item.prompt_count > 0 
+                ? `<span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-teal-500/20 text-teal-300 border border-teal-500/40 shrink-0 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-teal-400"></span>${item.prompt_count} Prompts</span>`
+                : `<span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">Pure Human</span>`
+              }
+            </div>
             <h4 class="font-bold text-sm text-white line-clamp-1" title="${escapeHtml(item.assessment_name)}">${escapeHtml(item.assessment_name)}</h4>
             <span class="text-[11px] text-slate-400 block font-mono">Closed: ${item.formatted_date}</span>
           </div>
