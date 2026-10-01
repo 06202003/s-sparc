@@ -78,6 +78,63 @@ function ssparc_analyze_prompt($text) {
     ];
 }
 
+function ssparc_resolve_all_user_identifiers($mydb, $userId) {
+    $identifiers = [];
+    if (!empty($userId)) {
+        $identifiers[] = trim((string)$userId);
+    }
+    if (!empty($_SESSION['user_id'])) {
+        $identifiers[] = trim((string)$_SESSION['user_id']);
+    }
+    if (!empty($_SESSION['username'])) {
+        $identifiers[] = trim((string)$_SESSION['username']);
+    }
+    if (!empty($_SESSION['name'])) {
+        $identifiers[] = trim((string)$_SESSION['name']);
+    }
+
+    $clean = array_values(array_filter(array_unique($identifiers)));
+    if (empty($clean) || !$mydb) {
+        return "''";
+    }
+
+    $escapedIds = array_map(function($id) use ($mydb) {
+        return "'" . $mydb->real_escape_string($id) . "'";
+    }, $clean);
+    $inSql = implode(',', $escapedIds);
+
+    // 1. Query E-STRANGE user table
+    $uQuery = $mydb->query("SELECT user_id, username, name FROM user WHERE user_id IN ($inSql) OR username IN ($inSql) OR name IN ($inSql)");
+    if ($uQuery && $uQuery->num_rows > 0) {
+        while ($row = $uQuery->fetch_assoc()) {
+            if (!empty($row['user_id'])) $identifiers[] = (string)$row['user_id'];
+            if (!empty($row['username'])) $identifiers[] = (string)$row['username'];
+        }
+    }
+
+    // 2. Query S-SPARC users table (UUID mappings)
+    $hasUsersTbl = $mydb->query("SHOW TABLES LIKE 'users'");
+    if ($hasUsersTbl && $hasUsersTbl->num_rows > 0) {
+        $escapedCurrent = array_map(function($id) use ($mydb) {
+            return "'" . $mydb->real_escape_string($id) . "'";
+        }, array_values(array_filter(array_unique($identifiers))));
+        $inSql2 = implode(',', $escapedCurrent);
+        $uuQuery = $mydb->query("SELECT user_id, username FROM users WHERE user_id IN ($inSql2) OR username IN ($inSql2)");
+        if ($uuQuery && $uuQuery->num_rows > 0) {
+            while ($row = $uuQuery->fetch_assoc()) {
+                if (!empty($row['user_id'])) $identifiers[] = (string)$row['user_id'];
+                if (!empty($row['username'])) $identifiers[] = (string)$row['username'];
+            }
+        }
+    }
+
+    $finalEscaped = array_map(function($id) use ($mydb) {
+        return "'" . $mydb->real_escape_string($id) . "'";
+    }, array_values(array_filter(array_unique($identifiers))));
+
+    return implode(',', $finalEscaped);
+}
+
 function ssparc_get_wrapped_for_assessment($mydb, $userId, $assessmentId) {
     if (!$mydb) {
         return ['status' => 'error', 'message' => 'Database connection unavailable.'];
@@ -165,20 +222,8 @@ function ssparc_get_wrapped_for_assessment($mydb, $userId, $assessmentId) {
         ];
     }
     
-    // 4. Resolve exact user IDs / username to prevent cross-account pollution
-    $userInClauses = ["'$uid'"];
-    $uQuery = $mydb->query("SELECT username FROM user WHERE user_id = '$uid' LIMIT 1");
-    if ($uQuery && $uQuery->num_rows > 0) {
-        $uRow = $uQuery->fetch_assoc();
-        $uname = $mydb->real_escape_string($uRow['username']);
-        $userInClauses[] = "'$uname'";
-        $uuQuery = $mydb->query("SELECT user_id FROM users WHERE username = '$uname' LIMIT 1");
-        if ($uuQuery && $uuQuery->num_rows > 0) {
-            $uuRow = $uuQuery->fetch_assoc();
-            $userInClauses[] = "'" . $mydb->real_escape_string($uuRow['user_id']) . "'";
-        }
-    }
-    $userInStr = implode(',', array_unique($userInClauses));
+    // 4. Resolve exact user IDs / username / UUIDs across all table variants
+    $userInStr = ssparc_resolve_all_user_identifiers($mydb, $userId);
     
     // 5. Fetch Chat History / Prompts STRICTLY for this user & assessment
     $prompts = [];
@@ -408,22 +453,8 @@ function ssparc_get_student_aggregated_profile($mydb, $userId) {
         ];
     }
 
-    $uid = $mydb->real_escape_string($userId);
-    
-    // Resolve user identifiers (user_id, username, uuid)
-    $userInClauses = ["'$uid'"];
-    $uQuery = $mydb->query("SELECT username FROM user WHERE user_id = '$uid' LIMIT 1");
-    if ($uQuery && $uQuery->num_rows > 0) {
-        $uRow = $uQuery->fetch_assoc();
-        $uname = $mydb->real_escape_string($uRow['username']);
-        $userInClauses[] = "'$uname'";
-        $uuQuery = $mydb->query("SELECT user_id FROM users WHERE username = '$uname' LIMIT 1");
-        if ($uuQuery && $uuQuery->num_rows > 0) {
-            $uuRow = $uuQuery->fetch_assoc();
-            $userInClauses[] = "'" . $mydb->real_escape_string($uuRow['user_id']) . "'";
-        }
-    }
-    $userInStr = implode(',', array_unique($userInClauses));
+    // Resolve user identifiers (user_id, username, uuid, name) across all tables
+    $userInStr = ssparc_resolve_all_user_identifiers($mydb, $userId);
 
     $prompts = [];
     $hasTableChat = false;
