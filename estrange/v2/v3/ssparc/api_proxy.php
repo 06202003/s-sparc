@@ -8,6 +8,8 @@ if (session_status() === PHP_SESSION_NONE) {
     @session_start();
 }
 
+require_once __DIR__ . '/../_config.php';
+
 // Allow CORS for local intranet & lab clients
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
@@ -41,7 +43,6 @@ if (!empty($_GET['path'])) {
 
 // 1. Direct High-Performance Cohort Telemetry Handler
 if ($path === '/api/admin/wrapped/analytics' || $path === '/admin/wrapped/analytics') {
-    require_once __DIR__ . '/_sso_bridge.php';
     require_once __DIR__ . '/_wrapped_service.php';
     header('Content-Type: application/json; charset=utf-8');
     
@@ -54,7 +55,6 @@ if ($path === '/api/admin/wrapped/analytics' || $path === '/admin/wrapped/analyt
 
 // 2. Direct Research Telemetry CSV Exporter
 if ($path === '/api/admin/wrapped/export-csv' || $path === '/admin/wrapped/export-csv') {
-    require_once __DIR__ . '/_sso_bridge.php';
     require_once __DIR__ . '/_wrapped_service.php';
     
     $courseId = $_GET['course_id'] ?? null;
@@ -87,7 +87,6 @@ if ($path === '/api/admin/wrapped/export-csv' || $path === '/admin/wrapped/expor
 
 // 3. Direct Student AI Literacy Profile Handler
 if (preg_match('#^/api/educational/student-profile/(.+)$#', $path, $matches)) {
-    require_once __DIR__ . '/_sso_bridge.php';
     require_once __DIR__ . '/_wrapped_service.php';
     header('Content-Type: application/json; charset=utf-8');
     
@@ -99,7 +98,6 @@ if (preg_match('#^/api/educational/student-profile/(.+)$#', $path, $matches)) {
 
 // 4. Direct Environmental Footprint Telemetry Handler
 if ($path === '/api/environmental/footprint') {
-    require_once __DIR__ . '/_sso_bridge.php';
     require_once __DIR__ . '/_wrapped_service.php';
     header('Content-Type: application/json; charset=utf-8');
     
