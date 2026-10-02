@@ -466,23 +466,81 @@ class PromptCriticService:
     @classmethod
     def get_cohort_research_analytics(cls, course_id: Optional[str] = None, assessment_id: Optional[str] = None) -> Dict[str, Any]:
         """
-        Aggregates class cohort telemetry for lecturer / researcher dashboard.
+        Aggregates class cohort telemetry for lecturer / researcher dashboard
+        from real database interaction records across all student prompt sources.
         """
         conn = get_db_connection()
         if conn is None:
-            return {"status": "error", "message": "Database offline"}
+            return {"status": "error", "message": "Database connection offline"}
 
         try:
             with conn.cursor() as cur:
-                # 1. Fetch distinct students who participated in this assessment
-                query = """
-                    SELECT DISTINCT u.user_id, u.username, COALESCE(u.name, u.username) AS full_name
-                    FROM users u
-                    INNER JOIN chat_history ch ON ch.user_id = u.user_id
-                    WHERE (%s IS NULL OR ch.assessment_id = %s)
-                """
-                cur.execute(query, (assessment_id, assessment_id))
-                students = cur.fetchall() or []
+                # 1. Discover all distinct student identifiers with activity in chat_history, gpt_jobs, or code_embeddings
+                student_user_ids = set()
+                
+                try:
+                    cur.execute(
+                        "SELECT DISTINCT user_id FROM chat_history WHERE (%s IS NULL OR assessment_id = %s)",
+                        (assessment_id, assessment_id)
+                    )
+                    for r in cur.fetchall() or []:
+                        uid = r.get('user_id')
+                        if uid is not None and str(uid).strip():
+                            student_user_ids.add(str(uid).strip())
+                except Exception as e_ch:
+                    logger.warning(f"Error querying chat_history distinct users: {e_ch}")
+
+                try:
+                    cur.execute(
+                        "SELECT DISTINCT user_id FROM gpt_jobs WHERE (%s IS NULL OR assessment_id = %s)",
+                        (assessment_id, assessment_id)
+                    )
+                    for r in cur.fetchall() or []:
+                        uid = r.get('user_id')
+                        if uid is not None and str(uid).strip():
+                            student_user_ids.add(str(uid).strip())
+                except Exception as e_jobs:
+                    logger.warning(f"Error querying gpt_jobs distinct users: {e_jobs}")
+
+                try:
+                    cur.execute("SELECT DISTINCT user_id FROM code_embeddings WHERE user_id IS NOT NULL")
+                    for r in cur.fetchall() or []:
+                        uid = r.get('user_id')
+                        if uid is not None and str(uid).strip():
+                            student_user_ids.add(str(uid).strip())
+                except Exception as e_emb:
+                    logger.warning(f"Error querying code_embeddings distinct users: {e_emb}")
+
+                # Also include enrolled students from user/users tables if specific course/assessment
+                user_profiles_map = {}
+                try:
+                    cur.execute("SELECT id, user_id, username, full_name, email FROM user")
+                    for r in cur.fetchall() or []:
+                        uid_key = str(r.get('id') or r.get('user_id') or r.get('username'))
+                        user_profiles_map[uid_key] = {
+                            "nim": r.get('username') or uid_key,
+                            "name": r.get('full_name') or r.get('username') or 'Mahasiswa',
+                            "email": r.get('email') or ''
+                        }
+                        if r.get('username'):
+                            user_profiles_map[str(r.get('username'))] = user_profiles_map[uid_key]
+                except Exception:
+                    pass
+
+                try:
+                    cur.execute("SELECT user_id, username, name, email FROM users")
+                    for r in cur.fetchall() or []:
+                        uid_key = str(r.get('user_id') or r.get('username'))
+                        if uid_key not in user_profiles_map:
+                            user_profiles_map[uid_key] = {
+                                "nim": r.get('username') or uid_key,
+                                "name": r.get('name') or r.get('username') or 'Mahasiswa',
+                                "email": r.get('email') or ''
+                            }
+                        if r.get('username') and str(r.get('username')) not in user_profiles_map:
+                            user_profiles_map[str(r.get('username'))] = user_profiles_map[uid_key]
+                except Exception:
+                    pass
 
                 student_records = []
                 archetype_counts: Dict[str, int] = {}
@@ -498,8 +556,8 @@ class PromptCriticService:
                 error_scores = []
                 entropy_scores = []
 
-                for s in students:
-                    uid = s['user_id']
+                # Analyze real telemetry for each discovered active student
+                for uid in sorted(student_user_ids):
                     wrapped_data = cls.get_assessment_wrapped(uid, assessment_id or "all")
                     if wrapped_data.get("status") == "success":
                         summary = wrapped_data['summary']
@@ -508,47 +566,56 @@ class PromptCriticService:
                         byok = wrapped_data['byok_sustainability']
                         tier_badge = summary.get('tier_badge', 'Tier C')
 
+                        # Resolve student name & nim
+                        prof = user_profiles_map.get(uid, {})
+                        nim = prof.get('nim') or uid
+                        name = prof.get('name') or (f"Mahasiswa ({uid})" if uid.isdigit() else uid)
+
+                        # Only include in telemetry list if there are real metrics
                         student_records.append({
                             "user_id": uid,
-                            "nim": s.get('username') or uid[:8],
-                            "name": s.get('full_name') or 'Mahasiswa',
-                            "total_prompts": summary['total_prompts'],
-                            "cioe_score": dims['cioe_completeness'],
-                            "shannon_entropy": dims['shannon_entropy'],
-                            "archetype": persona['title'],
+                            "nim": nim,
+                            "name": name,
+                            "total_prompts": summary.get('total_prompts', 0),
+                            "cioe_score": dims.get('cioe_completeness', 0),
+                            "shannon_entropy": dims.get('shannon_entropy', 0.0),
+                            "archetype": persona.get('title', 'The Developing Prompter'),
                             "literacy_tier": tier_badge,
-                            "energy_wh": byok['energy_wh'],
-                            "carbon_g": byok['carbon_g']
+                            "energy_wh": byok.get('energy_wh', 0.0),
+                            "carbon_g": byok.get('carbon_g', 0.0)
                         })
 
-                        # Aggregates
-                        total_class_prompts += summary['total_prompts']
-                        total_class_tokens += summary['total_tokens_used']
-                        total_class_wh += byok['energy_wh']
-                        total_class_carbon += byok['carbon_g']
+                        total_prompts = summary.get('total_prompts', 0)
+                        total_class_prompts += total_prompts
+                        total_class_tokens += summary.get('total_tokens_used', 0)
+                        total_class_wh += byok.get('energy_wh', 0.0)
+                        total_class_carbon += byok.get('carbon_g', 0.0)
 
-                        arch_title = persona['title']
-                        archetype_counts[arch_title] = archetype_counts.get(arch_title, 0) + 1
-                        if tier_badge in tier_counts:
-                            tier_counts[tier_badge] += 1
+                        arch_title = persona.get('title', 'The Developing Prompter')
+                        if total_prompts > 0:
+                            archetype_counts[arch_title] = archetype_counts.get(arch_title, 0) + 1
+                            if tier_badge in tier_counts:
+                                tier_counts[tier_badge] += 1
 
-                        radar = dims['radar']
-                        context_scores.append(radar.get('Context', 0))
-                        input_scores.append(radar.get('Input', 0))
-                        output_scores.append(radar.get('Output', 0))
-                        error_scores.append(radar.get('Error', 0))
-                        entropy_scores.append(radar.get('Vocabulary', 0))
+                            radar = dims.get('radar', {})
+                            context_scores.append(radar.get('Context', 0))
+                            input_scores.append(radar.get('Input', 0))
+                            output_scores.append(radar.get('Output', 0))
+                            error_scores.append(radar.get('Error', 0))
+                            entropy_scores.append(radar.get('Vocabulary', 0))
 
-                num_students = max(1, len(student_records))
-                avg_cioe = round(sum(r['cioe_score'] for r in student_records) / num_students, 1) if student_records else 0.0
-                avg_entropy = round(sum(r['shannon_entropy'] for r in student_records) / num_students, 2) if student_records else 0.0
+                num_active = len([r for r in student_records if r['total_prompts'] > 0]) or len(student_records)
+                divisor = max(1, num_active)
+
+                avg_cioe = round(sum(r['cioe_score'] for r in student_records) / divisor, 1) if student_records else 0.0
+                avg_entropy = round(sum(r['shannon_entropy'] for r in student_records) / divisor, 2) if student_records else 0.0
 
                 cohort_radar = {
-                    "Context": round(sum(context_scores) / num_students, 1) if context_scores else 0.0,
-                    "Input": round(sum(input_scores) / num_students, 1) if input_scores else 0.0,
-                    "Output": round(sum(output_scores) / num_students, 1) if output_scores else 0.0,
-                    "Error": round(sum(error_scores) / num_students, 1) if error_scores else 0.0,
-                    "Vocabulary": round(sum(entropy_scores) / num_students, 1) if entropy_scores else 0.0
+                    "Context": round(sum(context_scores) / divisor, 1) if context_scores else 0.0,
+                    "Input": round(sum(input_scores) / divisor, 1) if input_scores else 0.0,
+                    "Output": round(sum(output_scores) / divisor, 1) if output_scores else 0.0,
+                    "Error": round(sum(error_scores) / divisor, 1) if error_scores else 0.0,
+                    "Vocabulary": round(sum(entropy_scores) / divisor, 1) if entropy_scores else 0.0
                 }
 
                 return {

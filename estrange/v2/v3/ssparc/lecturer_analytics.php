@@ -201,26 +201,26 @@ if ($coursesRes) {
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div class="metric-card border-l-4 border-l-teal-500">
           <span class="text-xs text-slate-500 font-semibold block">Avg Class C-I-O-E</span>
-          <span id="research-avg-cioe" class="text-2xl font-extrabold text-teal-700 mt-1 block">78.4%</span>
+          <span id="research-avg-cioe" class="text-2xl font-extrabold text-teal-700 mt-1 block">--%</span>
           <span class="text-[11px] text-slate-400">Target adherence &ge; 70%</span>
         </div>
 
         <div class="metric-card border-l-4 border-l-emerald-500">
           <span class="text-xs text-slate-500 font-semibold block">Avg Shannon Entropy</span>
-          <span id="research-avg-entropy" class="text-2xl font-extrabold text-emerald-700 mt-1 block">0.76 H(X)</span>
+          <span id="research-avg-entropy" class="text-2xl font-extrabold text-emerald-700 mt-1 block">-- H(X)</span>
           <span class="text-[11px] text-slate-400">Optimal technical vocabulary</span>
         </div>
 
         <div class="metric-card border-l-4 border-l-indigo-500">
           <span class="text-xs text-slate-500 font-semibold block">Total BYOK Energy</span>
-          <span id="research-total-wh" class="text-2xl font-extrabold text-indigo-700 mt-1 block">14.8 Wh</span>
-          <span id="research-total-co2" class="text-[11px] text-slate-400">Estimated 7.03 g CO2e</span>
+          <span id="research-total-wh" class="text-2xl font-extrabold text-indigo-700 mt-1 block">-- Wh</span>
+          <span id="research-total-co2" class="text-[11px] text-slate-400">Estimated -- g CO2e</span>
         </div>
 
         <div class="metric-card border-l-4 border-l-amber-500">
           <span class="text-xs text-slate-500 font-semibold block">Total Class Prompts</span>
-          <span id="research-total-prompts" class="text-2xl font-extrabold text-amber-700 mt-1 block">342 Prompts</span>
-          <span class="text-[11px] text-slate-400">Logged in chat history</span>
+          <span id="research-total-prompts" class="text-2xl font-extrabold text-amber-700 mt-1 block">-- Prompts</span>
+          <span class="text-[11px] text-slate-400">Logged in database telemetry</span>
         </div>
       </div>
 
@@ -387,21 +387,27 @@ if ($coursesRes) {
       });
     }
 
+    let cohortRadarInstance = null;
+    let tierChartInstance = null;
+    let archetypeChartInstance = null;
+
     function renderCohortRadar(radarData) {
       const ctx = document.getElementById('cohortRadarChart')?.getContext('2d');
       if (!ctx) return;
-      new Chart(ctx, {
+      if (cohortRadarInstance) cohortRadarInstance.destroy();
+
+      cohortRadarInstance = new Chart(ctx, {
         type: 'radar',
         data: {
           labels: ['Context', 'Input', 'Output', 'Error', 'Vocabulary'],
           datasets: [{
             label: 'Class Average (%)',
             data: [
-              radarData?.Context || 82,
-              radarData?.Input || 74,
-              radarData?.Output || 76,
-              radarData?.Error || 85,
-              radarData?.Vocabulary || 78
+              radarData?.Context ?? 0,
+              radarData?.Input ?? 0,
+              radarData?.Output ?? 0,
+              radarData?.Error ?? 0,
+              radarData?.Vocabulary ?? 0
             ],
             backgroundColor: 'rgba(99, 102, 241, 0.25)',
             borderColor: '#6366f1',
@@ -420,16 +426,18 @@ if ($coursesRes) {
     function renderTierChart(tierData) {
       const ctx = document.getElementById('tierChart')?.getContext('2d');
       if (!ctx) return;
-      new Chart(ctx, {
+      if (tierChartInstance) tierChartInstance.destroy();
+
+      tierChartInstance = new Chart(ctx, {
         type: 'bar',
         data: {
           labels: ['Tier A (Architect)', 'Tier B (Structured)', 'Tier C (Developing)', 'Tier D (Novice)'],
           datasets: [{
             data: [
-              tierData?.['Tier A'] || 18,
-              tierData?.['Tier B'] || 24,
-              tierData?.['Tier C'] || 9,
-              tierData?.['Tier D'] || 3
+              tierData?.['Tier A'] ?? 0,
+              tierData?.['Tier B'] ?? 0,
+              tierData?.['Tier C'] ?? 0,
+              tierData?.['Tier D'] ?? 0
             ],
             backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444'],
             borderRadius: 6
@@ -447,10 +455,14 @@ if ($coursesRes) {
     function renderArchetypeChart(archData) {
       const ctx = document.getElementById('archetypeChart')?.getContext('2d');
       if (!ctx) return;
+      if (archetypeChartInstance) archetypeChartInstance.destroy();
+
+      const defaultArchetypes = ['The Socratic Architect', 'The Bug Hunter', 'The Fast-Path Prodigy', 'The Code Craftsman', 'The Speedrunner', 'The Developing Prompter'];
       const keys = Object.keys(archData || {});
-      const labels = keys.length ? keys : ['The Socratic Architect', 'The Bug Hunter', 'The Fast-Path Prodigy', 'The Code Craftsman', 'The Speedrunner', 'The Developing Prompter'];
-      const values = keys.length ? Object.values(archData) : [14, 12, 10, 8, 6, 4];
-      new Chart(ctx, {
+      const labels = keys.length ? keys : defaultArchetypes;
+      const values = keys.length ? Object.values(archData) : defaultArchetypes.map(() => 0);
+
+      archetypeChartInstance = new Chart(ctx, {
         type: 'doughnut',
         data: {
           labels: labels,
@@ -471,29 +483,29 @@ if ($coursesRes) {
       const tbody = document.getElementById('telemetry-table-body');
       if (!tbody) return;
       if (!records || !records.length) {
-        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-slate-400">No student telemetry records found for this assessment.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-8 text-slate-400 font-medium"><i class="fas fa-info-circle mr-1"></i> Belum ada rekaman telemetri prompt mahasiswa pada assessment ini.</td></tr>`;
         return;
       }
       tbody.innerHTML = records.map(r => `
         <tr class="hover:bg-slate-50 transition">
-          <td class="py-3 px-3 font-mono font-bold text-slate-900">${r.nim}</td>
-          <td class="py-3 px-3 font-medium text-slate-800">${r.name}</td>
-          <td class="py-3 px-3 text-center font-bold">${r.total_prompts}</td>
-          <td class="py-3 px-3 text-center font-semibold text-teal-700">${r.cioe_score}%</td>
-          <td class="py-3 px-3 text-center font-mono">${r.shannon_entropy}</td>
-          <td class="py-3 px-3 font-medium text-slate-900">${r.archetype}</td>
+          <td class="py-3 px-3 font-mono font-bold text-slate-900">${r.nim || '-'}</td>
+          <td class="py-3 px-3 font-medium text-slate-800">${r.name || 'Mahasiswa'}</td>
+          <td class="py-3 px-3 text-center font-bold">${r.total_prompts || 0}</td>
+          <td class="py-3 px-3 text-center font-semibold text-teal-700">${r.cioe_score || 0}%</td>
+          <td class="py-3 px-3 text-center font-mono">${r.shannon_entropy || '0.00'}</td>
+          <td class="py-3 px-3 font-medium text-slate-900">${r.archetype || 'Developing Prompter'}</td>
           <td class="py-3 px-3 text-center">
             <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${
               r.literacy_tier === 'Tier A' ? 'bg-emerald-100 text-emerald-800' :
               r.literacy_tier === 'Tier B' ? 'bg-blue-100 text-blue-800' :
               r.literacy_tier === 'Tier C' ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'
             }">
-              ${r.literacy_tier}
+              ${r.literacy_tier || 'Tier D'}
             </span>
           </td>
-          <td class="py-3 px-3 text-center font-mono text-[11px] text-slate-600">${r.energy_wh} Wh / ${r.carbon_g}g</td>
+          <td class="py-3 px-3 text-center font-mono text-[11px] text-slate-600">${r.energy_wh || 0} Wh / ${r.carbon_g || 0}g</td>
           <td class="py-3 px-3 text-center">
-            <a href="student_prompt_wrapped.php?assessment_id=1&user_id=${encodeURIComponent(r.user_id)}" target="_blank" class="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 text-[11px] font-bold transition">
+            <a href="student_prompt_wrapped.php?assessment_id=all&user_id=${encodeURIComponent(r.user_id || r.nim)}" target="_blank" class="px-2.5 py-1 rounded-lg bg-teal-50 hover:bg-teal-100 text-teal-800 text-[11px] font-bold transition">
               View Wrapped
             </a>
           </td>
@@ -502,14 +514,16 @@ if ($coursesRes) {
     }
 
     function renderDefaultResearchCharts() {
+      document.getElementById('research-avg-cioe').textContent = `0.0%`;
+      document.getElementById('research-avg-entropy').textContent = `0.00 H(X)`;
+      document.getElementById('research-total-wh').textContent = `0.00 Wh`;
+      document.getElementById('research-total-co2').textContent = `Estimated 0.00 g CO2e`;
+      document.getElementById('research-total-prompts').textContent = `0 Prompts`;
+
       renderCohortRadar({});
       renderTierChart({});
       renderArchetypeChart({});
-      renderTelemetryTable([
-        { nim: '2272001', name: 'Student A', total_prompts: 8, cioe_score: 87.5, shannon_entropy: 0.82, archetype: 'The Socratic Architect', literacy_tier: 'Tier A', energy_wh: 0.28, carbon_g: 0.13, user_id: 'u1' },
-        { nim: '2272002', name: 'Student B', total_prompts: 14, cioe_score: 52.0, shannon_entropy: 0.58, archetype: 'The Speedrunner', literacy_tier: 'Tier C', energy_wh: 0.49, carbon_g: 0.23, user_id: 'u2' },
-        { nim: '2272003', name: 'Student C', total_prompts: 6, cioe_score: 91.0, shannon_entropy: 0.79, archetype: 'The Code Craftsman', literacy_tier: 'Tier A', energy_wh: 0.21, carbon_g: 0.10, user_id: 'u3' }
-      ]);
+      renderTelemetryTable([]);
     }
 
     // Direct CSV Export Click Handler
