@@ -205,26 +205,49 @@ function ssparc_fetch_all_student_prompts($mydb, $userInStr, $assessmentId = nul
         $aidFilter = " AND (assessment_id = '$aid' OR assessment_id IS NULL OR assessment_id = '')";
     }
 
-    // Source 1: chat_history table
-    $hasTbl = $mydb->query("SHOW TABLES LIKE 'chat_history'");
-    if ($hasTbl && $hasTbl->num_rows > 0) {
-        $q = $mydb->query("SELECT id, content, created_at FROM chat_history 
-                           WHERE user_id IN ($userInStr) 
-                             AND (LOWER(role) = 'user' OR role IS NULL OR role = '') 
-                             $aidFilter 
-                           ORDER BY created_at ASC");
-        if ($q && $q->num_rows > 0) {
-            while ($r = $q->fetch_assoc()) {
-                $c = trim($r['content'] ?? '');
-                $recId = 'chat_' . ($r['id'] ?? uniqid());
-                if (!empty($c) && !isset($seenContent[$recId])) {
-                    $seenContent[$recId] = true;
-                    $prompts[] = [
-                        'id' => (string)($r['id'] ?? uniqid()),
-                        'prompt' => $c,
-                        'timestamp' => $r['created_at'] ?? date('Y-m-d H:i:s'),
-                        'analysis' => ssparc_analyze_prompt($c)
-                    ];
+    // Source 1: chat_history table (Current DB & Cross-Database Discovery)
+    $mydb->query("CREATE TABLE IF NOT EXISTS chat_history (
+        id VARCHAR(64) PRIMARY KEY,
+        user_id VARCHAR(64) NOT NULL,
+        session_id VARCHAR(64) NULL,
+        assessment_id VARCHAR(64) NULL,
+        role VARCHAR(20) DEFAULT 'user',
+        content TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+    $serverDbs = [];
+    $dbsQ = $mydb->query("SHOW DATABASES");
+    if ($dbsQ) {
+        while ($dbr = $dbsQ->fetch_assoc()) {
+            $dbName = reset($dbr);
+            if (!in_array($dbName, ['information_schema', 'performance_schema', 'mysql', 'sys'])) {
+                $serverDbs[] = $dbName;
+            }
+        }
+    }
+
+    foreach ($serverDbs as $sDb) {
+        $chkChat = $mydb->query("SHOW TABLES FROM `$sDb` LIKE 'chat_history'");
+        if ($chkChat && $chkChat->num_rows > 0) {
+            $qOtherChat = $mydb->query("SELECT id, content, created_at FROM `$sDb`.`chat_history` 
+                                        WHERE user_id IN ($userInStr) 
+                                          AND (LOWER(role) = 'user' OR role IS NULL OR role = '') 
+                                          $aidFilter 
+                                        ORDER BY created_at ASC");
+            if ($qOtherChat && $qOtherChat->num_rows > 0) {
+                while ($r = $qOtherChat->fetch_assoc()) {
+                    $c = trim($r['content'] ?? '');
+                    $recId = 'chat_' . $sDb . '_' . ($r['id'] ?? uniqid());
+                    if (!empty($c) && !isset($seenContent[$recId])) {
+                        $seenContent[$recId] = true;
+                        $prompts[] = [
+                            'id' => (string)($r['id'] ?? uniqid()),
+                            'prompt' => $c,
+                            'timestamp' => $r['created_at'] ?? date('Y-m-d H:i:s'),
+                            'analysis' => ssparc_analyze_prompt($c)
+                        ];
+                    }
                 }
             }
         }
