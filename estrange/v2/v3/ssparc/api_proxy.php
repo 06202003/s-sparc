@@ -197,12 +197,20 @@ if (isset($_GET['debug']) || (isset($_GET['action']) && $_GET['action'] === 'deb
 
     // 2. Table row counts across all databases on server
     $out['table_row_counts'] = [];
+    $out['table_columns'] = [];
     $candidateTables = ['chat_history', 'gpt_jobs', 'educational_learning_logs', 'code_embeddings', 'session_tokens', 'submission', 'suspicion', 'code_clarity_suggestion', 'user', 'users', 'game_student_course', 'enrollment', 'assessment', 'course'];
     foreach ($candidateTables as $tbl) {
         $chk = $db->query("SHOW TABLES LIKE '$tbl'");
         if ($chk && $chk->num_rows > 0) {
             $cntRes = $db->query("SELECT COUNT(*) AS total FROM $tbl");
             $out['table_row_counts'][$tbl] = $cntRes ? (int)$cntRes->fetch_assoc()['total'] : 0;
+            
+            $colsRes = $db->query("SHOW COLUMNS FROM $tbl");
+            if ($colsRes) {
+                while ($cr = $colsRes->fetch_assoc()) {
+                    $out['table_columns'][$tbl][] = $cr['Field'];
+                }
+            }
         } else {
             $out['table_row_counts'][$tbl] = 'TABLE_NOT_FOUND';
         }
