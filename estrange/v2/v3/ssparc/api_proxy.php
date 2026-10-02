@@ -85,6 +85,69 @@ if ($path === '/api/admin/wrapped/export-csv' || $path === '/admin/wrapped/expor
     exit;
 }
 
+// 3. Direct Student AI Literacy Profile Handler
+if (preg_match('#^/api/educational/student-profile/(.+)$#', $path, $matches)) {
+    require_once __DIR__ . '/_sso_bridge.php';
+    require_once __DIR__ . '/_wrapped_service.php';
+    header('Content-Type: application/json; charset=utf-8');
+    
+    $targetUser = trim($matches[1]);
+    $prof = ssparc_get_student_aggregated_profile($db, $targetUser);
+    echo json_encode($prof, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+// 4. Direct Environmental Footprint Telemetry Handler
+if ($path === '/api/environmental/footprint') {
+    require_once __DIR__ . '/_sso_bridge.php';
+    require_once __DIR__ . '/_wrapped_service.php';
+    header('Content-Type: application/json; charset=utf-8');
+    
+    $cohort = ssparc_get_cohort_research_analytics($db, $_GET['course_id'] ?? null, $_GET['assessment_id'] ?? null);
+    $totWh = (float)($cohort['total_class_wh'] ?? 0.0);
+    $totCarbonG = (float)($cohort['total_class_carbon_g'] ?? 0.0);
+    $totCarbonKg = round($totCarbonG / 1000.0, 5);
+    $totKwh = round($totWh / 1000.0, 5);
+    $totWaterL = round(($totWh * 4.65) / 1000.0, 4);
+
+    $daysCount = max(1, min(90, (int)($_GET['days'] ?? 30)));
+    $avgDailyKwh = round($totKwh / $daysCount, 5);
+
+    $footprintData = [
+        'status' => 'success',
+        'scope' => $_GET['scope'] ?? 'all',
+        'days' => $daysCount,
+        'totals' => [
+            'energy_kwh' => $totKwh,
+            'energy_wh' => $totWh,
+            'carbon_kg' => $totCarbonKg,
+            'carbon_g' => $totCarbonG,
+            'water_l' => $totWaterL,
+            'water_ml' => $totWaterL * 1000.0,
+            'total_prompts' => $cohort['total_class_prompts'] ?? 0
+        ],
+        'avg_daily_kwh' => $avgDailyKwh,
+        'equivalents' => [
+            'phone_charges' => round($totWh / 12.0, 1),
+            'led_hours' => round($totWh / 9.0, 1),
+            'kettle_boils' => round($totWh / 1500.0, 2),
+            'car_km' => round($totCarbonKg / 0.192, 2),
+            'tree_days' => round($totCarbonKg / (21.0 / 365.0), 1),
+            'shower_minutes' => round($totWaterL / 9.0, 2)
+        ],
+        'daily' => [
+            [
+                'day' => date('Y-m-d'),
+                'energy_kwh' => $totKwh,
+                'carbon_kg' => $totCarbonKg,
+                'water_l' => $totWaterL
+            ]
+        ]
+    ];
+    echo json_encode($footprintData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 if (isset($_GET['debug']) || (isset($_GET['action']) && $_GET['action'] === 'debug_user')) {
     require_once __DIR__ . '/../_config.php';
     require_once __DIR__ . '/_wrapped_service.php';

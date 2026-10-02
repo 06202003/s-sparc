@@ -410,12 +410,18 @@ select.select2-hidden-accessible {
       const courseId = $('#filterCourse').val() || '';
       const asmtId = $('#filterAsmt').val() || '';
 
-      let url = `${FASTAPI_URL}/api/environmental/footprint?days=${days}&scope=${scope}`;
+      let url = `api_proxy.php?endpoint=/api/environmental/footprint&days=${days}&scope=${scope}`;
       if (scope === 'course' && courseId) url += `&course_id=${courseId}`;
       if (scope === 'assessment' && asmtId) url += `&assessment_id=${asmtId}`;
 
       try {
-        const res = await fetch(url, { headers: { 'X-User-ID': SSO_USER_ID } });
+        let res = await fetch(url, { headers: { 'X-User-ID': SSO_USER_ID } });
+        if (!res.ok) {
+          let directUrl = `${FASTAPI_URL}/api/environmental/footprint?days=${days}&scope=${scope}`;
+          if (scope === 'course' && courseId) directUrl += `&course_id=${courseId}`;
+          if (scope === 'assessment' && asmtId) directUrl += `&assessment_id=${asmtId}`;
+          res = await fetch(directUrl, { headers: { 'X-User-ID': SSO_USER_ID } });
+        }
         if (!res.ok) return;
         const data = await res.json();
 
