@@ -80,17 +80,20 @@ function ssparc_analyze_prompt($text) {
 
 function ssparc_resolve_all_user_identifiers($mydb, $userId) {
     $identifiers = [];
-    if (!empty($userId)) {
-        $identifiers[] = trim((string)$userId);
-    }
-    if (!empty($_SESSION['user_id'])) {
-        $identifiers[] = trim((string)$_SESSION['user_id']);
-    }
-    if (!empty($_SESSION['username'])) {
-        $identifiers[] = trim((string)$_SESSION['username']);
-    }
-    if (!empty($_SESSION['name'])) {
-        $identifiers[] = trim((string)$_SESSION['name']);
+    $targetId = trim((string)$userId);
+    
+    if (!empty($targetId) && $targetId !== 'all' && $targetId !== 'student_demo') {
+        $identifiers[] = $targetId;
+    } else {
+        if (!empty($_SESSION['user_id'])) {
+            $identifiers[] = trim((string)$_SESSION['user_id']);
+        }
+        if (!empty($_SESSION['username'])) {
+            $identifiers[] = trim((string)$_SESSION['username']);
+        }
+        if (!empty($_SESSION['name'])) {
+            $identifiers[] = trim((string)$_SESSION['name']);
+        }
     }
 
     $clean = array_values(array_filter(array_unique($identifiers)));
@@ -113,36 +116,7 @@ function ssparc_resolve_all_user_identifiers($mydb, $userId) {
         }
     }
 
-    // 2. Keyword/Name-based search if name like 'YEHEZKIEL'
-    $nameKeywords = [];
-    foreach ($identifiers as $id) {
-        $parts = preg_split('/[\s_\-\.\@]+/', (string)$id);
-        foreach ($parts as $p) {
-            $p = trim($p);
-            if (strlen($p) >= 4 && !is_numeric($p)) {
-                $nameKeywords[] = $mydb->real_escape_string($p);
-            }
-        }
-    }
-    $nameKeywords = array_values(array_unique($nameKeywords));
-    if (!empty($nameKeywords)) {
-        $likeParts = [];
-        foreach ($nameKeywords as $kw) {
-            $likeParts[] = "name LIKE '%$kw%'";
-            $likeParts[] = "username LIKE '%$kw%'";
-        }
-        $likeSql = implode(' OR ', $likeParts);
-        $kwQuery = $mydb->query("SELECT user_id, username, name, email FROM user WHERE $likeSql LIMIT 10");
-        if ($kwQuery && $kwQuery->num_rows > 0) {
-            while ($row = $kwQuery->fetch_assoc()) {
-                if (!empty($row['user_id'])) $identifiers[] = (string)$row['user_id'];
-                if (!empty($row['username'])) $identifiers[] = (string)$row['username'];
-                if (!empty($row['email'])) $identifiers[] = (string)$row['email'];
-            }
-        }
-    }
-
-    // 3. Query S-SPARC users table (UUID mappings)
+    // 2. Query S-SPARC users table (UUID mappings)
     $hasUsersTbl = $mydb->query("SHOW TABLES LIKE 'users'");
     if ($hasUsersTbl && $hasUsersTbl->num_rows > 0) {
         $escapedCurrent = array_map(function($id) use ($mydb) {
@@ -857,11 +831,24 @@ function ssparc_get_cohort_research_analytics($mydb, $courseId = null, $assessme
         }
     }
 
-    // Fallback: If no students found yet, include all known student users from user table
+    // Fallback: If no active students found yet, include up to 30 known users from user table
     if (empty($studentUserIds)) {
+        $sampleCount = 0;
         foreach (array_keys($userProfilesMap) as $k) {
             $studentUserIds[$k] = true;
+            $sampleCount++;
+            if ($sampleCount >= 30) break;
         }
+    } else {
+        // If there are many users, prioritize active students and limit to max 50
+        $sliced = [];
+        $cnt = 0;
+        foreach ($studentUserIds as $k => $v) {
+            $sliced[$k] = true;
+            $cnt++;
+            if ($cnt >= 50) break;
+        }
+        $studentUserIds = $sliced;
     }
 
     $studentRecords = [];
