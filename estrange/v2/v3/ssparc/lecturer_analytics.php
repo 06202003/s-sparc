@@ -111,8 +111,8 @@ if ($coursesRes) {
           <span class="font-bold">Class C-I-O-E Adherence</span>
           <span class="text-teal-600 font-semibold">Prompt Literacy</span>
         </div>
-        <div id="class-cioe-rate" class="text-2xl font-extrabold text-slate-900">89.4%</div>
-        <p class="text-[11px] text-slate-500 mt-1">4.2x more specific compared to unstructured prompting</p>
+        <div id="class-cioe-rate" class="text-2xl font-extrabold text-slate-900 font-mono">--%</div>
+        <p class="text-[11px] text-slate-500 mt-1">Average structural adherence across all sessions</p>
       </div>
 
       <div class="metric-card border-l-4 border-l-indigo-500">
@@ -120,8 +120,8 @@ if ($coursesRes) {
           <span class="font-bold">1-Turn Task Resolution</span>
           <span class="text-indigo-600 font-semibold">Problem Solving</span>
         </div>
-        <div id="class-resolution-rate" class="text-2xl font-extrabold text-indigo-900 font-mono">1.8 turns</div>
-        <p class="text-[11px] text-slate-500 mt-1">Decreased from 7.4 baseline trial-and-error turns</p>
+        <div id="class-resolution-rate" class="text-2xl font-extrabold text-indigo-900 font-mono">-- turns</div>
+        <p class="text-[11px] text-slate-500 mt-1">Average student interaction turns per problem session</p>
       </div>
 
       <div class="metric-card border-l-4 border-l-emerald-500">
@@ -129,8 +129,8 @@ if ($coursesRes) {
           <span class="font-bold">Plagiarism Defenses Passed</span>
           <span class="text-emerald-600 font-semibold">Academic Integrity</span>
         </div>
-        <div id="class-defense-pass" class="text-2xl font-extrabold text-emerald-900 font-mono">92.3%</div>
-        <p class="text-[11px] text-slate-500 mt-1">Students successfully defend their code logic</p>
+        <div id="class-defense-pass" class="text-2xl font-extrabold text-emerald-900 font-mono">--%</div>
+        <p class="text-[11px] text-slate-500 mt-1">Cognitive independence &amp; code defense success</p>
       </div>
 
       <div class="metric-card border-l-4 border-l-amber-500">
@@ -138,8 +138,8 @@ if ($coursesRes) {
           <span class="font-bold">0-Token Fast-Path Reuse</span>
           <span class="text-amber-600 font-semibold">Green AI</span>
         </div>
-        <div id="class-fast-path" class="text-2xl font-extrabold text-amber-900 font-mono">46.5%</div>
-        <p class="text-[11px] text-slate-500 mt-1">100% token savings via semantic similarity s &ge; 0.88</p>
+        <div id="class-fast-path" class="text-2xl font-extrabold text-amber-900 font-mono">--%</div>
+        <p class="text-[11px] text-slate-500 mt-1">Token savings via semantic similarity cache hits</p>
       </div>
 
     </div>
@@ -152,9 +152,9 @@ if ($coursesRes) {
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
           <div>
             <h3 class="text-base font-bold text-slate-900">Session Turn Resolution Distribution</h3>
-            <p class="text-xs text-slate-500">Evidence of reduced prompt spamming under C-I-O-E and reflection cooldown</p>
+            <p class="text-xs text-slate-500">Evidence of reduced prompt spamming under C-I-O-E protocol</p>
           </div>
-          <span class="text-xs bg-teal-50 text-teal-700 px-2 py-0.5 rounded font-bold">1-2 Turns = 82%</span>
+          <span id="turns-1-2-badge" class="text-xs bg-teal-50 text-teal-700 px-2 py-0.5 rounded font-bold">1-2 Turns = --%</span>
         </div>
         <div class="h-64">
           <canvas id="turnsChart"></canvas>
@@ -168,7 +168,7 @@ if ($coursesRes) {
             <h3 class="text-base font-bold text-slate-900">4-Pillar C-I-O-E Completeness</h3>
             <p class="text-xs text-slate-500">Adherence rate of Context, Input, Output, and Error Trace</p>
           </div>
-          <span class="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded font-bold">N = 678 Sessions</span>
+          <span id="cioe-sessions-badge" class="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded font-bold">N = -- Prompts</span>
         </div>
         <div class="h-64">
           <canvas id="cioeRadarChart"></canvas>
@@ -307,12 +307,19 @@ if ($coursesRes) {
   </main>
 
   <script>
+    let turnsChartInstance = null;
+    let cioeRadarChartInstance = null;
+    let cohortRadarInstance = null;
+    let tierChartInstance = null;
+    let archetypeChartInstance = null;
+
     async function loadFacultyAnalytics() {
       let data = null;
+      let courseId = $('#faculty-course-select')?.val() || '';
       try {
-        let res = await fetch(`api_proxy.php?endpoint=/api/admin/wrapped/analytics`);
+        let res = await fetch(`api_proxy.php?endpoint=/api/admin/wrapped/analytics&course_id=${encodeURIComponent(courseId)}`);
         if (!res.ok) {
-          res = await fetch(`https://estrangeinternal.itmaranatha.org/api/admin/wrapped/analytics`, {
+          res = await fetch(`https://estrangeinternal.itmaranatha.org/api/admin/wrapped/analytics?course_id=${encodeURIComponent(courseId)}`, {
             headers: { 'X-User-ID': '<?= htmlspecialchars($sso_user_id) ?>' }
           });
         }
@@ -324,12 +331,25 @@ if ($coursesRes) {
       }
 
       if (data && data.status === 'success') {
+        // Top High-Level Proof Cards
+        document.getElementById('class-cioe-rate').textContent = `${data.avg_class_cioe}%`;
+        document.getElementById('class-resolution-rate').textContent = `${data.avg_turns} turns`;
+        document.getElementById('class-defense-pass').textContent = `${data.defense_pass_rate}%`;
+        document.getElementById('class-fast-path').textContent = `${data.fast_path_pct}%`;
+
+        const t1_2 = ((data.turn_distribution?.['1_turn'] || 0) + (data.turn_distribution?.['2_turns'] || 0)).toFixed(1);
+        document.getElementById('turns-1-2-badge').textContent = `1-2 Turns = ${t1_2}%`;
+        document.getElementById('cioe-sessions-badge').textContent = `N = ${data.total_class_prompts || data.total_students || 0} Prompts`;
+
+        // Research KPI Cards
         document.getElementById('research-avg-cioe').textContent = `${data.avg_class_cioe}%`;
         document.getElementById('research-avg-entropy').textContent = `${data.avg_class_entropy} H(X)`;
         document.getElementById('research-total-wh').textContent = `${data.total_class_wh} Wh`;
         document.getElementById('research-total-co2').textContent = `Estimated ${data.total_class_carbon_g} g CO2e`;
         document.getElementById('research-total-prompts').textContent = `${data.total_class_prompts} Prompts`;
 
+        renderTurnsChart(data.turn_distribution || {});
+        renderCioeComparisonChart(data.cohort_radar || {});
         renderCohortRadar(data.cohort_radar || {});
         renderTierChart(data.tier_distribution || {});
         renderArchetypeChart(data.archetype_distribution || {});
@@ -337,15 +357,25 @@ if ($coursesRes) {
       } else {
         renderDefaultResearchCharts();
       }
+    }
 
-      // Base Faculty Proof Charts
-      new Chart(document.getElementById('turnsChart').getContext('2d'), {
+    function renderTurnsChart(turnData) {
+      const ctx = document.getElementById('turnsChart')?.getContext('2d');
+      if (!ctx) return;
+      if (turnsChartInstance) turnsChartInstance.destroy();
+
+      turnsChartInstance = new Chart(ctx, {
         type: 'bar',
         data: {
           labels: ['1 Turn (Exact Fix)', '2 Turns (Refined)', '3-4 Turns (Iterative)', '5+ Turns (Struggling)'],
           datasets: [{
             label: 'Student Session Percentage',
-            data: [58.2, 24.1, 12.5, 5.2],
+            data: [
+              turnData?.['1_turn'] ?? 0,
+              turnData?.['2_turns'] ?? 0,
+              turnData?.['3_4_turns'] ?? 0,
+              turnData?.['5_plus_turns'] ?? 0
+            ],
             backgroundColor: ['#00A0A5', '#14b8a6', '#f59e0b', '#f43f5e'],
             borderRadius: 8
           }]
@@ -354,18 +384,29 @@ if ($coursesRes) {
           responsive: true,
           maintainAspectRatio: false,
           plugins: { legend: { display: false } },
-          scales: { y: { beginAtZero: true, max: 70, ticks: { callback: v => v + '%' } }, x: { grid: { display: false } } }
+          scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } }, x: { grid: { display: false } } }
         }
       });
+    }
 
-      new Chart(document.getElementById('cioeRadarChart').getContext('2d'), {
+    function renderCioeComparisonChart(radarData) {
+      const ctx = document.getElementById('cioeRadarChart')?.getContext('2d');
+      if (!ctx) return;
+      if (cioeRadarChartInstance) cioeRadarChartInstance.destroy();
+
+      cioeRadarChartInstance = new Chart(ctx, {
         type: 'radar',
         data: {
           labels: ['[C] Context / Language', '[I] Input / Pre-conditions', '[O] Output / Complexity', '[E] Error Trace / Line'],
           datasets: [
             {
-              label: 'S-SPARC C-I-O-E Group',
-              data: [94.5, 88.2, 86.4, 88.5],
+              label: 'S-SPARC C-I-O-E Cohort',
+              data: [
+                radarData?.Context ?? 0,
+                radarData?.Input ?? 0,
+                radarData?.Output ?? 0,
+                radarData?.Error ?? 0
+              ],
               backgroundColor: 'rgba(0, 160, 165, 0.25)',
               borderColor: '#00A0A5',
               borderWidth: 2
@@ -386,10 +427,6 @@ if ($coursesRes) {
         }
       });
     }
-
-    let cohortRadarInstance = null;
-    let tierChartInstance = null;
-    let archetypeChartInstance = null;
 
     function renderCohortRadar(radarData) {
       const ctx = document.getElementById('cohortRadarChart')?.getContext('2d');
@@ -514,12 +551,21 @@ if ($coursesRes) {
     }
 
     function renderDefaultResearchCharts() {
+      document.getElementById('class-cioe-rate').textContent = `0.0%`;
+      document.getElementById('class-resolution-rate').textContent = `1.0 turns`;
+      document.getElementById('class-defense-pass').textContent = `0.0%`;
+      document.getElementById('class-fast-path').textContent = `0.0%`;
+      document.getElementById('turns-1-2-badge').textContent = `1-2 Turns = 0.0%`;
+      document.getElementById('cioe-sessions-badge').textContent = `N = 0 Prompts`;
+
       document.getElementById('research-avg-cioe').textContent = `0.0%`;
       document.getElementById('research-avg-entropy').textContent = `0.00 H(X)`;
       document.getElementById('research-total-wh').textContent = `0.00 Wh`;
       document.getElementById('research-total-co2').textContent = `Estimated 0.00 g CO2e`;
       document.getElementById('research-total-prompts').textContent = `0 Prompts`;
 
+      renderTurnsChart({});
+      renderCioeComparisonChart({});
       renderCohortRadar({});
       renderTierChart({});
       renderArchetypeChart({});
@@ -528,7 +574,8 @@ if ($coursesRes) {
 
     // Direct CSV Export Click Handler
     document.getElementById('btn-export-csv')?.addEventListener('click', () => {
-      window.location.href = `api_proxy.php?endpoint=/api/admin/wrapped/export-csv`;
+      let courseId = $('#faculty-course-select')?.val() || '';
+      window.location.href = `api_proxy.php?endpoint=/api/admin/wrapped/export-csv&course_id=${encodeURIComponent(courseId)}`;
     });
 
     document.addEventListener('DOMContentLoaded', () => {

@@ -39,6 +39,52 @@ if (!empty($_GET['path'])) {
     }
 }
 
+// 1. Direct High-Performance Cohort Telemetry Handler
+if ($path === '/api/admin/wrapped/analytics' || $path === '/admin/wrapped/analytics') {
+    require_once __DIR__ . '/_sso_bridge.php';
+    require_once __DIR__ . '/_wrapped_service.php';
+    header('Content-Type: application/json; charset=utf-8');
+    
+    $courseId = $_GET['course_id'] ?? null;
+    $assessmentId = $_GET['assessment_id'] ?? null;
+    $data = ssparc_get_cohort_research_analytics($db, $courseId, $assessmentId);
+    echo json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+// 2. Direct Research Telemetry CSV Exporter
+if ($path === '/api/admin/wrapped/export-csv' || $path === '/admin/wrapped/export-csv') {
+    require_once __DIR__ . '/_sso_bridge.php';
+    require_once __DIR__ . '/_wrapped_service.php';
+    
+    $courseId = $_GET['course_id'] ?? null;
+    $assessmentId = $_GET['assessment_id'] ?? null;
+    $data = ssparc_get_cohort_research_analytics($db, $courseId, $assessmentId);
+    
+    header('Content-Type: text/csv; charset=utf-8');
+    header('Content-Disposition: attachment; filename="ssparc_cohort_telemetry_' . date('Ymd_His') . '.csv"');
+    
+    $outStream = fopen('php://output', 'w');
+    fputcsv($outStream, ['Assessment ID', 'Anonymous NIM', 'Student Name', 'Total Prompts', 'C-I-O-E (%)', 'Shannon Entropy', 'Archetype', 'Literacy Tier', 'Energy (Wh)', 'CO2 (g)']);
+    
+    foreach ($data['student_telemetry'] ?? [] as $r) {
+        fputcsv($outStream, [
+            $assessmentId ?: 'all',
+            'STU_' . substr(md5($r['nim']), 0, 6),
+            $r['name'],
+            $r['total_prompts'],
+            $r['cioe_score'],
+            $r['shannon_entropy'],
+            $r['archetype'],
+            $r['literacy_tier'],
+            $r['energy_wh'],
+            $r['carbon_g']
+        ]);
+    }
+    fclose($outStream);
+    exit;
+}
+
 if (isset($_GET['debug']) || (isset($_GET['action']) && $_GET['action'] === 'debug_user')) {
     require_once __DIR__ . '/../_config.php';
     require_once __DIR__ . '/_wrapped_service.php';
