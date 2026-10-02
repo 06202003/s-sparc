@@ -82,7 +82,7 @@ function ssparc_resolve_all_user_identifiers($mydb, $userId) {
     $identifiers = [];
     $targetId = trim((string)$userId);
     
-    if (!empty($targetId) && $targetId !== 'all' && $targetId !== 'student_demo') {
+    if (!empty($targetId) && $targetId !== 'all') {
         $identifiers[] = $targetId;
     } else {
         if (!empty($_SESSION['user_id'])) {
@@ -90,9 +90,6 @@ function ssparc_resolve_all_user_identifiers($mydb, $userId) {
         }
         if (!empty($_SESSION['username'])) {
             $identifiers[] = trim((string)$_SESSION['username']);
-        }
-        if (!empty($_SESSION['name'])) {
-            $identifiers[] = trim((string)$_SESSION['name']);
         }
     }
 
@@ -107,23 +104,47 @@ function ssparc_resolve_all_user_identifiers($mydb, $userId) {
     $inSql = implode(',', $escapedIds);
 
     // 1. Direct query E-STRANGE user table
+    $names = [];
     $uQuery = $mydb->query("SELECT user_id, username, name, email FROM user WHERE user_id IN ($inSql) OR username IN ($inSql) OR name IN ($inSql)");
     if ($uQuery && $uQuery->num_rows > 0) {
         while ($row = $uQuery->fetch_assoc()) {
             if (!empty($row['user_id'])) $identifiers[] = (string)$row['user_id'];
             if (!empty($row['username'])) $identifiers[] = (string)$row['username'];
             if (!empty($row['email'])) $identifiers[] = (string)$row['email'];
+            if (!empty($row['name'])) $names[] = (string)$row['name'];
         }
     }
 
-    // 2. Query S-SPARC users table (UUID mappings)
+    // 2. Keyword/Name-based search in user table and users table
+    $nameKeywords = [];
+    foreach (array_merge($identifiers, $names) as $id) {
+        $parts = preg_split('/[\s_\-\.\@]+/', (string)$id);
+        foreach ($parts as $p) {
+            $p = trim($p);
+            if (strlen($p) >= 3 && !is_numeric($p)) {
+                $nameKeywords[] = $mydb->real_escape_string($p);
+            }
+        }
+    }
+    $nameKeywords = array_values(array_unique($nameKeywords));
+
+    // 3. Query S-SPARC users table (UUID mappings)
     $hasUsersTbl = $mydb->query("SHOW TABLES LIKE 'users'");
     if ($hasUsersTbl && $hasUsersTbl->num_rows > 0) {
         $escapedCurrent = array_map(function($id) use ($mydb) {
             return "'" . $mydb->real_escape_string($id) . "'";
         }, array_values(array_filter(array_unique($identifiers))));
         $inSql2 = implode(',', $escapedCurrent);
-        $uuQuery = $mydb->query("SELECT user_id, username, email FROM users WHERE user_id IN ($inSql2) OR username IN ($inSql2) OR email IN ($inSql2)");
+        
+        $likeClauses = ["user_id IN ($inSql2)", "username IN ($inSql2)", "email IN ($inSql2)"];
+        foreach ($nameKeywords as $kw) {
+            $likeClauses[] = "username LIKE '%$kw%'";
+            $likeClauses[] = "name LIKE '%$kw%'";
+            $likeClauses[] = "email LIKE '%$kw%'";
+        }
+        $usersWhere = implode(' OR ', $likeClauses);
+        
+        $uuQuery = $mydb->query("SELECT user_id, username, email FROM users WHERE $usersWhere");
         if ($uuQuery && $uuQuery->num_rows > 0) {
             while ($row = $uuQuery->fetch_assoc()) {
                 if (!empty($row['user_id'])) $identifiers[] = (string)$row['user_id'];
