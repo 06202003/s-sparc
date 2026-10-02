@@ -576,6 +576,22 @@ function ssparc_get_student_aggregated_profile($mydb, $userId) {
     $prompts = ssparc_fetch_all_student_prompts($mydb, $userInStr, null);
 
     if (empty($prompts)) {
+        // Fallback: Query live FastAPI backend daemon (connected to db_semantic_final)
+        $backendUrl = getenv('FASTAPI_BACKEND_URL') ?: 'https://estrangeinternal.itmaranatha.org';
+        $ch = curl_init(rtrim($backendUrl, '/') . '/api/educational/student-profile/' . urlencode($userId));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        $resp = curl_exec($ch);
+        curl_close($ch);
+        if ($resp) {
+            $decoded = json_decode($resp, true);
+            if (!empty($decoded) && (!empty($decoded['total_prompts']) || !empty($decoded['average_prompt_quality']))) {
+                return $decoded;
+            }
+        }
+
         return [
             'status' => 'success',
             'user_id' => $userId,

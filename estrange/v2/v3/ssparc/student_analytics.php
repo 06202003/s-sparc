@@ -391,42 +391,59 @@ $userId = $_SESSION['user_id'] ?? 'student_demo';
       let bloomData = [0, 0, 0];
       let radarData = [0, 0, 0, 0, 0];
 
+      let profile = null;
       try {
         let res = await fetch(`api_proxy.php?endpoint=/api/educational/student-profile/${USER_ID}`);
-        if (!res.ok) {
-          res = await fetch(`https://estrangeinternal.itmaranatha.org/api/educational/student-profile/${USER_ID}`);
-        }
         if (res.ok) {
-          const profile = await res.json();
-          document.getElementById('profile-literacy-level').textContent = profile.persona_title || profile.literacy_level || 'The Algorithmic Synthesizer';
-          document.getElementById('profile-independence-index').textContent = `Independence: ${(profile.cognitive_independence_index ?? 1.0).toFixed(2)} / 1.0`;
-          document.getElementById('stat-cioe-adherence').textContent = `${(((profile.average_cioe_score ?? 0) * 100)).toFixed(1)}%`;
-          document.getElementById('stat-prompt-quality').textContent = `${(profile.average_entropy ?? 0).toFixed(2)} / 1.0`;
-          document.getElementById('stat-conceptual-ratio').textContent = `${(((profile.conceptual_mode_ratio ?? 0) * 100)).toFixed(1)}%`;
-          document.getElementById('stat-fast-path-rate').textContent = `${(((profile.fast_path_utilization_rate ?? 0) * 100)).toFixed(1)}%`;
-          
-          if (profile.bloom_distribution && Array.isArray(profile.bloom_distribution)) {
-            bloomData = profile.bloom_distribution;
-          }
-
-          if (profile.radar_dimensions) {
-            const rd = profile.radar_dimensions;
-            radarData = [
-              rd.Context ?? 0,
-              rd.Input ?? 0,
-              rd.Output ?? 0,
-              rd.Error ?? 0,
-              rd.Vocabulary ?? 0
-            ];
-            document.getElementById('radar-val-context').innerText = `${rd.Context ?? 0}%`;
-            document.getElementById('radar-val-input').innerText = `${rd.Input ?? 0}%`;
-            document.getElementById('radar-val-output').innerText = `${rd.Output ?? 0}%`;
-            document.getElementById('radar-val-error').innerText = `${rd.Error ?? 0}%`;
-            document.getElementById('radar-val-vocab').innerText = `${rd.Vocabulary ?? 0}%`;
-          }
+          profile = await res.json();
         }
       } catch (e) {
-        console.debug('Failed to fetch profile:', e);
+        console.debug('api_proxy fetch notice:', e);
+      }
+
+      // If proxy returned empty or zero stats, query live backend daemon directly
+      const hasValidPrompts = profile && ((profile.total_prompts && profile.total_prompts > 0) || (profile.radar_dimensions && profile.radar_dimensions.Context > 0) || (profile.average_prompt_quality && profile.average_prompt_quality > 0));
+      if (!hasValidPrompts) {
+        try {
+          let directRes = await fetch(`https://estrangeinternal.itmaranatha.org/api/educational/student-profile/${USER_ID}`);
+          if (directRes.ok) {
+            const dProf = await directRes.json();
+            if (dProf && (dProf.total_prompts > 0 || dProf.average_prompt_quality > 0 || dProf.persona_title)) {
+              profile = dProf;
+            }
+          }
+        } catch (e) {
+          console.debug('Direct backend daemon fetch notice:', e);
+        }
+      }
+
+      if (profile) {
+        document.getElementById('profile-literacy-level').textContent = profile.persona_title || profile.literacy_level || 'The Algorithmic Synthesizer';
+        document.getElementById('profile-independence-index').textContent = `Independence: ${(profile.cognitive_independence_index ?? 1.0).toFixed(2)} / 1.0`;
+        document.getElementById('stat-cioe-adherence').textContent = `${(((profile.average_cioe_score ?? 0) * 100)).toFixed(1)}%`;
+        document.getElementById('stat-prompt-quality').textContent = `${(profile.average_entropy ?? profile.average_prompt_quality ?? 0).toFixed(2)} / 1.0`;
+        document.getElementById('stat-conceptual-ratio').textContent = `${(((profile.conceptual_mode_ratio ?? 0) * 100)).toFixed(1)}%`;
+        document.getElementById('stat-fast-path-rate').textContent = `${(((profile.fast_path_utilization_rate ?? 0) * 100)).toFixed(1)}%`;
+        
+        if (profile.bloom_distribution && Array.isArray(profile.bloom_distribution)) {
+          bloomData = profile.bloom_distribution;
+        }
+
+        if (profile.radar_dimensions) {
+          const rd = profile.radar_dimensions;
+          radarData = [
+            rd.Context ?? 0,
+            rd.Input ?? 0,
+            rd.Output ?? 0,
+            rd.Error ?? 0,
+            rd.Vocabulary ?? 0
+          ];
+          document.getElementById('radar-val-context').innerText = `${rd.Context ?? 0}%`;
+          document.getElementById('radar-val-input').innerText = `${rd.Input ?? 0}%`;
+          document.getElementById('radar-val-output').innerText = `${rd.Output ?? 0}%`;
+          document.getElementById('radar-val-error').innerText = `${rd.Error ?? 0}%`;
+          document.getElementById('radar-val-vocab').innerText = `${rd.Vocabulary ?? 0}%`;
+        }
       }
 
       // 1. Render Bloom Cognitive Mode Bar Chart

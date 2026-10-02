@@ -155,7 +155,22 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}: ${res.statusText}`);
         }
-        const data = await res.json();
+        let data = await res.json();
+
+        // If no interactions found via proxy, check backend daemon directly
+        if (data.status === 'no_interactions' || !data || data.status === 'error') {
+          try {
+            const directRes = await fetch(`https://estrangeinternal.itmaranatha.org/api/assessments/${ASSESSMENT_ID}/wrapped?user_id=${USER_ID}`);
+            if (directRes.ok) {
+              const directData = await directRes.json();
+              if (directData && directData.status === 'success') {
+                data = directData;
+              }
+            }
+          } catch (e) {
+            console.debug('Direct backend wrapped fetch notice:', e);
+          }
+        }
 
         if (data.status === 'locked') {
           renderLockedState(data);
