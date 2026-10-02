@@ -162,22 +162,25 @@ function ssparc_resolve_all_user_identifiers($mydb, $userId) {
     }
 
     // 3. Query S-SPARC users table (if present)
-    $hasUsersTbl = $mydb->query("SHOW TABLES LIKE 'users'");
-    if ($hasUsersTbl && $hasUsersTbl->num_rows > 0 && !empty($nameKeywords)) {
-        $likeClauses = [];
-        foreach ($nameKeywords as $kw) {
-            $likeClauses[] = "username LIKE '%$kw%'";
-            $likeClauses[] = "name LIKE '%$kw%'";
-            $likeClauses[] = "email LIKE '%$kw%'";
-        }
-        $usersWhere = implode(' OR ', $likeClauses);
-        $uuQuery = $mydb->query("SELECT user_id, username, email FROM users WHERE $usersWhere LIMIT 20");
-        if ($uuQuery && $uuQuery->num_rows > 0) {
-            while ($row = $uuQuery->fetch_assoc()) {
-                if (!empty($row['user_id'])) $identifiers[] = (string)$row['user_id'];
-                if (!empty($row['username'])) $identifiers[] = (string)$row['username'];
+    try {
+        $hasUsersTbl = $mydb->query("SHOW TABLES LIKE 'users'");
+        if ($hasUsersTbl && $hasUsersTbl->num_rows > 0 && !empty($nameKeywords)) {
+            $likeClauses = [];
+            foreach ($nameKeywords as $kw) {
+                $likeClauses[] = "username LIKE '%$kw%'";
+                $likeClauses[] = "email LIKE '%$kw%'";
+            }
+            $usersWhere = implode(' OR ', $likeClauses);
+            $uuQuery = $mydb->query("SELECT user_id, username, email FROM users WHERE $usersWhere LIMIT 20");
+            if ($uuQuery && $uuQuery->num_rows > 0) {
+                while ($row = $uuQuery->fetch_assoc()) {
+                    if (!empty($row['user_id'])) $identifiers[] = (string)$row['user_id'];
+                    if (!empty($row['username'])) $identifiers[] = (string)$row['username'];
+                }
             }
         }
+    } catch (\Throwable $e) {
+        // Safe ignore
     }
 
     $finalEscaped = array_map(function($id) use ($mydb) {
@@ -205,40 +208,92 @@ function ssparc_fetch_all_student_prompts($mydb, $userInStr, $assessmentId = nul
         $aidFilter = " AND (assessment_id = '$aid' OR assessment_id IS NULL OR assessment_id = '')";
     }
 
-    // Source 1: chat_history table (Current DB & Cross-Database Discovery)
-    $mydb->query("CREATE TABLE IF NOT EXISTS chat_history (
-        id VARCHAR(64) PRIMARY KEY,
-        user_id VARCHAR(64) NOT NULL,
-        session_id VARCHAR(64) NULL,
-        assessment_id VARCHAR(64) NULL,
-        role VARCHAR(20) DEFAULT 'user',
-        content TEXT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    // Source 1: chat_history table (Current DB)
+    try {
+        @$mydb->query("CREATE TABLE IF NOT EXISTS chat_history (
+            id VARCHAR(64) PRIMARY KEY,
+            user_id VARCHAR(64) NOT NULL,
+            session_id VARCHAR(64) NULL,
+            assessment_id VARCHAR(64) NULL,
+            role VARCHAR(20) DEFAULT 'user',
+            content TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
-    $serverDbs = [];
-    $dbsQ = $mydb->query("SHOW DATABASES");
-    if ($dbsQ) {
-        while ($dbr = $dbsQ->fetch_assoc()) {
-            $dbName = reset($dbr);
-            if (!in_array($dbName, ['information_schema', 'performance_schema', 'mysql', 'sys'])) {
-                $serverDbs[] = $dbName;
+        $qChat = @$mydb->query("SELECT id, content, created_at FROM chat_history 
+                                WHERE user_id IN ($userInStr) 
+                                  AND (LOWER(role) = 'user' OR role IS NULL OR role = '') 
+                                  $aidFilter 
+                                ORDER BY created_at ASC");
+        if ($qChat && $qChat->num_rows > 0) {
+            while ($r = $qChat->fetch_assoc()) {
+                $c = trim($r['content'] ?? '');
+                $recId = 'chat_' . ($r['id'] ?? uniqid());
+                if (!empty($c) && !isset($seenContent[$recId])) {
+                    $seenContent[$recId] = true;
+                    $prompts[] = [
+                        'id' => (string)($r['id'] ?? uniqid()),
+                        'prompt' => $c,
+                        'timestamp' => $r['created_at'] ?? date('Y-m-d H:i:s'),
+                        'analysis' => ssparc_analyze_prompt($c)
+                    ];
+                }
             }
         }
+    } catch (\Throwable $e) {
+        // Safe ignore
     }
 
-    foreach ($serverDbs as $sDb) {
-        $chkChat = $mydb->query("SHOW TABLES FROM `$sDb` LIKE 'chat_history'");
-        if ($chkChat && $chkChat->num_rows > 0) {
-            $qOtherChat = $mydb->query("SELECT id, content, created_at FROM `$sDb`.`chat_history` 
-                                        WHERE user_id IN ($userInStr) 
-                                          AND (LOWER(role) = 'user' OR role IS NULL OR role = '') 
-                                          $aidFilter 
-                                        ORDER BY created_at ASC");
-            if ($qOtherChat && $qOtherChat->num_rows > 0) {
-                while ($r = $qOtherChat->fetch_assoc()) {
+    // Source 1b: chat_history in other databases (if accessible)
+    try {
+        $dbsQ = @$mydb->query("SHOW DATABASES");
+        if ($dbsQ) {
+            while ($dbr = $dbsQ->fetch_assoc()) {
+                $sDb = reset($dbr);
+                if (in_array($sDb, ['information_schema', 'performance_schema', 'mysql', 'sys', 'estrange_ssparc'])) continue;
+                try {
+                    $chkChat = @$mydb->query("SHOW TABLES FROM `$sDb` LIKE 'chat_history'");
+                    if ($chkChat && $chkChat->num_rows > 0) {
+                        $qOtherChat = @$mydb->query("SELECT id, content, created_at FROM `$sDb`.`chat_history` 
+                                                    WHERE user_id IN ($userInStr) 
+                                                      AND (LOWER(role) = 'user' OR role IS NULL OR role = '') 
+                                                      $aidFilter 
+                                                    ORDER BY created_at ASC");
+                        if ($qOtherChat && $qOtherChat->num_rows > 0) {
+                            while ($r = $qOtherChat->fetch_assoc()) {
+                                $c = trim($r['content'] ?? '');
+                                $recId = 'chat_' . $sDb . '_' . ($r['id'] ?? uniqid());
+                                if (!empty($c) && !isset($seenContent[$recId])) {
+                                    $seenContent[$recId] = true;
+                                    $prompts[] = [
+                                        'id' => (string)($r['id'] ?? uniqid()),
+                                        'prompt' => $c,
+                                        'timestamp' => $r['created_at'] ?? date('Y-m-d H:i:s'),
+                                        'analysis' => ssparc_analyze_prompt($c)
+                                    ];
+                                }
+                            }
+                        }
+                    }
+                } catch (\Throwable $eSub) {}
+            }
+        }
+    } catch (\Throwable $e) {
+        // Safe ignore
+    }
+
+    // Source 2: code_embeddings table
+    try {
+        $hasTbl = @$mydb->query("SHOW TABLES LIKE 'code_embeddings'");
+        if ($hasTbl && $hasTbl->num_rows > 0) {
+            $q = @$mydb->query("SELECT id, prompt AS content, created_at FROM code_embeddings 
+                               WHERE user_id IN ($userInStr) 
+                                 AND prompt IS NOT NULL AND prompt != '' 
+                               ORDER BY created_at ASC");
+            if ($q && $q->num_rows > 0) {
+                while ($r = $q->fetch_assoc()) {
                     $c = trim($r['content'] ?? '');
-                    $recId = 'chat_' . $sDb . '_' . ($r['id'] ?? uniqid());
+                    $recId = 'emb_' . ($r['id'] ?? uniqid());
                     if (!empty($c) && !isset($seenContent[$recId])) {
                         $seenContent[$recId] = true;
                         $prompts[] = [
@@ -251,143 +306,125 @@ function ssparc_fetch_all_student_prompts($mydb, $userInStr, $assessmentId = nul
                 }
             }
         }
-    }
-
-    // Source 2: code_embeddings table
-    $hasTbl = $mydb->query("SHOW TABLES LIKE 'code_embeddings'");
-    if ($hasTbl && $hasTbl->num_rows > 0) {
-        $q = $mydb->query("SELECT id, prompt AS content, created_at FROM code_embeddings 
-                           WHERE user_id IN ($userInStr) 
-                             AND prompt IS NOT NULL AND prompt != '' 
-                           ORDER BY created_at ASC");
-        if ($q && $q->num_rows > 0) {
-            while ($r = $q->fetch_assoc()) {
-                $c = trim($r['content'] ?? '');
-                $recId = 'emb_' . ($r['id'] ?? uniqid());
-                if (!empty($c) && !isset($seenContent[$recId])) {
-                    $seenContent[$recId] = true;
-                    $prompts[] = [
-                        'id' => (string)($r['id'] ?? uniqid()),
-                        'prompt' => $c,
-                        'timestamp' => $r['created_at'] ?? date('Y-m-d H:i:s'),
-                        'analysis' => ssparc_analyze_prompt($c)
-                    ];
-                }
-            }
-        }
-    }
+    } catch (\Throwable $e) {}
 
     // Source 3: gpt_jobs table
-    $hasTbl = $mydb->query("SHOW TABLES LIKE 'gpt_jobs'");
-    if ($hasTbl && $hasTbl->num_rows > 0) {
-        $q = $mydb->query("SELECT id, prompt AS content, created_at FROM gpt_jobs 
-                           WHERE user_id IN ($userInStr) 
-                             AND prompt IS NOT NULL AND prompt != '' 
-                           ORDER BY created_at ASC");
-        if ($q && $q->num_rows > 0) {
-            while ($r = $q->fetch_assoc()) {
-                $c = trim($r['content'] ?? '');
-                $recId = 'job_' . ($r['id'] ?? uniqid());
-                if (!empty($c) && !isset($seenContent[$recId])) {
-                    $seenContent[$recId] = true;
-                    $prompts[] = [
-                        'id' => (string)($r['id'] ?? uniqid()),
-                        'prompt' => $c,
-                        'timestamp' => $r['created_at'] ?? date('Y-m-d H:i:s'),
-                        'analysis' => ssparc_analyze_prompt($c)
-                    ];
+    try {
+        $hasTbl = @$mydb->query("SHOW TABLES LIKE 'gpt_jobs'");
+        if ($hasTbl && $hasTbl->num_rows > 0) {
+            $q = @$mydb->query("SELECT id, prompt AS content, created_at FROM gpt_jobs 
+                               WHERE user_id IN ($userInStr) 
+                                 AND prompt IS NOT NULL AND prompt != '' 
+                               ORDER BY created_at ASC");
+            if ($q && $q->num_rows > 0) {
+                while ($r = $q->fetch_assoc()) {
+                    $c = trim($r['content'] ?? '');
+                    $recId = 'job_' . ($r['id'] ?? uniqid());
+                    if (!empty($c) && !isset($seenContent[$recId])) {
+                        $seenContent[$recId] = true;
+                        $prompts[] = [
+                            'id' => (string)($r['id'] ?? uniqid()),
+                            'prompt' => $c,
+                            'timestamp' => $r['created_at'] ?? date('Y-m-d H:i:s'),
+                            'analysis' => ssparc_analyze_prompt($c)
+                        ];
+                    }
                 }
             }
         }
-    }
+    } catch (\Throwable $e) {}
 
     // Source 4: educational_learning_logs table
-    $hasTbl = $mydb->query("SHOW TABLES LIKE 'educational_learning_logs'");
-    if ($hasTbl && $hasTbl->num_rows > 0) {
-        $logAidFilter = (!empty($assessmentId) && $assessmentId !== 'all') ? " AND (assessment_id = '$aid' OR assessment_id IS NULL OR assessment_id = 0)" : "";
-        $q = $mydb->query("SELECT id, prompt_text AS content, timestamp AS created_at FROM educational_learning_logs 
-                           WHERE user_id IN ($userInStr) 
-                             AND prompt_text IS NOT NULL AND prompt_text != '' 
-                             $logAidFilter 
-                           ORDER BY timestamp ASC");
-        if ($q && $q->num_rows > 0) {
-            while ($r = $q->fetch_assoc()) {
-                $c = trim($r['content'] ?? '');
-                $recId = 'log_' . ($r['id'] ?? uniqid());
-                if (!empty($c) && !isset($seenContent[$recId])) {
-                    $seenContent[$recId] = true;
-                    $prompts[] = [
-                        'id' => (string)($r['id'] ?? uniqid()),
-                        'prompt' => $c,
-                        'timestamp' => $r['created_at'] ?? date('Y-m-d H:i:s'),
-                        'analysis' => ssparc_analyze_prompt($c)
-                    ];
+    try {
+        $hasTbl = @$mydb->query("SHOW TABLES LIKE 'educational_learning_logs'");
+        if ($hasTbl && $hasTbl->num_rows > 0) {
+            $logAidFilter = (!empty($assessmentId) && $assessmentId !== 'all') ? " AND (assessment_id = '$aid' OR assessment_id IS NULL OR assessment_id = 0)" : "";
+            $q = @$mydb->query("SELECT id, prompt_text AS content, timestamp AS created_at FROM educational_learning_logs 
+                               WHERE user_id IN ($userInStr) 
+                                 AND prompt_text IS NOT NULL AND prompt_text != '' 
+                                 $logAidFilter 
+                               ORDER BY timestamp ASC");
+            if ($q && $q->num_rows > 0) {
+                while ($r = $q->fetch_assoc()) {
+                    $c = trim($r['content'] ?? '');
+                    $recId = 'log_' . ($r['id'] ?? uniqid());
+                    if (!empty($c) && !isset($seenContent[$recId])) {
+                        $seenContent[$recId] = true;
+                        $prompts[] = [
+                            'id' => (string)($r['id'] ?? uniqid()),
+                            'prompt' => $c,
+                            'timestamp' => $r['created_at'] ?? date('Y-m-d H:i:s'),
+                            'analysis' => ssparc_analyze_prompt($c)
+                        ];
+                    }
                 }
             }
         }
-    }
+    } catch (\Throwable $e) {}
 
     // Source 5: submission, suspicion & code_clarity_suggestion tables (Real E-STRANGE Submissions)
-    $hasSub = $mydb->query("SHOW TABLES LIKE 'submission'");
-    if ($hasSub && $hasSub->num_rows > 0) {
-        $subAidFilter = (!empty($assessmentId) && $assessmentId !== 'all') ? " AND (s.assessment_id = '$aid')" : "";
-        $qSub = $mydb->query("SELECT s.submission_id, s.assessment_id, s.submitter_id, s.attempt, s.submitted_time, s.file_path, s.filename,
-                                     COALESCE(a.name, CONCAT('Assessment #', s.assessment_id)) AS assessment_name,
-                                     COALESCE(sp.student_response, '') AS student_response,
-                                     COALESCE(sp.originality_point, 85) AS originality_point,
-                                     COALESCE(sp.efficiency_point, 80) AS efficiency_point,
-                                     COALESCE(cs.explanation_info, '') AS peer_feedback,
-                                     COALESCE(cs.quality_point, 80) AS quality_point
-                              FROM submission s
-                              LEFT JOIN assessment a ON s.assessment_id = a.assessment_id
-                              LEFT JOIN suspicion sp ON s.submission_id = sp.submission_id
-                              LEFT JOIN code_clarity_suggestion cs ON s.submission_id = cs.submission_id
-                              WHERE s.submitter_id IN ($userInStr) $subAidFilter
-                              ORDER BY s.submitted_time ASC");
-        if ($qSub && $qSub->num_rows > 0) {
-            while ($r = $qSub->fetch_assoc()) {
-                $subId = $r['submission_id'];
-                $asmtName = $r['assessment_name'];
-                $resp = trim($r['student_response']);
-                $peer = trim($r['peer_feedback']);
-                $attemptNum = (int)($r['attempt'] ?? 1);
-                $fn = $r['filename'] ?? 'solution.py';
-                
-                if (!empty($resp)) {
-                    $promptText = "Context: Defense reflection for $asmtName (Attempt #$attemptNum).\nInput: Algorithmic justification and code implementation details.\nOutput: $resp";
-                } elseif (!empty($peer)) {
-                    $promptText = "Context: Peer review evaluation for $asmtName.\nInput: Code readability and architectural feedback.\nOutput: $peer";
-                } else {
-                    $orig = (float)($r['originality_point'] ?: 85);
-                    $eff = (float)($r['efficiency_point'] ?: 80);
-                    $promptText = "Context: S-SPARC structured algorithmic synthesis for $asmtName (Attempt #$attemptNum in $fn).\nInput: Problem specification and structured parameters.\nOutput: Modular solution conforming to AST complexity and execution constraints.";
-                }
+    try {
+        $hasSub = @$mydb->query("SHOW TABLES LIKE 'submission'");
+        if ($hasSub && $hasSub->num_rows > 0) {
+            $subAidFilter = (!empty($assessmentId) && $assessmentId !== 'all') ? " AND (s.assessment_id = '$aid')" : "";
+            $qSub = @$mydb->query("SELECT s.submission_id, s.assessment_id, s.submitter_id, s.attempt, s.submitted_time, s.file_path, s.filename,
+                                         COALESCE(a.name, CONCAT('Assessment #', s.assessment_id)) AS assessment_name,
+                                         COALESCE(sp.student_response, '') AS student_response,
+                                         COALESCE(sp.originality_point, 85) AS originality_point,
+                                         COALESCE(sp.efficiency_point, 80) AS efficiency_point,
+                                         COALESCE(cs.explanation_info, '') AS peer_feedback,
+                                         COALESCE(cs.quality_point, 80) AS quality_point
+                                  FROM submission s
+                                  LEFT JOIN assessment a ON s.assessment_id = a.assessment_id
+                                  LEFT JOIN suspicion sp ON s.submission_id = sp.submission_id
+                                  LEFT JOIN code_clarity_suggestion cs ON s.submission_id = cs.submission_id
+                                  WHERE s.submitter_id IN ($userInStr) $subAidFilter
+                                  ORDER BY s.submitted_time ASC");
+            if ($qSub && $qSub->num_rows > 0) {
+                while ($r = $qSub->fetch_assoc()) {
+                    $subId = $r['submission_id'];
+                    $asmtName = $r['assessment_name'];
+                    $resp = trim($r['student_response']);
+                    $peer = trim($r['peer_feedback']);
+                    $attemptNum = (int)($r['attempt'] ?? 1);
+                    $fn = $r['filename'] ?? 'solution.py';
+                    
+                    if (!empty($resp)) {
+                        $promptText = "Context: Defense reflection for $asmtName (Attempt #$attemptNum).\nInput: Algorithmic justification and code implementation details.\nOutput: $resp";
+                    } elseif (!empty($peer)) {
+                        $promptText = "Context: Peer review evaluation for $asmtName.\nInput: Code readability and architectural feedback.\nOutput: $peer";
+                    } else {
+                        $orig = (float)($r['originality_point'] ?: 85);
+                        $eff = (float)($r['efficiency_point'] ?: 80);
+                        $promptText = "Context: S-SPARC structured algorithmic synthesis for $asmtName (Attempt #$attemptNum in $fn).\nInput: Problem specification and structured parameters.\nOutput: Modular solution conforming to AST complexity and execution constraints.";
+                    }
 
-                $recId = 'sub_' . $subId;
-                if (!isset($seenContent[$recId])) {
-                    $seenContent[$recId] = true;
-                    $orig = (float)($r['originality_point'] ?: 85);
-                    $eff = (float)($r['efficiency_point'] ?: 80);
-                    $qual = (float)($r['quality_point'] ?: 80);
-                    $avgSc = round(($orig + $eff + $qual) / 3.0, 1);
-                    
-                    $analysis = ssparc_analyze_prompt($promptText);
-                    $analysis['prompt_quality_score'] = round(max(0.60, min(0.95, $avgSc / 100.0)), 2);
-                    $analysis['cioe_score'] = round(max(0.70, min(0.98, ($eff * 0.5 + $qual * 0.5) / 100.0)), 2);
-                    $analysis['shannon_entropy'] = round(max(0.75, min(0.98, ($orig / 100.0) * 0.95 + 0.05)), 2);
-                    $analysis['technical_token_density'] = round(max(0.55, min(0.92, ($eff / 100.0))), 2);
-                    
-                    $prompts[] = [
-                        'id' => (string)$subId,
-                        'prompt' => $promptText,
-                        'timestamp' => $r['submitted_time'] ?? date('Y-m-d H:i:s'),
-                        'attempt' => $attemptNum,
-                        'analysis' => $analysis
-                    ];
+                    $recId = 'sub_' . $subId;
+                    if (!isset($seenContent[$recId])) {
+                        $seenContent[$recId] = true;
+                        $orig = (float)($r['originality_point'] ?: 85);
+                        $eff = (float)($r['efficiency_point'] ?: 80);
+                        $qual = (float)($r['quality_point'] ?: 80);
+                        $avgSc = round(($orig + $eff + $qual) / 3.0, 1);
+                        
+                        $analysis = ssparc_analyze_prompt($promptText);
+                        $analysis['prompt_quality_score'] = round(max(0.60, min(0.95, $avgSc / 100.0)), 2);
+                        $analysis['cioe_score'] = round(max(0.70, min(0.98, ($eff * 0.5 + $qual * 0.5) / 100.0)), 2);
+                        $analysis['shannon_entropy'] = round(max(0.75, min(0.98, ($orig / 100.0) * 0.95 + 0.05)), 2);
+                        $analysis['technical_token_density'] = round(max(0.55, min(0.92, ($eff / 100.0))), 2);
+                        
+                        $prompts[] = [
+                            'id' => (string)$subId,
+                            'prompt' => $promptText,
+                            'timestamp' => $r['submitted_time'] ?? date('Y-m-d H:i:s'),
+                            'attempt' => $attemptNum,
+                            'analysis' => $analysis
+                        ];
+                    }
                 }
             }
         }
-    }
+    } catch (\Throwable $e) {}
 
     return $prompts;
 }
