@@ -847,40 +847,47 @@ function ssparc_get_cohort_research_analytics($mydb, $courseId = null, $assessme
     $studentUserIds = [];
     $userProfilesMap = [];
 
-    // 1. Fetch user profile map from E-STRANGE user table
+    // 1. Fetch user profile map from E-STRANGE user table (SSO)
     $hasUser = $mydb->query("SHOW TABLES LIKE 'user'");
     if ($hasUser && $hasUser->num_rows > 0) {
-        $uRes = $mydb->query("SELECT id, user_id, username, name, email FROM user");
+        $uRes = $mydb->query("SELECT user_id, username, name, email FROM user");
         if ($uRes) {
             while ($row = $uRes->fetch_assoc()) {
-                $uidKey = (string)($row['user_id'] ?? ($row['id'] ?? $row['username']));
+                $uidKey = (string)($row['user_id'] ?? $row['username']);
+                $nim = !empty($row['username']) ? trim($row['username']) : $uidKey;
+                $name = !empty($row['name']) ? trim($row['name']) : (!empty($row['username']) ? trim($row['username']) : "Mahasiswa ($uidKey)");
                 $prof = [
-                    'nim' => $row['username'] ?? $uidKey,
-                    'name' => !empty($row['name']) ? $row['name'] : ($row['username'] ?? 'Mahasiswa'),
+                    'nim' => $nim,
+                    'name' => $name,
                     'email' => $row['email'] ?? ''
                 ];
                 $userProfilesMap[$uidKey] = $prof;
-                if (!empty($row['username'])) $userProfilesMap[(string)$row['username']] = $prof;
-                if (!empty($row['id'])) $userProfilesMap[(string)$row['id']] = $prof;
+                if (!empty($row['username'])) $userProfilesMap[trim((string)$row['username'])] = $prof;
+                if (!empty($row['user_id'])) $userProfilesMap[trim((string)$row['user_id'])] = $prof;
             }
         }
     }
 
-    // 2. Fetch user profile map from S-SPARC users table
+    // 2. Fetch user profile map from S-SPARC users table (UUID mappings)
     $hasUsers = $mydb->query("SHOW TABLES LIKE 'users'");
     if ($hasUsers && $hasUsers->num_rows > 0) {
-        $uuRes = $mydb->query("SELECT user_id, username, name, email FROM users");
+        $uuRes = $mydb->query("SELECT * FROM users");
         if ($uuRes) {
             while ($row = $uuRes->fetch_assoc()) {
-                $uidKey = (string)($row['user_id'] ?? $row['username']);
+                $uidKey = (string)($row['user_id'] ?? ($row['id'] ?? $row['username']));
+                $nim = !empty($row['username']) ? trim($row['username']) : $uidKey;
+                $name = !empty($row['name']) ? trim($row['name']) : (!empty($row['full_name']) ? trim($row['full_name']) : (!empty($row['username']) ? trim($row['username']) : "Mahasiswa ($uidKey)"));
                 $prof = [
-                    'nim' => $row['username'] ?? $uidKey,
-                    'name' => !empty($row['name']) ? $row['name'] : ($row['username'] ?? 'Mahasiswa'),
+                    'nim' => $nim,
+                    'name' => $name,
                     'email' => $row['email'] ?? ''
                 ];
                 if (!isset($userProfilesMap[$uidKey])) $userProfilesMap[$uidKey] = $prof;
-                if (!empty($row['username']) && !isset($userProfilesMap[(string)$row['username']])) {
-                    $userProfilesMap[(string)$row['username']] = $prof;
+                if (!empty($row['username']) && !isset($userProfilesMap[trim((string)$row['username'])])) {
+                    $userProfilesMap[trim((string)$row['username'])] = $prof;
+                }
+                if (!empty($row['user_id']) && !isset($userProfilesMap[trim((string)$row['user_id'])])) {
+                    $userProfilesMap[trim((string)$row['user_id'])] = $prof;
                 }
             }
         }
@@ -980,7 +987,24 @@ function ssparc_get_cohort_research_analytics($mydb, $courseId = null, $assessme
     $processedUsers = [];
 
     foreach (array_keys($studentUserIds) as $uid) {
-        $prof = $userProfilesMap[$uid] ?? ['nim' => $uid, 'name' => (is_numeric($uid) ? "Mahasiswa ($uid)" : $uid)];
+        // Resolve student profile (NIM & Full Name)
+        $prof = $userProfilesMap[$uid] ?? null;
+        if (!$prof) {
+            $uidSafe = $mydb->real_escape_string($uid);
+            $qIndiv = $mydb->query("SELECT user_id, username, name, email FROM user WHERE user_id='$uidSafe' OR username='$uidSafe' LIMIT 1");
+            if ($qIndiv && $qIndiv->num_rows > 0) {
+                $rInd = $qIndiv->fetch_assoc();
+                $prof = [
+                    'nim' => !empty($rInd['username']) ? $rInd['username'] : $uid,
+                    'name' => !empty($rInd['name']) ? $rInd['name'] : (!empty($rInd['username']) ? $rInd['username'] : "Mahasiswa ($uid)"),
+                    'email' => $rInd['email'] ?? ''
+                ];
+                $userProfilesMap[$uid] = $prof;
+            } else {
+                $prof = ['nim' => $uid, 'name' => (is_numeric($uid) ? "Mahasiswa ($uid)" : $uid), 'email' => ''];
+            }
+        }
+
         $primaryKey = $prof['nim'] ?? $uid;
         if (isset($processedUsers[$primaryKey])) continue;
         $processedUsers[$primaryKey] = true;
@@ -988,11 +1012,13 @@ function ssparc_get_cohort_research_analytics($mydb, $courseId = null, $assessme
         $profile = ssparc_get_student_aggregated_profile($mydb, $uid);
         if ($profile && isset($profile['status']) && $profile['status'] === 'success') {
             $pCount = (int)($profile['total_prompts'] ?? 0);
-            $avgCioe = round(($profile['average_cioe_score'] ?? 0.0) * 100, 1);
+            
+            $rd = $profile['radar_dimensions'] ?? [];
+            $cScore = !empty($rd) ? round((($rd['Context'] ?? 0) + ($rd['Input'] ?? 0) + ($rd['Output'] ?? 0) + ($rd['Error'] ?? 0)) / 4, 1) : round(($profile['average_cioe_score'] ?? 0.0) * 100, 1);
             $avgEntropy = round((float)($profile['average_entropy'] ?? 0.0), 2);
             $personaTitle = $profile['persona_title'] ?? 'The Developing Prompter';
             
-            // Extract short tier (Tier A, Tier B, Tier C, Tier D)
+            // Extract short tier badge (Tier A, Tier B, Tier C, Tier D)
             $tierFull = $profile['literacy_level'] ?? 'Tier C';
             $tierBadge = 'Tier C';
             if (strpos($tierFull, 'Tier A') !== false) $tierBadge = 'Tier A';
@@ -1009,7 +1035,7 @@ function ssparc_get_cohort_research_analytics($mydb, $courseId = null, $assessme
                 'nim' => $prof['nim'] ?? $uid,
                 'name' => $prof['name'] ?? 'Mahasiswa',
                 'total_prompts' => $pCount,
-                'cioe_score' => $avgCioe,
+                'cioe_score' => $cScore,
                 'shannon_entropy' => $avgEntropy,
                 'archetype' => $personaTitle,
                 'literacy_tier' => $tierBadge,
@@ -1028,7 +1054,6 @@ function ssparc_get_cohort_research_analytics($mydb, $courseId = null, $assessme
                     $tierCounts[$tierBadge]++;
                 }
 
-                $rd = $profile['radar_dimensions'] ?? [];
                 $contextScores[] = (float)($rd['Context'] ?? 0);
                 $inputScores[] = (float)($rd['Input'] ?? 0);
                 $outputScores[] = (float)($rd['Output'] ?? 0);
