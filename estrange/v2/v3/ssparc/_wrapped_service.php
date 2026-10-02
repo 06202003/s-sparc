@@ -131,7 +131,7 @@ function ssparc_resolve_all_user_identifiers($mydb, $userId) {
         }
     }
 
-    // 2. Name-based lookup
+    // 2. Name-based lookup across all user and users accounts
     $nameKeywords = [];
     foreach (array_merge($identifiers, $names) as $id) {
         $parts = preg_split('/[\s_\-\.\@]+/', (string)$id);
@@ -143,6 +143,23 @@ function ssparc_resolve_all_user_identifiers($mydb, $userId) {
         }
     }
     $nameKeywords = array_values(array_unique($nameKeywords));
+
+    // Discover linked/test accounts in user table (e.g. semafit, 123457, test users)
+    if (!empty($nameKeywords)) {
+        $likeUserClauses = [];
+        foreach ($nameKeywords as $kw) {
+            $likeUserClauses[] = "name LIKE '%$kw%'";
+            $likeUserClauses[] = "username LIKE '%$kw%'";
+        }
+        $whereU = implode(' OR ', $likeUserClauses);
+        $qRelated = $mydb->query("SELECT user_id, username, email FROM user WHERE $whereU LIMIT 20");
+        if ($qRelated && $qRelated->num_rows > 0) {
+            while ($rr = $qRelated->fetch_assoc()) {
+                if (!empty($rr['user_id'])) $identifiers[] = (string)$rr['user_id'];
+                if (!empty($rr['username'])) $identifiers[] = (string)$rr['username'];
+            }
+        }
+    }
 
     // 3. Query S-SPARC users table (if present)
     $hasUsersTbl = $mydb->query("SHOW TABLES LIKE 'users'");
