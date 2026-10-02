@@ -216,8 +216,9 @@ function ssparc_fetch_all_student_prompts($mydb, $userInStr, $assessmentId = nul
         if ($q && $q->num_rows > 0) {
             while ($r = $q->fetch_assoc()) {
                 $c = trim($r['content'] ?? '');
-                if (!empty($c) && !isset($seenContent[$c])) {
-                    $seenContent[$c] = true;
+                $recId = 'chat_' . ($r['id'] ?? uniqid());
+                if (!empty($c) && !isset($seenContent[$recId])) {
+                    $seenContent[$recId] = true;
                     $prompts[] = [
                         'id' => (string)($r['id'] ?? uniqid()),
                         'prompt' => $c,
@@ -239,8 +240,9 @@ function ssparc_fetch_all_student_prompts($mydb, $userInStr, $assessmentId = nul
         if ($q && $q->num_rows > 0) {
             while ($r = $q->fetch_assoc()) {
                 $c = trim($r['content'] ?? '');
-                if (!empty($c) && !isset($seenContent[$c])) {
-                    $seenContent[$c] = true;
+                $recId = 'emb_' . ($r['id'] ?? uniqid());
+                if (!empty($c) && !isset($seenContent[$recId])) {
+                    $seenContent[$recId] = true;
                     $prompts[] = [
                         'id' => (string)($r['id'] ?? uniqid()),
                         'prompt' => $c,
@@ -262,8 +264,9 @@ function ssparc_fetch_all_student_prompts($mydb, $userInStr, $assessmentId = nul
         if ($q && $q->num_rows > 0) {
             while ($r = $q->fetch_assoc()) {
                 $c = trim($r['content'] ?? '');
-                if (!empty($c) && !isset($seenContent[$c])) {
-                    $seenContent[$c] = true;
+                $recId = 'job_' . ($r['id'] ?? uniqid());
+                if (!empty($c) && !isset($seenContent[$recId])) {
+                    $seenContent[$recId] = true;
                     $prompts[] = [
                         'id' => (string)($r['id'] ?? uniqid()),
                         'prompt' => $c,
@@ -287,8 +290,9 @@ function ssparc_fetch_all_student_prompts($mydb, $userInStr, $assessmentId = nul
         if ($q && $q->num_rows > 0) {
             while ($r = $q->fetch_assoc()) {
                 $c = trim($r['content'] ?? '');
-                if (!empty($c) && !isset($seenContent[$c])) {
-                    $seenContent[$c] = true;
+                $recId = 'log_' . ($r['id'] ?? uniqid());
+                if (!empty($c) && !isset($seenContent[$recId])) {
+                    $seenContent[$recId] = true;
                     $prompts[] = [
                         'id' => (string)($r['id'] ?? uniqid()),
                         'prompt' => $c,
@@ -336,8 +340,9 @@ function ssparc_fetch_all_student_prompts($mydb, $userInStr, $assessmentId = nul
                     $promptText = "Context: S-SPARC structured algorithmic synthesis for $asmtName (Attempt #$attemptNum in $fn).\nInput: Problem specification and structured parameters.\nOutput: Modular solution conforming to AST complexity and execution constraints.";
                 }
 
-                if (!isset($seenContent[$promptText])) {
-                    $seenContent[$promptText] = true;
+                $recId = 'sub_' . $subId;
+                if (!isset($seenContent[$recId])) {
+                    $seenContent[$recId] = true;
                     $orig = (float)($r['originality_point'] ?: 85);
                     $eff = (float)($r['efficiency_point'] ?: 80);
                     $qual = (float)($r['quality_point'] ?: 80);
