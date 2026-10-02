@@ -374,141 +374,8 @@ function ssparc_get_wrapped_for_assessment($mydb, $userId, $assessmentId) {
         $prompts = ssparc_fetch_all_student_prompts($mydb, $userInStr, null);
     }
     
-    // 6. Handle No Interactions Case or Fallback to Live Backend Daemon
+    // 6. Handle No Interactions Case
     if (empty($prompts)) {
-        // Fallback 1: Query live FastAPI backend daemon for assessment-specific wrapped
-        $backendUrl = getenv('FASTAPI_BACKEND_URL') ?: 'https://estrangeinternal.itmaranatha.org';
-        $ch = curl_init(rtrim($backendUrl, '/') . '/api/assessments/' . urlencode($assessmentId) . '/wrapped?user_id=' . urlencode($userId));
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-        $resp = curl_exec($ch);
-        curl_close($ch);
-        if ($resp) {
-            $decoded = json_decode($resp, true);
-            if (!empty($decoded) && isset($decoded['status']) && $decoded['status'] === 'success') {
-                return $decoded;
-            }
-        }
-
-        // Fallback 2: Query live FastAPI backend daemon for student profile (db_semantic_final)
-        $ch2 = curl_init(rtrim($backendUrl, '/') . '/api/educational/student-profile/' . urlencode($userId));
-        curl_setopt($ch2, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch2, CURLOPT_TIMEOUT, 10);
-        curl_setopt($ch2, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch2, CURLOPT_SSL_VERIFYHOST, 0);
-        $resp2 = curl_exec($ch2);
-        curl_close($ch2);
-        if ($resp2) {
-            $prof = json_decode($resp2, true);
-            if (!empty($prof) && (!empty($prof['total_prompts']) || !empty($prof['average_prompt_quality']))) {
-                $totP = $prof['total_prompts'] ?? 20;
-                $avgQ = $prof['average_prompt_quality'] ?? 0.67;
-                $avgE = $prof['average_entropy'] ?? 0.97;
-                $totTok = $totP * 280;
-                $tokSav = (int)($totTok * 0.42);
-                $fpHits = max(1, (int)($totP * ($prof['fast_path_utilization_rate'] ?? 0.20)));
-                $rd = $prof['radar_dimensions'] ?? ['Context' => 85, 'Input' => 20, 'Output' => 30, 'Error' => 0, 'Vocabulary' => 97];
-
-                $cCompleteness = (int)round((($rd['Context'] ?? 85) + ($rd['Input'] ?? 20) + ($rd['Output'] ?? 30) + ($rd['Error'] ?? 0)) / 4);
-
-                return [
-                    'status' => 'success',
-                    'assessment_id' => (string)$assessmentId,
-                    'assessment_title' => $assessmentTitle,
-                    'course_name' => $courseName,
-                    'summary' => [
-                        'total_prompts' => $totP,
-                        'total_tokens_used' => $totTok,
-                        'tokens_saved_fastpath' => $tokSav,
-                        'fast_path_hits' => $fpHits,
-                        'overall_score' => (int)($avgQ * 100),
-                        'literacy_tier' => $prof['literacy_level'] ?? 'Tier B (Structured Prompter)',
-                        'tier_badge' => $prof['persona_title'] ?? 'The Algorithmic Synthesizer',
-                        'badge_color' => '#10B981'
-                    ],
-                    'persona' => [
-                        'title' => $prof['persona_title'] ?? 'The Algorithmic Synthesizer',
-                        'archetype' => 'Strategic AI Collaborator',
-                        'tagline' => 'High contextual clarity, robust problem framing, and strategic inquiry.',
-                        'description' => 'You demonstrate a balanced, highly structured approach to prompting, breaking down algorithmic challenges methodically.',
-                        'power_stat' => 'Top Metric: Context Decomposition (' . ($rd['Context'] ?? 85) . '%)'
-                    ],
-                    'dimensions' => [
-                        'cioe_completeness' => $cCompleteness,
-                        'shannon_entropy' => round($avgE, 2),
-                        'radar' => [
-                            'Context' => $rd['Context'] ?? 85,
-                            'Input' => $rd['Input'] ?? 20,
-                            'Output' => $rd['Output'] ?? 30,
-                            'Error' => $rd['Error'] ?? 0,
-                            'Vocabulary' => $rd['Vocabulary'] ?? 97
-                        ],
-                        'clarity' => [
-                            'name' => 'Prompt Clarity & Context',
-                            'score' => $rd['Context'] ?? 85,
-                            'status' => 'High',
-                            'critique' => 'Rich context provided with clear task objectives and constraints.'
-                        ],
-                        'input_precision' => [
-                            'name' => 'Input Specification',
-                            'score' => $rd['Input'] ?? 20,
-                            'status' => 'Moderate',
-                            'critique' => 'Specifications are provided with concise variable definitions.'
-                        ],
-                        'output_structure' => [
-                            'name' => 'Expected Output Structure',
-                            'score' => $rd['Output'] ?? 30,
-                            'status' => 'Moderate',
-                            'critique' => 'Return expectations are defined with proper structural schemas.'
-                        ],
-                        'error_handling' => [
-                            'name' => 'Debugging & Error Context',
-                            'score' => $rd['Error'] ?? 10,
-                            'status' => 'Evolving',
-                            'critique' => 'Refine edge case handling and stack trace inclusion during debugging.'
-                        ],
-                        'vocabulary' => [
-                            'name' => 'Technical Token Density',
-                            'score' => $rd['Vocabulary'] ?? 97,
-                            'status' => 'Master',
-                            'critique' => 'Exceptional technical vocabulary density and precise terminology.'
-                        ]
-                    ],
-                    'critic_room' => [
-                        'best_prompt' => [
-                            'score' => 95,
-                            'text' => 'Bagaimana cara kerja base case dan recursive case pada algoritma rekursif untuk menghitung faktorial dan traversal tree?',
-                            'why_stellar' => 'Struktur inquiry sangat jelas membedakan base case & recursive step dengan batasan terminasi yang terdefinisi.'
-                        ],
-                        'needs_polish_prompt' => [
-                            'score' => 62,
-                            'ai_critic_comment' => 'Pertanyaan awal masih bersifat langsung meminta implementasi tanpa mendefinisikan tipe parameter dan nilai batas.',
-                            'suggested_rewrite' => "Context: Implementasi fungsi rekursif di Python.\nInput: Integer n (0 <= n <= 100).\nOutput: Nilai faktorial bertipe integer.\nConstraint: Sertakan handling untuk n=0 dan batas rekursi."
-                        ]
-                    ],
-                    'timeline' => [
-                        'total_events' => $totP,
-                        'peak_hour' => 'Morning',
-                        'average_latency_ms' => 480.0
-                    ],
-                    'byok_sustainability' => [
-                        'energy_wh' => round($totTok * 0.0003, 3),
-                        'carbon_g' => round($totTok * 0.00015, 3),
-                        'water_ml' => round($totTok * 0.0008, 3),
-                        'rating' => 'Sustainable / Eco-Conscious',
-                        'fast_path_ratio' => ($prof['fast_path_utilization_rate'] ?? 0.20) * 100
-                    ],
-                    'action_items' => [
-                        'Always specify explicit input variable types and expected return data structures.',
-                        'Incorporate edge case bounds (e.g. empty lists, single elements, recursion depth) in initial prompts.',
-                        'Leverage S-SPARC C-I-O-E protocol templates before requesting code synthesis.'
-                    ]
-                ];
-            }
-        }
-
         return [
             'status' => 'no_interactions',
             'is_expired' => true,
@@ -525,6 +392,33 @@ function ssparc_get_wrapped_for_assessment($mydb, $userId, $assessmentId) {
                 'literacy_tier' => 'Independent Scholar (Human-Only)',
                 'tier_badge' => 'Pure Human',
                 'badge_color' => '#10B981'
+            ],
+            'persona' => [
+                'title' => 'The Independent Master',
+                'tagline' => 'Zero-AI Autonomous Achiever',
+                'description' => 'Solved the assessment independently without requiring AI assistance.',
+                'power_stat' => '100% Pure Organic Cognitive Effort'
+            ],
+            'dimensions' => [
+                'cioe_completeness' => 100,
+                'shannon_entropy' => 1.0,
+                'radar' => [
+                    'Context' => 100,
+                    'Input' => 100,
+                    'Output' => 100,
+                    'Error' => 100,
+                    'Vocabulary' => 100
+                ]
+            ],
+            'byok_sustainability' => [
+                'energy_wh' => 0.0,
+                'carbon_g' => 0.0,
+                'water_ml' => 0.0,
+                'rating' => 'Net-Zero Carbon Autonomous',
+                'fast_path_ratio' => 100.0
+            ],
+            'action_items' => [
+                'Maintain your autonomous problem-solving and critical thinking in future advanced assessments!'
             ]
         ];
     }
@@ -713,25 +607,10 @@ function ssparc_get_student_aggregated_profile($mydb, $userId) {
     $prompts = ssparc_fetch_all_student_prompts($mydb, $userInStr, null);
 
     if (empty($prompts)) {
-        // Fallback: Query live FastAPI backend daemon (connected to db_semantic_final)
-        $backendUrl = getenv('FASTAPI_BACKEND_URL') ?: 'https://estrangeinternal.itmaranatha.org';
-        $ch = curl_init(rtrim($backendUrl, '/') . '/api/educational/student-profile/' . urlencode($userId));
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
-        $resp = curl_exec($ch);
-        curl_close($ch);
-        if ($resp) {
-            $decoded = json_decode($resp, true);
-            if (!empty($decoded) && (!empty($decoded['total_prompts']) || !empty($decoded['average_prompt_quality']))) {
-                return $decoded;
-            }
-        }
-
         return [
             'status' => 'success',
             'user_id' => $userId,
+            'total_prompts' => 0,
             'literacy_level' => 'Independent Scholar (Human-Only)',
             'persona_title' => 'The Independent Scholar',
             'cognitive_independence_index' => 1.0,
@@ -740,7 +619,14 @@ function ssparc_get_student_aggregated_profile($mydb, $userId) {
             'average_prompt_quality' => 0.0,
             'conceptual_mode_ratio' => 0.0,
             'fast_path_utilization_rate' => 0.0,
-            'bloom_distribution' => [0, 0, 0]
+            'bloom_distribution' => [0, 0, 0],
+            'radar_dimensions' => [
+                'Context' => 0,
+                'Input' => 0,
+                'Output' => 0,
+                'Error' => 0,
+                'Vocabulary' => 0
+            ]
         ];
     }
 
