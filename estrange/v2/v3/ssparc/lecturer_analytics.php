@@ -22,6 +22,10 @@ if ($coursesRes) {
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Select2 CSS & JS -->
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
   <style>
     body { font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; }
     .metric-card {
@@ -30,6 +34,45 @@ if ($coursesRes) {
       border-radius: 1rem;
       padding: 1.25rem;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    /* Select2 Modern Styling */
+    .select2-container--default .select2-selection--single {
+      height: 38px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 0.75rem;
+      display: flex;
+      align-items: center;
+      background-color: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(8px);
+      padding-left: 0.6rem;
+      padding-right: 1.5rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #ffffff;
+      transition: all 0.2s;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+      color: #ffffff;
+      line-height: 38px;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+      height: 36px;
+      right: 8px;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow b {
+      border-color: #ffffff transparent transparent transparent;
+    }
+    .select2-dropdown {
+      border: 1px solid #e2e8f0;
+      border-radius: 0.75rem;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      font-size: 0.75rem;
+      color: #0f172a;
+    }
+    .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+      background-color: #00A0A5;
+      color: #ffffff;
     }
   </style>
 </head>
@@ -50,8 +93,8 @@ if ($coursesRes) {
           Provides quantitative evidence on C-I-O-E problem formulation discipline, Bloom Taxonomy distribution, 1-turn resolution efficiency, and computational resource stewardship.
         </p>
       </div>
-      <div class="flex items-center gap-3">
-        <select class="bg-white/10 border border-white/20 text-white text-xs font-semibold rounded-xl px-4 py-2.5 backdrop-blur outline-none focus:ring-2 focus:ring-teal-400">
+      <div class="flex items-center gap-3 min-w-[200px]">
+        <select id="faculty-course-select" class="w-full">
           <option value="" class="text-slate-900">All Courses</option>
           <?php foreach ($courses as $c): ?>
             <option value="<?= $c['course_id'] ?>" class="text-slate-900"><?= htmlspecialchars($c['name']) ?></option>
@@ -469,7 +512,17 @@ if ($coursesRes) {
       window.location.href = `api_proxy.php?endpoint=/api/admin/wrapped/export-csv`;
     });
 
-    document.addEventListener('DOMContentLoaded', loadFacultyAnalytics);
+    document.addEventListener('DOMContentLoaded', () => {
+      loadFacultyAnalytics();
+      if (window.jQuery && $.fn.select2) {
+        $('#faculty-course-select').select2({
+          width: '100%',
+          minimumResultsForSearch: 6
+        }).on('change', function() {
+          loadFacultyAnalytics();
+        });
+      }
+    });
   </script>
 </body>
 </html>

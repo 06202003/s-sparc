@@ -15,6 +15,10 @@ $userId = $_SESSION['user_id'] ?? 'student_demo';
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Select2 CSS & JS -->
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
   <style>
     body { font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; }
     .metric-card {
@@ -23,6 +27,70 @@ $userId = $_SESSION['user_id'] ?? 'student_demo';
       border-radius: 1rem;
       padding: 1.25rem;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    /* Select2 Modern Tailwind Styling */
+    .select2-container--default .select2-selection--single {
+      height: 38px;
+      border: 1px solid #cbd5e1;
+      border-radius: 0.75rem;
+      display: flex;
+      align-items: center;
+      background-color: #f8fafc;
+      padding-left: 0.6rem;
+      padding-right: 1.5rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #334155;
+      transition: all 0.2s;
+    }
+    .select2-container--default .select2-selection--single:hover {
+      background-color: #f1f5f9;
+      border-color: #94a3b8;
+    }
+    .select2-container--default.select2-container--open .select2-selection--single,
+    .select2-container--default.select2-container--focus .select2-selection--single {
+      border-color: #00A0A5;
+      box-shadow: 0 0 0 3px rgba(0, 160, 165, 0.15);
+      outline: none;
+      background-color: #ffffff;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+      color: #334155;
+      line-height: 38px;
+      padding-left: 0;
+      padding-right: 1.25rem;
+    }
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+      height: 36px;
+      right: 8px;
+    }
+    .select2-dropdown {
+      border: 1px solid #e2e8f0;
+      border-radius: 0.75rem;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      font-size: 0.75rem;
+      border-top: 1px solid #e2e8f0 !important;
+      margin-top: 4px;
+    }
+    .select2-container--default .select2-search--dropdown .select2-search__field {
+      border: 1px solid #e2e8f0;
+      border-radius: 0.5rem;
+      padding: 0.4rem 0.6rem;
+      font-size: 0.75rem;
+      outline: none;
+    }
+    .select2-container--default .select2-search--dropdown .select2-search__field:focus {
+      border-color: #00A0A5;
+    }
+    .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+      background-color: #00A0A5;
+      color: #ffffff;
+    }
+    .select2-container--default .select2-results__option--selected {
+      background-color: #f0fdfa;
+      color: #0f766e;
+      font-weight: 600;
     }
   </style>
 </head>
@@ -529,6 +597,15 @@ $userId = $_SESSION['user_id'] ?? 'student_demo';
     document.addEventListener('DOMContentLoaded', () => {
       renderAssessmentCards();
       loadStudentProfile();
+      
+      if (window.jQuery && $.fn.select2) {
+        $('#course-filter-select').select2({
+          width: '100%',
+          minimumResultsForSearch: 6
+        }).on('change', function() {
+          onFilterChange();
+        });
+      }
     });
   </script>
 </body>
