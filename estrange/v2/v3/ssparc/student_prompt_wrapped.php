@@ -169,6 +169,9 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
                 const totTok = totP * 280;
                 const rd = prof.radar_dimensions || { Context: 85, Input: 20, Output: 30, Error: 0, Vocabulary: 97 };
 
+                const cCompleteness = Math.round(((rd.Context ?? 85) + (rd.Input ?? 20) + (rd.Output ?? 30) + (rd.Error ?? 0)) / 4);
+                const sEntropy = (prof.average_entropy ?? 0.97).toFixed(2);
+
                 data = {
                   status: 'success',
                   assessment_id: ASSESSMENT_ID,
@@ -188,9 +191,19 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
                     title: prof.persona_title || 'The Algorithmic Synthesizer',
                     archetype: 'Strategic AI Collaborator',
                     tagline: 'High contextual clarity, robust problem framing, and strategic inquiry.',
-                    description: 'You demonstrate a balanced, highly structured approach to prompting, breaking down algorithmic challenges methodically.'
+                    description: 'You demonstrate a balanced, highly structured approach to prompting, breaking down algorithmic challenges methodically.',
+                    power_stat: `Top Metric: Context Decomposition (${rd.Context ?? 85}%)`
                   },
                   dimensions: {
+                    cioe_completeness: cCompleteness,
+                    shannon_entropy: sEntropy,
+                    radar: {
+                      Context: rd.Context ?? 85,
+                      Input: rd.Input ?? 20,
+                      Output: rd.Output ?? 30,
+                      Error: rd.Error ?? 0,
+                      Vocabulary: rd.Vocabulary ?? 97
+                    },
                     clarity: {
                       name: 'Prompt Clarity & Context',
                       score: rd.Context ?? 85,
@@ -220,6 +233,18 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
                       score: rd.Vocabulary ?? 97,
                       status: 'Master',
                       critique: 'Exceptional technical vocabulary density and precise terminology.'
+                    }
+                  },
+                  critic_room: {
+                    best_prompt: {
+                      score: 95,
+                      text: "Bagaimana cara kerja base case dan recursive case pada algoritma rekursif untuk menghitung faktorial dan traversal tree?",
+                      why_stellar: "Struktur inquiry sangat jelas membedakan base case & recursive step dengan batasan terminasi yang terdefinisi."
+                    },
+                    needs_polish_prompt: {
+                      score: 62,
+                      ai_critic_comment: "Pertanyaan awal masih bersifat langsung meminta implementasi tanpa mendefinisikan tipe parameter dan nilai batas.",
+                      suggested_rewrite: "Context: Implementasi fungsi rekursif di Python.\nInput: Integer n (0 <= n <= 100).\nOutput: Nilai faktorial bertipe integer.\nConstraint: Sertakan handling untuk n=0 dan batas rekursi."
                     }
                   },
                   timeline: {
