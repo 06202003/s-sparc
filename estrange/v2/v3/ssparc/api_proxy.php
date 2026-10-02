@@ -231,7 +231,7 @@ if (isset($_GET['debug']) || (isset($_GET['action']) && $_GET['action'] === 'deb
         }
     }
 
-    // 3. User submissions history for account 218
+    // 3. User submissions history for account
     $out['user_submissions'] = [];
     $subRes = $db->query("SELECT s.submission_id, s.assessment_id, a.name AS assessment_name, s.attempt, s.submitted_time, s.filename 
                           FROM submission s 
@@ -240,6 +240,24 @@ if (isset($_GET['debug']) || (isset($_GET['action']) && $_GET['action'] === 'deb
                           ORDER BY s.submitted_time DESC LIMIT 10");
     if ($subRes) {
         while ($sr = $subRes->fetch_assoc()) $out['user_submissions'][] = $sr;
+    }
+
+    $out['submission_top_submitters'] = [];
+    $qTopSub = $db->query("SELECT s.submitter_id, u.username, u.name, COUNT(*) as cnt FROM submission s LEFT JOIN user u ON s.submitter_id = u.user_id GROUP BY s.submitter_id ORDER BY cnt DESC LIMIT 10");
+    if ($qTopSub) {
+        while ($r = $qTopSub->fetch_assoc()) $out['submission_top_submitters'][] = $r;
+    }
+
+    $out['course_32_assessments'] = [];
+    $qC32A = $db->query("SELECT assessment_id, name, course_id FROM assessment WHERE course_id = '32'");
+    if ($qC32A) {
+        while ($r = $qC32A->fetch_assoc()) $out['course_32_assessments'][] = $r;
+    }
+
+    $out['course_32_submissions'] = [];
+    $qC32S = $db->query("SELECT s.submission_id, s.assessment_id, s.submitter_id, u.username, u.name FROM submission s JOIN assessment a ON s.assessment_id = a.assessment_id JOIN user u ON s.submitter_id = u.user_id WHERE a.course_id = '32' LIMIT 10");
+    if ($qC32S) {
+        while ($r = $qC32S->fetch_assoc()) $out['course_32_submissions'][] = $r;
     }
 
     // 4. Matches in user
