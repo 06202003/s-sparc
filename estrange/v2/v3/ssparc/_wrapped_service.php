@@ -367,7 +367,7 @@ function ssparc_fetch_all_student_prompts($mydb, $userInStr, $assessmentId = nul
         $hasSub = @$mydb->query("SHOW TABLES LIKE 'submission'");
         if ($hasSub && $hasSub->num_rows > 0) {
             $subAidFilter = (!empty($assessmentId) && $assessmentId !== 'all') ? " AND (s.assessment_id = '$aid')" : "";
-            $qSub = @$mydb->query("SELECT s.submission_id, s.assessment_id, s.submitter_id, s.attempt, s.submitted_time, s.file_path, s.filename,
+            $qSub = @$mydb->query("SELECT s.submission_id, s.assessment_id, s.submitter_id, s.attempt, s.submission_time, s.file_path, s.filename,
                                          COALESCE(a.name, CONCAT('Assessment #', s.assessment_id)) AS assessment_name,
                                          COALESCE(sp.student_response, '') AS student_response,
                                          COALESCE(sp.originality_point, 85) AS originality_point,
@@ -379,7 +379,7 @@ function ssparc_fetch_all_student_prompts($mydb, $userInStr, $assessmentId = nul
                                   LEFT JOIN suspicion sp ON s.submission_id = sp.submission_id
                                   LEFT JOIN code_clarity_suggestion cs ON s.submission_id = cs.submission_id
                                   WHERE s.submitter_id IN ($userInStr) $subAidFilter
-                                  ORDER BY s.submitted_time ASC");
+                                  ORDER BY s.submission_time ASC");
             if ($qSub && $qSub->num_rows > 0) {
                 while ($r = $qSub->fetch_assoc()) {
                     $subId = $r['submission_id'];
@@ -416,7 +416,7 @@ function ssparc_fetch_all_student_prompts($mydb, $userInStr, $assessmentId = nul
                         $prompts[] = [
                             'id' => (string)$subId,
                             'prompt' => $promptText,
-                            'timestamp' => $r['submitted_time'] ?? date('Y-m-d H:i:s'),
+                            'timestamp' => $r['submission_time'] ?? date('Y-m-d H:i:s'),
                             'attempt' => $attemptNum,
                             'analysis' => $analysis
                         ];
