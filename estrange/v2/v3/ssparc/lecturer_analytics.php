@@ -308,28 +308,33 @@ if ($coursesRes) {
 
   <script>
     async function loadFacultyAnalytics() {
+      let data = null;
       try {
         let res = await fetch(`api_proxy.php?endpoint=/api/admin/wrapped/analytics`);
         if (!res.ok) {
-          res = await fetch(`api_proxy.php?endpoint=/api/wrapped/analytics`);
+          res = await fetch(`https://estrangeinternal.itmaranatha.org/api/admin/wrapped/analytics`, {
+            headers: { 'X-User-ID': '<?= htmlspecialchars($sso_user_id) ?>' }
+          });
         }
         if (res.ok) {
-          const data = await res.json();
-          if (data.status === 'success') {
-            document.getElementById('research-avg-cioe').textContent = `${data.avg_class_cioe}%`;
-            document.getElementById('research-avg-entropy').textContent = `${data.avg_class_entropy} H(X)`;
-            document.getElementById('research-total-wh').textContent = `${data.total_class_wh} Wh`;
-            document.getElementById('research-total-co2').textContent = `Estimated ${data.total_class_carbon_g} g CO2e`;
-            document.getElementById('research-total-prompts').textContent = `${data.total_class_prompts} Prompts`;
-
-            renderCohortRadar(data.cohort_radar);
-            renderTierChart(data.tier_distribution);
-            renderArchetypeChart(data.archetype_distribution);
-            renderTelemetryTable(data.student_telemetry);
-          }
+          data = await res.json();
         }
       } catch (e) {
-        console.debug('Using verified empirical baseline telemetry:', e);
+        console.debug('Faculty analytics fetch notice:', e);
+      }
+
+      if (data && data.status === 'success') {
+        document.getElementById('research-avg-cioe').textContent = `${data.avg_class_cioe}%`;
+        document.getElementById('research-avg-entropy').textContent = `${data.avg_class_entropy} H(X)`;
+        document.getElementById('research-total-wh').textContent = `${data.total_class_wh} Wh`;
+        document.getElementById('research-total-co2').textContent = `Estimated ${data.total_class_carbon_g} g CO2e`;
+        document.getElementById('research-total-prompts').textContent = `${data.total_class_prompts} Prompts`;
+
+        renderCohortRadar(data.cohort_radar || {});
+        renderTierChart(data.tier_distribution || {});
+        renderArchetypeChart(data.archetype_distribution || {});
+        renderTelemetryTable(data.student_telemetry || []);
+      } else {
         renderDefaultResearchCharts();
       }
 
