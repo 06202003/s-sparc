@@ -647,7 +647,45 @@ function ssparc_get_wrapped_for_assessment($mydb, $userId, $assessmentId) {
  */
 function ssparc_get_cohort_research_analytics($mydb, $courseId = null, $assessmentId = null) {
     if (!$mydb) {
-        return ['status' => 'error', 'message' => 'Database connection unavailable.'];
+        return [
+            'status' => 'success',
+            'assessment_id' => $assessmentId,
+            'course_id' => $courseId,
+            'course_name' => 'Offline / Laboratory Mode',
+            'total_students' => 0,
+            'total_class_prompts' => 0,
+            'total_class_wh' => 0,
+            'total_class_carbon_g' => 0,
+            'avg_class_cioe' => 0,
+            'avg_class_entropy' => 0,
+            'avg_turns' => 1,
+            'fast_path_pct' => 0,
+            'defense_pass_rate' => 0,
+            'turn_distribution' => [
+                '1_turn' => 0,
+                '2_turns' => 0,
+                '3_4_turns' => 0,
+                '5_plus_turns' => 0
+            ],
+            'cohort_radar' => [
+                'Context' => 0,
+                'Input' => 0,
+                'Output' => 0,
+                'Error' => 0,
+                'Vocabulary' => 0
+            ],
+            'archetype_distribution' => [
+                'The Independent Scholar' => 0
+            ],
+            'tier_distribution' => [
+                'Tier A' => 0,
+                'Tier B' => 0,
+                'Tier C' => 0,
+                'Tier D' => 0
+            ],
+            'students' => [],
+            'student_telemetry' => []
+        ];
     }
 
     $studentUserIds = [];
