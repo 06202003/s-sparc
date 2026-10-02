@@ -293,7 +293,20 @@ if (isset($_GET['debug']) || (isset($_GET['action']) && $_GET['action'] === 'deb
         }
     }
 
-    // 8. Fetched prompts via resolver
+    // 8. Yehezkiel all account submissions across all courses
+    $out['yehezkiel_all_submissions'] = [];
+    $qY = $db->query("SELECT s.submission_id, s.assessment_id, a.name AS assessment_name, a.course_id, c.name AS course_name, s.attempt, s.submitted_time, s.filename, u.user_id, u.username, u.name 
+                      FROM submission s 
+                      LEFT JOIN assessment a ON s.assessment_id = a.assessment_id 
+                      LEFT JOIN course c ON a.course_id = c.course_id 
+                      LEFT JOIN user u ON s.submitter_id = u.user_id 
+                      WHERE s.submitter_id IN ('218', '123457') OR u.username IN ('2172003', 'semafit') OR u.name LIKE '%YEHEZKIEL%' 
+                      ORDER BY s.submitted_time DESC");
+    if ($qY) {
+        while ($ry = $qY->fetch_assoc()) $out['yehezkiel_all_submissions'][] = $ry;
+    }
+
+    // 9. Fetched prompts via resolver
     $resolvedSql = ssparc_resolve_all_user_identifiers($db, $sessUserId);
     $out['fetched_prompts'] = ssparc_fetch_all_student_prompts($db, $resolvedSql, null);
     
