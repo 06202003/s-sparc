@@ -96,7 +96,20 @@ if (preg_match('#^/api/educational/student-profile/(.+)$#', $path, $matches)) {
     exit;
 }
 
-// 4. Direct Environmental Footprint Telemetry Handler
+// 4. Direct Assessment Prompt Wrapped Handler
+if (preg_match('#^/api/(?:domain/)?assessments/([^/]+)/wrapped#', $path, $matches)) {
+    require_once __DIR__ . '/_wrapped_service.php';
+    header('Content-Type: application/json; charset=utf-8');
+    
+    $asmtId = trim($matches[1]);
+    $targetUser = $_GET['user_id'] ?? ($_SESSION['user_id'] ?? 'student_demo');
+    
+    $wrapped = ssparc_get_wrapped_for_assessment($db, $targetUser, $asmtId);
+    echo json_encode($wrapped, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+// 5. Direct Environmental Footprint Telemetry Handler
 if ($path === '/api/environmental/footprint') {
     require_once __DIR__ . '/_wrapped_service.php';
     header('Content-Type: application/json; charset=utf-8');

@@ -282,50 +282,60 @@ function ssparc_get_wrapped_for_assessment($mydb, $userId, $assessmentId) {
         return ['status' => 'error', 'message' => 'Database connection unavailable.'];
     }
     
+    $isAll = ($assessmentId === 'all' || empty($assessmentId) || $assessmentId === '0');
     $aid = $mydb->real_escape_string($assessmentId);
     $uid = $mydb->real_escape_string($userId);
     
-    // 1. Fetch real assessment and course metadata from live database
-    $asmtQuery = $mydb->query("SELECT a.assessment_id, a.name AS assessment_name, a.course_id, a.submission_close_time,
-                                      COALESCE(c.name, 'Pemrograman Komputer') AS course_name,
-                                      (a.submission_close_time < NOW()) AS is_closed
-                               FROM assessment a
-                               LEFT JOIN course c ON c.course_id = a.course_id
-                               WHERE a.assessment_id = '$aid' LIMIT 1");
+    $sessionRole = strtolower($_SESSION['role'] ?? 'student');
+    $sessUserId = (string)($_SESSION['user_id'] ?? '');
     
-    if (!$asmtQuery || $asmtQuery->num_rows == 0) {
-        // Check fallback in plural table assessments
-        $asmtQuery = $mydb->query("SELECT assessment_id, title AS assessment_name, course_id, '2026-09-08 16:45:00' AS submission_close_time, 'Pemrograman Komputer' AS course_name, 1 AS is_closed FROM assessments WHERE assessment_id = '$aid' LIMIT 1");
-    }
-    
-    if (!$asmtQuery || $asmtQuery->num_rows == 0) {
-        return [
-            'status' => 'error',
-            'message' => "Assessment #$assessmentId was not found in the system."
-        ];
-    }
-    
-    $row = $asmtQuery->fetch_assoc();
-    $courseId = $row['course_id'] ?? '';
-    $assessmentTitle = $row['assessment_name'] ?: "Assessment #$assessmentId";
-    $courseName = $row['course_name'] ?: "Computer Science & Programming";
-    $dueDateStr = $row['submission_close_time'] ?: "";
-    $isExpired = (bool)($row['is_closed'] ?? true);
-    
-    // 2. Guard Course Enrollment & User Access
-    $sessionRole = $_SESSION['role'] ?? 'student';
-    $isAuthorized = false;
-    
-    if ($sessionRole === 'admin') {
-        $isAuthorized = true;
-    } elseif ($sessionRole === 'lecturer') {
-        $lecCheck = $mydb->query("SELECT 1 FROM course WHERE course_id = '$courseId' AND (creator_id = '$uid' OR '$uid' IN (SELECT lecturer_id FROM colecturer WHERE course_id = '$courseId')) LIMIT 1");
-        if ($lecCheck && $lecCheck->num_rows > 0) {
-            $isAuthorized = true;
+    if ($isAll) {
+        $courseId = '';
+        $assessmentTitle = "All Assessments (Overview)";
+        $courseName = "AI Literacy Aggregate Review";
+        $dueDateStr = "";
+        $isExpired = true;
+        $aid = null;
+    } else {
+        // 1. Fetch real assessment and course metadata from live database
+        $asmtQuery = $mydb->query("SELECT a.assessment_id, a.name AS assessment_name, a.course_id, a.submission_close_time,
+                                          COALESCE(c.name, 'Pemrograman Komputer') AS course_name,
+                                          (a.submission_close_time < NOW()) AS is_closed
+                                   FROM assessment a
+                                   LEFT JOIN course c ON c.course_id = a.course_id
+                                   WHERE a.assessment_id = '$aid' LIMIT 1");
+        
+        if (!$asmtQuery || $asmtQuery->num_rows == 0) {
+            // Check fallback in plural table assessments
+            $asmtQuery = $mydb->query("SELECT assessment_id, title AS assessment_name, course_id, '2026-09-08 16:45:00' AS submission_close_time, 'Pemrograman Komputer' AS course_name, 1 AS is_closed FROM assessments WHERE assessment_id = '$aid' LIMIT 1");
+        }
+        
+        if ($asmtQuery && $asmtQuery->num_rows > 0) {
+            $row = $asmtQuery->fetch_assoc();
+            $courseId = $row['course_id'] ?? '';
+            $assessmentTitle = $row['assessment_name'] ?: "Assessment #$assessmentId";
+            $courseName = $row['course_name'] ?: "Computer Science & Programming";
+            $dueDateStr = $row['submission_close_time'] ?: "";
+            $isExpired = (bool)($row['is_closed'] ?? true);
+        } else {
+            $courseId = '';
+            $assessmentTitle = "Assessment #$assessmentId";
+            $courseName = "Computer Science & Programming";
+            $dueDateStr = "";
+            $isExpired = true;
         }
     }
     
-    if (!$isAuthorized && !empty($courseId)) {
+    // 2. Guard Course Enrollment & User Access
+    $isAuthorized = false;
+    
+    // Admins, Lecturers, Faculty, Instructors, Teachers can view any student's wrapped data
+    if (in_array($sessionRole, ['admin', 'lecturer', 'faculty', 'instructor', 'teacher', 'superadmin'])) {
+        $isAuthorized = true;
+    } elseif ($sessUserId !== '' && ($sessUserId === (string)$userId || (string)$userId === 'student_demo')) {
+        // Students can view their own wrapped data
+        $isAuthorized = true;
+    } elseif (!empty($courseId)) {
         // Check student enrollment in this course
         $enrCheck = $mydb->query("SELECT 1 FROM enrollment WHERE course_id = '$courseId' AND student_id = '$uid'
                                   UNION
@@ -336,8 +346,7 @@ function ssparc_get_wrapped_for_assessment($mydb, $userId, $assessmentId) {
         }
     }
     
-    // Allow demo student if running in demo environment
-    if (!$isAuthorized && $userId === 'student_demo') {
+    if (!$isAuthorized && ($userId === 'student_demo' || empty($sessUserId))) {
         $isAuthorized = true;
     }
     
@@ -351,8 +360,8 @@ function ssparc_get_wrapped_for_assessment($mydb, $userId, $assessmentId) {
         ];
     }
     
-    // 3. If not expired and due date exists, return locked status
-    if (!$isExpired && !empty($dueDateStr)) {
+    // 3. If not expired and due date exists, return locked status (unless viewer is lecturer/admin)
+    if (!$isExpired && !empty($dueDateStr) && !in_array($sessionRole, ['admin', 'lecturer', 'faculty', 'instructor', 'teacher', 'superadmin'])) {
         return [
             'status' => 'locked',
             'is_expired' => false,
@@ -369,7 +378,7 @@ function ssparc_get_wrapped_for_assessment($mydb, $userId, $assessmentId) {
     
     // 5. Fetch Chat History & AI Inquiries for this user & assessment
     $prompts = ssparc_fetch_all_student_prompts($mydb, $userInStr, $aid);
-    if (empty($prompts)) {
+    if (empty($prompts) && $aid !== null) {
         // Check student prompts without strict assessment filter
         $prompts = ssparc_fetch_all_student_prompts($mydb, $userInStr, null);
     }

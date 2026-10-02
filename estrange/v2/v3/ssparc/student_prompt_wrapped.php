@@ -1,8 +1,11 @@
 <?php
 require_once(__DIR__ . '/_sso_bridge.php');
 
-$userId = $_SESSION['user_id'] ?? 'student_demo';
-$assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
+$userId = $_GET['user_id'] ?? $_SESSION['user_id'] ?? 'student_demo';
+$assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? 'all';
+$userRole = $_SESSION['role'] ?? 'student';
+$isLecturer = in_array(strtolower($userRole), ['lecturer', 'faculty', 'instructor', 'teacher', 'admin', 'superadmin']);
+$backUrl = $isLecturer ? 'lecturer_analytics.php' : 'student_analytics.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -90,7 +93,7 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
           </span>
           <span id="header-assessment-title" class="truncate max-w-[200px] font-medium text-slate-200">Assessment #<?= htmlspecialchars($assessmentId) ?></span>
         </div>
-        <a href="student_analytics.php" class="hover:text-white transition p-1 rounded-full bg-white/5 hover:bg-white/10" title="Exit">
+        <a href="<?= htmlspecialchars($backUrl) ?>" class="hover:text-white transition p-1 rounded-full bg-white/5 hover:bg-white/10" title="Exit">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </a>
       </div>
@@ -133,6 +136,7 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
   <script>
     const ASSESSMENT_ID = "<?= htmlspecialchars($assessmentId) ?>";
     const USER_ID = "<?= htmlspecialchars($userId) ?>";
+    const BACK_URL = "<?= htmlspecialchars($backUrl) ?>";
     
     let wrappedData = null;
     let currentSlide = 0;
@@ -148,19 +152,19 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
     // Fetch Wrapped Data from API
     async function loadWrappedData() {
       try {
-        let res = await fetch(`api_proxy.php?endpoint=/api/assessments/${ASSESSMENT_ID}/wrapped&user_id=${USER_ID}`);
-        if (!res.ok && res.status === 404) {
-          res = await fetch(`api_proxy.php?endpoint=/api/domain/assessments/${ASSESSMENT_ID}/wrapped&user_id=${USER_ID}`);
+        let res = await fetch(`api_proxy.php?endpoint=/api/assessments/${encodeURIComponent(ASSESSMENT_ID)}/wrapped&user_id=${encodeURIComponent(USER_ID)}`);
+        if (!res.ok) {
+          res = await fetch(`api_proxy.php?endpoint=/api/domain/assessments/${encodeURIComponent(ASSESSMENT_ID)}/wrapped&user_id=${encodeURIComponent(USER_ID)}`);
         }
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}: ${res.statusText}`);
         }
         let data = await res.json();
 
-        // If no interactions found via proxy, check backend daemon directly or synthesize from student profile
+        // If no interactions found via proxy, check student profile
         if (data.status === 'no_interactions' || !data || data.status === 'error' || data.status === 'locked') {
           try {
-            const directRes = await fetch(`https://estrangeinternal.itmaranatha.org/api/educational/student-profile/${USER_ID}`);
+            const directRes = await fetch(`api_proxy.php?endpoint=/api/educational/student-profile/${encodeURIComponent(USER_ID)}`);
             if (directRes.ok) {
               const prof = await directRes.json();
               if (prof && (prof.total_prompts > 0 || prof.average_prompt_quality > 0)) {
@@ -385,7 +389,7 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
               <span>Download Achievement Card</span>
             </button>
-            <a href="student_analytics.php" class="block w-full py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-slate-300 transition">
+            <a href="${BACK_URL}" class="block w-full py-2 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-slate-300 transition">
               Back to Analytics Hub
             </a>
           </div>
@@ -417,8 +421,8 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
             </p>
           </div>
           <div>
-            <a href="student_analytics.php" class="inline-block px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-white transition">
-              Return to My Courses
+            <a href="${BACK_URL}" class="inline-block px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-white transition">
+              Return to Analytics
             </a>
           </div>
         </div>
@@ -450,7 +454,7 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
             Deadline: ${data.due_date || 'In Progress'}
           </div>
           <div>
-            <a href="student_analytics.php" class="inline-block mt-2 px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-white transition">
+            <a href="${BACK_URL}" class="inline-block mt-2 px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-white transition">
               Back to Analytics
             </a>
           </div>
@@ -464,7 +468,7 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
       document.getElementById('slide-viewport').innerHTML = `
         <div class="text-center space-y-4 my-auto px-4">
           <p class="text-rose-400 text-sm font-semibold">${msg}</p>
-          <a href="student_analytics.php" class="inline-block px-4 py-2 rounded-xl bg-slate-800 text-xs text-white">Back to Analytics</a>
+          <a href="${BACK_URL}" class="inline-block px-4 py-2 rounded-xl bg-slate-800 text-xs text-white">Back to Analytics</a>
         </div>
       `;
     }
@@ -753,7 +757,7 @@ $assessmentId = $_GET['assessment_id'] ?? $_GET['id'] ?? '1';
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
               <span>Download Wrapped Summary Card</span>
             </button>
-            <a href="student_analytics.php" class="block w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-slate-300 transition">
+            <a href="${BACK_URL}" class="block w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-slate-300 transition">
               Complete &amp; View All Analytics
             </a>
           </div>
