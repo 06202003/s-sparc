@@ -847,7 +847,7 @@ function ssparc_get_cohort_research_analytics($mydb, $courseId = null, $assessme
     $studentUserIds = [];
     $userProfilesMap = [];
 
-    // 1. Fetch user map from E-STRANGE user table
+    // 1. Fetch user profile map from E-STRANGE user table
     $hasUser = $mydb->query("SHOW TABLES LIKE 'user'");
     if ($hasUser && $hasUser->num_rows > 0) {
         $uRes = $mydb->query("SELECT id, user_id, username, name, email FROM user");
@@ -866,7 +866,7 @@ function ssparc_get_cohort_research_analytics($mydb, $courseId = null, $assessme
         }
     }
 
-    // 2. Fetch user map from S-SPARC users table
+    // 2. Fetch user profile map from S-SPARC users table
     $hasUsers = $mydb->query("SHOW TABLES LIKE 'users'");
     if ($hasUsers && $hasUsers->num_rows > 0) {
         $uuRes = $mydb->query("SELECT user_id, username, name, email FROM users");
@@ -886,11 +886,38 @@ function ssparc_get_cohort_research_analytics($mydb, $courseId = null, $assessme
         }
     }
 
-    // 3. Discover active students in chat_history
+    // 3. If courseId is provided, get course assessments and enrolled students
+    $courseAssessmentIds = [];
+    if (!empty($courseId)) {
+        $cidSafe = $mydb->real_escape_string($courseId);
+        $asmtQ = $mydb->query("SELECT assessment_id FROM assessment WHERE course_id = '$cidSafe'");
+        if ($asmtQ) {
+            while ($ar = $asmtQ->fetch_assoc()) {
+                $courseAssessmentIds[] = (string)$ar['assessment_id'];
+            }
+        }
+
+        // Students enrolled in this course
+        $enrQ = $mydb->query("SELECT student_id FROM enrollment WHERE course_id = '$cidSafe' 
+                              UNION 
+                              SELECT student_id FROM game_student_course WHERE course_id = '$cidSafe'");
+        if ($enrQ) {
+            while ($er = $enrQ->fetch_assoc()) {
+                $sid = trim((string)($er['student_id'] ?? ''));
+                if (!empty($sid)) $studentUserIds[$sid] = true;
+            }
+        }
+    }
+
+    // 4. Discover active students in chat_history
     $aidFilter = "";
     if (!empty($assessmentId) && $assessmentId !== 'all') {
         $aid = $mydb->real_escape_string($assessmentId);
         $aidFilter = " WHERE (assessment_id = '$aid' OR assessment_id IS NULL OR assessment_id = '')";
+    } elseif (!empty($courseAssessmentIds)) {
+        $escapedAids = array_map(function($a) use ($mydb) { return "'" . $mydb->real_escape_string($a) . "'"; }, $courseAssessmentIds);
+        $aidIn = implode(',', $escapedAids);
+        $aidFilter = " WHERE (assessment_id IN ($aidIn) OR assessment_id IS NULL OR assessment_id = '')";
     }
 
     $hasChat = $mydb->query("SHOW TABLES LIKE 'chat_history'");
@@ -904,7 +931,7 @@ function ssparc_get_cohort_research_analytics($mydb, $courseId = null, $assessme
         }
     }
 
-    // 4. Discover active students in gpt_jobs
+    // 5. Discover active students in gpt_jobs
     $hasJobs = $mydb->query("SHOW TABLES LIKE 'gpt_jobs'");
     if ($hasJobs && $hasJobs->num_rows > 0) {
         $qJobs = $mydb->query("SELECT DISTINCT user_id FROM gpt_jobs WHERE prompt IS NOT NULL AND prompt != ''");
@@ -916,7 +943,7 @@ function ssparc_get_cohort_research_analytics($mydb, $courseId = null, $assessme
         }
     }
 
-    // 5. Discover active students in educational_learning_logs
+    // 6. Discover active students in educational_learning_logs
     $hasLogs = $mydb->query("SHOW TABLES LIKE 'educational_learning_logs'");
     if ($hasLogs && $hasLogs->num_rows > 0) {
         $qLogs = $mydb->query("SELECT DISTINCT user_id FROM educational_learning_logs");
@@ -928,7 +955,7 @@ function ssparc_get_cohort_research_analytics($mydb, $courseId = null, $assessme
         }
     }
 
-    // Fallback: If no distinct prompt users yet, include all known users from user table
+    // Fallback: If no students found yet, include all known student users from user table
     if (empty($studentUserIds)) {
         foreach (array_keys($userProfilesMap) as $k) {
             $studentUserIds[$k] = true;
@@ -953,53 +980,61 @@ function ssparc_get_cohort_research_analytics($mydb, $courseId = null, $assessme
     $processedUsers = [];
 
     foreach (array_keys($studentUserIds) as $uid) {
-        // Avoid duplicate evaluation if username and user_id alias each other
         $prof = $userProfilesMap[$uid] ?? ['nim' => $uid, 'name' => (is_numeric($uid) ? "Mahasiswa ($uid)" : $uid)];
         $primaryKey = $prof['nim'] ?? $uid;
         if (isset($processedUsers[$primaryKey])) continue;
         $processedUsers[$primaryKey] = true;
 
-        $wrapped = ssparc_generate_wrapped_data($mydb, $uid, $assessmentId);
-        if ($wrapped && isset($wrapped['summary'])) {
-            $summary = $wrapped['summary'];
-            $persona = $wrapped['persona'] ?? ['title' => 'The Developing Prompter'];
-            $dims = $wrapped['dimensions'] ?? ['cioe_completeness' => 0, 'shannon_entropy' => 0];
-            $byok = $wrapped['byok_sustainability'] ?? ['energy_wh' => 0, 'carbon_g' => 0];
-            $tierBadge = $summary['tier_badge'] ?? 'Tier C';
+        $profile = ssparc_get_student_aggregated_profile($mydb, $uid);
+        if ($profile && isset($profile['status']) && $profile['status'] === 'success') {
+            $pCount = (int)($profile['total_prompts'] ?? 0);
+            $avgCioe = round(($profile['average_cioe_score'] ?? 0.0) * 100, 1);
+            $avgEntropy = round((float)($profile['average_entropy'] ?? 0.0), 2);
+            $personaTitle = $profile['persona_title'] ?? 'The Developing Prompter';
+            
+            // Extract short tier (Tier A, Tier B, Tier C, Tier D)
+            $tierFull = $profile['literacy_level'] ?? 'Tier C';
+            $tierBadge = 'Tier C';
+            if (strpos($tierFull, 'Tier A') !== false) $tierBadge = 'Tier A';
+            elseif (strpos($tierFull, 'Tier B') !== false) $tierBadge = 'Tier B';
+            elseif (strpos($tierFull, 'Tier C') !== false) $tierBadge = 'Tier C';
+            elseif (strpos($tierFull, 'Tier D') !== false) $tierBadge = 'Tier D';
 
-            $pCount = (int)($summary['total_prompts'] ?? 0);
+            $energyWh = round(($pCount * 280 / 1000.0) * 0.35, 3);
+            $carbonG = round($energyWh * 0.475, 3);
+            $fastPathHits = max(0, (int)($pCount * ($profile['fast_path_utilization_rate'] ?? 0.20)));
+
             $studentRecords[] = [
                 'user_id' => $uid,
                 'nim' => $prof['nim'] ?? $uid,
                 'name' => $prof['name'] ?? 'Mahasiswa',
                 'total_prompts' => $pCount,
-                'cioe_score' => (float)($dims['cioe_completeness'] ?? 0),
-                'shannon_entropy' => (float)($dims['shannon_entropy'] ?? 0),
-                'archetype' => $persona['title'] ?? 'The Developing Prompter',
+                'cioe_score' => $avgCioe,
+                'shannon_entropy' => $avgEntropy,
+                'archetype' => $personaTitle,
                 'literacy_tier' => $tierBadge,
-                'energy_wh' => (float)($byok['energy_wh'] ?? 0),
-                'carbon_g' => (float)($byok['carbon_g'] ?? 0)
+                'energy_wh' => $energyWh,
+                'carbon_g' => $carbonG
             ];
 
             $totalClassPrompts += $pCount;
-            $totalClassWh += (float)($byok['energy_wh'] ?? 0);
-            $totalClassCarbon += (float)($byok['carbon_g'] ?? 0);
-            $totalFastPathHits += (int)($summary['fast_path_hits'] ?? 0);
+            $totalClassWh += $energyWh;
+            $totalClassCarbon += $carbonG;
+            $totalFastPathHits += $fastPathHits;
 
             if ($pCount > 0) {
-                $archTitle = $persona['title'] ?? 'The Developing Prompter';
-                $archetypeCounts[$archTitle] = ($archetypeCounts[$archTitle] ?? 0) + 1;
+                $archetypeCounts[$personaTitle] = ($archetypeCounts[$personaTitle] ?? 0) + 1;
                 if (isset($tierCounts[$tierBadge])) {
                     $tierCounts[$tierBadge]++;
                 }
 
-                $radar = $dims['radar'] ?? [];
-                $contextScores[] = (float)($radar['Context'] ?? 0);
-                $inputScores[] = (float)($radar['Input'] ?? 0);
-                $outputScores[] = (float)($radar['Output'] ?? 0);
-                $errorScores[] = (float)($radar['Error'] ?? 0);
-                $entropyScores[] = (float)($radar['Vocabulary'] ?? 0);
-                $qualityScores[] = (float)($summary['overall_score'] ?? 0);
+                $rd = $profile['radar_dimensions'] ?? [];
+                $contextScores[] = (float)($rd['Context'] ?? 0);
+                $inputScores[] = (float)($rd['Input'] ?? 0);
+                $outputScores[] = (float)($rd['Output'] ?? 0);
+                $errorScores[] = (float)($rd['Error'] ?? 0);
+                $entropyScores[] = (float)($rd['Vocabulary'] ?? 0);
+                $qualityScores[] = (float)($profile['average_prompt_quality'] ?? 0);
             }
         }
     }
@@ -1007,11 +1042,11 @@ function ssparc_get_cohort_research_analytics($mydb, $courseId = null, $assessme
     $activeCount = count($qualityScores);
     $divisor = max(1, $activeCount);
 
-    $avgCioe = !empty($contextScores) ? round((array_sum($contextScores) + array_sum($inputScores) + array_sum($outputScores) + array_sum($errorScores)) / ($divisor * 4), 1) : 0.0;
-    $avgEntropy = !empty($entropyScores) ? round((array_sum($entropyScores) / $divisor) / 100.0, 2) : 0.0;
+    $avgClassCioe = !empty($contextScores) ? round((array_sum($contextScores) + array_sum($inputScores) + array_sum($outputScores) + array_sum($errorScores)) / ($divisor * 4), 1) : 0.0;
+    $avgClassEntropy = !empty($entropyScores) ? round((array_sum($entropyScores) / $divisor) / 100.0, 2) : 0.0;
     $avgTurns = $totalClassPrompts > 0 ? round(max(1.2, min(3.5, $totalClassPrompts / max(1, count($studentRecords)))), 1) : 1.0;
     $fastPathPct = $totalClassPrompts > 0 ? round(($totalFastPathHits / max(1, $totalClassPrompts)) * 100, 1) : 0.0;
-    $defensePassRate = $activeCount > 0 ? round(min(98.5, max(85.0, 80 + ($avgCioe * 0.15))), 1) : 0.0;
+    $defensePassRate = $activeCount > 0 ? round(min(98.5, max(85.0, 80 + ($avgClassCioe * 0.15))), 1) : 0.0;
 
     $cohortRadar = [
         'Context' => !empty($contextScores) ? round(array_sum($contextScores) / $divisor, 1) : 0.0,
@@ -1022,8 +1057,8 @@ function ssparc_get_cohort_research_analytics($mydb, $courseId = null, $assessme
     ];
 
     // Turn Distribution Calculation
-    $t1 = $activeCount > 0 ? round(min(75, max(45, 50 + ($avgCioe * 0.2))), 1) : 0;
-    $t2 = $activeCount > 0 ? round(min(35, max(20, 28 - ($avgCioe * 0.08))), 1) : 0;
+    $t1 = $activeCount > 0 ? round(min(75, max(45, 50 + ($avgClassCioe * 0.2))), 1) : 0;
+    $t2 = $activeCount > 0 ? round(min(35, max(20, 28 - ($avgClassCioe * 0.08))), 1) : 0;
     $t3 = $activeCount > 0 ? round(max(5, 100 - $t1 - $t2 - 5), 1) : 0;
     $t5 = $activeCount > 0 ? round(max(0, 100 - $t1 - $t2 - $t3), 1) : 0;
 
@@ -1035,8 +1070,8 @@ function ssparc_get_cohort_research_analytics($mydb, $courseId = null, $assessme
         'total_class_prompts' => $totalClassPrompts,
         'total_class_wh' => round($totalClassWh, 2),
         'total_class_carbon_g' => round($totalClassCarbon, 2),
-        'avg_class_cioe' => $avgCioe,
-        'avg_class_entropy' => $avgEntropy,
+        'avg_class_cioe' => $avgClassCioe,
+        'avg_class_entropy' => $avgClassEntropy,
         'avg_turns' => $avgTurns,
         'fast_path_pct' => $fastPathPct,
         'defense_pass_rate' => $defensePassRate,
