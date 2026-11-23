@@ -715,7 +715,20 @@ select.select2-hidden-accessible {
           (isUser ? 'bg-slate-800 text-white' : 'bg-white text-slate-700 border border-slate-200');
         avatar.textContent = isUser ? 'You' : 'AI';
 
-        const isDb = !isUser && msg.meta && (msg.meta.toLowerCase().includes('cache') || msg.meta.toLowerCase().includes('vector') || msg.meta.toLowerCase().includes('database') || msg.meta.toLowerCase().includes('retrieved'));
+        const isGuardrail = !isUser && (
+          (msg.meta && msg.meta.toLowerCase().includes('guardrail')) ||
+          (msg.text && (
+            msg.text.includes('S-SPARC AI Guardrail') ||
+            msg.text.includes('S-SPARC Academic Scope') ||
+            msg.text.includes('Halo dari S-SPARC Academic Assistant')
+          ))
+        );
+        const isDb = !isUser && !isGuardrail && msg.meta && (
+          msg.meta.toLowerCase().includes('cache') ||
+          msg.meta.toLowerCase().includes('vector') ||
+          msg.meta.toLowerCase().includes('database') ||
+          msg.meta.toLowerCase().includes('retrieved')
+        );
 
         const bubble = document.createElement('div');
         if (isUser) {
@@ -724,7 +737,12 @@ select.select2-hidden-accessible {
           bubble.className = 'max-w-2xl rounded-2xl bg-white text-slate-900 px-4 py-3 shadow-xs border border-slate-200/90 text-sm leading-relaxed';
         }
 
-        if (isDb) {
+        if (isGuardrail) {
+          const guardrailHeader = document.createElement('div');
+          guardrailHeader.className = 'text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg mb-2 inline-flex items-center gap-1.5';
+          guardrailHeader.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500"></span> 🛡️ S-SPARC Prompt Guardrail (Zero Tokens Consumed)';
+          bubble.appendChild(guardrailHeader);
+        } else if (isDb) {
           const dbHeader = document.createElement('div');
           dbHeader.className = 'text-[11px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg mb-2 inline-flex items-center gap-1.5';
           dbHeader.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Zero-Token Vector Semantic Cache (Retrieved from DB)';
@@ -1525,10 +1543,21 @@ Kode saya mengalami infinite loop saat 'left == right'. Mohon jelaskan logika pe
         const data = await response.json();
         let replyText = data.code || data.text || data.message || 'Solution processing completed.';
         
-        const isRetrieval = data.is_retrieval || Number(data.request_tokens_used || 0) === 0;
-        let metaInfo = isRetrieval 
-          ? 'Vector Semantic Cache Hit (0 Tokens / Free Tier)' 
-          : `Adaptive Router Gemini (Personal Key)`;
+        const isGuardrail = Boolean(
+          data.is_guardrail_rejection || 
+          data.status === 'guardrail_rejected' || 
+          (replyText && (
+            replyText.includes('S-SPARC AI Guardrail') || 
+            replyText.includes('S-SPARC Academic Scope') || 
+            replyText.includes('Halo dari S-SPARC Academic Assistant')
+          ))
+        );
+        const isRetrieval = !isGuardrail && (data.is_retrieval || (Number(data.request_tokens_used || 0) === 0 && Number(data.tokens_used || 0) === 0 && !data.routed_to));
+        let metaInfo = isGuardrail 
+          ? 'S-SPARC Prompt Guardrail (Zero Tokens Consumed)' 
+          : (isRetrieval 
+            ? 'Vector Semantic Cache Hit (0 Tokens / Free Tier)' 
+            : `Adaptive Router Gemini (Personal Key)`);
 
         state.messages.push({ sender: 'bot', text: replyText, meta: metaInfo, prompt: prompt });
         persistMessages();

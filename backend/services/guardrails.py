@@ -29,17 +29,53 @@ class PromptGuardrail:
 
     # Specific Technical / Programming Terms ONLY (used for domain validation)
     PROGRAMMING_KEYWORDS = {
-        "python", "java", "c++", "cpp", "c#", "csharp", "javascript", "typescript", "php", "sql", "html", "css",
-        "def", "function", "class", "return", "import", "public", "private", "void", "static", "int", "float",
-        "string", "str", "bool", "boolean", "array", "list", "dict", "map", "set", "tuple", "vector",
-        "loop", "for", "while", "if", "else", "elif", "switch", "case", "break", "continue", "try", "except", "catch",
-        "algorithm", "algoritma", "rekursif", "recursion", "recursive", "fibonacci", "sorting", "sort", "search",
-        "searching", "binary", "linear", "hash", "tree", "graph", "node", "edge", "stack", "queue", "pointer",
-        "sliding", "window", "two", "pointers", "dp", "dynamic", "programming", "memoization", "prefix", "sum",
+        # Languages & Environments
+        "python", "java", "c++", "cpp", "c#", "csharp", "javascript", "js", "typescript", "ts", "php", "sql", "html", "css",
+        "golang", "rust", "kotlin", "swift", "r", "matlab", "ruby", "perl", "vscode", "terminal", "bash", "shell", "git",
+        "pandas", "numpy", "library", "framework",
+        # Syntax & Programming Concepts
+        "def", "function", "class", "return", "import", "public", "private", "protected", "void", "static", "int", "float",
+        "double", "char", "string", "str", "bool", "boolean", "array", "list", "dict", "dictionary", "map", "set", "tuple",
+        "vector", "matrix", "matriks", "tensor", "struct", "enum", "const", "let", "var", "val", "file", "csv", "json",
+        "io", "input", "output", "read", "write", "object", "objek", "oop", "pewarisan", "inheritance", "polymorphism",
+        "encapsulation", "enkapsulasi", "abstraction", "abstraksi", "interface", "method", "prosedur",
+        # Flow & Control
+        "loop", "looping", "for", "while", "do", "if", "else", "elif", "switch", "case", "break", "continue", "pass",
+        "try", "except", "catch", "finally", "throw", "raise", "yield", "perulangan", "percabangan", "kondisi",
+        # Memory & Pointers
+        "pointer", "reference", "ref", "value", "dereference", "memory", "memori", "alokasi", "heap", "stack",
+        "garbage", "collector", "leak", "segfault", "segmentation", "overflow", "underflow", "buffer",
+        # Algorithms & DSA
+        "algorithm", "algoritma", "rekursi", "rekursif", "recursion", "recursive", "fibonacci", "sorting", "sort", "search",
+        "searching", "binary", "linear", "hash", "hashing", "tree", "pohon", "traversal", "preorder", "inorder", "postorder",
+        "graph", "graf", "node", "edge", "queue", "antrean", "antrian", "tumpukan", "linked", "faktorial", "prima", "deret",
+        "fpb", "kpk", "knapsack", "greedy", "dp", "dynamic", "programming", "memoization", "backtracking", "bfs", "dfs",
+        "dijkstra", "merge", "quick", "bubble", "selection", "insertion", "heap", "sliding", "window", "two", "pointers",
+        # Complexity & Analysis
         "kompleksitas", "complexity", "time", "space", "waktu", "ruang", "big-o", "o(n)", "o(1)", "o(log", "o(n^2)",
-        "parameter", "input", "output", "error", "bug", "traceback", "indexerror", "typeerror", "valueerror",
-        "kode", "code", "fungsi", "method", "optimasi", "koding", "coding", "linked", "faktorial", "struktur", "data", "variabel"
+        "efisiensi", "runtime", "benchmark", "overhead", "log",
+        # Errors & Debugging
+        "error", "bug", "traceback", "indexerror", "typeerror", "valueerror", "recursionerror", "syntaxerror",
+        "zerodivisionerror", "nullpointer", "exception", "freeze", "hang", "debugging", "debug", "koding", "coding", "code",
+        "kode", "program", "programmer", "sintaks", "syntax", "kompilasi", "compile", "eksekusi",
+        # Academic & University
+        "praktikum", "modul", "tugas", "soal", "ujian", "asisten", "lab", "dosen", "pseudocode", "flowchart", "komputer",
+        "informatika", "variabel", "parameter", "argumen", "tipe", "data", "database", "kendala", "materi"
     }
+
+    CODE_SYNTAX_PATTERNS = [
+        r'\bdef\s+\w+\s*\(', r'\bclass\s+\w+', r'\[.*?\]', r'\{.*?\}',
+        r'==|!=|<=|>=|\+=|-=|\*=|/=|->|=>', r'None|True|False',
+        r'System\.out|console\.log|printf|cout\s*<<|cin\s*>>',
+        r';\s*$', r'//.*', r'/\*.*?\*/', r'#.*'
+    ]
+
+    MEME_SLANG_BRAINROT_PATTERNS = [
+        r'\b(?:rizz|gyatt|skibidi|sigma|mewing|fanum|kai\s+cenat|baby\s+shark|ohio|brainrot|chud)\b',
+        r'\b(?:dungtak|taraktak|taratak|sakarakeding|dungding|dumpak|dungking|takdung)\b',
+        r'\b(?:twinkle\s+twinkle|little\s+star|little\s+stars)\b',
+        r'\b(?:ea\s+bro|anjay|anjir|wkwk|awkoakwok|cie\s+cie|xixixi|hahaha)\b'
+    ]
 
     CURHAT_PATTERNS = [
         r'\bcurhat\b',
@@ -156,22 +192,23 @@ class PromptGuardrail:
             if len(w) >= 7 and (v_count == 0 or v_ratio < 0.12):
                 return True, f"Terdeteksi rangkaian kata acak tanpa susunan vokal wajar ('{w[:12]}...')."
 
-        # 5. Check if query body contains at least one meaningful word
+        # 5. Check for onomatopoeia sound effects / internet slang / brainrot memes
+        body_lower = body.lower()
+        words = set(re.findall(r'[a-zA-Z0-9_+]+', body_lower))
+        prog_matches = words.intersection(cls.PROGRAMMING_KEYWORDS)
+        if len(prog_matches) == 0:
+            for pat in cls.MEME_SLANG_BRAINROT_PATTERNS:
+                if re.search(pat, body_lower):
+                    return True, "Terdeteksi teks berupa kata tiruan bunyi (onomatope), bahasa gaul acak (slang/meme), atau konten non-edukatif."
+
+        # 6. Check if query body contains recognized CS domain terms or code syntax
         tokens = [t.lower() for t in re.findall(r'[a-zA-Z0-9_#+]+', body) if len(t) >= 2]
         if len(tokens) >= 5:
             recognized = sum(1 for t in tokens if t in cls.PROGRAMMING_KEYWORDS)
-            # If prompt has >= 5 words but 0 recognized programming/domain terms and low dictionary matches
-            if recognized == 0 and len(tokens) > 8:
-                # Calculate Shannon entropy of the body
-                freqs = {}
-                for c in body.lower():
-                    freqs[c] = freqs.get(c, 0) + 1
-                entropy = 0.0
-                for count in freqs.values():
-                    p = count / len(body)
-                    entropy -= p * math.log2(p)
-                if entropy < 2.5:
-                    return True, "Entropi informasi terlalu rendah untuk sebuah pertanyaan pemrograman yang valid."
+            has_code = any(re.search(pat, body) for pat in cls.CODE_SYNTAX_PATTERNS)
+            # If prompt has >= 5 words, 0 recognized programming terms, and no code syntax
+            if recognized == 0 and not has_code:
+                return True, "Prompt tidak mengandung konteks pembelajaran pemrograman, algoritma, atau kode komputer."
 
         return False, ""
 
