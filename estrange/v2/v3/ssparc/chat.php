@@ -1569,8 +1569,8 @@ Kode saya mengalami infinite loop saat 'left == right'. Mohon jelaskan logika pe
           fetchQueryQuota();
         }
 
-        // Start cooldown rate limit after successful generation
-        startCooldown(data.cooldown_seconds || 15);
+        // Start cooldown rate limit after successful generation (45s for Live AI, 15s for DB Cache)
+        startCooldown(data.cooldown_seconds || (isRetrieval ? 15 : 45));
 
       } catch (err) {
         state.messages.push({
@@ -1649,7 +1649,7 @@ Kode saya mengalami infinite loop saat 'left == right'. Mohon jelaskan logika pe
           fetchQueryQuota();
         }
 
-        startCooldown(data.cooldown_seconds || 15);
+        startCooldown(data.cooldown_seconds || 45);
 
       } catch (err) {
         Swal.fire({
