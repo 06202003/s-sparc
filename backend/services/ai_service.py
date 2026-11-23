@@ -171,17 +171,26 @@ class HybridSearcher:
         self.model = get_hybrid_model()
         self.k = 60 # RRF constant
         
-    def check_fast_path(self, query: str, threshold: float = 0.88):
+    def check_fast_path(self, query: str, threshold: float = 0.92):
         """
         Checks if query has a direct high-similarity match (>= threshold) in code_embeddings
         for 0-token immediate response.
+        Enforces PromptGuardrail to avoid matching hollow/gibberish templates, and strips
+        static boilerplate to prevent false-positive cosine similarity matches.
         """
+        from backend.services.guardrails import PromptGuardrail
+        val = PromptGuardrail.validate(query)
+        if not val["is_valid"]:
+            return False, None, 0.0
+
         all_docs, emb_map, _ = get_cached_corpus_and_embeddings()
         if not all_docs:
             return False, None, 0.0
 
         try:
-            query_embedding = self.model.encode(query)
+            # Strip static C-I-O-E boilerplate framing before computing vector embedding
+            sanitized_query = PromptGuardrail.sanitize_for_rag(query)
+            query_embedding = self.model.encode(sanitized_query)
             query_arr = np.asarray(query_embedding, dtype=np.float32)
             q_dim = len(query_arr)
             query_norm = np.linalg.norm(query_arr)
@@ -203,6 +212,16 @@ class HybridSearcher:
             best_doc = dict(docs[best_idx])
 
             if best_score >= threshold:
+                # Sanity check: Ensure matched document shares at least some core technical tokens
+                query_words = set(re.findall(r'[a-zA-Z]{4,}', sanitized_query.lower()))
+                doc_words = set(re.findall(r'[a-zA-Z]{4,}', best_doc.get('prompt', '').lower()))
+                common_words = query_words.intersection(doc_words)
+                
+                # If both have meaningful words, require at least 1-2 overlapping words
+                if len(query_words) >= 4 and len(common_words) < 1:
+                    logging.info(f"[FAST-PATH GUARDRAIL] Dense score {best_score:.3f} >= {threshold}, but zero lexical keyword overlap. Fast-path bypassed.")
+                    return False, best_doc, best_score
+
                 best_doc['code'] = fetch_code_by_id(best_doc['id'])
                 return True, best_doc, best_score
             return False, best_doc, best_score
@@ -210,14 +229,28 @@ class HybridSearcher:
             logging.error(f"check_fast_path error: {e}")
             return False, None, 0.0
 
-    def search(self, query: str, top_k: int = 3) -> str:
+    def search(self, query: str, top_k: int = 3, min_similarity: float = 0.65) -> str:
+        """
+        Hybrid search combining BM25 and Dense embeddings.
+        Guarded by:
+        1. PromptGuardrail pre-flight validation.
+        2. Boilerplate stripping to avoid boilerplate-induced similarity skew.
+        3. min_similarity cutoff (0.65): suppresses context injection if no relevant document exists.
+        """
+        from backend.services.guardrails import PromptGuardrail
+        val = PromptGuardrail.validate(query)
+        if not val["is_valid"]:
+            return ""
+
         all_docs, emb_map, bm25 = get_cached_corpus_and_embeddings()
         if not all_docs:
             return ""
 
+        sanitized_query = PromptGuardrail.sanitize_for_rag(query)
+
         # Sparse Search (BM25) over cached pre-built index
         if bm25:
-            tokenized_query = query.lower().split()
+            tokenized_query = sanitized_query.lower().split()
             sparse_scores = bm25.get_scores(tokenized_query)
         else:
             sparse_scores = [0.0] * len(all_docs)
@@ -225,7 +258,7 @@ class HybridSearcher:
         # Dense Search (Vectorized)
         dense_scores_map = {} # doc_id -> score
         try:
-            query_embedding = self.model.encode(query)
+            query_embedding = self.model.encode(sanitized_query)
             query_arr = np.asarray(query_embedding, dtype=np.float32)
             q_dim = len(query_arr)
             query_norm = np.linalg.norm(query_arr)
@@ -241,6 +274,12 @@ class HybridSearcher:
         except Exception as e:
             logging.error(f"Dense search error: {e}")
 
+        # Check maximum dense similarity score
+        max_dense = max(dense_scores_map.values()) if dense_scores_map else 0.0
+        if max_dense < min_similarity:
+            logging.info(f"[RAG GUARDRAIL] Highest similarity ({max_dense:.3f}) below threshold {min_similarity}. Context injection suppressed to prevent hallucination.")
+            return ""
+
         # RRF (Reciprocal Rank Fusion)
         sparse_ranks = {all_docs[i]['id']: rank for rank, i in enumerate(np.argsort(sparse_scores)[::-1])}
         dense_scores_list = [dense_scores_map.get(d['id'], 0.0) for d in all_docs]
@@ -249,8 +288,13 @@ class HybridSearcher:
         rrf_scores = []
         for doc in all_docs:
             doc_id = doc['id']
-            rrf_score = 1.0 / (self.k + sparse_ranks[doc_id]) + 1.0 / (self.k + dense_ranks[doc_id])
-            rrf_scores.append((rrf_score, doc))
+            # Only consider docs meeting minimum similarity cutoff
+            if dense_scores_map.get(doc_id, 0.0) >= min_similarity:
+                rrf_score = 1.0 / (self.k + sparse_ranks[doc_id]) + 1.0 / (self.k + dense_ranks[doc_id])
+                rrf_scores.append((rrf_score, doc))
+
+        if not rrf_scores:
+            return ""
 
         rrf_scores.sort(key=lambda x: x[0], reverse=True)
         top_docs = [doc for score, doc in rrf_scores[:top_k]]
@@ -301,6 +345,48 @@ def process_chat_job(job_id: str, gpt_prompt_marked: str):
                 clean_prompt_lines.append(line)
                 
         clean_prompt = "\n".join(clean_prompt_lines).strip()
+        
+        # Pre-flight Prompt Guardrail Check
+        from backend.services.guardrails import PromptGuardrail
+        guardrail_res = PromptGuardrail.validate(clean_prompt)
+        if not guardrail_res["is_valid"]:
+            logging.warning(f"[GUARDRAIL ACTIVATED] Job {job_id} rejected: {guardrail_res['reason']}")
+            rejection_text = guardrail_res["educational_message"]
+
+            try:
+                from backend.api.ai_chat import _in_memory_jobs
+                _in_memory_jobs[job_id] = {
+                    "job_id": job_id,
+                    "status": "done",
+                    "code": rejection_text,
+                    "raw_response": rejection_text,
+                    "similarity": 0.0,
+                    "tokens_used": 0,
+                    "is_guardrail_rejection": True
+                }
+            except Exception as e_mem:
+                logging.warning(f"Failed to update in-memory job state: {e_mem}")
+
+            conn = get_db_connection()
+            if conn is not None:
+                try:
+                    with conn.cursor() as cur:
+                        cur.execute(
+                            "UPDATE gpt_jobs SET status='done', code=%s, raw_response=%s, similarity=0.0, prompt_matched='GUARDRAIL_REJECTED', updated_at=NOW() WHERE job_id=%s",
+                            (rejection_text, rejection_text, job_id)
+                        )
+                    conn.commit()
+                except Exception:
+                    pass
+                finally:
+                    try:
+                        conn.close()
+                    except Exception:
+                        pass
+
+            insert_chat_history(user_id, session_id, "user", clean_prompt, assessment_id)
+            insert_chat_history(user_id, session_id, "assistant", rejection_text, assessment_id)
+            return
         
         # 2. Fetch Chat History
         assessment_id = markers.get('assessment_id')
@@ -541,10 +627,15 @@ def process_chat_job(job_id: str, gpt_prompt_marked: str):
 def auto_ingest_knowledge(user_id: str, prompt: str, code: str):
     """
     Self-Growing Knowledge Base Auto-Ingestion:
-    Automatically computes vector embeddings for newly generated GPT code solutions
-    and inserts them into code_embeddings so future similar queries are retrieved for FREE.
+    Guarded by PromptGuardrail to ensure only genuine, high-quality code solutions are stored,
+    preventing poisoned, fallback, or gibberish entries from contaminating code_embeddings.
     """
-    if not prompt or not code or len(code.strip()) < 10:
+    if not prompt or not code:
+        return
+
+    from backend.services.guardrails import PromptGuardrail
+    if not PromptGuardrail.is_safe_for_knowledge_ingestion(prompt, code):
+        logging.info("[SELF-GROWING GATE] Skipped auto-ingestion: failed quality/safety guardrail.")
         return
 
     import uuid

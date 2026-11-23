@@ -233,10 +233,18 @@ class OllamaClient:
         except Exception as e:
             logging.warning(f"Ollama service call failed ({e}). Utilizing offline knowledge fallback...")
 
-        user_prompt = messages[-1].get("content", "") if messages else ""
-        prompt_lower = user_prompt.lower()
+        # Extract user's actual substantive prompt (ignoring any injected RAG context)
+        raw_user_content = messages[-1].get("content", "") if messages else ""
+        user_query_clean = re.sub(r'\[CONTEXT BASED ON SEMANTIC SEARCH[\s\S]*$', '', raw_user_content, flags=re.I).strip()
 
-        if "fibonacci" in prompt_lower or "rekursif" in prompt_lower or "memoization" in prompt_lower:
+        from backend.services.guardrails import PromptGuardrail
+        val = PromptGuardrail.validate(user_query_clean)
+        if not val["is_valid"]:
+            return val["educational_message"]
+
+        prompt_lower = PromptGuardrail.strip_boilerplate(user_query_clean).lower()
+
+        if "fibonacci" in prompt_lower:
             return """### S-SPARC AI Analysis — Fibonacci & Dynamic Programming
 
 Berikut penjelasan dan solusi teroptimasi untuk kendala deret Fibonacci rekursif:
@@ -274,7 +282,7 @@ print(f"Fibonacci ke-45: {result}")
 3. **n < 0**: Mengembalikan `0` atau melempar ValueError untuk penanganan input tak valid.
 4. **n = 45**: Mengeksekusi secara instan (< 1ms) tanpa Stack Overflow."""
 
-        elif "binary search" in prompt_lower or "pencarian biner" in prompt_lower or "search" in prompt_lower:
+        elif "binary search" in prompt_lower or "pencarian biner" in prompt_lower:
             return """### S-SPARC AI Analysis — Binary Search Algorithm
 
 Berikut penjelasan dan perbaikan fungsi Binary Search:
@@ -311,7 +319,7 @@ print(f"Target {target} ditemukan pada indeks: {result}")
 - **Time Complexity**: `O(log N)` karena ruang pencarian dibagi 2 di setiap iterasi.
 - **Space Complexity**: `O(1)` (Iteratif ramah memori / Green Code)."""
 
-        elif "hash" in prompt_lower or "two sum" in prompt_lower or "big-o" in prompt_lower or "complexity" in prompt_lower:
+        elif "two sum" in prompt_lower or "hash map" in prompt_lower or "hash table" in prompt_lower:
             return """### S-SPARC AI Analysis — Optimization to O(N) Hash Map
 
 Berikut penjelasannya:
@@ -342,35 +350,16 @@ print("Pasangan Indeks:", two_sum_optimized(nums, target))
 - **Space Complexity**: `O(N)`"""
 
         else:
-            return """### S-SPARC AI Assistant Solution
+            return """### ℹ️ S-SPARC Assistant — Layanan AI Sedang Dalam Antrean
 
-Berikut panduan & analisis perbaikan kode berdasarkan prompt C-I-O-E yang Anda berikan:
+Layanan AI cloud dan lokal saat ini sedang mengalami antrean pemrosesan tingkat tinggi.
 
-#### 1. Diagnosis & Struktur Logika
-Berdasarkan parameter dan batasan yang Anda sampaikan, solusi memerlukan pendekatan terstruktur dengan pengecekan prekondisi data sebelum memproses eksekusi utama.
+**Panduan Analisis Mandiri:**
+1. Periksa kembali struktur data awal dan batasan input (*pre-conditions*).
+2. Periksa titik terminasi (*base case* rekursi atau kondisi keluar loop) untuk mencegah *infinite loop*.
+3. Lakukan pengujian manual menggunakan *print statement* pada kasus uji batas (*boundary test cases*).
 
-```python
-def process_solution(data_input):
-    # Pre-condition check
-    if not data_input:
-        return None
-        
-    # Main logic implementation
-    result = []
-    for item in data_input:
-        # Process item
-        result.append(item)
-        
-    return result
-
-# Pengujian
-print("Status Eksekusi: Berhasil diproses")
-```
-
-#### 2. Validasi & Best Practices
-- **Input Validation**: Selalu pastikan tipe data dan batas prekondisi diperiksa.
-- **Error Handling**: Gunakan `try-except` untuk menangani pengecualian tak terduga.
-- **Efficiency**: Jaga kompleksitas runtime tetap efisien."""
+*Silakan coba kirimkan kembali prompt Anda dalam beberapa saat.*"""
 
 
 class AdaptiveRouter:

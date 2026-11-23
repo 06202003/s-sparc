@@ -68,20 +68,60 @@ class PromptLinter:
     @classmethod
     def analyze(cls, prompt: str) -> Dict[str, Any]:
         """
-        Performs a full multi-dimensional AI Literacy analysis of the prompt.
+        Performs a full multi-dimensional AI Literacy analysis of the prompt
+        with strict guardrail enforcement against gibberish, hollow templates, and character spam.
         """
-        clean_text = prompt.strip()
+        from backend.services.guardrails import PromptGuardrail
+
+        clean_text = (prompt or "").strip()
         length = len(clean_text)
         lower_text = clean_text.lower()
 
-        # 1. Component Detection (C-I-O-E)
-        has_context = any(kw in lower_text for kw in cls.CONTEXT_KEYWORDS) or bool(re.search(r'\[CONTEXT|in\s+\w+|using\s+\w+', lower_text))
-        has_input = any(kw in lower_text for kw in cls.INPUT_KEYWORDS) or bool(re.search(r'\[INPUT|given\s+|parameters?|args', lower_text))
-        has_output = any(kw in lower_text for kw in cls.OUTPUT_KEYWORDS) or bool(re.search(r'\[OUTPUT|returns?|complexity|o\(', lower_text))
-        has_error = any(kw in lower_text for kw in cls.ERROR_KEYWORDS) or bool(re.search(r'\[ERROR|error:|line\s+\d+|exception', lower_text))
+        # Pre-flight Guardrail Check
+        guardrail_res = PromptGuardrail.validate(clean_text)
+        if not guardrail_res["is_valid"]:
+            entropy = cls.calculate_shannon_entropy(clean_text)
+            return {
+                "prompt_length": length,
+                "shannon_entropy": entropy,
+                "technical_token_density": 0.0,
+                "cioe_breakdown": {
+                    "has_context": False,
+                    "has_input": False,
+                    "has_output": False,
+                    "has_error_trace": False,
+                    "components_present": 0,
+                    "cioe_score": 0.0
+                },
+                "prompt_quality_score": 0.05,
+                "literacy_grade": "F (Invalid / Gibberish Prompt)",
+                "pedagogical_feedback": [
+                    f"Prompt Ditolak oleh Guardrail: {guardrail_res['reason']}",
+                    "Lengkapi setiap bagian C-I-O-E dengan deskripsi masalah atau kode nyata, bukan karakter acak atau template kosong."
+                ]
+            }
 
-        # Technical pattern density
-        tech_matches = sum(len(re.findall(pat, clean_text, re.IGNORECASE)) for pat in cls.TECHNICAL_PATTERNS)
+        # Substantive content without boilerplate frames
+        substantive_body = PromptGuardrail.strip_boilerplate(clean_text)
+        substantive_lower = substantive_body.lower()
+        sections = PromptGuardrail.extract_cioe_sections(clean_text)
+
+        # 1. Component Detection (C-I-O-E)
+        # If template headers are used, check that each section has substantive body (> 6 chars)
+        has_template_headers = any(kw in lower_text for kw in ['[context', '[input', '[output', '[error'])
+        if has_template_headers:
+            has_context = len(sections.get("context", "")) >= 6 or any(kw in substantive_lower for kw in cls.CONTEXT_KEYWORDS)
+            has_input = len(sections.get("input", "")) >= 6 or any(kw in substantive_lower for kw in cls.INPUT_KEYWORDS)
+            has_output = len(sections.get("output", "")) >= 6 or any(kw in substantive_lower for kw in cls.OUTPUT_KEYWORDS)
+            has_error = len(sections.get("error", "")) >= 6 or any(kw in substantive_lower for kw in cls.ERROR_KEYWORDS)
+        else:
+            has_context = any(kw in lower_text for kw in cls.CONTEXT_KEYWORDS) or bool(re.search(r'in\s+\w+|using\s+\w+', lower_text))
+            has_input = any(kw in lower_text for kw in cls.INPUT_KEYWORDS) or bool(re.search(r'given\s+|parameters?|args', lower_text))
+            has_output = any(kw in lower_text for kw in cls.OUTPUT_KEYWORDS) or bool(re.search(r'returns?|complexity|o\(', lower_text))
+            has_error = any(kw in lower_text for kw in cls.ERROR_KEYWORDS) or bool(re.search(r'error:|line\s+\d+|exception', lower_text))
+
+        # Technical pattern density on substantive body (excludes C-I-O-E tags themselves)
+        tech_matches = sum(len(re.findall(pat, substantive_body, re.IGNORECASE)) for pat in cls.TECHNICAL_PATTERNS)
         tech_density = min(1.0, tech_matches / 4.0)
 
         # Shannon Entropy

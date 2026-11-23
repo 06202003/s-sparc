@@ -127,6 +127,22 @@ async def generate_code(request: Request, data: GenerateRequest, background_task
             detail=f"Prompt terlalu panjang. Maksimal {MAX_PROMPT_LENGTH} karakter (saat ini: {len(raw_prompt)})."
         )
 
+    # Prompt Guardrail Pre-flight
+    from backend.services.guardrails import PromptGuardrail
+    guardrail_val = PromptGuardrail.validate(raw_prompt)
+    if not guardrail_val["is_valid"]:
+        logging.warning(f"[GUARDRAIL PRE-FLIGHT] Enqueue request from user '{user_id}' intercepted: {guardrail_val['reason']}")
+        return {
+            "status": "guardrail_rejected",
+            "code": guardrail_val["educational_message"],
+            "raw_response": guardrail_val["educational_message"],
+            "similarity": 0.0,
+            "is_retrieval": False,
+            "tokens_used": 0,
+            "is_guardrail_rejection": True,
+            "message": guardrail_val["reason"]
+        }
+
     # 2. Check Cooldown Rate Limit (60s for Live AI, 15s for DB Cache)
     now = time.time()
     last_req = _USER_LAST_REQUEST_TIME.get(user_id)
@@ -256,6 +272,22 @@ async def enqueue_gpt(request: Request, data: GenerateRequest, background_tasks:
             status_code=400, 
             detail=f"Prompt terlalu panjang. Maksimal {MAX_PROMPT_LENGTH} karakter (saat ini: {len(raw_prompt)})."
         )
+
+    # Prompt Guardrail Pre-flight
+    from backend.services.guardrails import PromptGuardrail
+    guardrail_val = PromptGuardrail.validate(raw_prompt)
+    if not guardrail_val["is_valid"]:
+        logging.warning(f"[GUARDRAIL PRE-FLIGHT] Enqueue request from user '{user_id}' intercepted: {guardrail_val['reason']}")
+        return {
+            "status": "guardrail_rejected",
+            "code": guardrail_val["educational_message"],
+            "raw_response": guardrail_val["educational_message"],
+            "similarity": 0.0,
+            "is_retrieval": False,
+            "tokens_used": 0,
+            "is_guardrail_rejection": True,
+            "message": guardrail_val["reason"]
+        }
 
     now = time.time()
     last_req_time = _USER_LAST_REQUEST_TIME.get(user_id, 0)
