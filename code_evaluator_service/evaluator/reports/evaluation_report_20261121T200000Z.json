@@ -1,0 +1,26 @@
+{
+  "run_id": "20261121T200000Z",
+  "service": "code_evaluator_service",
+  "trigger": "scheduler",
+  "started_at": "2026-11-21T20:00:00.009044+00:00",
+  "finished_at": "2026-11-21T20:04:55.805593+00:00",
+  "duration_seconds": 295.8,
+  "total_entries": 5486,
+  "valid_entries": 5486,
+  "review_entries": 0,
+  "deleted_entries": 0,
+  "average_similarity": 0.8833,
+  "average_score": 8.343,
+  "suspicious_entries": 549,
+  "backup_path": null,
+  "dry_run": false,
+  "thresholds": {
+    "semantic_similarity_threshold": 0.8,
+    "review_score_threshold": 4.8,
+    "final_score_threshold": 5.2
+  },
+  "review_breakdown": {},
+  "deleted_breakdown": {},
+  "sample_review_ids": [],
+  "sample_deleted_ids": []
+}

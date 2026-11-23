@@ -1,0 +1,32 @@
+{
+  "run_id": "20261017T200000Z",
+  "service": "code_evaluator_service",
+  "trigger": "scheduler",
+  "started_at": "2026-10-17T20:00:00.016085+00:00",
+  "finished_at": "2026-10-17T20:03:47.508643+00:00",
+  "duration_seconds": 227.49,
+  "total_entries": 5486,
+  "valid_entries": 5484,
+  "review_entries": 0,
+  "deleted_entries": 2,
+  "average_similarity": 0.8833,
+  "average_score": 8.3439,
+  "suspicious_entries": 549,
+  "backup_path": "C:\\Users\\master\\Downloads\\s-sparc\\code_evaluator_service\\backup\\code_embeddings_backup_20261017T200000Z.json",
+  "dry_run": false,
+  "thresholds": {
+    "semantic_similarity_threshold": 0.8,
+    "review_score_threshold": 4.8,
+    "final_score_threshold": 5.2
+  },
+  "review_breakdown": {},
+  "deleted_breakdown": {
+    "LOW_QUALITY": 1,
+    "INVALID": 1
+  },
+  "sample_review_ids": [],
+  "sample_deleted_ids": [
+    "fa01a37c-79ba-4afc-aad5-71188415a30e",
+    "000de2ca-ea1a-4c07-8687-237ec9f13bf5"
+  ]
+}
