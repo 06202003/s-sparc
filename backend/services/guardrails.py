@@ -288,17 +288,6 @@ class PromptGuardrail:
                 "educational_message": cls.build_educational_rejection(hollow_reason)
             }
 
-        # Check gibberish / spam
-        is_gibberish, gibberish_reason = cls.is_gibberish_or_spam(prompt_clean)
-        if is_gibberish:
-            return {
-                "is_valid": False,
-                "reason": gibberish_reason,
-                "category": "GIBBERISH",
-                "status": "REJECTED",
-                "educational_message": cls.build_educational_rejection(gibberish_reason)
-            }
-
         # Check emotional curhat / personal life distress
         is_curhat, curhat_reason = cls.is_curhat_or_emotional(prompt_clean)
         if is_curhat:
@@ -319,6 +308,17 @@ class PromptGuardrail:
                 "category": "OFF_TOPIC",
                 "status": "REJECTED",
                 "educational_message": cls.build_off_topic_response(off_topic_reason)
+            }
+
+        # Check gibberish / spam
+        is_gibberish, gibberish_reason = cls.is_gibberish_or_spam(prompt_clean)
+        if is_gibberish:
+            return {
+                "is_valid": False,
+                "reason": gibberish_reason,
+                "category": "GIBBERISH",
+                "status": "REJECTED",
+                "educational_message": cls.build_educational_rejection(gibberish_reason)
             }
 
         return {
@@ -365,11 +365,11 @@ class PromptGuardrail:
 
         # 3. Reject fallback notices or guardrail messages
         reject_markers = [
-            "### ⚠️",
-            "### ☕",
+            "[S-SPARC Guardrail]",
+            "[S-SPARC Scope]",
             "S-SPARC AI Guardrail",
             "S-SPARC Academic Scope",
-            "S-SPARC AI Analysis — Fibonacci",
+            "S-SPARC AI Analysis - Fibonacci",
             "Status Eksekusi:",
             "Solution processing completed",
             "Layanan AI lokal/cloud saat ini sedang",
@@ -397,17 +397,17 @@ class PromptGuardrail:
         """
         Generates constructive, pedagogical feedback in Markdown when a prompt violates guardrails.
         """
-        return f"""### ⚠️ S-SPARC AI Guardrail — Kualitas Prompt Belum Memenuhi Standar
+        return f"""### [S-SPARC Guardrail] Kualitas Prompt Belum Memenuhi Standar
 
 Prompt yang Anda kirimkan tidak dapat diproses karena:
 > **Kendala:** {specific_reason}
 
 ---
 
-#### 💡 Mengapa S-SPARC Memeriksa Kualitas Prompt?
-S-SPARC dirancang untuk melatih **Literasi AI & Kemandirian Kognitif (*Prompt Engineering*)**. Pengiriman teks acak (*gibberish*), template kosong, atau karakter berulang tidak dapat dianalisis oleh *Semantic Search Engine* dan dapat menimbulkan pemborosan komputasi (*GPU energy waste*).
+#### Mengapa S-SPARC Memeriksa Kualitas Prompt?
+S-SPARC dirancang untuk melatih **Literasi AI dan Kemandirian Kognitif (*Prompt Engineering*)**. Pengiriman teks acak (*gibberish*), template kosong, atau karakter berulang tidak dapat dianalisis oleh *Semantic Search Engine* dan dapat menimbulkan pemborosan komputasi (*GPU energy waste*).
 
-#### 📝 Panduan Mengisi Protokol C-I-O-E yang Benar:
+#### Panduan Mengisi Protokol C-I-O-E yang Benar:
 1. **[CONTEXT]**: Jelaskan materi kuliah dan algoritma yang sedang dipelajari (misal: *Dynamic Programming*, *Array*, *Binary Search*).
 2. **[INPUT]**: Tuliskan tipe data input, parameter fungsi, dan contoh kasus uji (*test case*).
 3. **[OUTPUT]**: Jelaskan hasil akhir yang diharapkan serta target kompleksitas waktu/ruang (misal: $O(N)$ atau $O(\\log N)$).
@@ -420,39 +420,39 @@ S-SPARC dirancang untuk melatih **Literasi AI & Kemandirian Kognitif (*Prompt En
         """
         Generates an empathetic, human-centered response when a student shares personal/life struggles.
         """
-        return """### ☕ Halo dari S-SPARC Academic Assistant!
+        return """### Halo dari S-SPARC Academic Assistant
 
-Halo bro, terima kasih sudah mau terbuka dan berbagi ceritamu di sini. Perasaan galau, merasa *stuck*, bingung dengan arah masa depan, atau merasa ritme kerjaan dan finansial jalan di tempat adalah hal yang sangat manusiawi—banyak orang (termasuk sesama mahasiswa, asisten lab, maupun staf) pernah atau sedang melewati fase serupa.
+Halo bro, terima kasih sudah mau terbuka dan berbagi ceritamu di sini. Perasaan galau, merasa *stuck*, bingung dengan arah masa depan, atau merasa ritme kerjaan dan finansial jalan di tempat adalah hal yang sangat manusiawi, banyak orang (termasuk sesama mahasiswa, asisten lab, maupun staf) pernah atau sedang melewati fase serupa.
 
 Ingat bahwa perjalanan hidup dan karier bukan lomba *sprint*, melainkan maraton panjang. Rasa stagnan sering kali menjadi sinyal tubuh dan pikiran bahwa kamu butuh jeda sejenak untuk menata ulang energi dan perspektif.
 
 Berikut beberapa langkah sederhana yang bisa dicoba:
-1. **Beri Jeda & Istirahat**: Jangan paksakan diri saat pikiran sedang penuh. Ambil waktu sejenak dari layar komputer, jalan-jalan santai, dan pastikan istirahat cukup.
+1. **Beri Jeda dan Istirahat**: Jangan paksakan diri saat pikiran sedang penuh. Ambil waktu sejenak dari layar komputer, jalan-jalan santai, dan pastikan istirahat cukup.
 2. **Fokus pada Langkah Kecil (*Micro-progress*)**: Jangan bebani diri memikirkan segalanya sekaligus. Fokus pada satu hal konkret yang bisa diselesaikan hari ini.
 3. **Cari Teman Cerita Nyata**: Jika perasaan ini terasa membebani, sangat dianjurkan untuk bercerita dengan teman terdekat, keluarga, dosen wali, atau unit bimbingan konseling kampus.
 
 ---
-> ℹ️ **Catatan Sistem:** Sebagai asisten AI akademik, S-SPARC difokuskan secara khusus untuk membantu pembelajaran koding, algoritma, dan debugging. Kalau ada tugas praktikum atau tantangan pemrograman yang lagi bikin pusing, tanyakan kodinganmu di sini ya bro, kita diskusikan bareng-bareng! Tetap semangat terus! 💪"""
+> **Catatan Sistem:** Sebagai asisten AI akademik, S-SPARC difokuskan secara khusus untuk membantu pembelajaran koding, algoritma, dan debugging. Kalau ada tugas praktikum atau tantangan pemrograman yang lagi bikin pusing, tanyakan kodinganmu di sini ya bro, kita diskusikan bareng-bareng! Tetap semangat terus!"""
 
     @classmethod
     def build_off_topic_response(cls, reason: str) -> str:
         """
         Generates boundary clarification when user sends general off-topic/non-programming queries.
         """
-        return f"""### ⚠️ S-SPARC Academic Scope — Pertanyaan di Luar Pembelajaran Pemrograman
+        return f"""### [S-SPARC Scope] Pertanyaan di Luar Pembelajaran Pemrograman
 
 Halo! Pertanyaan atau topik yang Anda kirimkan berada di luar domain sistem pembelajaran **S-SPARC**.
 > **Keterangan:** {reason}
 
 ---
 
-#### 💡 Mengenai Fokus Akademik S-SPARC:
+#### Mengenai Fokus Akademik S-SPARC:
 S-SPARC (*Sustainable Semantic Prompting & Academic Reasoning Corpus*) adalah sistem asisten akademik yang dirancang secara khusus untuk:
-- 💻 **Pembelajaran Pemrograman & Algoritma** (Python, Java, C++, Struktur Data, OOP, dll.)
-- 🔍 **Analisis Bug, Error Trace, & Optimasi Kompleksitas (Big-O)**
-- 📝 **Pelatihan Prompt Engineering Akademis (Protokol C-I-O-E)**
+- Pembelajaran Pemrograman dan Algoritma (Python, Java, C++, Struktur Data, OOP, dll.)
+- Analisis Bug, Error Trace, dan Optimasi Kompleksitas (Big-O)
+- Pelatihan Prompt Engineering Akademis (Protokol C-I-O-E)
 
-#### 🎯 Rekomendasi Langkah:
+#### Rekomendasi Langkah:
 Silakan ajukan pertanyaan terkait koding, algoritma, atau tugas praktikum Anda menggunakan format protokol **C-I-O-E**:
 1. **[CONTEXT]**: Materi kuliah / bahasa pemrograman yang digunakan.
 2. **[INPUT]**: Parameter masukan, tipe data, atau kasus uji.

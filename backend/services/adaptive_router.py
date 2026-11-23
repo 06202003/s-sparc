@@ -247,7 +247,7 @@ class OllamaClient:
         prompt_lower = PromptGuardrail.strip_boilerplate(user_query_clean).lower()
 
         if "fibonacci" in prompt_lower:
-            return """### S-SPARC AI Analysis — Fibonacci & Dynamic Programming
+            return """### S-SPARC AI Analysis: Fibonacci & Dynamic Programming
 
 Berikut penjelasan dan solusi teroptimasi untuk kendala deret Fibonacci rekursif:
 
@@ -285,7 +285,7 @@ print(f"Fibonacci ke-45: {result}")
 4. **n = 45**: Mengeksekusi secara instan (< 1ms) tanpa Stack Overflow."""
 
         elif "binary search" in prompt_lower or "pencarian biner" in prompt_lower:
-            return """### S-SPARC AI Analysis — Binary Search Algorithm
+            return """### S-SPARC AI Analysis: Binary Search Algorithm
 
 Berikut penjelasan dan perbaikan fungsi Binary Search:
 
@@ -322,7 +322,7 @@ print(f"Target {target} ditemukan pada indeks: {result}")
 - **Space Complexity**: `O(1)` (Iteratif ramah memori / Green Code)."""
 
         elif "two sum" in prompt_lower or "hash map" in prompt_lower or "hash table" in prompt_lower:
-            return """### S-SPARC AI Analysis — Optimization to O(N) Hash Map
+            return """### S-SPARC AI Analysis: Optimization to O(N) Hash Map
 
 Berikut penjelasannya:
 
@@ -352,7 +352,7 @@ print("Pasangan Indeks:", two_sum_optimized(nums, target))
 - **Space Complexity**: `O(N)`"""
 
         else:
-            return """### ℹ️ S-SPARC Assistant — Layanan AI Sedang Dalam Antrean
+            return """### S-SPARC Assistant: Layanan AI Sedang Dalam Antrean
 
 Layanan AI cloud dan lokal saat ini sedang mengalami antrean pemrosesan tingkat tinggi.
 

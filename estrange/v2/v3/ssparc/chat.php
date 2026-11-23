@@ -718,6 +718,8 @@ select.select2-hidden-accessible {
         const isGuardrail = !isUser && (
           (msg.meta && msg.meta.toLowerCase().includes('guardrail')) ||
           (msg.text && (
+            msg.text.includes('[S-SPARC Guardrail]') ||
+            msg.text.includes('[S-SPARC Scope]') ||
             msg.text.includes('S-SPARC AI Guardrail') ||
             msg.text.includes('S-SPARC Academic Scope') ||
             msg.text.includes('Halo dari S-SPARC Academic Assistant')
@@ -740,7 +742,7 @@ select.select2-hidden-accessible {
         if (isGuardrail) {
           const guardrailHeader = document.createElement('div');
           guardrailHeader.className = 'text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg mb-2 inline-flex items-center gap-1.5';
-          guardrailHeader.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500"></span> 🛡️ S-SPARC Prompt Guardrail (Zero Tokens Consumed)';
+          guardrailHeader.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500"></span> S-SPARC Prompt Guardrail (Zero Tokens Consumed)';
           bubble.appendChild(guardrailHeader);
         } else if (isDb) {
           const dbHeader = document.createElement('div');
@@ -1095,7 +1097,7 @@ Kode saya mengalami infinite loop saat 'left == right'. Mohon jelaskan logika pe
     // Terms and Conditions Modal Dialog (Step 1)
     function showTermsAndConditionsModal(onAcceptCallback) {
       Swal.fire({
-        title: 'Terms & Conditions — Personal API Key Usage',
+        title: 'Terms & Conditions - Personal API Key Usage',
         html: `
           <div class="text-left text-xs leading-relaxed space-y-3.5 text-slate-700 max-h-[55vh] overflow-y-auto pr-2 border border-slate-200 rounded-xl p-3.5 bg-slate-50/50" id="termsScrollBox">
             <div class="p-3 bg-teal-50/90 border border-teal-200 rounded-xl text-[11px] text-teal-900 font-medium">
@@ -1547,6 +1549,8 @@ Kode saya mengalami infinite loop saat 'left == right'. Mohon jelaskan logika pe
           data.is_guardrail_rejection || 
           data.status === 'guardrail_rejected' || 
           (replyText && (
+            replyText.includes('[S-SPARC Guardrail]') ||
+            replyText.includes('[S-SPARC Scope]') ||
             replyText.includes('S-SPARC AI Guardrail') || 
             replyText.includes('S-SPARC Academic Scope') || 
             replyText.includes('Halo dari S-SPARC Academic Assistant')

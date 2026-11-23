@@ -964,7 +964,7 @@ Kode saya mengalami infinite loop saat 'left == right'. Mohon jelaskan logika pe
     // Terms and Conditions Modal Dialog with Scroll Enforcement
     function showTermsAndConditionsModal(onAcceptCallback) {
       Swal.fire({
-        title: '📜 Terms & Conditions — Personal API Key Usage',
+        title: 'Terms & Conditions - Personal API Key Usage',
         html: `
           <div class="text-left text-xs leading-relaxed space-y-3.5 text-slate-700 max-h-[220px] overflow-y-auto pr-2 border border-slate-200 rounded-xl p-3.5 bg-slate-50/50" id="termsScrollBox">
             <div class="p-3 bg-teal-50/90 border border-teal-200 rounded-xl text-[11px] text-teal-900 font-medium">
