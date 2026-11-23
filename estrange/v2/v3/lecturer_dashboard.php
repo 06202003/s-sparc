@@ -38,19 +38,29 @@
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-	<script src="strange_html_layout_additional_files/vendor/tailwind.cdn.js"></script>
+	<!-- Tailwind -->
+	<script src="assets/vendor/tailwindcss.js"></script>
+	<script>window.tailwind || document.write('<script src="https://cdn.tailwindcss.com"><\/script>');</script>
 
 	<!-- jQuery -->
-	<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+	<script src="assets/vendor/jquery.min.js"></script>
+	<script>window.jQuery || document.write('<script src="https://code.jquery.com/jquery-3.7.1.min.js"><\/script>');</script>
 
 	<!-- DataTables -->
-	<link rel="stylesheet" type="text/css" href="strange_html_layout_additional_files/vendor/jquery.dataTables.min.css">
-	<link rel="stylesheet" type="text/css" href="strange_html_layout_additional_files/vendor/responsive.dataTables.min.css">
-	<script type="text/javascript" src="strange_html_layout_additional_files/vendor/jquery.dataTables.min.js"></script>
-	<script type="text/javascript" src="strange_html_layout_additional_files/vendor/dataTables.responsive.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="assets/vendor/jquery.dataTables.min.css">
+	<link rel="stylesheet" type="text/css" href="assets/vendor/responsive.dataTables.min.css">
+	<script type="text/javascript" src="assets/vendor/jquery.dataTables.min.js"></script>
+	<script type="text/javascript" src="assets/vendor/dataTables.responsive.min.js"></script>
 
 	<!-- SweetAlert2 -->
-	<script src="strange_html_layout_additional_files/vendor/sweetalert2.all.min.js"></script>
+	<link rel="stylesheet" href="assets/vendor/sweetalert2.min.css">
+	<script src="assets/vendor/sweetalert2.all.min.js"></script>
+	<script>
+	if (typeof Swal === 'undefined') {
+		document.write('<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">');
+		document.write('<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"><\/script>');
+	}
+	</script>
 
 	<style>
 		:root { color-scheme: light; }
@@ -97,13 +107,42 @@
 		}
 	</style>
 	<script>
-		function showDescModal(title, content) {
+		function openDescModal(btn) {
+			if (!btn) return;
+			var targetId = btn.getAttribute('data-target');
+			var title = btn.getAttribute('data-title') || 'Course Description';
+			var template = targetId ? document.getElementById(targetId) : null;
+			if (!template && btn.parentElement) {
+				template = btn.parentElement.querySelector('template');
+			}
+			var contentHtml = template ? template.innerHTML.trim() : '';
+
+			var hasHtml = /<[a-z][\s\S]*>/i.test(contentHtml);
+			var bodyClass = hasHtml 
+				? "text-left text-xs text-slate-700 leading-relaxed max-h-96 overflow-y-auto p-3.5 prose prose-slate max-w-none bg-slate-50/70 rounded-xl border border-slate-200/80"
+				: "text-left text-xs text-slate-700 leading-relaxed max-h-96 overflow-y-auto whitespace-pre-line p-3.5 bg-slate-50/70 rounded-xl border border-slate-200/80";
+
 			Swal.fire({
 				title: title,
-				html: `<div class="text-left text-xs text-slate-700 leading-relaxed max-h-96 overflow-y-auto whitespace-pre-line p-2">${content}</div>`,
+				html: `<div class="${bodyClass}">${contentHtml}</div>`,
 				confirmButtonText: 'Close',
-				confirmButtonColor: '#0f172a',
-				width: '550px'
+				confirmButtonColor: '#00A0A5',
+				width: '640px'
+			});
+		}
+
+		function showDescModal(title, content) {
+			var hasHtml = /<[a-z][\s\S]*>/i.test(content);
+			var bodyClass = hasHtml 
+				? "text-left text-xs text-slate-700 leading-relaxed max-h-96 overflow-y-auto p-3.5 prose prose-slate max-w-none bg-slate-50/70 rounded-xl border border-slate-200/80"
+				: "text-left text-xs text-slate-700 leading-relaxed max-h-96 overflow-y-auto whitespace-pre-line p-3.5 bg-slate-50/70 rounded-xl border border-slate-200/80";
+
+			Swal.fire({
+				title: title,
+				html: `<div class="${bodyClass}">${content}</div>`,
+				confirmButtonText: 'Close',
+				confirmButtonColor: '#00A0A5',
+				width: '640px'
 			});
 		}
 
@@ -266,10 +305,11 @@ select.select2-hidden-accessible {
 
 								if ($result && $result->num_rows > 0) {
 									while($row = $result->fetch_assoc()) {
-										$descClean = trim($row['description'] ?? '');
-										$descClean = preg_replace('/<p>\s*<br>\s*<\/p>/', '', $descClean);
-										$descCleanEscaped = addslashes(htmlspecialchars(strip_tags($descClean)));
-										$nameEscaped = addslashes(htmlspecialchars($row['name']));
+										$descRaw = trim($row['description'] ?? '');
+										$descClean = preg_replace('/<p>\s*(<br>|&nbsp;|\s)*<\/p>/i', '', $descRaw);
+										$hasContent = !empty(trim(strip_tags($descClean)));
+										$nameAttr = htmlspecialchars($row['name'], ENT_QUOTES, 'UTF-8');
+										$courseIdAttr = htmlspecialchars($row['course_id'], ENT_QUOTES, 'UTF-8');
 
 										echo '<tr class="hover:bg-slate-50/80 transition-colors">';
 										
@@ -280,8 +320,14 @@ select.select2-hidden-accessible {
 
 										// Description Button
 										echo '<td class="py-3.5 px-3 text-center">';
-										if (!empty($descClean)) {
-											echo '<button type="button" onclick="showDescModal(\''.$nameEscaped.'\', \''.$descCleanEscaped.'\')" class="px-2.5 py-1 text-[11px] font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition">Details</button>';
+										if ($hasContent) {
+											$tmplId = 'desc-course-template-' . $courseIdAttr;
+											echo '<button type="button" 
+														  data-target="' . $tmplId . '" 
+														  data-title="' . $nameAttr . '" 
+														  onclick="openDescModal(this)" 
+														  class="desc-modal-trigger px-2.5 py-1 text-[11px] font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition shadow-2xs">Details</button>';
+											echo '<template id="' . $tmplId . '">' . $descClean . '</template>';
 										} else {
 											echo '<span class="text-slate-400 font-normal italic">-</span>';
 										}
@@ -342,7 +388,11 @@ select.select2-hidden-accessible {
 											  </form>';
 
 										// Delete Action Button
-										echo '<button type="button" onclick="triggerCourseDelete(\''.htmlspecialchars($row['course_id']).'\', \''.$nameEscaped.'\')" class="px-2.5 py-1 text-[11px] font-semibold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg transition">Delete</button>';
+										echo '<button type="button" 
+													  data-id="' . $courseIdAttr . '" 
+													  data-name="' . $nameAttr . '" 
+													  onclick="triggerCourseDelete(this.getAttribute(\'data-id\'), this.getAttribute(\'data-name\'))" 
+													  class="px-2.5 py-1 text-[11px] font-semibold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg transition">Delete</button>';
 
 										// Hidden Delete Form for POST submission
 										echo '<form id="delete-form-'.htmlspecialchars($row['course_id']).'" action="'.htmlentities($_SERVER['PHP_SELF']).'" method="post" class="hidden">
@@ -366,6 +416,11 @@ select.select2-hidden-accessible {
 
 	<script>
 		document.addEventListener('DOMContentLoaded', function() {
+			$(document).on('click', '.desc-modal-trigger', function(e) {
+				e.preventDefault();
+				openDescModal(this);
+			});
+
 			var table = new DataTable('#lecturerDashboardTable', {
 				responsive: true,
 				pageLength: 5,

@@ -254,16 +254,32 @@ class PromptCriticService:
         if total_prompts == 0:
             return cls._get_empty_wrapped(assessment_id, assessment_title, course_name)
 
+        # Helper to get cioe fields safely from analysis or cioe_breakdown
+        def _get_an_val(an, key, default=0.0):
+            if not isinstance(an, dict):
+                return default
+            if key in an:
+                return an[key]
+            cb = an.get('cioe_breakdown', {})
+            if isinstance(cb, dict):
+                if key in cb:
+                    return cb[key]
+                if key == 'has_error':
+                    return cb.get('has_error', cb.get('has_error_trace', False))
+                if key == 'cioe_score':
+                    return cb.get('cioe_score', an.get('prompt_quality_score', 0.5))
+            return default
+
         # Calculate Averages & Dimensions
-        avg_entropy = sum(p['analysis']['shannon_entropy'] for p in user_prompts) / total_prompts
-        avg_tech = sum(p['analysis']['technical_token_density'] for p in user_prompts) / total_prompts
-        avg_cioe_score = sum(p['analysis']['cioe_score'] for p in user_prompts) / total_prompts
-        avg_literacy_score = sum(p['analysis']['prompt_quality_score'] for p in user_prompts) / total_prompts
+        avg_entropy = sum(p['analysis'].get('shannon_entropy', 0.5) for p in user_prompts) / total_prompts
+        avg_tech = sum(p['analysis'].get('technical_token_density', 0.5) for p in user_prompts) / total_prompts
+        avg_cioe_score = sum(_get_an_val(p['analysis'], 'cioe_score', 0.5) for p in user_prompts) / total_prompts
+        avg_literacy_score = sum(p['analysis'].get('prompt_quality_score', 0.5) for p in user_prompts) / total_prompts
         
-        context_count = sum(1 for p in user_prompts if p['analysis']['cioe_breakdown']['has_context'])
-        input_count = sum(1 for p in user_prompts if p['analysis']['cioe_breakdown']['has_input'])
-        output_count = sum(1 for p in user_prompts if p['analysis']['cioe_breakdown']['has_output'])
-        error_count = sum(1 for p in user_prompts if p['analysis']['cioe_breakdown']['has_error'])
+        context_count = sum(1 for p in user_prompts if _get_an_val(p['analysis'], 'has_context', False))
+        input_count = sum(1 for p in user_prompts if _get_an_val(p['analysis'], 'has_input', False))
+        output_count = sum(1 for p in user_prompts if _get_an_val(p['analysis'], 'has_output', False))
+        error_count = sum(1 for p in user_prompts if _get_an_val(p['analysis'], 'has_error', False))
 
         context_pct = round((context_count / total_prompts) * 100)
         input_pct = round((input_count / total_prompts) * 100)
@@ -347,17 +363,17 @@ class PromptCriticService:
             "critic_room": {
                 "best_prompt": {
                     "text": best_item['prompt'],
-                    "score": round(best_item['analysis']['prompt_quality_score'] * 100, 1),
-                    "entropy": best_item['analysis']['shannon_entropy'],
-                    "cioe_score": round(best_item['analysis']['cioe_score'] * 100, 1),
-                    "why_stellar": best_item['analysis']['feedback'][0] if best_item['analysis']['feedback'] else "Complete structure with clear technical specifications and constraints."
+                    "score": round(best_item['analysis'].get('prompt_quality_score', 0.5) * 100, 1),
+                    "entropy": best_item['analysis'].get('shannon_entropy', 0.5),
+                    "cioe_score": round(_get_an_val(best_item['analysis'], 'cioe_score', 0.5) * 100, 1),
+                    "why_stellar": best_item['analysis'].get('pedagogical_feedback', [None])[0] or best_item['analysis'].get('feedback', [None])[0] or "Complete structure with clear technical specifications and constraints."
                 },
                 "needs_polish_prompt": {
                     "text": worst_item['prompt'],
-                    "score": round(worst_item['analysis']['prompt_quality_score'] * 100, 1),
-                    "entropy": worst_item['analysis']['shannon_entropy'],
-                    "cioe_score": round(worst_item['analysis']['cioe_score'] * 100, 1),
-                    "weaknesses": worst_item['analysis']['feedback'],
+                    "score": round(worst_item['analysis'].get('prompt_quality_score', 0.5) * 100, 1),
+                    "entropy": worst_item['analysis'].get('shannon_entropy', 0.5),
+                    "cioe_score": round(_get_an_val(worst_item['analysis'], 'cioe_score', 0.5) * 100, 1),
+                    "weaknesses": worst_item['analysis'].get('pedagogical_feedback', worst_item['analysis'].get('feedback', [])),
                     "ai_critic_comment": critic_review['critic_comment'],
                     "suggested_rewrite": critic_review['suggested_rewrite']
                 }

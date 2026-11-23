@@ -1,5 +1,6 @@
 import os
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import PlainTextResponse, FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from dotenv import load_dotenv
@@ -149,7 +150,8 @@ Available in `docs/system_flow_diagrams.md` and `docs/DIAGRAM_ALIR_S-SPARC_ESTRA
 
  # Mount Code Evaluator Sub-App & Dashboard for HTTPS Port 443 Access
  try:
-     from code_evaluator_service.evaluator_app import app as evaluator_app
+     from code_evaluator_service.evaluator_app import app as evaluator_app, scheduler as evaluator_scheduler
+     evaluator_scheduler.start()
      app.mount("/evaluator", evaluator_app)
 
      from code_evaluator_service.evaluator_app import stats as get_eval_stats

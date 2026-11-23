@@ -72,13 +72,42 @@
 		}
 	</style>
 	<script>
-		function showDescriptionModal(title, content) {
+		function openDescModal(btn) {
+			if (!btn) return;
+			var targetId = btn.getAttribute('data-target');
+			var title = btn.getAttribute('data-title') || 'Problem Statement & Guidelines';
+			var template = targetId ? document.getElementById(targetId) : null;
+			if (!template && btn.parentElement) {
+				template = btn.parentElement.querySelector('template');
+			}
+			var contentHtml = template ? template.innerHTML.trim() : '';
+
+			var hasHtml = /<[a-z][\s\S]*>/i.test(contentHtml);
+			var bodyClass = hasHtml 
+				? "text-left text-xs text-slate-700 leading-relaxed max-h-96 overflow-y-auto p-3.5 prose prose-slate max-w-none bg-slate-50/70 rounded-xl border border-slate-200/80"
+				: "text-left text-xs text-slate-700 leading-relaxed max-h-96 overflow-y-auto whitespace-pre-line p-3.5 bg-slate-50/70 rounded-xl border border-slate-200/80";
+
 			Swal.fire({
 				title: title,
-				html: `<div class="text-left text-xs text-slate-700 leading-relaxed max-h-96 overflow-y-auto whitespace-pre-line p-2">${content}</div>`,
+				html: `<div class="${bodyClass}">${contentHtml}</div>`,
 				confirmButtonText: 'Close',
-				confirmButtonColor: '#0f172a',
-				width: '550px'
+				confirmButtonColor: '#00A0A5',
+				width: '640px'
+			});
+		}
+
+		function showDescriptionModal(title, content) {
+			var hasHtml = /<[a-z][\s\S]*>/i.test(content);
+			var bodyClass = hasHtml 
+				? "text-left text-xs text-slate-700 leading-relaxed max-h-96 overflow-y-auto p-3.5 prose prose-slate max-w-none bg-slate-50/70 rounded-xl border border-slate-200/80"
+				: "text-left text-xs text-slate-700 leading-relaxed max-h-96 overflow-y-auto whitespace-pre-line p-3.5 bg-slate-50/70 rounded-xl border border-slate-200/80";
+
+			Swal.fire({
+				title: title,
+				html: `<div class="${bodyClass}">${content}</div>`,
+				confirmButtonText: 'Close',
+				confirmButtonColor: '#00A0A5',
+				width: '640px'
 			});
 		}
 	</script>
@@ -224,10 +253,11 @@ select.select2-hidden-accessible {
 
 								if ($result && $result->num_rows > 0) {
 									while($row = $result->fetch_assoc()) {
-										$descClean = trim($row['description']);
-										$descClean = preg_replace('/<p>\s*<br>\s*<\/p>/', '', $descClean);
-										$descCleanEscaped = addslashes(htmlspecialchars(strip_tags($descClean)));
-										$titleEscaped = addslashes(htmlspecialchars($row['assessment_name']));
+										$descRaw = trim($row['description'] ?? '');
+										$descClean = preg_replace('/<p>\s*(<br>|&nbsp;|\s)*<\/p>/i', '', $descRaw);
+										$hasContent = !empty(trim(strip_tags($descClean)));
+										$titleAttr = htmlspecialchars($row['assessment_name'], ENT_QUOTES, 'UTF-8');
+										$submissionIdAttr = htmlspecialchars($row['submission_id'], ENT_QUOTES, 'UTF-8');
 
 										echo '<tr class="hover:bg-slate-50/80 transition-colors">';
 										echo '<td class="py-3.5 px-3 font-bold text-slate-900">'.htmlspecialchars($row['assessment_name']).'</td>';
@@ -236,8 +266,14 @@ select.select2-hidden-accessible {
 										echo '<td class="py-3.5 px-3 font-mono text-slate-600">'.htmlspecialchars($row['submission_time']).'</td>';
 
 										echo '<td class="py-3.5 px-3 text-center">';
-										if (!empty($descClean)) {
-											echo '<button type="button" onclick="showDescriptionModal(\''.$titleEscaped.'\', \''.$descCleanEscaped.'\')" class="px-2.5 py-1 text-[11px] font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition">View</button>';
+										if ($hasContent) {
+											$tmplId = 'desc-sub-template-' . $submissionIdAttr;
+											echo '<button type="button" 
+														  data-target="' . $tmplId . '" 
+														  data-title="' . $titleAttr . '" 
+														  onclick="openDescModal(this)" 
+														  class="desc-modal-trigger px-2.5 py-1 text-[11px] font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition shadow-2xs">View</button>';
+											echo '<template id="' . $tmplId . '">' . $descClean . '</template>';
 										} else {
 											echo '<span class="text-slate-400 text-[11px]">-</span>';
 										}

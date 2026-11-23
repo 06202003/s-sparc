@@ -87,10 +87,11 @@ class GeminiMultiProviderGateway:
         if system_instruction:
             payload["systemInstruction"] = system_instruction
         
-        payload["generationConfig"] = {"temperature": 0.7}
+        temp = 1.0 if ("gemini-3" in clean_model) else 0.7
+        payload["generationConfig"] = {"temperature": temp}
 
         headers = {"Content-Type": "application/json"}
-        resp = requests.post(url, json=payload, headers=headers, timeout=25)
+        resp = requests.post(url, json=payload, headers=headers, timeout=45)
         
         if resp.status_code == 429:
             raise Exception(f"429 Rate Limit Exceeded: {resp.text}")
@@ -112,10 +113,10 @@ class GeminiMultiProviderGateway:
         if not api_key or not self._is_valid_key(api_key):
             raise Exception("Invalid API Key format (minimum 20 characters required)")
 
-        clean_model = model.replace("gemini/", "").strip() if model else "gemini-3.6-flash"
-        valid_models = ["gemini-3.6-flash", "gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-3.7-flash"]
+        clean_model = model.replace("gemini/", "").strip() if model else "gemini-3.8-flash"
+        valid_models = ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-3.1-flash-lite"]
         if clean_model not in valid_models:
-            clean_model = "gemini-3.6-flash"
+            clean_model = "gemini-3.8-flash"
 
         # 1. Try Direct REST (Instant ~1.2s response time)
         try:

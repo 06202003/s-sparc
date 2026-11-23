@@ -5,7 +5,7 @@ GEMINI_API_KEY_3=AIzaSyYourGeminiApiKey3Here
 GEMINI_API_KEY_4=AIzaSyYourGeminiApiKey4Here
 GEMINI_API_KEY_5=
 GEMINI_API_KEY_6=
-GEMINI_MODEL=gemini-3.1-flash-lite
+GEMINI_MODEL=gemini-3.8-flash
 
 # === Ollama Local Runtime ===
 OLLAMA_BASE_URL=http://localhost:11434

@@ -257,10 +257,23 @@ select.select2-hidden-accessible {
 								<tr class="hover:bg-slate-50/80 transition-colors">
 									<td class="py-3.5 px-3">
 										<div class="font-bold text-slate-900"><?= htmlspecialchars($row['name']); ?></div>
-										<button type="button" onclick="showDescription('<?= htmlspecialchars($row['name'], ENT_QUOTES); ?>', '<?= htmlspecialchars(addslashes(preg_replace('/(\r\n|\n){2,}/', '\n', $row['description']))); ?>')"
-											class="text-[11px] text-slate-500 hover:text-slate-800 underline mt-0.5 block">
-											View Instructions
-										</button>
+										<?php
+											$descRaw = trim($row['description'] ?? '');
+											$descClean = preg_replace('/<p>\s*(<br>|&nbsp;|\s)*<\/p>/i', '', $descRaw);
+											$hasContent = !empty(trim(strip_tags($descClean)));
+											$tmplId = 'admin-desc-template-' . htmlspecialchars($row['assessment_id'], ENT_QUOTES, 'UTF-8');
+											$nameAttr = htmlspecialchars($row['name'], ENT_QUOTES, 'UTF-8');
+										?>
+										<?php if ($hasContent): ?>
+											<button type="button" 
+													data-target="<?= $tmplId ?>"
+													data-title="<?= $nameAttr ?>"
+													onclick="openDescModal(this)"
+													class="desc-modal-trigger text-[11px] text-[#00A0A5] hover:text-[#008488] font-semibold underline mt-0.5 block">
+												View Instructions
+											</button>
+											<template id="<?= $tmplId ?>"><?= $descClean ?></template>
+										<?php endif; ?>
 									</td>
 									<td class="py-3.5 px-3 text-center font-mono text-[11px] text-slate-600">
 										<?= date('d M Y, H:i', strtotime($row['submission_open_time'])); ?>
@@ -337,16 +350,42 @@ select.select2-hidden-accessible {
 			});
 		});
 
-		function showDescription(title, content) {
+		function openDescModal(btn) {
+			if (!btn) return;
+			var targetId = btn.getAttribute('data-target');
+			var title = btn.getAttribute('data-title') || 'Instructions & Problem Statement';
+			var template = targetId ? document.getElementById(targetId) : null;
+			if (!template && btn.parentElement) {
+				template = btn.parentElement.querySelector('template');
+			}
+			var contentHtml = template ? template.innerHTML.trim() : '';
+
+			var hasHtml = /<[a-z][\s\S]*>/i.test(contentHtml);
+			var bodyClass = hasHtml 
+				? "text-left text-xs text-slate-700 leading-relaxed max-h-96 overflow-y-auto p-3.5 prose prose-slate max-w-none bg-slate-50/70 rounded-xl border border-slate-200/80"
+				: "text-left text-xs text-slate-700 leading-relaxed max-h-96 overflow-y-auto whitespace-pre-line p-3.5 bg-slate-50/70 rounded-xl border border-slate-200/80";
+
 			Swal.fire({
 				title: title,
-				html: `<div class="text-left text-xs text-slate-700 whitespace-pre-line leading-relaxed max-h-96 overflow-y-auto p-2 bg-slate-50 rounded-xl border border-slate-200">${content}</div>`,
+				html: `<div class="${bodyClass}">${contentHtml}</div>`,
 				confirmButtonText: 'Close',
-				confirmButtonColor: '#0f172a',
-				customClass: {
-					popup: 'rounded-2xl',
-					confirmButton: 'rounded-xl text-xs px-4 py-2 font-bold'
-				}
+				confirmButtonColor: '#00A0A5',
+				width: '640px'
+			});
+		}
+
+		function showDescription(title, content) {
+			var hasHtml = /<[a-z][\s\S]*>/i.test(content);
+			var bodyClass = hasHtml 
+				? "text-left text-xs text-slate-700 leading-relaxed max-h-96 overflow-y-auto p-3.5 prose prose-slate max-w-none bg-slate-50/70 rounded-xl border border-slate-200/80"
+				: "text-left text-xs text-slate-700 leading-relaxed max-h-96 overflow-y-auto whitespace-pre-line p-3.5 bg-slate-50/70 rounded-xl border border-slate-200/80";
+
+			Swal.fire({
+				title: title,
+				html: `<div class="${bodyClass}">${content}</div>`,
+				confirmButtonText: 'Close',
+				confirmButtonColor: '#00A0A5',
+				width: '640px'
 			});
 		}
 
