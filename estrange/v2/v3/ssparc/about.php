@@ -360,11 +360,11 @@ $sso_role = $_SESSION['role'] ?? 'student';
               <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
                 <h4 class="h5 fw-bold text-slate-900 mb-0">Archangela Sheilla Haryanto Sundjaya</h4>
                 <span class="badge bg-purple-50 text-purple-700 border font-mono px-2.5 py-1 text-[11px]" style="background-color: #faf5ff; color: #7e22ce; border-color: #e9d5ff;">
-                  Design &amp; Visual Identity
+                  Poster &amp; Presentation Design
                 </span>
               </div>
               <p class="text-slate-600 text-xs mb-0 leading-relaxed" style="line-height: 1.65;">
-                Brand identity systems, visual design language, interface aesthetics, and user experience workflows.
+                Academic research poster design and presentation slide decks (PPT).
               </p>
             </div>
           </div>
