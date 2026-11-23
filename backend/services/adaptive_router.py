@@ -91,7 +91,8 @@ class GeminiMultiProviderGateway:
         payload["generationConfig"] = {"temperature": temp}
 
         headers = {"Content-Type": "application/json"}
-        resp = requests.post(url, json=payload, headers=headers, timeout=45)
+        # Fail fast (12s max) to prevent HTTP 502 Bad Gateway timeouts on reverse proxy
+        resp = requests.post(url, json=payload, headers=headers, timeout=12)
         
         if resp.status_code == 429:
             raise Exception(f"429 Rate Limit Exceeded: {resp.text}")
@@ -126,7 +127,7 @@ class GeminiMultiProviderGateway:
         except Exception as e_rest:
             logging.warning(f"Direct REST attempt with key ({api_key[:6]}...) failed: {e_rest}. Trying LiteLLM fallback...")
 
-        # 2. Try LiteLLM fallback
+        # 2. Try LiteLLM fallback (Fast 8s timeout, no background retry loop)
         try:
             import litellm
             litellm_model = f"gemini/{clean_model}"
@@ -135,7 +136,8 @@ class GeminiMultiProviderGateway:
                 messages=messages,
                 api_key=api_key,
                 temperature=0.7,
-                timeout=10
+                timeout=8,
+                num_retries=0
             )
             return response.choices[0].message.content
         except Exception as e_litellm:
@@ -223,7 +225,7 @@ class OllamaClient:
         }
 
         try:
-            timeout_val = int(os.getenv("OLLAMA_TIMEOUT", "5"))
+            timeout_val = int(os.getenv("OLLAMA_TIMEOUT", "4"))
             resp = requests.post(url, json=payload, timeout=timeout_val)
             if resp.status_code == 200:
                 data = resp.json()

@@ -27,7 +27,7 @@ class PromptGuardrail:
         r'\[AUTO_FALLBACK:[^\]]*\]'
     ]
 
-    # Standard Indonesian & English programming keywords to recognize valid technical context
+    # Specific Technical / Programming Terms ONLY (used for domain validation)
     PROGRAMMING_KEYWORDS = {
         "python", "java", "c++", "cpp", "c#", "csharp", "javascript", "typescript", "php", "sql", "html", "css",
         "def", "function", "class", "return", "import", "public", "private", "void", "static", "int", "float",
@@ -38,9 +38,36 @@ class PromptGuardrail:
         "sliding", "window", "two", "pointers", "dp", "dynamic", "programming", "memoization", "prefix", "sum",
         "kompleksitas", "complexity", "time", "space", "waktu", "ruang", "big-o", "o(n)", "o(1)", "o(log", "o(n^2)",
         "parameter", "input", "output", "error", "bug", "traceback", "indexerror", "typeerror", "valueerror",
-        "kode", "code", "fungsi", "method", "mengembalikan", "hasil", "kendala", "masalah", "mengapa", "bagaimana",
-        "solusi", "perbaikan", "bantu", "buatkan", "tuliskan", "optimasi", "penjelasan", "jelaskan", "soal", "tugas"
+        "kode", "code", "fungsi", "method", "optimasi", "koding", "coding", "linked", "faktorial", "struktur", "data", "variabel"
     }
+
+    CURHAT_PATTERNS = [
+        r'\bcurhat\b',
+        r'\bgalau\b',
+        r'\bpusing\s+(?:hidup|banget|mau\s+ngapain)\b',
+        r'\bmasa\s+depan\b',
+        r'\bkerjaan\s+gini\s+gini\b',
+        r'\buang\s+segini\s+gini\b',
+        r'\bhidup\s+(?:gua|gue|gw|ku|saya)\b',
+        r'\b(?:perkembangan\s+hidup|hidup.*stuck)\b',
+        r'\b(?:putus\s+cinta|patah\s+hati|masalah\s+pacar)\b',
+        r'\b(?:capek|lelah)\s+(?:banget\s+)?(?:hidup|kuliah|jalanin)\b',
+        r'\b(?:pengen|mau)\s+nyerah\b',
+        r'\bga\s+ada\s+perkembangan\b',
+        r'\bgak\s+ada\s+perkembangan\b',
+        r'\btidak\s+ada\s+perkembangan\b',
+        r'\b(?:stuck|buntu)\s+(?:hidup|karir|karier|finansial)\b'
+    ]
+
+    OFF_TOPIC_PATTERNS = [
+        r'\b(?:resep|memasak|masak|bumbu|makanan|minuman|kuliner|rendang|nasi\s+goreng)\b',
+        r'\b(?:presiden|menteri|partai|pemilu|politik|pilkada|dpr)\b',
+        r'\b(?:lagu|lirik|penyanyi|artis|film|sinetron|drakor|anime|manga)\b',
+        r'\b(?:zodiak|ramalan|horoskop|shio|cuaca|hujan|gempa)\b',
+        r'\b(?:lelucon|jokes|lawak|tebak-tebakan|puisi|pantun|cerpen)\b',
+        r'^(?:halo|hai|hey|hi|pagi|siang|sore|malam|test|tes)\s*(?:bro|min|admin|ai|bang)?[\s\!\?\.]*$',
+        r'\b(?:kamu\s+siapa|siapa\s+(?:kamu|namamu)|siapa\s+yang\s+membuatmu)\b'
+    ]
 
     VOWELS = set('aeiouAEIOU')
 
@@ -149,15 +176,64 @@ class PromptGuardrail:
         return False, ""
 
     @classmethod
+    def is_curhat_or_emotional(cls, text: str) -> Tuple[bool, str]:
+        """
+        Detects personal emotional curhat, feeling stuck/lost in life, career, or salary issues,
+        provided there are no technical/programming keywords present.
+        """
+        body = cls.strip_boilerplate(text)
+        if not body:
+            return False, ""
+
+        body_lower = body.lower()
+        words = set(re.findall(r'[a-zA-Z0-9_+]+', body_lower))
+        prog_matches = words.intersection(cls.PROGRAMMING_KEYWORDS)
+
+        # If user explicitly included programming keywords, treat as coding frustration (do not reject as curhat)
+        if len(prog_matches) > 0:
+            return False, ""
+
+        for pat in cls.CURHAT_PATTERNS:
+            if re.search(pat, body_lower):
+                return True, "Prompt terdeteksi berupa curahan hati (curhat) atau topik kehidupan pribadi non-akademis."
+
+        return False, ""
+
+    @classmethod
+    def is_off_topic_non_programming(cls, text: str) -> Tuple[bool, str]:
+        """
+        Detects general non-programming topics (recipes, politics, celebrity, astrology, pure greetings)
+        without any technical programming context.
+        """
+        body = cls.strip_boilerplate(text)
+        if not body:
+            return False, ""
+
+        body_lower = body.lower()
+        words = set(re.findall(r'[a-zA-Z0-9_+]+', body_lower))
+        prog_matches = words.intersection(cls.PROGRAMMING_KEYWORDS)
+
+        # If user explicitly included programming keywords, not off-topic
+        if len(prog_matches) > 0:
+            return False, ""
+
+        for pat in cls.OFF_TOPIC_PATTERNS:
+            if re.search(pat, body_lower):
+                return True, "Pertanyaan berada di luar domain pembelajaran pemrograman & algoritma komputer S-SPARC."
+
+        return False, ""
+
+    @classmethod
     def validate(cls, raw_prompt: str) -> Dict[str, Any]:
         """
         Main validation entry point for inbound user queries.
-        Returns validation status, educational guide if rejected, and cleaned body.
+        Returns validation status, educational guide if rejected, category, and cleaned body.
         """
         if not raw_prompt or not raw_prompt.strip():
             return {
                 "is_valid": False,
                 "reason": "Prompt kosong.",
+                "category": "EMPTY",
                 "status": "REJECTED",
                 "educational_message": cls.build_educational_rejection("Prompt tidak boleh kosong.")
             }
@@ -170,6 +246,7 @@ class PromptGuardrail:
             return {
                 "is_valid": False,
                 "reason": hollow_reason,
+                "category": "HOLLOW_TEMPLATE",
                 "status": "REJECTED",
                 "educational_message": cls.build_educational_rejection(hollow_reason)
             }
@@ -180,13 +257,37 @@ class PromptGuardrail:
             return {
                 "is_valid": False,
                 "reason": gibberish_reason,
+                "category": "GIBBERISH",
                 "status": "REJECTED",
                 "educational_message": cls.build_educational_rejection(gibberish_reason)
+            }
+
+        # Check emotional curhat / personal life distress
+        is_curhat, curhat_reason = cls.is_curhat_or_emotional(prompt_clean)
+        if is_curhat:
+            return {
+                "is_valid": False,
+                "reason": curhat_reason,
+                "category": "CURHAT",
+                "status": "REJECTED",
+                "educational_message": cls.build_curhat_response()
+            }
+
+        # Check off-topic non-programming queries
+        is_off_topic, off_topic_reason = cls.is_off_topic_non_programming(prompt_clean)
+        if is_off_topic:
+            return {
+                "is_valid": False,
+                "reason": off_topic_reason,
+                "category": "OFF_TOPIC",
+                "status": "REJECTED",
+                "educational_message": cls.build_off_topic_response(off_topic_reason)
             }
 
         return {
             "is_valid": True,
             "reason": "Valid academic programming query.",
+            "category": "ACADEMIC",
             "status": "APPROVED",
             "educational_message": "",
             "cleaned_body": cls.strip_boilerplate(prompt_clean)
@@ -228,11 +329,14 @@ class PromptGuardrail:
         # 3. Reject fallback notices or guardrail messages
         reject_markers = [
             "### ⚠️",
+            "### ☕",
             "S-SPARC AI Guardrail",
+            "S-SPARC Academic Scope",
             "S-SPARC AI Analysis — Fibonacci",
             "Status Eksekusi:",
             "Solution processing completed",
             "Layanan AI lokal/cloud saat ini sedang",
+            "Halo dari S-SPARC Academic Assistant",
             "Input Quality Guardrail"
         ]
         if any(marker in code_clean for marker in reject_markers):
@@ -273,3 +377,48 @@ S-SPARC dirancang untuk melatih **Literasi AI & Kemandirian Kognitif (*Prompt En
 4. **[ERROR TRACE / KENDALA]**: Cantumkan baris kode Anda yang mengalami error atau penjelasan logika di mana Anda merasa buntu.
 
 *Silakan lengkapi prompt Anda dengan pertanyaan atau kode yang spesifik lalu kirimkan kembali.*"""
+
+    @classmethod
+    def build_curhat_response(cls) -> str:
+        """
+        Generates an empathetic, human-centered response when a student shares personal/life struggles.
+        """
+        return """### ☕ Halo dari S-SPARC Academic Assistant!
+
+Halo bro, terima kasih sudah mau terbuka dan berbagi ceritamu di sini. Perasaan galau, merasa *stuck*, bingung dengan arah masa depan, atau merasa ritme kerjaan dan finansial jalan di tempat adalah hal yang sangat manusiawi—banyak orang (termasuk sesama mahasiswa, asisten lab, maupun staf) pernah atau sedang melewati fase serupa.
+
+Ingat bahwa perjalanan hidup dan karier bukan lomba *sprint*, melainkan maraton panjang. Rasa stagnan sering kali menjadi sinyal tubuh dan pikiran bahwa kamu butuh jeda sejenak untuk menata ulang energi dan perspektif.
+
+Berikut beberapa langkah sederhana yang bisa dicoba:
+1. **Beri Jeda & Istirahat**: Jangan paksakan diri saat pikiran sedang penuh. Ambil waktu sejenak dari layar komputer, jalan-jalan santai, dan pastikan istirahat cukup.
+2. **Fokus pada Langkah Kecil (*Micro-progress*)**: Jangan bebani diri memikirkan segalanya sekaligus. Fokus pada satu hal konkret yang bisa diselesaikan hari ini.
+3. **Cari Teman Cerita Nyata**: Jika perasaan ini terasa membebani, sangat dianjurkan untuk bercerita dengan teman terdekat, keluarga, dosen wali, atau unit bimbingan konseling kampus.
+
+---
+> ℹ️ **Catatan Sistem:** Sebagai asisten AI akademik, S-SPARC difokuskan secara khusus untuk membantu pembelajaran koding, algoritma, dan debugging. Kalau ada tugas praktikum atau tantangan pemrograman yang lagi bikin pusing, tanyakan kodinganmu di sini ya bro, kita diskusikan bareng-bareng! Tetap semangat terus! 💪"""
+
+    @classmethod
+    def build_off_topic_response(cls, reason: str) -> str:
+        """
+        Generates boundary clarification when user sends general off-topic/non-programming queries.
+        """
+        return f"""### ⚠️ S-SPARC Academic Scope — Pertanyaan di Luar Pembelajaran Pemrograman
+
+Halo! Pertanyaan atau topik yang Anda kirimkan berada di luar domain sistem pembelajaran **S-SPARC**.
+> **Keterangan:** {reason}
+
+---
+
+#### 💡 Mengenai Fokus Akademik S-SPARC:
+S-SPARC (*Sustainable Semantic Prompting & Academic Reasoning Corpus*) adalah sistem asisten akademik yang dirancang secara khusus untuk:
+- 💻 **Pembelajaran Pemrograman & Algoritma** (Python, Java, C++, Struktur Data, OOP, dll.)
+- 🔍 **Analisis Bug, Error Trace, & Optimasi Kompleksitas (Big-O)**
+- 📝 **Pelatihan Prompt Engineering Akademis (Protokol C-I-O-E)**
+
+#### 🎯 Rekomendasi Langkah:
+Silakan ajukan pertanyaan terkait koding, algoritma, atau tugas praktikum Anda menggunakan format protokol **C-I-O-E**:
+1. **[CONTEXT]**: Materi kuliah / bahasa pemrograman yang digunakan.
+2. **[INPUT]**: Parameter masukan, tipe data, atau kasus uji.
+3. **[OUTPUT]**: Hasil keluaran dan target kompleksitas yang diharapkan.
+4. **[ERROR TRACE / KENDALA]**: Kode yang error atau letak kebingungan Anda."""
+

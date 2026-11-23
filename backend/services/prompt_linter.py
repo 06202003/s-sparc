@@ -81,6 +81,27 @@ class PromptLinter:
         guardrail_res = PromptGuardrail.validate(clean_text)
         if not guardrail_res["is_valid"]:
             entropy = cls.calculate_shannon_entropy(clean_text)
+            cat = guardrail_res.get("category", "INVALID")
+            
+            if cat == "CURHAT":
+                grade_label = "F (Personal / Non-Academic Topic)"
+                feedback = [
+                    f"S-SPARC Guardrail: {guardrail_res['reason']}",
+                    "S-SPARC dirancang khusus untuk asistensi materi pemrograman akademik dan koding. Tetap semangat, dan silakan ajukan pertanyaan terkait koding praktikum menggunakan protokol C-I-O-E."
+                ]
+            elif cat == "OFF_TOPIC":
+                grade_label = "F (Off-Topic Non-Programming Query)"
+                feedback = [
+                    f"S-SPARC Guardrail: {guardrail_res['reason']}",
+                    "Fokuskan pertanyaan Anda pada materi algoritma, struktur data, atau kendala pemrograman menggunakan format C-I-O-E."
+                ]
+            else:
+                grade_label = "F (Invalid / Gibberish Prompt)"
+                feedback = [
+                    f"Prompt Ditolak oleh Guardrail: {guardrail_res['reason']}",
+                    "Lengkapi setiap bagian C-I-O-E dengan deskripsi masalah atau kode nyata, bukan karakter acak atau template kosong."
+                ]
+
             return {
                 "prompt_length": length,
                 "shannon_entropy": entropy,
@@ -93,12 +114,9 @@ class PromptLinter:
                     "components_present": 0,
                     "cioe_score": 0.0
                 },
-                "prompt_quality_score": 0.05,
-                "literacy_grade": "F (Invalid / Gibberish Prompt)",
-                "pedagogical_feedback": [
-                    f"Prompt Ditolak oleh Guardrail: {guardrail_res['reason']}",
-                    "Lengkapi setiap bagian C-I-O-E dengan deskripsi masalah atau kode nyata, bukan karakter acak atau template kosong."
-                ]
+                "prompt_quality_score": 0.10 if cat in ("CURHAT", "OFF_TOPIC") else 0.05,
+                "literacy_grade": grade_label,
+                "pedagogical_feedback": feedback
             }
 
         # Substantive content without boilerplate frames

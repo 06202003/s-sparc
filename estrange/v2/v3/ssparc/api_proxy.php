@@ -336,7 +336,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+curl_setopt($ch, CURLOPT_TIMEOUT, 90);
 
 // Ignore SSL errors if internal certificate
 curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
